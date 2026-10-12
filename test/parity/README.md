@@ -62,6 +62,62 @@ kubectl --context kind-authz-e2e delete namespace authz-parity   # the replay on
 make e2e-down                                                     # the whole cluster
 ```
 
+## Export-fed profile
+
+The agent profile above pulls simplified policies from `authz-policy-admin`, so it never sees what a legacy
+access-control export holds: regular policy sets, customizations, statuses other than `ACTIVE`, several tenants. The
+export-fed profile feeds the agent v3 configuration exports instead and compares its decisions with the legacy
+goldens:
+
+```bash
+make parity-export PARITY_EXPORT_BUNDLE=<spec-language>/pap-export-bundle
+```
+
+`PARITY_EXPORT_BUNDLE` names the export bundle that the executable specification writes (its `pap-export-bundle`
+check). For each recorded test function the bundle holds the log the profile replays: the PIP stub pins, the export
+the specification predicts for the stand at each decision, the decision requests, and the goldens to compare. The
+profile runs under `PARITY_PROFILE=authz-agent-export`, where only `TestExportFedAgent` runs and `TestParitySuite`
+skips.
+
+| Target | What it does |
+| --- | --- |
+| `parity-export-image` | Builds `local/authz-parity-suite-export:ci`, the suite image with the bundle under `testdata/export-bundle/`, from the build context `export-bundle` of [`suite/Dockerfile`](suite/Dockerfile), and loads it into the cluster. `make e2e-images` builds `local/authz-parity-suite:ci` without a bundle, and [`suite/.dockerignore`](suite/.dockerignore) keeps one under `suite/testdata/` out of either |
+| `parity-export-harness` | The test-stand chart with [`test/k8s/parity/test-stand-values-export.yaml`](../k8s/parity/test-stand-values-export.yaml) layered over `test-stand-values.yaml`: the parity stand plus `export-source`, a PIP stub that serves the mounted export, and the suite Job `parity-export` with `PARITY_PROFILE=authz-agent-export`; then an empty export on `export-source` until the first mount, so that the agent becomes ready |
+| `parity-export-install` | `helm upgrade --install` of the agent chart with [`values-export.yaml`](../k8s/parity/values-export.yaml) layered over `values.yaml`, so the agent pulls from `export-source` every second |
+| `parity-export-suite` | The test-stand release again with the current `PARITY_EXPORT_RUN`, then the Job `parity-export`, run by `helm test` with a timeout of `8h15m`, past the Job's 8-hour deadline; its log is streamed |
+
+The export-fed stand replaces the parity suite Job and the agent's policy source in the same namespace. To run the agent
+profile again, run `make parity-harness parity-install parity-suite`. After `make e2e-images`,
+`make parity-export-restart` restarts the export-fed stand's Deployments that run a local image, `export-source` among
+them, and configures the empty export on the new `export-source` before it waits for the agent.
+
+Each test function starts from the empty export, so a function whose first export fails to convert is judged under the
+empty export whatever ran before it. Before the decisions that follow an export, the suite pins that export on
+`export-source` and waits until a pull that started after the pin has fetched both documents and the agent has started
+its next pull.
+`PARITY_EXPORT_PULL_TIMEOUT_SECONDS` bounds the wait (30 by default). A whole bundle mounts several thousand exports and
+takes hours; `PARITY_EXPORT_RUN=<regexp>` limits the run to the test functions whose name matches. A golden whose token
+comes from a realm the stand lacks, or whose user the realm refuses with `invalid_grant` (such as a user of the second
+tenant), is skipped. The run fails first if the realm refuses a token for `parity-reader`, so a wrong end-user password
+fails the run rather than skipping every end-user golden, and it fails at the end if no golden was compared.
+
+Each golden of the bundle carries the difference class the specification predicts for it. A golden passes when the agent
+matches it. It also passes when its class is listed in `acceptedExportDivergences` in
+[`suite/accepted_divergences.go`](suite/accepted_divergences.go) and the agent answers exactly as the bundle predicts
+for that class, unless the agent allows what the golden denies. The report at the end of the run counts the verdicts per
+family (simplified, policy-set, customization, status, tenant, pip-kind) and lists every golden that differs.
+
+The bundle also checks the specification's model of the agent's conversion. Without a stand, from the repository
+root:
+
+```bash
+PARITY_EXPORT_BUNDLE=<spec-language>/pap-export-bundle go test -run TestExportBundleConformance ./internal/acconfig/
+```
+
+The test converts every export of the bundle with `internal/acconfig` and fails where the result differs from the
+conversion the bundle predicts. With `PARITY_EXPORT_REFUSED_OUT=<file>` it also writes the conditions the agent's
+parser refuses. The specification reads them from its `pap-export-agent-refused.json`.
+
 ## Identity provider
 
 The `idp` Deployment runs the public Keycloak image (`quay.io/keycloak/keycloak`, the version the goldens were captured
@@ -608,6 +664,7 @@ test/parity/
     ├── config.go
     ├── compare.go                       (golden read/diff; no write/record path)
     ├── accepted_divergences.go
+    ├── export_fed.go                    (the export-fed profile: bundle reader, export source, replayer)
     ├── testdata/
     │   ├── golden/                      (129 committed golden JSON files)
     │   ├── pap-operations.json          (the PAP operations a case step names; generated)

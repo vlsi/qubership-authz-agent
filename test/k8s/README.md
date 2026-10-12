@@ -34,6 +34,13 @@ provider. It runs in its own namespace, so its Keycloak can be named `idp`, the
 issuer host in the parity realm's tokens, next to the e2e namespace's
 `keycloak`.
 
+`parity/test-stand-values-export.yaml` and `parity/values-export.yaml` are the
+export-fed profile of the parity suite, layered over the parity values: the
+stand adds `export-source`, a PIP stub that serves a v3 configuration export,
+and runs `TestExportFedAgent` as the Job `parity-export`; the agent pulls its
+configuration from `export-source` instead of from `authz-policy-admin`. See
+[the export-fed profile](../parity/README.md#export-fed-profile).
+
 ## Run
 
 ```bash
@@ -58,6 +65,12 @@ Step by step, in the order `make e2e` runs them:
 The parity targets mirror these: `parity-harness`, `parity-install`,
 `parity-suite`, `parity-restart`, and `parity-logs`, all in `PARITY_NAMESPACE`. `parity` runs the
 cluster and image targets first, then the three.
+
+`make parity-export PARITY_EXPORT_BUNDLE=<dir>` runs the export-fed profile in
+the same namespace: `parity-export-image`, `parity-export-harness`,
+`parity-export-install`, and `parity-export-suite` after the cluster and image
+targets, and `parity-export-restart` after `e2e-images`.
+`PARITY_EXPORT_RUN=<regexp>` narrows the run to the test functions it matches.
 
 `KIND_CLUSTER`, `E2E_NAMESPACE`, `PARITY_NAMESPACE`, and `E2E_ARTIFACTS`
 override the defaults. `E2E_HELM_ARGS` adds arguments to every chart install, the test stand's included;

@@ -69,6 +69,26 @@ var acceptedDivergences = map[string]AcceptedDivergence{
 	},
 }
 
+// acceptedExportDivergences is keyed by the difference class the
+// specification's export bundle gives a golden of the export-fed profile
+// (TestExportFedAgent): set-type, conversion, tenant, pip-kind, pull-failure.
+// A class is accepted, not a case, because one decision about the conversion
+// explains every golden of the class. Such a golden still runs and passes only
+// when the agent answers exactly as the bundle predicts for it, so an agent that
+// answers a third way still fails.
+//
+// Every entry needs a decision document, as acceptedDivergences does. An
+// answer that allows what the golden denies (grantsMore) is never accepted,
+// whatever its class: a wrong allow is an agent defect until its own decision
+// says otherwise.
+var acceptedExportDivergences = map[string]AcceptedDivergence{
+	"set-type": {
+		Reason: "The agent evaluates the simplified model only: it skips every policy set whose type is not " +
+			"SIMPLIFIED, so a decision that rests on a regular policy set differs from legacy.",
+		Decision: "docs/parity/export-fed-agent-divergences.md",
+	},
+}
+
 func key(id ParityEndpointID, subCase string) string {
 	return fmt.Sprintf("%d|%s", int(id), subCase)
 }

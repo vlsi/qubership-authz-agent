@@ -51,7 +51,7 @@ spec:
               port: http
             periodSeconds: 2
           resources:
-            {{- toYaml $.Values.pipStub.resources | nindent 12 }}
+            {{- toYaml ($instance.resources | default $.Values.pipStub.resources) | nindent 12 }}
           {{- if $instance.config }}
           volumeMounts:
             - name: config

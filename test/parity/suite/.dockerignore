@@ -1,0 +1,3 @@
+# The export bundle of the export-fed profile reaches the image only through
+# the build context export-bundle (see Dockerfile), never from testdata/.
+testdata/export-bundle

@@ -9,6 +9,8 @@ test/tools/opa/opa
 
 # Parity suite: *.observed.json sidecar output from local runs (not evidence)
 *.observed.json
+# Parity suite: an export bundle TestExportFedAgent reads by default when run outside the image
+/test/parity/suite/testdata/export-bundle/
 
 # OPA binary (installed by test/scripts/install-opa.sh)
 /test/tools/opa/opa

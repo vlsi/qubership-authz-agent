@@ -54,8 +54,13 @@ type ParitySuite struct {
 const scopeCacheTTL = 1500 * time.Millisecond
 
 // TestParitySuite is the `go test` entry. Use
-// `go test -tags integration -run ^TestParitySuite$ ./...` to drive it.
+// `go test -tags integration -run ^TestParitySuite$ ./...` to drive it. It
+// skips under the export-fed profile, whose agent pulls from the exports
+// TestExportFedAgent serves and ignores the uploads this suite makes.
 func TestParitySuite(t *testing.T) {
+	if isExportFedProfile(LoadConfig().Profile) {
+		t.Skipf("PARITY_PROFILE=%s runs TestExportFedAgent only", exportFedProfile)
+	}
 	suite.Run(t, new(ParitySuite))
 }
 

@@ -39,6 +39,8 @@ idp:
 # Instances of the pip-stub image, one Deployment and one Service each, keyed
 # by the Service name. `port` is the container and Service port. `config`
 # names a rule file under files/pip-stub/ that the stub loads at start.
+# `resources`, when set, replaces pipStub.resources for that instance, for a
+# stub that holds more than a few routes in memory.
 pipStub:
   imageRepository: ghcr.io/netcracker/pip-stub
   instances: {}

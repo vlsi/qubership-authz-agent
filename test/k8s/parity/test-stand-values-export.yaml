@@ -1,0 +1,57 @@
+# Values of the authz-test-stand chart for the export-fed parity profile
+# (`make parity-export-harness`), layered over test-stand-values.yaml: the
+# parity stand plus export-source, and the suite Job of the profile instead of
+# the parity suite's.
+
+pipStub:
+  instances:
+    # A PIP stub with no rule set that serves the v3 configuration export the
+    # suite mounts. The agent of the profile pulls /access/v3/config/policySets
+    # and /access/v3/config/pips from it (values-export.yaml) instead of from
+    # authz-policy-admin. `make parity-export-harness` configures an empty
+    # export until the suite mounts the first one.
+    export-source:
+      port: 8090
+      # A mounted export of a whole stand is kept in memory.
+      resources:
+        requests:
+          cpu: 50m
+          memory: 64Mi
+          ephemeral-storage: 64Mi
+        limits:
+          memory: 256Mi
+          ephemeral-storage: 128Mi
+
+# TestExportFedAgent against the export bundle the image carries under
+# testdata/export-bundle. Each mounted export waits for a pull, so a whole
+# bundle takes hours; PARITY_EXPORT_RUN narrows it to the test functions it
+# matches.
+suite:
+  name: parity-export
+  # The suite image with the bundle, from `make parity-export-image`; the
+  # parity suite's own image carries none.
+  imageRepository: local/authz-parity-suite-export
+  args:
+    - ./parity.test
+    - -test.v
+    - -test.timeout
+    - 28000s
+    - -test.run
+    - ^TestExportFedAgent$
+  activeDeadlineSeconds: 28800
+  env:
+    PARITY_PROFILE: authz-agent-export
+    PARITY_EXPORT_SOURCE_CONTROL_URL: http://export-source:8090
+    # A Go regexp over the test functions of the bundle; empty runs every one.
+    # `make parity-export-harness` and `make parity-export-suite` set it from
+    # PARITY_EXPORT_RUN.
+    PARITY_EXPORT_RUN: ''
+  # elements.json of a whole bundle is decoded into memory once.
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+      ephemeral-storage: 64Mi
+    limits:
+      memory: 1Gi
+      ephemeral-storage: 256Mi

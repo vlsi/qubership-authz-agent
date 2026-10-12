@@ -84,8 +84,9 @@ type Config struct {
 	// D-L (always "PARITY" in Step 3).
 	DomainName string
 
-	// Profile is the active PARITY_PROFILE. The only supported value is
-	// "authz-agent" (golden collection cannot run from this repository).
+	// Profile is the active PARITY_PROFILE: "authz-agent", or
+	// "authz-agent-export" for the export-fed agent of TestExportFedAgent
+	// (golden collection cannot run from this repository).
 	Profile string
 
 	// Tenants describes the two-tenant stand the tenant-scoped cases need. The
@@ -189,7 +190,7 @@ func isAuthzAgentProfile(profile string) bool {
 
 func defaultACBaseURL(profile string) string {
 	portKey, fallback := "PARITY_AC_PORT", "28090"
-	if isAuthzAgentProfile(profile) {
+	if isAuthzAgentProfile(profile) || isExportFedProfile(profile) {
 		portKey, fallback = "PARITY_AUTHZ_PORT", "28100"
 	}
 	return "http://localhost:" + envOr(portKey, fallback)
@@ -197,7 +198,7 @@ func defaultACBaseURL(profile string) string {
 
 func defaultIDPBaseURL(profile string) string {
 	portKey, fallback := "PARITY_IDP_PORT", "25557"
-	if isAuthzAgentProfile(profile) {
+	if isAuthzAgentProfile(profile) || isExportFedProfile(profile) {
 		portKey, fallback = "PARITY_AUTHZ_IDP_PORT", "25558"
 	}
 	return "http://localhost:" + envOr(portKey, fallback) + "/auth/realms/parity"

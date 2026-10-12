@@ -190,6 +190,28 @@ func (tf *TokenFactory) passwordGrantVia(client ClientCredentials, username stri
 	return tf.tokenRequest(form)
 }
 
+// TokenRequestError is the answer of the token endpoint to a request it did
+// not grant: the HTTP status and the body, which carries the OAuth error code.
+type TokenRequestError struct {
+	Status int
+	Body   string
+}
+
+func (e *TokenRequestError) Error() string {
+	return fmt.Sprintf("token request failed: status=%d body=%s", e.Status, e.Body)
+}
+
+// InvalidGrant reports whether the endpoint refused the grant itself, as it
+// does for a user the realm does not have or a wrong password, rather than the
+// client or the request.
+func (e *TokenRequestError) InvalidGrant() bool {
+	var body struct {
+		Error string `json:"error"`
+	}
+	return (e.Status == http.StatusBadRequest || e.Status == http.StatusUnauthorized) &&
+		json.Unmarshal([]byte(e.Body), &body) == nil && body.Error == "invalid_grant"
+}
+
 func (tf *TokenFactory) tokenRequest(form url.Values) (tokenEntry, error) {
 	endpoint := strings.TrimRight(tf.cfg.IDPBaseURL, "/") + "/protocol/openid-connect/token"
 	req, err := http.NewRequest(http.MethodPost, endpoint, strings.NewReader(form.Encode()))
@@ -206,7 +228,7 @@ func (tf *TokenFactory) tokenRequest(form url.Values) (tokenEntry, error) {
 
 	body, _ := io.ReadAll(resp.Body)
 	if resp.StatusCode != http.StatusOK {
-		return tokenEntry{}, fmt.Errorf("token request failed: status=%d body=%s", resp.StatusCode, string(body))
+		return tokenEntry{}, &TokenRequestError{Status: resp.StatusCode, Body: string(body)}
 	}
 
 	var payload struct {
