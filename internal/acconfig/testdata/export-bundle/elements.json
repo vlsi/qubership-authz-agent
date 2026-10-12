@@ -1,0 +1,5 @@
+{"set":{"type":"SIMPLIFIED","domain":"PARITY_D","tenantId":"default","target":"resourceType == 'PARITY_T'","policies":[{"target":"operation == 'READ'","rules":[{"effect":"ALLOW","condition":"true","target":"subject.roles CONTAINS ANY 'ROLE_R'"}]}]},
+ "bad":{"type":"SIMPLIFIED","target":"true","policies":[{"target":"operation == 'READ'","rules":[{"effect":"ALLOW","condition":true,"target":"subject.roles CONTAINS ANY 'ROLE_R'"}]}]},
+ "refused":{"type":"SIMPLIFIED","domain":"PARITY_D","target":"resourceType == 'PARITY_U'","policies":[{"target":"operation == 'READ'","rules":[{"effect":"ALLOW","condition":"true < 'v'","target":"subject.roles CONTAINS ANY 'ROLE_R'"}]}]},
+ "pol":{"component":"PARITY_D","resourceType":"PARITY_T","operation":"READ","condition":"true","rsqlPredicate":"","sqlPredicate":"","mongodbPredicate":"","querydslPredicate":"","roles":["ROLE_R"]},
+ "polwrong":{"component":"PARITY_D","resourceType":"PARITY_T","operation":"LIST","condition":"true","rsqlPredicate":"","sqlPredicate":"","mongodbPredicate":"","querydslPredicate":"","roles":["ROLE_R"]}}
