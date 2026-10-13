@@ -1,0 +1,861 @@
+{
+ "about": "tasks/09 phase 1: one candidate answer of User Management read through conditions over the subject. Needs a stand whose INTERNAL_APIGATEWAY_URL points at user-management-mock.",
+ "resourceTypePrefix": "PARITY_SUITE_",
+ "standVersion": true,
+ "cases": [
+  {
+   "id": "r63ob-should-control-first",
+   "about": "Control: a DENY rule over a resource attribute that does not hold. True unless the stand answers every check with 400.",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "PERMIT_UNLESS_DENY",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "PERMIT_UNLESS_DENY",
+       "rules": [
+        {
+         "key": "deny",
+         "target": "true",
+         "condition": "resource.c == 'zz'",
+         "effect": "DENY"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "name": "read",
+     "resource": {
+      "id": "r33",
+      "c": "n"
+     }
+    }
+   ]
+  },
+  {
+   "id": "r63ob-check-token",
+   "about": "The only set that allows VIEW_AS_ANOTHER_USER reads the caller's department through a TOKEN PIP (LI-10): the reader passes when the check reads the caller's token, and gets false when the check reads TOKEN as empty, as the decision for the user does.",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "anyone",
+       "target": "true",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "read",
+         "target": "operation == 'READ'",
+         "condition": "true",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "key": "authorize",
+     "target": "resourceType == 'OnBehalfOfUserAuthorization'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "view-as",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "view",
+         "target": "operation == 'VIEW_AS_ANOTHER_USER'",
+         "condition": "subject.parityOnBehalfDepartment == 'finance'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "name": "read-as-a-user",
+     "resource": {
+      "id": "r63"
+     },
+     "userManagementCalls": true,
+     "userId": "00000000-0000-0000-0000-000000006303",
+     "userManagement": {
+      "*": {
+       "statusCode": 200,
+       "body": {
+        "id": "parity-um-id",
+        "username": "parity-um-username",
+        "name": "parity-um-name",
+        "login": "parity-um-login",
+        "roles": [
+         "ROLE_PARITY_UM_ROLES"
+        ],
+        "realmRoles": [
+         "ROLE_PARITY_UM_REALM_ROLES"
+        ],
+        "type": "PARITY_UM_TYPE",
+        "scopes": [
+         "parity-um-scope"
+        ],
+        "department": "parity-um-department"
+       }
+      }
+     }
+    }
+   ],
+   "pips": [
+    "department"
+   ]
+  },
+  {
+   "id": "r63ob-subject",
+   "about": "The stub answers with one user whose members all differ; each request asks one condition over the subject, under its own resource type (a request's type takes no placeholder): which member becomes subject.id, name, roles and type, which claims a TOKEN PIP reads and which scopes the user has.",
+   "sets": [
+    {
+     "key": "probe-id",
+     "target": "resourceType == '{{resourceType}}_ID'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "anyone-id",
+       "target": "true",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "read-id",
+         "target": "operation == 'READ'",
+         "condition": "subject.id == 'parity-um-id'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "key": "probe-id-requested",
+     "target": "resourceType == '{{resourceType}}_ID_REQUESTED'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "anyone-id-requested",
+       "target": "true",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "read-id-requested",
+         "target": "operation == 'READ'",
+         "condition": "subject.id == '00000000-0000-0000-0000-000000006302'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "key": "probe-name-username",
+     "target": "resourceType == '{{resourceType}}_NAME_USERNAME'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "anyone-name-username",
+       "target": "true",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "read-name-username",
+         "target": "operation == 'READ'",
+         "condition": "subject.name == 'parity-um-username'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "key": "probe-name-name",
+     "target": "resourceType == '{{resourceType}}_NAME_NAME'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "anyone-name-name",
+       "target": "true",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "read-name-name",
+         "target": "operation == 'READ'",
+         "condition": "subject.name == 'parity-um-name'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "key": "probe-name-login",
+     "target": "resourceType == '{{resourceType}}_NAME_LOGIN'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "anyone-name-login",
+       "target": "true",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "read-name-login",
+         "target": "operation == 'READ'",
+         "condition": "subject.name == 'parity-um-login'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "key": "probe-roles",
+     "target": "resourceType == '{{resourceType}}_ROLES'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "anyone-roles",
+       "target": "true",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "read-roles",
+         "target": "operation == 'READ'",
+         "condition": "subject.roles CONTAINS 'ROLE_PARITY_UM_ROLES'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "key": "probe-realm-roles",
+     "target": "resourceType == '{{resourceType}}_REALM_ROLES'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "anyone-realm-roles",
+       "target": "true",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "read-realm-roles",
+         "target": "operation == 'READ'",
+         "condition": "subject.roles CONTAINS 'ROLE_PARITY_UM_REALM_ROLES'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "key": "probe-type-user",
+     "target": "resourceType == '{{resourceType}}_TYPE_USER'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "anyone-type-user",
+       "target": "true",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "read-type-user",
+         "target": "operation == 'READ'",
+         "condition": "subject.type == 'USER'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "key": "probe-type-body",
+     "target": "resourceType == '{{resourceType}}_TYPE_BODY'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "anyone-type-body",
+       "target": "true",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "read-type-body",
+         "target": "operation == 'READ'",
+         "condition": "subject.type == 'PARITY_UM_TYPE'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "key": "probe-claim-caller",
+     "target": "resourceType == '{{resourceType}}_CLAIM_CALLER'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "anyone-claim-caller",
+       "target": "true",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "read-claim-caller",
+         "target": "operation == 'READ'",
+         "condition": "subject.parityOnBehalfDepartment == 'finance'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "key": "probe-claim-body",
+     "target": "resourceType == '{{resourceType}}_CLAIM_BODY'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "anyone-claim-body",
+       "target": "true",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "read-claim-body",
+         "target": "operation == 'READ'",
+         "condition": "subject.parityOnBehalfDepartment == 'parity-um-department'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "key": "probe-scopes-caller",
+     "target": "resourceType == '{{resourceType}}_SCOPES_CALLER'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "anyone-scopes-caller",
+       "target": "true",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "read-scopes-caller",
+         "target": "operation == 'READ'",
+         "condition": "subject.scopes CONTAINS 'openid'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "key": "probe-scopes-body",
+     "target": "resourceType == '{{resourceType}}_SCOPES_BODY'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "anyone-scopes-body",
+       "target": "true",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "read-scopes-body",
+         "target": "operation == 'READ'",
+         "condition": "subject.scopes CONTAINS 'parity-um-scope'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "key": "authorize",
+     "target": "resourceType == 'OnBehalfOfUserAuthorization'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "view-as",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER' OR subject.roles CONTAINS 'ROLE_M2M'",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "view",
+         "target": "operation == 'VIEW_AS_ANOTHER_USER'",
+         "condition": "true",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "name": "read-id",
+     "resource": {
+      "id": "r63"
+     },
+     "userManagementCalls": true,
+     "userId": "00000000-0000-0000-0000-000000006302",
+     "userManagement": {
+      "*": {
+       "statusCode": 200,
+       "body": {
+        "id": "parity-um-id",
+        "username": "parity-um-username",
+        "name": "parity-um-name",
+        "login": "parity-um-login",
+        "roles": [
+         "ROLE_PARITY_UM_ROLES"
+        ],
+        "realmRoles": [
+         "ROLE_PARITY_UM_REALM_ROLES"
+        ],
+        "type": "PARITY_UM_TYPE",
+        "scopes": [
+         "parity-um-scope"
+        ],
+        "department": "parity-um-department"
+       }
+      }
+     },
+     "type": "PARITY_SUITE_R63OB_SUBJECT_ID"
+    },
+    {
+     "name": "read-id-requested",
+     "resource": {
+      "id": "r63"
+     },
+     "userManagementCalls": true,
+     "userId": "00000000-0000-0000-0000-000000006302",
+     "userManagement": {
+      "*": {
+       "statusCode": 200,
+       "body": {
+        "id": "parity-um-id",
+        "username": "parity-um-username",
+        "name": "parity-um-name",
+        "login": "parity-um-login",
+        "roles": [
+         "ROLE_PARITY_UM_ROLES"
+        ],
+        "realmRoles": [
+         "ROLE_PARITY_UM_REALM_ROLES"
+        ],
+        "type": "PARITY_UM_TYPE",
+        "scopes": [
+         "parity-um-scope"
+        ],
+        "department": "parity-um-department"
+       }
+      }
+     },
+     "type": "PARITY_SUITE_R63OB_SUBJECT_ID_REQUESTED"
+    },
+    {
+     "name": "read-name-username",
+     "resource": {
+      "id": "r63"
+     },
+     "userManagementCalls": true,
+     "userId": "00000000-0000-0000-0000-000000006302",
+     "userManagement": {
+      "*": {
+       "statusCode": 200,
+       "body": {
+        "id": "parity-um-id",
+        "username": "parity-um-username",
+        "name": "parity-um-name",
+        "login": "parity-um-login",
+        "roles": [
+         "ROLE_PARITY_UM_ROLES"
+        ],
+        "realmRoles": [
+         "ROLE_PARITY_UM_REALM_ROLES"
+        ],
+        "type": "PARITY_UM_TYPE",
+        "scopes": [
+         "parity-um-scope"
+        ],
+        "department": "parity-um-department"
+       }
+      }
+     },
+     "type": "PARITY_SUITE_R63OB_SUBJECT_NAME_USERNAME"
+    },
+    {
+     "name": "read-name-name",
+     "resource": {
+      "id": "r63"
+     },
+     "userManagementCalls": true,
+     "userId": "00000000-0000-0000-0000-000000006302",
+     "userManagement": {
+      "*": {
+       "statusCode": 200,
+       "body": {
+        "id": "parity-um-id",
+        "username": "parity-um-username",
+        "name": "parity-um-name",
+        "login": "parity-um-login",
+        "roles": [
+         "ROLE_PARITY_UM_ROLES"
+        ],
+        "realmRoles": [
+         "ROLE_PARITY_UM_REALM_ROLES"
+        ],
+        "type": "PARITY_UM_TYPE",
+        "scopes": [
+         "parity-um-scope"
+        ],
+        "department": "parity-um-department"
+       }
+      }
+     },
+     "type": "PARITY_SUITE_R63OB_SUBJECT_NAME_NAME"
+    },
+    {
+     "name": "read-name-login",
+     "resource": {
+      "id": "r63"
+     },
+     "userManagementCalls": true,
+     "userId": "00000000-0000-0000-0000-000000006302",
+     "userManagement": {
+      "*": {
+       "statusCode": 200,
+       "body": {
+        "id": "parity-um-id",
+        "username": "parity-um-username",
+        "name": "parity-um-name",
+        "login": "parity-um-login",
+        "roles": [
+         "ROLE_PARITY_UM_ROLES"
+        ],
+        "realmRoles": [
+         "ROLE_PARITY_UM_REALM_ROLES"
+        ],
+        "type": "PARITY_UM_TYPE",
+        "scopes": [
+         "parity-um-scope"
+        ],
+        "department": "parity-um-department"
+       }
+      }
+     },
+     "type": "PARITY_SUITE_R63OB_SUBJECT_NAME_LOGIN"
+    },
+    {
+     "name": "read-roles",
+     "resource": {
+      "id": "r63"
+     },
+     "userManagementCalls": true,
+     "userId": "00000000-0000-0000-0000-000000006302",
+     "userManagement": {
+      "*": {
+       "statusCode": 200,
+       "body": {
+        "id": "parity-um-id",
+        "username": "parity-um-username",
+        "name": "parity-um-name",
+        "login": "parity-um-login",
+        "roles": [
+         "ROLE_PARITY_UM_ROLES"
+        ],
+        "realmRoles": [
+         "ROLE_PARITY_UM_REALM_ROLES"
+        ],
+        "type": "PARITY_UM_TYPE",
+        "scopes": [
+         "parity-um-scope"
+        ],
+        "department": "parity-um-department"
+       }
+      }
+     },
+     "type": "PARITY_SUITE_R63OB_SUBJECT_ROLES"
+    },
+    {
+     "name": "read-realm-roles",
+     "resource": {
+      "id": "r63"
+     },
+     "userManagementCalls": true,
+     "userId": "00000000-0000-0000-0000-000000006302",
+     "userManagement": {
+      "*": {
+       "statusCode": 200,
+       "body": {
+        "id": "parity-um-id",
+        "username": "parity-um-username",
+        "name": "parity-um-name",
+        "login": "parity-um-login",
+        "roles": [
+         "ROLE_PARITY_UM_ROLES"
+        ],
+        "realmRoles": [
+         "ROLE_PARITY_UM_REALM_ROLES"
+        ],
+        "type": "PARITY_UM_TYPE",
+        "scopes": [
+         "parity-um-scope"
+        ],
+        "department": "parity-um-department"
+       }
+      }
+     },
+     "type": "PARITY_SUITE_R63OB_SUBJECT_REALM_ROLES"
+    },
+    {
+     "name": "read-type-user",
+     "resource": {
+      "id": "r63"
+     },
+     "userManagementCalls": true,
+     "userId": "00000000-0000-0000-0000-000000006302",
+     "userManagement": {
+      "*": {
+       "statusCode": 200,
+       "body": {
+        "id": "parity-um-id",
+        "username": "parity-um-username",
+        "name": "parity-um-name",
+        "login": "parity-um-login",
+        "roles": [
+         "ROLE_PARITY_UM_ROLES"
+        ],
+        "realmRoles": [
+         "ROLE_PARITY_UM_REALM_ROLES"
+        ],
+        "type": "PARITY_UM_TYPE",
+        "scopes": [
+         "parity-um-scope"
+        ],
+        "department": "parity-um-department"
+       }
+      }
+     },
+     "type": "PARITY_SUITE_R63OB_SUBJECT_TYPE_USER"
+    },
+    {
+     "name": "read-type-body",
+     "resource": {
+      "id": "r63"
+     },
+     "userManagementCalls": true,
+     "userId": "00000000-0000-0000-0000-000000006302",
+     "userManagement": {
+      "*": {
+       "statusCode": 200,
+       "body": {
+        "id": "parity-um-id",
+        "username": "parity-um-username",
+        "name": "parity-um-name",
+        "login": "parity-um-login",
+        "roles": [
+         "ROLE_PARITY_UM_ROLES"
+        ],
+        "realmRoles": [
+         "ROLE_PARITY_UM_REALM_ROLES"
+        ],
+        "type": "PARITY_UM_TYPE",
+        "scopes": [
+         "parity-um-scope"
+        ],
+        "department": "parity-um-department"
+       }
+      }
+     },
+     "type": "PARITY_SUITE_R63OB_SUBJECT_TYPE_BODY"
+    },
+    {
+     "name": "read-claim-caller",
+     "resource": {
+      "id": "r63"
+     },
+     "userManagementCalls": true,
+     "userId": "00000000-0000-0000-0000-000000006302",
+     "userManagement": {
+      "*": {
+       "statusCode": 200,
+       "body": {
+        "id": "parity-um-id",
+        "username": "parity-um-username",
+        "name": "parity-um-name",
+        "login": "parity-um-login",
+        "roles": [
+         "ROLE_PARITY_UM_ROLES"
+        ],
+        "realmRoles": [
+         "ROLE_PARITY_UM_REALM_ROLES"
+        ],
+        "type": "PARITY_UM_TYPE",
+        "scopes": [
+         "parity-um-scope"
+        ],
+        "department": "parity-um-department"
+       }
+      }
+     },
+     "type": "PARITY_SUITE_R63OB_SUBJECT_CLAIM_CALLER"
+    },
+    {
+     "name": "read-claim-body",
+     "resource": {
+      "id": "r63"
+     },
+     "userManagementCalls": true,
+     "userId": "00000000-0000-0000-0000-000000006302",
+     "userManagement": {
+      "*": {
+       "statusCode": 200,
+       "body": {
+        "id": "parity-um-id",
+        "username": "parity-um-username",
+        "name": "parity-um-name",
+        "login": "parity-um-login",
+        "roles": [
+         "ROLE_PARITY_UM_ROLES"
+        ],
+        "realmRoles": [
+         "ROLE_PARITY_UM_REALM_ROLES"
+        ],
+        "type": "PARITY_UM_TYPE",
+        "scopes": [
+         "parity-um-scope"
+        ],
+        "department": "parity-um-department"
+       }
+      }
+     },
+     "type": "PARITY_SUITE_R63OB_SUBJECT_CLAIM_BODY"
+    },
+    {
+     "name": "read-scopes-caller",
+     "resource": {
+      "id": "r63"
+     },
+     "userManagementCalls": true,
+     "userId": "00000000-0000-0000-0000-000000006302",
+     "userManagement": {
+      "*": {
+       "statusCode": 200,
+       "body": {
+        "id": "parity-um-id",
+        "username": "parity-um-username",
+        "name": "parity-um-name",
+        "login": "parity-um-login",
+        "roles": [
+         "ROLE_PARITY_UM_ROLES"
+        ],
+        "realmRoles": [
+         "ROLE_PARITY_UM_REALM_ROLES"
+        ],
+        "type": "PARITY_UM_TYPE",
+        "scopes": [
+         "parity-um-scope"
+        ],
+        "department": "parity-um-department"
+       }
+      }
+     },
+     "type": "PARITY_SUITE_R63OB_SUBJECT_SCOPES_CALLER"
+    },
+    {
+     "name": "read-scopes-body",
+     "resource": {
+      "id": "r63"
+     },
+     "userManagementCalls": true,
+     "userId": "00000000-0000-0000-0000-000000006302",
+     "userManagement": {
+      "*": {
+       "statusCode": 200,
+       "body": {
+        "id": "parity-um-id",
+        "username": "parity-um-username",
+        "name": "parity-um-name",
+        "login": "parity-um-login",
+        "roles": [
+         "ROLE_PARITY_UM_ROLES"
+        ],
+        "realmRoles": [
+         "ROLE_PARITY_UM_REALM_ROLES"
+        ],
+        "type": "PARITY_UM_TYPE",
+        "scopes": [
+         "parity-um-scope"
+        ],
+        "department": "parity-um-department"
+       }
+      }
+     },
+     "type": "PARITY_SUITE_R63OB_SUBJECT_SCOPES_BODY"
+    }
+   ],
+   "pips": [
+    "department"
+   ]
+  },
+  {
+   "id": "r63ob-should-control-last",
+   "about": "Control: a DENY rule over a resource attribute that does not hold. True unless the stand answers every check with 400.",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "PERMIT_UNLESS_DENY",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "PERMIT_UNLESS_DENY",
+       "rules": [
+        {
+         "key": "deny",
+         "target": "true",
+         "condition": "resource.c == 'zz'",
+         "effect": "DENY"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "name": "read",
+     "resource": {
+      "id": "r33",
+      "c": "n"
+     }
+    }
+   ]
+  }
+ ],
+ "pips": {
+  "department": {
+   "name": "subject.parityOnBehalfDepartment",
+   "type": "UUID",
+   "pipType": "TOKEN",
+   "claim": "department",
+   "cacheable": false
+  }
+ }
+}

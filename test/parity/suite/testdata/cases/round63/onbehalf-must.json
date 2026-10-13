@@ -1,0 +1,982 @@
+{
+ "about": "tasks/09 phase 1: the call access-control makes to User Management for a request with userId (method, path, query, headers, body), recorded by the stub user-management-mock, and the answer to an unrouted path, failing statuses and answers that are no user. Needs a stand whose INTERNAL_APIGATEWAY_URL points at user-management-mock.",
+ "resourceTypePrefix": "PARITY_SUITE_",
+ "standVersion": true,
+ "cases": [
+  {
+   "id": "r63ob-must-control-first",
+   "about": "Control: a DENY rule over a resource attribute that does not hold. True unless the stand answers every check with 400.",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "PERMIT_UNLESS_DENY",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "PERMIT_UNLESS_DENY",
+       "rules": [
+        {
+         "key": "deny",
+         "target": "true",
+         "condition": "resource.c == 'zz'",
+         "effect": "DENY"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "name": "read",
+     "resource": {
+      "id": "r33",
+      "c": "n"
+     }
+    }
+   ]
+  },
+  {
+   "id": "r63ob-unrouted",
+   "about": "The first request with userId of the function, before anything pins the default route of the stub: what access-control sends to User Management, and what it answers when the stub has no route (404). Round 29 recorded 404 on a stand without the API.",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "anyone",
+       "target": "true",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "read",
+         "target": "operation == 'READ'",
+         "condition": "true",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "key": "authorize",
+     "target": "resourceType == 'OnBehalfOfUserAuthorization'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "view-as",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER' OR subject.roles CONTAINS 'ROLE_M2M'",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "view",
+         "target": "operation == 'VIEW_AS_ANOTHER_USER'",
+         "condition": "true",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "name": "read-as-a-user",
+     "resource": {
+      "id": "r63"
+     },
+     "userManagementCalls": true,
+     "userId": "00000000-0000-0000-0000-000000006304"
+    }
+   ]
+  },
+  {
+   "id": "r63ob-call",
+   "about": "The stub answers every path with a user. The call of a reader, of the M2M client and of a filter on behalf of a user, and a request without userId, which should make no call. The resource set allows READ to anyone, so true means the lookup succeeded.",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "anyone",
+       "target": "true",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "read",
+         "target": "operation == 'READ'",
+         "condition": "true",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "key": "authorize",
+     "target": "resourceType == 'OnBehalfOfUserAuthorization'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "view-as",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER' OR subject.roles CONTAINS 'ROLE_M2M'",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "view",
+         "target": "operation == 'VIEW_AS_ANOTHER_USER'",
+         "condition": "true",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "name": "read-as-a-user",
+     "resource": {
+      "id": "r63"
+     },
+     "userManagementCalls": true,
+     "userId": "00000000-0000-0000-0000-000000006305",
+     "userManagement": {
+      "*": {
+       "statusCode": 200,
+       "body": {
+        "id": "parity-um-id",
+        "username": "parity-um-username",
+        "name": "parity-um-name",
+        "login": "parity-um-login",
+        "roles": [
+         "ROLE_PARITY_UM_ROLES"
+        ],
+        "realmRoles": [
+         "ROLE_PARITY_UM_REALM_ROLES"
+        ],
+        "type": "PARITY_UM_TYPE",
+        "scopes": [
+         "parity-um-scope"
+        ],
+        "department": "parity-um-department"
+       }
+      }
+     }
+    },
+    {
+     "name": "m2m-read-as-a-user",
+     "resource": {
+      "id": "r63"
+     },
+     "userManagementCalls": true,
+     "userId": "00000000-0000-0000-0000-000000006306",
+     "userManagement": {
+      "*": {
+       "statusCode": 200,
+       "body": {
+        "id": "parity-um-id",
+        "username": "parity-um-username",
+        "name": "parity-um-name",
+        "login": "parity-um-login",
+        "roles": [
+         "ROLE_PARITY_UM_ROLES"
+        ],
+        "realmRoles": [
+         "ROLE_PARITY_UM_REALM_ROLES"
+        ],
+        "type": "PARITY_UM_TYPE",
+        "scopes": [
+         "parity-um-scope"
+        ],
+        "department": "parity-um-department"
+       }
+      }
+     },
+     "subject": "m2m"
+    },
+    {
+     "name": "read-without-a-user-id",
+     "resource": {
+      "id": "r63"
+     },
+     "userManagementCalls": true,
+     "userManagement": {
+      "*": {
+       "statusCode": 200,
+       "body": {
+        "id": "parity-um-id",
+        "username": "parity-um-username",
+        "name": "parity-um-name",
+        "login": "parity-um-login",
+        "roles": [
+         "ROLE_PARITY_UM_ROLES"
+        ],
+        "realmRoles": [
+         "ROLE_PARITY_UM_REALM_ROLES"
+        ],
+        "type": "PARITY_UM_TYPE",
+        "scopes": [
+         "parity-um-scope"
+        ],
+        "department": "parity-um-department"
+       }
+      }
+     }
+    },
+    {
+     "name": "filter-as-a-user",
+     "userManagementCalls": true,
+     "userId": "00000000-0000-0000-0000-000000006307",
+     "userManagement": {
+      "*": {
+       "statusCode": 200,
+       "body": {
+        "id": "parity-um-id",
+        "username": "parity-um-username",
+        "name": "parity-um-name",
+        "login": "parity-um-login",
+        "roles": [
+         "ROLE_PARITY_UM_ROLES"
+        ],
+        "realmRoles": [
+         "ROLE_PARITY_UM_REALM_ROLES"
+        ],
+        "type": "PARITY_UM_TYPE",
+        "scopes": [
+         "parity-um-scope"
+        ],
+        "department": "parity-um-department"
+       }
+      }
+     },
+     "filter": true,
+     "operation": "READ"
+    }
+   ]
+  },
+  {
+   "id": "r63ob-encoding",
+   "about": "userId values with a character a URL path reserves (LI-26): how the call writes each in its path or query, and what the request answers when the call cannot be made.",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "anyone",
+       "target": "true",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "read",
+         "target": "operation == 'READ'",
+         "condition": "true",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "key": "authorize",
+     "target": "resourceType == 'OnBehalfOfUserAuthorization'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "view-as",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER' OR subject.roles CONTAINS 'ROLE_M2M'",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "view",
+         "target": "operation == 'VIEW_AS_ANOTHER_USER'",
+         "condition": "true",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "name": "read-as-space",
+     "resource": {
+      "id": "r63"
+     },
+     "userManagementCalls": true,
+     "userId": "parity 63",
+     "userManagement": {
+      "*": {
+       "statusCode": 200,
+       "body": {
+        "id": "parity-um-id",
+        "username": "parity-um-username",
+        "name": "parity-um-name",
+        "login": "parity-um-login",
+        "roles": [
+         "ROLE_PARITY_UM_ROLES"
+        ],
+        "realmRoles": [
+         "ROLE_PARITY_UM_REALM_ROLES"
+        ],
+        "type": "PARITY_UM_TYPE",
+        "scopes": [
+         "parity-um-scope"
+        ],
+        "department": "parity-um-department"
+       }
+      }
+     }
+    },
+    {
+     "name": "read-as-slash",
+     "resource": {
+      "id": "r63"
+     },
+     "userManagementCalls": true,
+     "userId": "parity/63",
+     "userManagement": {
+      "*": {
+       "statusCode": 200,
+       "body": {
+        "id": "parity-um-id",
+        "username": "parity-um-username",
+        "name": "parity-um-name",
+        "login": "parity-um-login",
+        "roles": [
+         "ROLE_PARITY_UM_ROLES"
+        ],
+        "realmRoles": [
+         "ROLE_PARITY_UM_REALM_ROLES"
+        ],
+        "type": "PARITY_UM_TYPE",
+        "scopes": [
+         "parity-um-scope"
+        ],
+        "department": "parity-um-department"
+       }
+      }
+     }
+    },
+    {
+     "name": "read-as-hash",
+     "resource": {
+      "id": "r63"
+     },
+     "userManagementCalls": true,
+     "userId": "parity#63",
+     "userManagement": {
+      "*": {
+       "statusCode": 200,
+       "body": {
+        "id": "parity-um-id",
+        "username": "parity-um-username",
+        "name": "parity-um-name",
+        "login": "parity-um-login",
+        "roles": [
+         "ROLE_PARITY_UM_ROLES"
+        ],
+        "realmRoles": [
+         "ROLE_PARITY_UM_REALM_ROLES"
+        ],
+        "type": "PARITY_UM_TYPE",
+        "scopes": [
+         "parity-um-scope"
+        ],
+        "department": "parity-um-department"
+       }
+      }
+     }
+    },
+    {
+     "name": "read-as-question-mark",
+     "resource": {
+      "id": "r63"
+     },
+     "userManagementCalls": true,
+     "userId": "parity?63",
+     "userManagement": {
+      "*": {
+       "statusCode": 200,
+       "body": {
+        "id": "parity-um-id",
+        "username": "parity-um-username",
+        "name": "parity-um-name",
+        "login": "parity-um-login",
+        "roles": [
+         "ROLE_PARITY_UM_ROLES"
+        ],
+        "realmRoles": [
+         "ROLE_PARITY_UM_REALM_ROLES"
+        ],
+        "type": "PARITY_UM_TYPE",
+        "scopes": [
+         "parity-um-scope"
+        ],
+        "department": "parity-um-department"
+       }
+      }
+     }
+    },
+    {
+     "name": "read-as-percent",
+     "resource": {
+      "id": "r63"
+     },
+     "userManagementCalls": true,
+     "userId": "parity%zz63",
+     "userManagement": {
+      "*": {
+       "statusCode": 200,
+       "body": {
+        "id": "parity-um-id",
+        "username": "parity-um-username",
+        "name": "parity-um-name",
+        "login": "parity-um-login",
+        "roles": [
+         "ROLE_PARITY_UM_ROLES"
+        ],
+        "realmRoles": [
+         "ROLE_PARITY_UM_REALM_ROLES"
+        ],
+        "type": "PARITY_UM_TYPE",
+        "scopes": [
+         "parity-um-scope"
+        ],
+        "department": "parity-um-department"
+       }
+      }
+     }
+    },
+    {
+     "name": "read-as-plus",
+     "resource": {
+      "id": "r63"
+     },
+     "userManagementCalls": true,
+     "userId": "parity+63",
+     "userManagement": {
+      "*": {
+       "statusCode": 200,
+       "body": {
+        "id": "parity-um-id",
+        "username": "parity-um-username",
+        "name": "parity-um-name",
+        "login": "parity-um-login",
+        "roles": [
+         "ROLE_PARITY_UM_ROLES"
+        ],
+        "realmRoles": [
+         "ROLE_PARITY_UM_REALM_ROLES"
+        ],
+        "type": "PARITY_UM_TYPE",
+        "scopes": [
+         "parity-um-scope"
+        ],
+        "department": "parity-um-department"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "r63ob-failures",
+   "about": "The stub answers with a failing status: what the request answers for 404 with a JSON body, 403, 500 and 503.",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "anyone",
+       "target": "true",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "read",
+         "target": "operation == 'READ'",
+         "condition": "true",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "key": "authorize",
+     "target": "resourceType == 'OnBehalfOfUserAuthorization'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "view-as",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER' OR subject.roles CONTAINS 'ROLE_M2M'",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "view",
+         "target": "operation == 'VIEW_AS_ANOTHER_USER'",
+         "condition": "true",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "name": "read-when-user-management-answers-404",
+     "resource": {
+      "id": "r63"
+     },
+     "userManagementCalls": true,
+     "userId": "00000000-0000-0000-0000-000000006308",
+     "userManagement": {
+      "*": {
+       "statusCode": 404,
+       "body": {
+        "error": "parity"
+       }
+      }
+     }
+    },
+    {
+     "name": "read-when-user-management-answers-403",
+     "resource": {
+      "id": "r63"
+     },
+     "userManagementCalls": true,
+     "userId": "00000000-0000-0000-0000-000000006309",
+     "userManagement": {
+      "*": {
+       "statusCode": 403,
+       "body": {
+        "error": "parity"
+       }
+      }
+     }
+    },
+    {
+     "name": "read-when-user-management-answers-500",
+     "resource": {
+      "id": "r63"
+     },
+     "userManagementCalls": true,
+     "userId": "00000000-0000-0000-0000-000000006310",
+     "userManagement": {
+      "*": {
+       "statusCode": 500,
+       "body": {
+        "error": "parity"
+       }
+      }
+     }
+    },
+    {
+     "name": "read-when-user-management-answers-503",
+     "resource": {
+      "id": "r63"
+     },
+     "userManagementCalls": true,
+     "userId": "00000000-0000-0000-0000-000000006311",
+     "userManagement": {
+      "*": {
+       "statusCode": 503,
+       "body": {
+        "error": "parity"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "r63ob-bodies",
+   "about": "The stub answers 200 with something that is no user: null, an empty list, a string, an empty object, and text that is no JSON.",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "anyone",
+       "target": "true",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "read",
+         "target": "operation == 'READ'",
+         "condition": "true",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "key": "authorize",
+     "target": "resourceType == 'OnBehalfOfUserAuthorization'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "view-as",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER' OR subject.roles CONTAINS 'ROLE_M2M'",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "view",
+         "target": "operation == 'VIEW_AS_ANOTHER_USER'",
+         "condition": "true",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "name": "read-when-the-user-is-null",
+     "resource": {
+      "id": "r63"
+     },
+     "userManagementCalls": true,
+     "userId": "00000000-0000-0000-0000-000000006312",
+     "userManagement": {
+      "*": {
+       "statusCode": 200,
+       "body": null
+      }
+     }
+    },
+    {
+     "name": "read-when-the-user-is-a-list",
+     "resource": {
+      "id": "r63"
+     },
+     "userManagementCalls": true,
+     "userId": "00000000-0000-0000-0000-000000006313",
+     "userManagement": {
+      "*": {
+       "statusCode": 200,
+       "body": []
+      }
+     }
+    },
+    {
+     "name": "read-when-the-user-is-a-string",
+     "resource": {
+      "id": "r63"
+     },
+     "userManagementCalls": true,
+     "userId": "00000000-0000-0000-0000-000000006314",
+     "userManagement": {
+      "*": {
+       "statusCode": 200,
+       "body": "parity"
+      }
+     }
+    },
+    {
+     "name": "read-when-the-user-is-an-empty-object",
+     "resource": {
+      "id": "r63"
+     },
+     "userManagementCalls": true,
+     "userId": "00000000-0000-0000-0000-000000006315",
+     "userManagement": {
+      "*": {
+       "statusCode": 200,
+       "body": {}
+      }
+     }
+    },
+    {
+     "name": "read-when-the-user-is-not-json",
+     "resource": {
+      "id": "r63"
+     },
+     "userManagementCalls": true,
+     "userId": "00000000-0000-0000-0000-000000006316",
+     "userManagement": {
+      "*": {
+       "statusCode": 200,
+       "bodyRaw": "parity, not JSON"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "r63ob-repeat",
+   "about": "Two requests for one user in a row, each recording the stub's calls: whether the second looks the user up again.",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "anyone",
+       "target": "true",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "read",
+         "target": "operation == 'READ'",
+         "condition": "true",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "key": "authorize",
+     "target": "resourceType == 'OnBehalfOfUserAuthorization'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "view-as",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER' OR subject.roles CONTAINS 'ROLE_M2M'",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "view",
+         "target": "operation == 'VIEW_AS_ANOTHER_USER'",
+         "condition": "true",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "name": "read-first",
+     "resource": {
+      "id": "r63"
+     },
+     "userManagementCalls": true,
+     "userId": "00000000-0000-0000-0000-000000006301",
+     "userManagement": {
+      "*": {
+       "statusCode": 200,
+       "body": {
+        "id": "parity-um-id",
+        "username": "parity-um-username",
+        "name": "parity-um-name",
+        "login": "parity-um-login",
+        "roles": [
+         "ROLE_PARITY_UM_ROLES"
+        ],
+        "realmRoles": [
+         "ROLE_PARITY_UM_REALM_ROLES"
+        ],
+        "type": "PARITY_UM_TYPE",
+        "scopes": [
+         "parity-um-scope"
+        ],
+        "department": "parity-um-department"
+       }
+      }
+     }
+    },
+    {
+     "name": "read-again",
+     "resource": {
+      "id": "r63"
+     },
+     "userManagementCalls": true,
+     "userId": "00000000-0000-0000-0000-000000006301"
+    }
+   ]
+  },
+  {
+   "id": "r63ob-bulk",
+   "about": "check/resource/bulk and bulk/operations with two items on behalf of one user: one lookup for the request or one per item.",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "anyone",
+       "target": "true",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "read",
+         "target": "operation == 'READ'",
+         "condition": "true",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "key": "authorize",
+     "target": "resourceType == 'OnBehalfOfUserAuthorization'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "view-as",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER' OR subject.roles CONTAINS 'ROLE_M2M'",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "view",
+         "target": "operation == 'VIEW_AS_ANOTHER_USER'",
+         "condition": "true",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "name": "bulk-as-a-user",
+     "userManagementCalls": true,
+     "userId": "00000000-0000-0000-0000-000000006317",
+     "userManagement": {
+      "*": {
+       "statusCode": 200,
+       "body": {
+        "id": "parity-um-id",
+        "username": "parity-um-username",
+        "name": "parity-um-name",
+        "login": "parity-um-login",
+        "roles": [
+         "ROLE_PARITY_UM_ROLES"
+        ],
+        "realmRoles": [
+         "ROLE_PARITY_UM_REALM_ROLES"
+        ],
+        "type": "PARITY_UM_TYPE",
+        "scopes": [
+         "parity-um-scope"
+        ],
+        "department": "parity-um-department"
+       }
+      }
+     },
+     "bulk": [
+      {
+       "id": "r63a",
+       "operation": "READ",
+       "resource": {
+        "id": "r63a"
+       }
+      },
+      {
+       "id": "r63b",
+       "operation": "READ",
+       "resource": {
+        "id": "r63b"
+       }
+      }
+     ]
+    },
+    {
+     "name": "operations-as-a-user",
+     "userManagementCalls": true,
+     "userId": "00000000-0000-0000-0000-000000006318",
+     "userManagement": {
+      "*": {
+       "statusCode": 200,
+       "body": {
+        "id": "parity-um-id",
+        "username": "parity-um-username",
+        "name": "parity-um-name",
+        "login": "parity-um-login",
+        "roles": [
+         "ROLE_PARITY_UM_ROLES"
+        ],
+        "realmRoles": [
+         "ROLE_PARITY_UM_REALM_ROLES"
+        ],
+        "type": "PARITY_UM_TYPE",
+        "scopes": [
+         "parity-um-scope"
+        ],
+        "department": "parity-um-department"
+       }
+      }
+     },
+     "bulkOperations": [
+      {
+       "id": "r63a",
+       "operations": [
+        "READ"
+       ],
+       "resource": {
+        "id": "r63a"
+       }
+      },
+      {
+       "id": "r63b",
+       "operations": [
+        "READ"
+       ],
+       "resource": {
+        "id": "r63b"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "r63ob-must-control-last",
+   "about": "Control: a DENY rule over a resource attribute that does not hold. True unless the stand answers every check with 400.",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "PERMIT_UNLESS_DENY",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "PERMIT_UNLESS_DENY",
+       "rules": [
+        {
+         "key": "deny",
+         "target": "true",
+         "condition": "resource.c == 'zz'",
+         "effect": "DENY"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "name": "read",
+     "resource": {
+      "id": "r33",
+      "c": "n"
+     }
+    }
+   ]
+  }
+ ]
+}
