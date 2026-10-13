@@ -62,6 +62,9 @@ type regularCase struct {
 	// pins are the pip-mock answers pinned when the case starts; see
 	// caseSpec.Pins.
 	pins map[string]PipStubResponse
+	// userManagement are the user-management-mock answers pinned when the
+	// case starts; see caseSpec.UserManagement.
+	userManagement map[string]PipStubResponse
 }
 
 // regularStep is one step of a case, as stepSpec describes it: call, the
@@ -146,6 +149,7 @@ func (s *ParitySuite) runRegularCases(cases []regularCase) {
 	for _, tc := range cases {
 		s.Run(tc.id, func() {
 			s.pinRoutes(tc.pins)
+			s.pinUserManagement(tc.userManagement)
 			s.resetCallsFor(append(slices.Clone(tc.readsRoutes), tc.pipCalls))
 			if len(tc.pips) > 0 || len(tc.simplified) > 0 {
 				status, body, err := UploadIsolatedPoliciesWithQuery(ctx, s.cfg, s.tokens, isolatedCaseDomain, tc.pips, tc.simplified, "")
@@ -292,7 +296,10 @@ type sequenceCase struct {
 	resourceType string
 	tenant       string
 	pins         map[string]PipStubResponse
-	steps        []regularStep
+	// userManagement are the user-management-mock answers pinned when the
+	// case starts; see caseSpec.UserManagement.
+	userManagement map[string]PipStubResponse
+	steps          []regularStep
 }
 
 // runSequenceCases runs each case's steps in the case's tenant, which every
@@ -326,6 +333,7 @@ func (s *ParitySuite) runSequenceCases(cases []sequenceCase) {
 				s.T().Cleanup(func() { s.cfg.TenantID = stand })
 			}
 			s.pinRoutes(tc.pins)
+			s.pinUserManagement(tc.userManagement)
 			s.runSteps("sequence/"+tc.id, tc.resourceType, tc.steps, nil)
 		})
 	}
@@ -336,6 +344,14 @@ func (s *ParitySuite) runSequenceCases(cases []sequenceCase) {
 func (s *ParitySuite) pinRoutes(pins map[string]PipStubResponse) {
 	for _, route := range slices.Sorted(maps.Keys(pins)) {
 		s.Require().NoErrorf(s.pipMock.PinRoute(context.Background(), route, pins[route]), "pin %s", route)
+	}
+}
+
+// pinUserManagement pins each route of pins on user-management-mock, in the
+// order of the route names, as pinRoutes does on pip-mock.
+func (s *ParitySuite) pinUserManagement(pins map[string]PipStubResponse) {
+	for _, route := range slices.Sorted(maps.Keys(pins)) {
+		s.Require().NoErrorf(s.umMock.PinRoute(context.Background(), route, pins[route]), "pin %s on user-management-mock", route)
 	}
 }
 

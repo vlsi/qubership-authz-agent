@@ -63,6 +63,9 @@ type isolatedCase struct {
 	// pins are the pip-mock answers pinned when the case starts; see
 	// caseSpec.Pins.
 	pins map[string]PipStubResponse
+	// userManagement are the user-management-mock answers pinned when the
+	// case starts; see caseSpec.UserManagement.
+	userManagement map[string]PipStubResponse
 }
 
 // isolatedRequest is a check/resource request against the case's policy, or a
@@ -107,6 +110,12 @@ type isolatedRequest struct {
 	// pins are the pip-mock answers pinned before the request; see
 	// requestSpec.Pins.
 	pins map[string]PipStubResponse
+	// userManagement are the user-management-mock answers pinned before the
+	// request; see requestSpec.UserManagement.
+	userManagement map[string]PipStubResponse
+	// userManagementCalls records what user-management-mock received while the
+	// request ran; see requestSpec.UserManagementCalls.
+	userManagementCalls bool
 	// readsRoutes are the pip-mock routes that have to receive a call while
 	// the request runs; see requestSpec.ReadsRoutes.
 	readsRoutes []string
@@ -174,6 +183,7 @@ func (s *ParitySuite) runIsolatedCases(cases []isolatedCase) {
 	for _, tc := range cases {
 		s.Run(tc.id, func() {
 			s.pinRoutes(tc.pins)
+			s.pinUserManagement(tc.userManagement)
 			s.resetCallsFor(append(slices.Clone(tc.readsRoutes), tc.pipCalls))
 			policy := map[string]any{
 				"component":             "PARITY",

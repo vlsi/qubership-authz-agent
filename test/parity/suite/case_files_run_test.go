@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"net/http"
 	"path"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -49,6 +50,9 @@ func (s *ParitySuite) runCaseFile(name string) {
 	}
 	for route, response := range f.Pins {
 		s.Require().NoErrorf(s.pipMock.PinRoute(ctx, route, response), "pin %s for %s", route, name)
+	}
+	for route, response := range f.UserManagement {
+		s.Require().NoErrorf(s.umMock.PinRoute(ctx, route, response), "pin %s on user-management-mock for %s", route, name)
 	}
 	if f.Entitlements != nil {
 		s.Require().NoErrorf(s.pinEntitlementsAPIVersionV3(ctx), "pin the entitlements API version of %s", name)
@@ -84,7 +88,7 @@ func caseFileCases(f caseFile) ([]isolatedCase, []regularCase, []sequenceCase, e
 		}
 		if len(c.Sets) == 0 && c.Steps != nil {
 			sequence = append(sequence, sequenceCase{
-				id: c.ID, resourceType: rt, tenant: caseTenant(c, f), pins: c.Pins, steps: steps,
+				id: c.ID, resourceType: rt, tenant: caseTenant(c, f), pins: c.Pins, userManagement: c.UserManagement, steps: steps,
 			})
 			continue
 		}
@@ -102,7 +106,7 @@ func caseFileCases(f caseFile) ([]isolatedCase, []regularCase, []sequenceCase, e
 				id: c.ID, resourceType: rt, domain: c.Domain, operation: c.Operation, roles: c.Roles,
 				condition: resourceTypeReplacer(rt).Replace(c.Condition), pips: pips, requests: requests,
 				policyOmit: c.PolicyOmit, policy: c.Policy, policiesQuery: c.PoliciesQuery,
-				readsRoutes: c.ReadsRoutes, pipCalls: c.PIPCalls, pins: c.Pins,
+				readsRoutes: c.ReadsRoutes, pipCalls: c.PIPCalls, pins: c.Pins, userManagement: c.UserManagement,
 			})
 			continue
 		}
@@ -114,13 +118,14 @@ func caseFileCases(f caseFile) ([]isolatedCase, []regularCase, []sequenceCase, e
 		}
 		regular = append(regular, regularCase{
 			id: c.ID, resourceType: rt, pips: pips,
-			uploads:     []regularUpload{{externalID: "parity-" + c.ID, sets: sets}},
-			requests:    requests,
-			steps:       steps,
-			cleanup:     customizationCleanup(c.ID, c.Customize, rt),
-			readsRoutes: c.ReadsRoutes,
-			pipCalls:    c.PIPCalls,
-			pins:        c.Pins,
+			uploads:        []regularUpload{{externalID: "parity-" + c.ID, sets: sets}},
+			requests:       requests,
+			steps:          steps,
+			cleanup:        customizationCleanup(c.ID, c.Customize, rt),
+			readsRoutes:    c.ReadsRoutes,
+			pipCalls:       c.PIPCalls,
+			pins:           c.Pins,
+			userManagement: c.UserManagement,
 		})
 	}
 	return isolated, regular, sequence, nil
@@ -195,6 +200,7 @@ func caseRequests(specs []requestSpec, rt string) []isolatedRequest {
 			userClaims: r.SubjectClaims,
 			userID:     r.UserID, emptyOperation: r.EmptyOperation, omitOperation: r.OmitOperation,
 			pins: r.Pins, readsRoutes: r.ReadsRoutes, pipHeaders: r.PIPHeaders,
+			userManagement: r.UserManagement, userManagementCalls: r.UserManagementCalls,
 			pause: time.Duration(r.PauseMs) * time.Millisecond,
 		}
 		if r.Bulk != nil {
@@ -245,5 +251,38 @@ func TestCaseFileCases_ResourceTypeReplacesTheDerivedOne(t *testing.T) {
 				t.Errorf("regular case: resource type %q, set target %q, want %q in both", regular[0].resourceType, target, tc.want)
 			}
 		})
+	}
+}
+
+// The userManagement pins and userManagementCalls of a case file reach the
+// runner: a case's pins on the case, a request's pins and its call recording
+// on the request, for a case without sets, one with sets, and a sequence case,
+// whose step decides through the request.
+func TestCaseFileCases_CarryTheUserManagementFields(t *testing.T) {
+	casePins := map[string]PipStubResponse{DefaultRoute: {StatusCode: 404}}
+	requestPins := map[string]PipStubResponse{"/users/u-1": {StatusCode: 200, Body: map[string]any{"id": "u-1"}}}
+	request := []requestSpec{{Name: "read", UserManagement: requestPins, UserManagementCalls: true}}
+	f := caseFile{ResourceTypePrefix: "PARITY_P_", Cases: []caseSpec{
+		{ID: "iso", UserManagement: casePins, Requests: request},
+		{ID: "reg", UserManagement: casePins, Sets: []setSpec{{Key: "set"}}, Requests: request},
+		{ID: "seq", UserManagement: casePins, Steps: []stepSpec{
+			{Name: "decide", Op: "read-config-sets", Observe: []string{"decide:read"}, Requests: request}}},
+	}}
+	isolated, regular, sequence, err := caseFileCases(f)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for name, got := range map[string]map[string]PipStubResponse{
+		"isolated": isolated[0].userManagement, "regular": regular[0].userManagement, "sequence": sequence[0].userManagement,
+	} {
+		if !reflect.DeepEqual(got, casePins) {
+			t.Errorf("%s case: userManagement %v, want %v", name, got, casePins)
+		}
+	}
+	for name, req := range map[string]isolatedRequest{"isolated": isolated[0].requests[0], "regular": regular[0].requests[0],
+		"sequence step": sequence[0].steps[0].observe[0].request} {
+		if !reflect.DeepEqual(req.userManagement, requestPins) || !req.userManagementCalls {
+			t.Errorf("%s request: userManagement %v, userManagementCalls %v, want %v and true", name, req.userManagement, req.userManagementCalls, requestPins)
+		}
 	}
 }

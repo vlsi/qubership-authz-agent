@@ -139,9 +139,9 @@ parity: e2e-cluster e2e-images parity-harness parity-install parity-suite
 # The test stand of test/k8s/parity/test-stand-values.yaml: Keycloak with the
 # realms of test/k8s/parity/idp-seed/ and the users of
 # test/parity/suite/testdata/realm/, pip-mock with the request-args rule set,
-# entitlements-mock, the M2M client-credentials Secret for the parity-m2m
-# client of the cloud-common realm, and the parity suite Job, which
-# parity-suite runs.
+# entitlements-mock, user-management-mock, the M2M client-credentials Secret
+# for the parity-m2m client of the cloud-common realm, and the parity suite
+# Job, which parity-suite runs.
 parity-harness: test-stand-files
 	$(PARITY_HELM) upgrade --install authz-test-stand $(TEST_STAND_CHART) --create-namespace -f test/k8s/parity/test-stand-values.yaml --set suite.env.PARITY_AC_BASE_URL=$(PARITY_AC_BASE_URL) --wait --timeout 10m $(E2E_HELM_ARGS)
 
@@ -154,7 +154,7 @@ parity-suite:
 	$(call run-suite,$(PARITY_KUBECTL),$(PARITY_HELM),parity-suite)
 
 # The parity counterpart of e2e-restart, for the same reason.
-PARITY_LOCAL_DEPLOYMENTS := authz-agent authz-policy-admin pip-mock entitlements-mock
+PARITY_LOCAL_DEPLOYMENTS := authz-agent authz-policy-admin pip-mock entitlements-mock user-management-mock
 parity-restart:
 	$(PARITY_KUBECTL) rollout restart $(addprefix deploy/,$(PARITY_LOCAL_DEPLOYMENTS))
 	for d in $(PARITY_LOCAL_DEPLOYMENTS); do $(PARITY_KUBECTL) rollout status deploy/$$d --timeout=3m || exit 1; done

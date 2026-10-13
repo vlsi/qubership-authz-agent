@@ -229,6 +229,16 @@ func TestCaseFileProblems_SequenceCasesAndTenants(t *testing.T) {
 		{"a step named as a request of the case",
 			caseFile{Cases: []caseSpec{{ID: "c", Sets: sets, Requests: []requestSpec{{Name: "read"}}, Steps: step}}},
 			"records a golden under too"},
+		{"a sequence step's request with user-management fields",
+			caseFile{Cases: []caseSpec{{ID: "c", UserManagement: map[string]PipStubResponse{DefaultRoute: {}}, Steps: []stepSpec{
+				{Name: "d", Op: "read-config-sets", Observe: []string{"decide:read"}, Requests: []requestSpec{
+					{Name: "read", UserID: stringOf("u"), UserManagementCalls: true,
+						UserManagement: map[string]PipStubResponse{"/users/u": {}}}}}}}}}, ""},
+		{"a sequence step's request with a user-management route that is no path",
+			caseFile{Cases: []caseSpec{{ID: "c", Steps: []stepSpec{
+				{Name: "d", Op: "read-config-sets", Observe: []string{"decide:read"}, Requests: []requestSpec{
+					{Name: "read", UserManagement: map[string]PipStubResponse{"users": {}}}}}}}}},
+			`case c request read pins the user-management route "users"`},
 		{"a pip-call on a route nothing pins",
 			caseFile{Cases: []caseSpec{{ID: "c", Steps: []stepSpec{{Name: "r", Op: "read-config-sets",
 				Observe: []string{"read:read-config-sets", "pip-call:/api/v1/pip/x"}}}}}}, "nothing pins"},

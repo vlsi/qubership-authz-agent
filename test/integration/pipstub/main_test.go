@@ -211,3 +211,68 @@ func TestHandlePIP_RespondSequence(t *testing.T) {
 		t.Fatalf("sequence codes: %v", codes)
 	}
 }
+
+// serve sends one request to handlePIP and returns its status and body.
+func serve(method, target string) (int, string) {
+	rr := httptest.NewRecorder()
+	handlePIP(rr, httptest.NewRequest(method, target, nil))
+	return rr.Code, strings.TrimSpace(rr.Body.String())
+}
+
+// The default route answers a path that has no route of its own, the routed
+// path keeps its own answer, and a stub with no default route answers 404.
+func TestHandlePIP_DefaultRouteAnswersUnroutedPaths(t *testing.T) {
+	cases := []struct {
+		name, path  string
+		withDefault bool
+		wantStatus  int
+		wantBody    string
+	}{
+		{"an unrouted path gets the default answer", "/users/u-1", true, 200, `{"from":"default"}`},
+		{"a routed path keeps its own answer", "/routed", true, 200, `{"from":"route"}`},
+		{"an unrouted path without a default route is 404", "/users/u-1", false, 404,
+			`{"error":"no rule or route for /users/u-1"}`},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			resetState()
+			routes["/routed"] = &pipRoute{Path: "/routed", Responses: []pipResponse{{StatusCode: 200, Body: map[string]any{"from": "route"}}}}
+			if tc.withDefault {
+				routes[defaultRoute] = &pipRoute{Path: defaultRoute, Responses: []pipResponse{{StatusCode: 200, Body: map[string]any{"from": "default"}}}}
+			}
+			status, body := serve(http.MethodGet, tc.path)
+			if status != tc.wantStatus || body != tc.wantBody {
+				t.Errorf("GET %s = %d %s, want %d %s", tc.path, status, body, tc.wantStatus, tc.wantBody)
+			}
+		})
+	}
+}
+
+// The default route serves its responses in sequence across every unrouted
+// path, clamped to the last, as one route does for its own path.
+func TestHandlePIP_DefaultRouteServesItsSequenceAcrossPaths(t *testing.T) {
+	resetState()
+	routes[defaultRoute] = &pipRoute{Path: defaultRoute, Responses: []pipResponse{{StatusCode: 503}, {StatusCode: 200}}}
+	var got []int
+	for _, path := range []string{"/a", "/b", "/a"} {
+		status, _ := serve(http.MethodGet, path)
+		got = append(got, status)
+	}
+	if want := []int{503, 200, 200}; !reflect.DeepEqual(got, want) {
+		t.Errorf("statuses of /a, /b, /a = %v, want %v", got, want)
+	}
+}
+
+// The call record keeps the request target as it arrived, while path holds it
+// decoded and without the query.
+func TestHandlePIP_RecordsTheRequestTargetAsSent(t *testing.T) {
+	resetState()
+	serve(http.MethodGet, "/users/a%2Fb%20c%3F?x=1")
+	if len(calls) != 1 {
+		t.Fatalf("recorded %d calls, want 1", len(calls))
+	}
+	got := calls[0]
+	if got.RequestURI != "/users/a%2Fb%20c%3F?x=1" || got.Path != "/users/a/b c?" {
+		t.Errorf("requestUri %q, path %q, want %q and %q", got.RequestURI, got.Path, "/users/a%2Fb%20c%3F?x=1", "/users/a/b c?")
+	}
+}

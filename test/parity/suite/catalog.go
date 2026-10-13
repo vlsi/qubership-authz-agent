@@ -87,6 +87,9 @@ const (
 	// PSUITE_PAP_READ_RAW is a case step's read recorded whole, when the step
 	// observes read-raw:<op>.
 	PSUITE_PAP_READ_RAW
+	// PSUITE_USER_MANAGEMENT_CALL is what the User Management stub received
+	// from the service under test over one request.
+	PSUITE_USER_MANAGEMENT_CALL
 )
 
 // RowMeta holds the canonical per-row metadata the GoldenComparator and
@@ -187,6 +190,10 @@ var rowMetas = map[ParityEndpointID]RowMeta{
 		ID: PSUITE_PIP_CALL, Name: "pip-call", HTTPMethod: "POST",
 		PathTmpl: "/api/v1/pip", GoldenDir: "pip-call",
 	},
+	PSUITE_USER_MANAGEMENT_CALL: {
+		ID: PSUITE_USER_MANAGEMENT_CALL, Name: "user-management-call", HTTPMethod: "GET",
+		PathTmpl: "/", GoldenDir: "user-management-call",
+	},
 	PSUITE_PAP_READ: {
 		ID: PSUITE_PAP_READ, Name: "pap-read", HTTPMethod: "GET",
 		PathTmpl: "/access/v1", GoldenDir: "pap-read",
@@ -275,6 +282,8 @@ func NewGoldenTarget(id ParityEndpointID) any {
 		return &model.ConfigExportOutcome{}
 	case PSUITE_PIP_CALL:
 		return &model.PipCallOutcome{}
+	case PSUITE_USER_MANAGEMENT_CALL:
+		return &model.UserManagementCallOutcome{}
 	case PSUITE_PAP_READ:
 		return &model.PapReadOutcome{}
 	case PSUITE_PAP_ERROR:

@@ -25,8 +25,8 @@ import (
 )
 
 // ParitySuite is the testify entry point per D-A, with one test method per
-// row of the Planned Test Catalogue. The TearDownTest hook already calls ResetPinnedRoutes on both
-// pip-mock and entitlements-mock so every sub-case starts from a known
+// row of the Planned Test Catalogue. The TearDownTest hook already calls ResetPinnedRoutes on
+// pip-mock, entitlements-mock and user-management-mock so every sub-case starts from a known
 // state per D-O.
 type ParitySuite struct {
 	suite.Suite
@@ -36,6 +36,10 @@ type ParitySuite struct {
 	comparator *GoldenComparator
 	pipMock    *PipController
 	eaMock     *PipController
+	// umMock is the User Management stub. The suite pins it or reads its
+	// calls only for case files that ask to, so a stand without it runs
+	// every other file.
+	umMock *PipController
 	// errorBodies is set while runCaseFile runs a file that records the body
 	// of a 400 or 409 answer beside its status; see recordsErrorBodies.
 	errorBodies bool
@@ -61,6 +65,7 @@ func (s *ParitySuite) SetupSuite() {
 	s.comparator = NewGoldenComparator(s.cfg)
 	s.pipMock = NewPipController(s.cfg.PipMockControlURL)
 	s.eaMock = NewPipController(s.cfg.EAMockControlURL)
+	s.umMock = NewPipController(s.cfg.UMMockControlURL)
 
 	ctx := context.Background()
 	seeder := NewDomainSeeder(s.cfg, s.tokens)
@@ -94,7 +99,7 @@ func (s *ParitySuite) SetupSuite() {
 	}
 }
 
-// TearDownTest resets both mocks' pinned-route state so the next test's
+// TearDownTest resets every mock's pinned-route state so the next test's
 // SetupTest starts from a clean slate. Tests that do not pin routes still
 // pay nothing here — ResetPinnedRoutes is a no-op on an empty pin map.
 //
@@ -121,6 +126,11 @@ func (s *ParitySuite) TearDownTest() {
 	if s.eaMock != nil {
 		if err := s.eaMock.ResetPinnedRoutes(ctx); err != nil {
 			s.T().Logf("entitlements-mock reset warning: %v", err)
+		}
+	}
+	if s.umMock != nil {
+		if err := s.umMock.ResetPinnedRoutes(ctx); err != nil {
+			s.T().Logf("user-management-mock reset warning: %v", err)
 		}
 	}
 }

@@ -228,6 +228,75 @@ func TestForwardedHeaders(t *testing.T) {
 	}
 }
 
+// A user-management-call golden lists every call in order, keeps the request
+// target as sent, lists every header name, and holds the value only of the
+// headers whose value repeats from run to run, a token or the tenant labeled.
+func TestUserManagementCallOutcome(t *testing.T) {
+	sent := map[string]string{"authorization": "Bearer m2m-token", "incoming-token": "Bearer user-token"}
+	userID := "u 1"
+	calls := []PipStubCall{
+		{Method: "GET", Path: "/users/u 1", RequestURI: "/users/u%201?expand=roles", BodyRaw: "", Headers: map[string]string{
+			"authorization": jwt(map[string]any{"preferred_username": "service-account-ac", "sub": "s"}),
+			"tenant":        "default",
+			"accept":        "application/json",
+			"x-request-id":  "differs on every run",
+		}},
+		{Method: "POST", Path: "/users", RequestURI: "/users", BodyRaw: `{"id":"u 1"}`, Headers: map[string]string{
+			"incoming-token": "Bearer user-token",
+			"tenant":         "tenant-b",
+			"content-type":   "application/json",
+		}},
+	}
+	got := userManagementCallOutcome(calls, sent, "default", &userID)
+	want := &model.UserManagementCallOutcome{Calls: []model.UserManagementCall{
+		{Method: "GET", RequestURI: "/users/u%201?expand=roles",
+			HeaderNames: []string{"accept", "authorization", "tenant", "x-request-id"},
+			Headers:     map[string]any{"accept": "application/json", "authorization": "<service account>", "tenant": "<tenant_id>"}},
+		{Method: "POST", RequestURI: "/users", Body: `{"id":"u 1"}`,
+			HeaderNames: []string{"content-type", "incoming-token", "tenant"},
+			Headers:     map[string]any{"content-type": "application/json", "incoming-token": "<user token>", "tenant": "tenant-b"}},
+	}}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("userManagementCallOutcome mismatch (-want +got):\n%s", diff)
+	}
+}
+
+// A request that made no call records an empty list, not null, so that the
+// golden tells it from a log nobody read.
+func TestUserManagementCallOutcome_NoCall(t *testing.T) {
+	got, err := json.Marshal(userManagementCallOutcome(nil, map[string]string{}, "default", nil))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(got) != `{"calls":[]}` {
+		t.Errorf("userManagementCallOutcome(no calls) = %s, want {\"calls\":[]}", got)
+	}
+}
+
+func TestUserManagementTokenLabel(t *testing.T) {
+	user := jwt(map[string]any{"sub": "sub-of-the-reader", "preferred_username": "parity-reader"})
+	sent := map[string]string{"authorization": "Bearer m2m-token", "incoming-token": user}
+	userID := "sub-asked-for"
+	cases := []struct {
+		name, value, want string
+	}{
+		{"the request's Authorization", "m2m-token", "<m2m token>"},
+		{"the request's Incoming-Token", user, "<user token>"},
+		{"a service account's token", jwt(map[string]any{"sub": "x", "preferred_username": "service-account-ac"}), "<service account>"},
+		{"another token of the request's user", jwt(map[string]any{"sub": "sub-of-the-reader", "azp": "other"}), "<the request's user>"},
+		{"a token of the user asked for", jwt(map[string]any{"sub": "sub-asked-for"}), "<the user asked for>"},
+		{"a token of another user", jwt(map[string]any{"sub": "someone"}), "<another user>"},
+		{"no JWT", "Basic dXNlcjpwYXNz", "<not a token>"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := userManagementTokenLabel(tc.value, sent, &userID); got != tc.want {
+				t.Errorf("userManagementTokenLabel(%q) = %q, want %q", tc.value, got, tc.want)
+			}
+		})
+	}
+}
+
 func TestForwardedHeaders_LabelsAnotherTokenAndAnotherTenant(t *testing.T) {
 	calls := []PipStubCall{{Path: "/pip", Headers: map[string]string{"authorization": "Bearer elsewhere", "tenant": "tenant-b"}}}
 	got := forwardedHeaders(calls, "/pip", []string{"authorization", "tenant"}, map[string]string{"authorization": "Bearer m2m-token"}, "default")
@@ -450,6 +519,21 @@ func TestCaseFileProblems(t *testing.T) {
 			f.Cases[0].Requests[0].Operation = "READ"
 		}, "case iso request read sets both operation and emptyOperation"},
 		{"a negative pause", func(f *caseFile) { f.Cases[0].Requests[0].PauseMs = -1 }, "case iso request read pauses for -1 ms"},
+		{"user-management routes that are paths or the default route", func(f *caseFile) {
+			f.UserManagement = map[string]PipStubResponse{DefaultRoute: {StatusCode: http.StatusNotFound}}
+			f.Cases[0].UserManagement = map[string]PipStubResponse{"/users/u-1": {StatusCode: http.StatusOK}}
+			f.Cases[0].Requests[0].UserManagement = map[string]PipStubResponse{DefaultRoute: {StatusCode: http.StatusOK}}
+			f.Cases[0].Requests[0].UserManagementCalls = true
+		}, ""},
+		{"a user-management route of the file that is no path", func(f *caseFile) {
+			f.UserManagement = map[string]PipStubResponse{"users": {StatusCode: http.StatusOK}}
+		}, `the file pins the user-management route "users", which is neither * nor a path`},
+		{"a user-management route of a case that is no path", func(f *caseFile) {
+			f.Cases[1].UserManagement = map[string]PipStubResponse{"**": {StatusCode: http.StatusOK}}
+		}, `case reg pins the user-management route "**", which is neither * nor a path`},
+		{"a user-management route of a request that is no path", func(f *caseFile) {
+			f.Cases[0].Requests[0].UserManagement = map[string]PipStubResponse{"": {StatusCode: http.StatusOK}}
+		}, `case iso request read pins the user-management route "", which is neither * nor a path`},
 		{"bulk beside bulkOperations", func(f *caseFile) {
 			f.Cases[0].Requests[0].Bulk = []any{}
 			f.Cases[0].Requests[0].BulkOperations = []any{}

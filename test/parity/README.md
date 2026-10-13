@@ -36,7 +36,7 @@ the suite image built from [`suite/Dockerfile`](suite/Dockerfile)), then:
 
 | Target | What it does |
 | --- | --- |
-| `parity-harness` | The test-stand chart with [`test/k8s/parity/test-stand-values.yaml`](../k8s/parity/test-stand-values.yaml) in namespace `authz-parity`: Keycloak as `idp` in dev mode with the parity realms; `pip-mock` with the request-args rule set; `entitlements-mock`; the M2M client-credentials Secret |
+| `parity-harness` | The test-stand chart with [`test/k8s/parity/test-stand-values.yaml`](../k8s/parity/test-stand-values.yaml) in namespace `authz-parity`: Keycloak as `idp` in dev mode with the parity realms; `pip-mock` with the request-args rule set; `entitlements-mock`; `user-management-mock`; the M2M client-credentials Secret |
 | `parity-install` | `helm upgrade --install` of the stub chart with [`test/k8s/parity/policy-admin-values.yaml`](../k8s/parity/policy-admin-values.yaml), then of the agent chart with [`test/k8s/parity/values.yaml`](../k8s/parity/values.yaml) |
 | `parity-suite` | The suite Job of the test-stand release, run by `helm test`; its log is streamed |
 
@@ -44,8 +44,8 @@ Expected result: 135/135 cases green against authz-agent, and the cases that wai
 [Cases waiting for a golden](#cases-waiting-for-a-golden)). CI runs the same targets (job `Parity on kind` in
 `.github/workflows/integration-tests.yaml`).
 
-The suite addresses `authz-agent`, `idp`, `pip-mock`, and `entitlements-mock` by Service name; nothing is published on
-the host. To look at the stack from the host, port-forward, for example
+The suite addresses `authz-agent`, `idp`, `pip-mock`, `entitlements-mock`, and `user-management-mock` by Service
+name; nothing is published on the host. To look at the stack from the host, port-forward, for example
 `kubectl --context kind-authz-e2e -n authz-parity port-forward svc/authz-agent 28100:8080`.
 
 ### Iterating
@@ -380,6 +380,8 @@ Optional fields change one part of the upload or the request; without them a cas
 | `subject` | A request | `m2m` sends the M2M token alone. `user:<username>` sends the token of that user of the parity realm, which logs in with the suite's end-user client and `PARITY_END_USER_PASSWORD`, beside the M2M token. Without it the request is parity-reader's |
 | `subjectClaims` | A request with a `user:` subject | Claim values, such as `sub` and `preferred_username`, that the user's token must carry. The suite decodes the token and fails before sending the request when a claim is missing or differs |
 | `pipCalls` | A request | A route the file, the case, or this or an earlier request of the case pins. The pip-mock call log is cleared before the request, and what the route received while the request ran is recorded under `pip-call/<kind>/<case>/<request>` beside the request's own golden |
+| `userManagement` | The file, a case, or a request | user-management-mock answers by route, `{statusCode, body}`, pinned before the first case, when the case starts, or before the request, as `pins` does for pip-mock; see [User Management stub](#user-management-stub) |
+| `userManagementCalls` | A request | `true` clears the call log of user-management-mock before the request and records every call it received while the request ran under `user-management-call/<kind>/<case>/<request>`; see [User Management stub](#user-management-stub) |
 | `entitlements` | The file | A pip-mock answer, `{statusCode, body}`, that entitlements-mock gives to the user-entitlements lookup of parity-reader for the whole function. The suite also pins `/api-version` of entitlements-mock to major 3, which access-control reads before that lookup |
 | `policyOmit` | A case without `sets` | Names of members the simplified policy is uploaded without, such as `applicableForFrontend` |
 | `policy` | A case without `sets` | Members merged into the simplified policy after `policyOmit`: they add a member, replace one, or set one to `null`. Strings take the resource type placeholders |
@@ -449,6 +451,28 @@ the call the step's requests run, with golden paths as the case's own requests h
 last step the suite deletes, with no golden, the customization of every set a step's `sets` names at its top level and
 of every PIP an object of its `pips` or `pipBody` names, at the step's level, or at both `PROJECT` and `CUSTOMER` when
 the step names another level or sets `omitLevel`.
+
+#### User Management stub
+
+Access-control decides a request with `userId` for the user it reads from the User Management API, which it reaches
+at `INTERNAL_APIGATEWAY_URL`. On a stand where that variable points at `user-management-mock`, a third pip-stub
+instance, a case answers the lookup itself: `userManagement` pins an answer to a path, and the route `*` answers every
+path that has no route of its own. The suite reaches the stub at `PARITY_UM_MOCK_CONTROL_URL`, default
+`http://localhost:28194`. Without the default route, an unrouted path answers 404, as pip-mock does. The stub matches a
+route on the path alone, whatever tenant the request or its step runs in; the golden shows the call's `Tenant` header.
+Both fields also work on a request a sequence step decides, whose golden is `user-management-call/sequence/<case>/<request>`.
+Only a file that sets `userManagement` or `userManagementCalls` makes the suite pin or read the stub, so a stand
+without it runs every other file. On a stand that has it, access-control calls it for every authorized request with
+`userId`, from any file; an unrouted path answers 404, as a stand without the API does.
+
+A `user-management-call` golden lists the calls in the order they arrived. Each holds the method, `requestUri` (the
+request target with its path and query as the caller encoded them), `headerNames` (every header name, lower case,
+sorted), `headers`, and the body as text, omitted when empty. `headers` holds the values of `authorization`,
+`incoming-token`, `tenant`, `accept`, and `content-type` only, since another header may carry a value that differs
+from run to run. A token is a label: `<m2m token>` or `<user token>` for a token of the request, and by its claims
+`<service account>`, `<the request's user>`, `<the user asked for>` (its `sub` is the `userId`), `<another user>`, or
+`<not a token>`. A `tenant` equal to the request's tenant is `<tenant_id>`. A request that made no call records
+`{"calls": []}`.
 
 #### Steps
 

@@ -396,18 +396,34 @@ func (s *ParitySuite) sendRequest(resourceType string, req isolatedRequest, toke
 // own; the call log is read before either golden is compared, since a golden
 // not yet recorded skips the rest of the subtest. Either one, and
 // req.readsRoutes, clear the call log before req.pause starts, and req.pins
-// are pinned before that.
+// are pinned before that. With req.userManagementCalls what user-management-
+// mock received is recorded as the user-management-call golden subCase, its
+// call log cleared and req.userManagement pinned at the same points.
 func (s *ParitySuite) runRequest(subCase, resourceType string, req isolatedRequest) {
 	s.T().Helper()
 	ctx := context.Background()
 	s.pinRoutes(req.pins)
+	s.pinUserManagement(req.userManagement)
 	if req.classifyBy != "" || req.pipCalls != "" || len(req.readsRoutes) > 0 {
 		s.Require().NoError(s.pipMock.ResetCalls(ctx))
+	}
+	if req.userManagementCalls {
+		s.Require().NoError(s.umMock.ResetCalls(ctx), "clear the user-management-mock call log")
 	}
 	time.Sleep(req.pause)
 	tokens := s.requestTokens(req)
 	id, outcome := s.sendRequest(resourceType, req, tokens)
 	s.requireRoutesRead(req.readsRoutes)
+	var umCalls *model.UserManagementCallOutcome
+	if req.userManagementCalls {
+		calls, err := s.umMock.GetCalls(ctx)
+		s.Require().NoError(err, "read the user-management-mock call log")
+		tenant := s.cfg.TenantID
+		if req.tenantID != nil {
+			tenant = *req.tenantID
+		}
+		umCalls = userManagementCallOutcome(calls, sentHeaders(tokens, req.callOptions()), tenant, req.userID)
+	}
 	switch {
 	case req.classifyBy != "" && s.comparesWithTheUnclassifiedGolden(id, subCase):
 		s.T().Logf("%s: the %s profile is compared with the unclassified golden", subCase, s.cfg.Profile)
@@ -432,6 +448,11 @@ func (s *ParitySuite) runRequest(subCase, resourceType string, req isolatedReque
 		}
 		s.Run("pip-calls", func() {
 			s.requirePendingGolden(PSUITE_PIP_CALL, subCase, pipCalls)
+		})
+	}
+	if umCalls != nil {
+		s.Run("user-management-calls", func() {
+			s.requirePendingGolden(PSUITE_USER_MANAGEMENT_CALL, subCase, umCalls)
 		})
 	}
 	s.requirePendingGolden(id, subCase, outcome)

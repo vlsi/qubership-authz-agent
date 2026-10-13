@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/fs"
+	"maps"
 	"net/http"
 	"net/url"
 	"os"
@@ -30,6 +31,8 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+
+	"authz-agent/test/parity/suite/model"
 )
 
 // caseFile is one file under testdata/cases: the cases one test function runs
@@ -50,6 +53,10 @@ type caseFile struct {
 	ResourceTypePrefix string `json:"resourceTypePrefix"`
 	// Pins maps a pip-mock route to the answer it is pinned to before the first case.
 	Pins map[string]PipStubResponse `json:"pins"`
+	// UserManagement maps a route of user-management-mock to the answer it is
+	// pinned to before the first case. The route * (DefaultRoute) answers
+	// every path that has no route of its own; see userManagementRoutes.
+	UserManagement map[string]PipStubResponse `json:"userManagement"`
 	// PIPs holds the PIP declarations the cases name by key.
 	PIPs  map[string]any `json:"pips"`
 	Cases []caseSpec     `json:"cases"`
@@ -96,6 +103,9 @@ type caseSpec struct {
 	// route again: a later case or request, in the order the cases run, which
 	// puts the cases without sets first.
 	Pins map[string]PipStubResponse `json:"pins"`
+	// UserManagement pins routes of user-management-mock when the case starts,
+	// as Pins does for pip-mock.
+	UserManagement map[string]PipStubResponse `json:"userManagement"`
 	// About says what the case asks where its id and condition do not; nothing
 	// reads it.
 	About     string        `json:"about"`
@@ -303,6 +313,14 @@ type requestSpec struct {
 	// The answer stays for the requests and cases after it until something
 	// pins the route again.
 	Pins map[string]PipStubResponse `json:"pins"`
+	// UserManagement pins routes of user-management-mock before the request
+	// is sent, as Pins does for pip-mock.
+	UserManagement map[string]PipStubResponse `json:"userManagement"`
+	// UserManagementCalls clears the call log of user-management-mock before
+	// the request and records every call it received while the request ran as
+	// a user-management-call golden under the request's own name; see
+	// userManagementCallOutcome.
+	UserManagementCalls bool `json:"userManagementCalls"`
 	// ReadsRoutes names pip-mock routes each of which has to receive at least
 	// one call while the request runs. The runner clears the call log before
 	// the request and fails a check of its own, which records no golden, when
@@ -738,6 +756,61 @@ func tokenSubject(value, incoming string) string {
 	return "<another user>"
 }
 
+// userManagementCallOutcome returns calls, the call log of user-management-
+// mock over one request, as a user-management-call golden records it. sent
+// holds the headers of the request, as sentHeaders returns them, tenant its
+// tenant_id, and userID its userId, nil when it sent none. Of the headers of a
+// call, the golden holds the value of authorization, incoming-token, tenant,
+// accept, and content-type only, since another header may carry a value that
+// differs from run to run. A token is the label userManagementTokenLabel gives
+// it; a tenant equal to tenant is <tenant_id>.
+func userManagementCallOutcome(calls []PipStubCall, sent map[string]string, tenant string, userID *string) *model.UserManagementCallOutcome {
+	outcome := &model.UserManagementCallOutcome{Calls: []model.UserManagementCall{}}
+	for _, call := range calls {
+		names := slices.Sorted(maps.Keys(call.Headers))
+		headers := map[string]any{}
+		for _, name := range names {
+			value := call.Headers[name]
+			switch name {
+			case "authorization", "incoming-token":
+				headers[name] = userManagementTokenLabel(value, sent, userID)
+			case "tenant":
+				if value == tenant {
+					headers[name] = "<tenant_id>"
+				} else {
+					headers[name] = value
+				}
+			case "accept", "content-type":
+				headers[name] = value
+			}
+		}
+		outcome.Calls = append(outcome.Calls, model.UserManagementCall{
+			Method: call.Method, RequestURI: call.RequestURI, HeaderNames: names, Headers: headers, Body: call.BodyRaw,
+		})
+	}
+	return outcome
+}
+
+// userManagementTokenLabel returns whose token value is, never the token
+// itself: <m2m token> or <user token> when it is the request's Authorization
+// or Incoming-Token, with or without Bearer; otherwise the label tokenSubject
+// gives it, except that a token whose sub equals userID is <the user asked
+// for> rather than <another user>.
+func userManagementTokenLabel(value string, sent map[string]string, userID *string) string {
+	token := withoutBearer(value)
+	switch {
+	case sent["authorization"] != "" && token == withoutBearer(sent["authorization"]):
+		return "<m2m token>"
+	case sent["incoming-token"] != "" && token == withoutBearer(sent["incoming-token"]):
+		return "<user token>"
+	}
+	label := tokenSubject(value, sent["incoming-token"])
+	if sub, _ := jwtClaims(token)["sub"].(string); label == "<another user>" && userID != nil && sub == *userID {
+		return "<the user asked for>"
+	}
+	return label
+}
+
 // jwtClaims returns the claims of the payload of token, a JWT, without checking
 // its signature, or nil when token is no JWT with a JSON object as payload.
 func jwtClaims(token string) map[string]any {
@@ -813,7 +886,9 @@ func caseFileProblems(f caseFile) []string {
 	var problems []string
 	report := func(format string, args ...any) { problems = append(problems, fmt.Sprintf(format, args...)) }
 	earlierRegular := map[string]bool{}
+	problems = append(problems, userManagementRouteProblems("the file", f.UserManagement)...)
 	for _, c := range f.Cases {
+		problems = append(problems, userManagementRouteProblems("case "+c.ID, c.UserManagement)...)
 		sequence := len(c.Sets) == 0 && c.Steps != nil
 		if (c.Tenant != nil || f.Tenant != nil) && !sequence {
 			report("case %s runs in a tenant the case or its file names, which only a case with steps and no sets does", c.ID)
@@ -1131,6 +1206,9 @@ func requestProblems(c caseSpec, r requestSpec, pinned map[string]bool) []string
 	if r.PauseMs < 0 {
 		report("pauses for %d ms", r.PauseMs)
 	}
+	for _, problem := range userManagementRouteProblems("", r.UserManagement) {
+		report("%s", problem)
+	}
 	if r.EmptyOperation && r.Operation != "" {
 		report("sets both operation and emptyOperation")
 	}
@@ -1148,6 +1226,19 @@ func requestProblems(c caseSpec, r requestSpec, pinned map[string]bool) []string
 			if _, ok := item.(map[string]any); !ok {
 				report("has the bulk item %v, which is not an object", item)
 			}
+		}
+	}
+	return problems
+}
+
+// userManagementRouteProblems returns one message for each route of pins, the
+// userManagement member of owner, that is neither DefaultRoute nor a path:
+// pipstub matches a route against the path of a request, which starts with /.
+func userManagementRouteProblems(owner string, pins map[string]PipStubResponse) []string {
+	var problems []string
+	for _, route := range slices.Sorted(maps.Keys(pins)) {
+		if route != DefaultRoute && !strings.HasPrefix(route, "/") {
+			problems = append(problems, strings.TrimSpace(fmt.Sprintf("%s pins the user-management route %q, which is neither %s nor a path", owner, route, DefaultRoute)))
 		}
 	}
 	return problems

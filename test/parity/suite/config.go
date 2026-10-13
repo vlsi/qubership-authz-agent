@@ -69,6 +69,12 @@ type Config struct {
 	// the parity harness. Default http://localhost:28092.
 	EAMockControlURL string
 
+	// UMMockControlURL is the base URL of the user-management-mock service,
+	// the pip-stub instance access-control reaches as the User Management API
+	// to look up the user of a request with userId. Default
+	// http://localhost:28194.
+	UMMockControlURL string
+
 	// TenantID is the value the suite sends in the tenant_id query param
 	// (D-V item 6). Defaults to "default" — the tenant the Step 2 smoke
 	// fixtures use.
@@ -160,6 +166,7 @@ func LoadConfig() Config {
 		EndUserPassword:     envOr("PARITY_END_USER_PASSWORD", "ParityPass1!@#"),
 		PipMockControlURL:   envOr("PARITY_PIP_MOCK_CONTROL_URL", "http://localhost:"+envOr("PARITY_PIP_PORT", "28191")),
 		EAMockControlURL:    envOr("PARITY_EA_MOCK_CONTROL_URL", "http://localhost:"+envOr("PARITY_EA_PORT", "28192")),
+		UMMockControlURL:    envOr("PARITY_UM_MOCK_CONTROL_URL", "http://localhost:"+envOr("PARITY_UM_PORT", "28194")),
 		TenantID:            envOr("PARITY_TENANT_ID", "default"),
 		DomainName:          envOr("PARITY_DOMAIN_NAME", "PARITY"),
 		Profile:             profile,

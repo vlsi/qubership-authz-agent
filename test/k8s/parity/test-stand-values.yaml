@@ -21,6 +21,10 @@ pipStub:
       config: requestargs.responses.yaml
     entitlements-mock:
       port: 8080
+    # The User Management API, which access-control asks for the user of a
+    # request with userId; authz-agent does not call it, the suite pins it.
+    user-management-mock:
+      port: 8080
 
 # The parity-m2m client of the cloud-common realm in idp-seed/.
 clientCredentials:
@@ -41,3 +45,4 @@ suite:
     PARITY_AUTHZ_POLICY_ADMIN_BASE_URL: http://authz-policy-admin:18090
     PARITY_PIP_MOCK_CONTROL_URL: http://pip-mock:8090
     PARITY_EA_MOCK_CONTROL_URL: http://entitlements-mock:8080
+    PARITY_UM_MOCK_CONTROL_URL: http://user-management-mock:8080

@@ -28,8 +28,15 @@
 //     stateful `respondSequence`, and explicit status/headers.
 //
 // Precedence per request: record it, try the configured rules first; on no rule
-// match fall back to the legacy path routes; else 404. When PIP_STUB_CONFIG is
-// unset there are no rules and behaviour is exactly as before.
+// match fall back to the legacy path routes, then to the default route; else
+// 404. When PIP_STUB_CONFIG is unset there are no rules and behaviour is
+// exactly as before.
+//
+// The default route is the path-route registered under defaultRoute (*): it
+// answers every request whose path has no route of its own, in sequence like
+// any other route. No request path is *, so it never shadows a real route.
+// A stub nobody configures with it answers an unrouted request 404, as it did
+// before the default route existed.
 package main
 
 import (
@@ -64,12 +71,16 @@ type pipRoute struct {
 // ── Full request capture (extended additively) ───────────────────────────────
 
 type callRecord struct {
-	Path    string              `json:"path"`
-	Method  string              `json:"method"`
-	Query   map[string][]string `json:"query,omitempty"`
-	Headers map[string]string   `json:"headers,omitempty"`
-	BodyRaw string              `json:"bodyRaw,omitempty"`
-	Body    any                 `json:"body,omitempty"`
+	Path string `json:"path"`
+	// RequestURI is the request target as it arrived, before the path is
+	// decoded and the query is split off, so that a caller that encodes a
+	// value in the path differently from one that does not can be told apart.
+	RequestURI string              `json:"requestUri"`
+	Method     string              `json:"method"`
+	Query      map[string][]string `json:"query,omitempty"`
+	Headers    map[string]string   `json:"headers,omitempty"`
+	BodyRaw    string              `json:"bodyRaw,omitempty"`
+	Body       any                 `json:"body,omitempty"`
 }
 
 // ── Static rule engine model (YAML) ──────────────────────────────────────────
@@ -108,6 +119,10 @@ type stubRespond struct {
 	Headers map[string]string `yaml:"headers"`
 	DelayMs int               `yaml:"delayMs"`
 }
+
+// defaultRoute is the path under which /pip-stub/configure registers the
+// answer to every request whose path has no route of its own.
+const defaultRoute = "*"
 
 var (
 	routes      map[string]*pipRoute
@@ -196,12 +211,13 @@ func handlePIP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	rec := callRecord{
-		Path:    r.URL.Path,
-		Method:  r.Method,
-		Query:   map[string][]string(r.URL.Query()),
-		Headers: flattenHeaders(r.Header),
-		BodyRaw: string(bodyBytes),
-		Body:    parsedBody,
+		Path:       r.URL.Path,
+		RequestURI: r.RequestURI,
+		Method:     r.Method,
+		Query:      map[string][]string(r.URL.Query()),
+		Headers:    flattenHeaders(r.Header),
+		BodyRaw:    string(bodyBytes),
+		Body:       parsedBody,
 	}
 
 	mu.Lock()
@@ -214,19 +230,25 @@ func handlePIP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 2. Legacy path routes (fallback so existing tests keep working).
-	route, ok := routes[r.URL.Path]
-	if !ok {
+	// 2. Legacy path routes (fallback so existing tests keep working), then
+	// the default route.
+	key := r.URL.Path
+	route, ok := routes[key]
+	if !ok || len(route.Responses) == 0 {
+		key = defaultRoute
+		route, ok = routes[key]
+	}
+	if !ok || len(route.Responses) == 0 {
 		mu.Unlock()
 		w.WriteHeader(http.StatusNotFound)
 		_, _ = fmt.Fprintf(w, `{"error":"no rule or route for %s"}`, r.URL.Path)
 		return
 	}
-	idx := counters[r.URL.Path]
+	idx := counters[key]
 	if idx >= len(route.Responses) {
 		idx = len(route.Responses) - 1
 	}
-	counters[r.URL.Path] = idx + 1
+	counters[key] = idx + 1
 	resp := route.Responses[idx]
 	mu.Unlock()
 
