@@ -352,6 +352,8 @@ func (s *ParitySuite) sendRequest(resourceType string, req isolatedRequest, toke
 	ctx := context.Background()
 	opts := req.callOptions()
 	switch {
+	case req.v2:
+		return s.sendV2Request(resourceType, req, tokens)
 	case req.bulk != nil:
 		status, raw, err := HelperPostV1(ctx, s.cfg, v1PathCheckResourceBulk, req.bulk, tokens, opts)
 		s.Require().NoError(err)

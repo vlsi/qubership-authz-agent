@@ -74,6 +74,21 @@ type caseFile struct {
 	// sends, unless the case names its own; the stand's tenant when empty. A
 	// file with a tenant holds only such cases; an empty string is not a tenant.
 	Tenant *string `json:"tenant"`
+	// StandProperties names access-control properties, by their name in the
+	// service's configuration, with the value the stand has to run with for
+	// the file's goldens to mean what they say, such as
+	// access-control.obligations.enabled. The runner neither sets nor checks
+	// them: the stand's owner sets them before the run, and the request for
+	// the round names them. A property the file does not name keeps the
+	// stand's default.
+	StandProperties map[string]string `json:"standProperties"`
+}
+
+// standProperties holds the values each property a case file may name in
+// StandProperties can take.
+var standProperties = map[string][]string{
+	"access-control.obligations.enabled":        {"true", "false"},
+	"access-control.obligations.merge.strategy": {"weak", "strict"},
 }
 
 type caseSpec struct {
@@ -340,6 +355,22 @@ type requestSpec struct {
 	// these items; see bulkItems. The golden records the status and, per
 	// operation, the sorted allowed ids.
 	BulkOperations []any `json:"bulkOperations"`
+	// V2 sends the request through the v2 endpoint of its kind,
+	// check/resource, check/filter, or check/resource/bulk/operations, and
+	// records the obligations member of the answer beside the decision; see
+	// v2Spec. A bulk request has no v2 endpoint.
+	V2 *v2Spec `json:"v2"`
+}
+
+// v2Spec is how a case's request goes through a v2 endpoint. Obligations is
+// the value of the obligations query parameter, sent as written; when it is
+// absent the request sends no obligations parameter at all. The golden is
+// check-resource-v2-outcome, check-filter-v2-outcome, or
+// check-resource-bulk-operations-v2-outcome, under the request's name, and
+// holds what the v1 outcome of the same request holds plus the obligations
+// member, written only when the answer had one.
+type v2Spec struct {
+	Obligations *string `json:"obligations"`
 }
 
 // errorBodiesFromRound is the first round whose case files record, beside the
@@ -874,6 +905,16 @@ func TestCaseFilesAreWellFormed(t *testing.T) {
 	}
 }
 
+// caseResourceType returns the resource type of case c of f: its own
+// resourceType, else the file's prefix followed by its id in upper case, with
+// each hyphen turned into an underscore.
+func caseResourceType(f caseFile, c caseSpec) string {
+	if c.ResourceType != "" {
+		return c.ResourceType
+	}
+	return f.ResourceTypePrefix + strings.ToUpper(strings.ReplaceAll(c.ID, "-", "_"))
+}
+
 // caseFileProblems returns one message for each part of f that runCaseFile
 // would not run as written: a PIP a case names and f does not declare, a field
 // the kind of case or request does not read, two fields that contradict each
@@ -887,6 +928,13 @@ func caseFileProblems(f caseFile) []string {
 	report := func(format string, args ...any) { problems = append(problems, fmt.Sprintf(format, args...)) }
 	earlierRegular := map[string]bool{}
 	problems = append(problems, userManagementRouteProblems("the file", f.UserManagement)...)
+	for _, name := range slices.Sorted(maps.Keys(f.StandProperties)) {
+		if values, ok := standProperties[name]; !ok {
+			report("names the stand property %s, which is none of %v", name, slices.Sorted(maps.Keys(standProperties)))
+		} else if !slices.Contains(values, f.StandProperties[name]) {
+			report("sets the stand property %s to %q, which is none of %q", name, f.StandProperties[name], values)
+		}
+	}
 	for _, c := range f.Cases {
 		problems = append(problems, userManagementRouteProblems("case "+c.ID, c.UserManagement)...)
 		sequence := len(c.Sets) == 0 && c.Steps != nil
@@ -973,7 +1021,7 @@ func caseFileProblems(f caseFile) []string {
 				for route := range r.Pins {
 					pinned[route] = true
 				}
-				problems = append(problems, requestProblems(c, r, pinned)...)
+				problems = append(problems, requestProblems(c, r, pinned, caseResourceType(f, c))...)
 			}
 		}
 		checkRequests(c.Requests)
@@ -1167,7 +1215,7 @@ func customEntryProblems(kind string, e any) []string {
 // requestProblems returns the problems of r, a request of the case c. pinned
 // holds the routes pinned before r is sent: the file's, the case's, and those
 // r and the requests before it pin.
-func requestProblems(c caseSpec, r requestSpec, pinned map[string]bool) []string {
+func requestProblems(c caseSpec, r requestSpec, pinned map[string]bool, rt string) []string {
 	var problems []string
 	report := func(format string, args ...any) {
 		problems = append(problems, fmt.Sprintf("case %s request %s ", c.ID, r.Name)+fmt.Sprintf(format, args...))
@@ -1214,6 +1262,14 @@ func requestProblems(c caseSpec, r requestSpec, pinned map[string]bool) []string
 	}
 	if r.OmitOperation && (!r.Filter || r.Operation != "" || r.EmptyOperation) {
 		report("sets omitOperation, which only a filter request with no operation and no emptyOperation reads")
+	}
+	if r.V2 != nil && r.Bulk != nil {
+		report("sets v2 beside bulk, which has no v2 endpoint")
+	}
+	if r.V2 != nil && r.BulkOperations != nil {
+		if _, err := v2BulkOperationsBody(bulkItems(r.BulkOperations, rt), rt); err != nil {
+			report("sends bulkOperations through v2, but %v", err)
+		}
 	}
 	if r.Bulk != nil || r.BulkOperations != nil {
 		if r.Bulk != nil && r.BulkOperations != nil {

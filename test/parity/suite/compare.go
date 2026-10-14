@@ -22,6 +22,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"slices"
 	"sort"
 	"strings"
 
@@ -215,9 +216,60 @@ func normalizeComparable(id ParityEndpointID, subCase string, v any) any {
 	if id == PSUITE_ROW_10_CHECK_FILTER_V2 && (subCase == "general-pip-dict" || subCase == "general-pip-list") {
 		v = normalizeFilterInClauseElements(v)
 	}
+	v = withSortedObligations(v)
 	switch id {
-	case PSUITE_ROW_6_CHECK_FILTER_V1, PSUITE_ROW_6_CHECK_FILTER_V1_OUTCOME, PSUITE_ROW_10_CHECK_FILTER_V2:
+	case PSUITE_ROW_6_CHECK_FILTER_V1, PSUITE_ROW_6_CHECK_FILTER_V1_OUTCOME, PSUITE_ROW_10_CHECK_FILTER_V2,
+		PSUITE_ROW_10_CHECK_FILTER_V2_OUTCOME:
 		return normalizeFilterOrder(v)
+	}
+	return v
+}
+
+// withSortedObligations returns a copy of v with every list of strings in its
+// obligations member sorted when v is a v2 outcome, and v itself otherwise.
+// The fields of an obligation name a set of resource fields, and a merge of
+// the obligations of several roles need not list them in one order from run
+// to run.
+func withSortedObligations(v any) any {
+	switch typed := v.(type) {
+	case *model.CheckResourceV2Outcome:
+		clone := *typed
+		clone.Obligations.Value = sortedStringLists(clone.Obligations.Value)
+		return &clone
+	case *model.CheckResourceBulkOperationsV2Outcome:
+		clone := *typed
+		clone.Obligations.Value = sortedStringLists(clone.Obligations.Value)
+		return &clone
+	case *model.FilterV2Outcome:
+		clone := *typed
+		clone.Obligations.Value = sortedStringLists(clone.Obligations.Value)
+		return &clone
+	}
+	return v
+}
+
+// sortedStringLists returns a copy of v, a decoded JSON value, in which every
+// array whose elements are all strings is sorted.
+func sortedStringLists(v any) any {
+	switch x := v.(type) {
+	case map[string]any:
+		out := make(map[string]any, len(x))
+		for key, value := range x {
+			out[key] = sortedStringLists(value)
+		}
+		return out
+	case []any:
+		out := make([]any, len(x))
+		strs := true
+		for i, e := range x {
+			out[i] = sortedStringLists(e)
+			_, ok := e.(string)
+			strs = strs && ok
+		}
+		if strs {
+			slices.SortFunc(out, func(a, b any) int { return strings.Compare(a.(string), b.(string)) })
+		}
+		return out
 	}
 	return v
 }
@@ -245,6 +297,18 @@ func withoutMessage(v any) any {
 		clone.Message = nil
 		return &clone
 	case *model.CheckResourceBulkOperationsOutcome:
+		clone := *typed
+		clone.Message = nil
+		return &clone
+	case *model.CheckResourceV2Outcome:
+		clone := *typed
+		clone.Message = nil
+		return &clone
+	case *model.CheckResourceBulkOperationsV2Outcome:
+		clone := *typed
+		clone.Message = nil
+		return &clone
+	case *model.FilterV2Outcome:
 		clone := *typed
 		clone.Message = nil
 		return &clone

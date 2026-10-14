@@ -19,9 +19,11 @@ package paritysuite
 import (
 	"context"
 	"fmt"
+	"maps"
 	"net/http"
 	"path"
 	"reflect"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -39,6 +41,9 @@ func (s *ParitySuite) runCaseFile(name string) {
 	defer func() { s.errorBodies = false }()
 	s.scopeRead = s.scopeRead || readsPermissionScope(f)
 	ctx := context.Background()
+	for _, property := range slices.Sorted(maps.Keys(f.StandProperties)) {
+		s.T().Logf("%s expects the stand to run with %s=%s", name, property, f.StandProperties[property])
+	}
 	if f.StandVersion {
 		function := path.Base(s.T().Name())
 		s.Run("api-version", func() {
@@ -81,7 +86,7 @@ func caseFileCases(f caseFile) ([]isolatedCase, []regularCase, []sequenceCase, e
 	var regular []regularCase
 	var sequence []sequenceCase
 	for _, c := range f.Cases {
-		rt := valueOr(c.ResourceType, f.ResourceTypePrefix+strings.ToUpper(strings.ReplaceAll(c.ID, "-", "_")))
+		rt := caseResourceType(f, c)
 		steps, err := caseSteps(c, rt)
 		if err != nil {
 			return nil, nil, nil, err
@@ -208,6 +213,9 @@ func caseRequests(specs []requestSpec, rt string) []isolatedRequest {
 		}
 		if r.BulkOperations != nil {
 			req.bulkOperations = bulkItems(r.BulkOperations, rt)
+		}
+		if r.V2 != nil {
+			req.v2, req.obligations = true, r.V2.Obligations
 		}
 		requests = append(requests, req)
 	}

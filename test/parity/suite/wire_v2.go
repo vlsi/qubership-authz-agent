@@ -123,3 +123,17 @@ func HelperFilterV2(ctx context.Context, cfg Config, resourceType, operation str
 	}
 	return status, decoded, raw, nil
 }
+
+// HelperPostV2 posts body, nil for none, to the v2 path of access-control
+// with the tenant, the userId, and the headers of opts and the query
+// parameters extra, and returns the status and the raw body without decoding
+// it. Unlike the row helpers it sends no obligations parameter of its own:
+// extra carries one when the caller wants one.
+func HelperPostV2(ctx context.Context, cfg Config, path string, extra url.Values, body any, tokens TokenBundle, opts PerCallOptions) (int, []byte, error) {
+	target := buildURL(cfg.ACBaseURL, path, buildQuery(cfg, opts, extra))
+	req, err := buildRequest(ctx, http.MethodPost, target, body, tokens, opts)
+	if err != nil {
+		return 0, nil, err
+	}
+	return doRequest(req)
+}

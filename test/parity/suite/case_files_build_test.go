@@ -579,6 +579,30 @@ func TestCaseFileProblems(t *testing.T) {
 			`case reg has a customize step named ""`},
 		{"a bulkOperations item that is not an object", func(f *caseFile) { f.Cases[0].Requests[0].BulkOperations = []any{"a"} },
 			"case iso request read has the bulk item a, which is not an object"},
+		{"v2 beside bulk", func(f *caseFile) {
+			f.Cases[0].Requests[0].Bulk = []any{}
+			f.Cases[0].Requests[0].V2 = &v2Spec{}
+		}, "case iso request read sets v2 beside bulk"},
+		{"v2 bulkOperations of one type", func(f *caseFile) {
+			f.Cases[0].Requests[0].BulkOperations = []any{map[string]any{"id": "a"}, map[string]any{"id": "b"}}
+			f.Cases[0].Requests[0].V2 = &v2Spec{}
+		}, ""},
+		{"v2 bulkOperations of two types", func(f *caseFile) {
+			f.Cases[0].Requests[0].BulkOperations = []any{map[string]any{"id": "a"}, map[string]any{"id": "b", "type": "T"}}
+			f.Cases[0].Requests[0].V2 = &v2Spec{}
+		}, "case iso request read sends bulkOperations through v2, but its items name 2 types"},
+		{"v2 bulkOperations of the case's type, named and omitted", func(f *caseFile) {
+			f.Cases[0].Requests[0].BulkOperations = []any{map[string]any{"id": "a"}, map[string]any{"id": "b", "type": "ISO"}}
+			f.Cases[0].Requests[0].V2 = &v2Spec{}
+		}, ""},
+		{"a stand property", func(f *caseFile) {
+			f.StandProperties = map[string]string{"access-control.obligations.merge.strategy": "weak"}
+		}, ""},
+		{"an unknown stand property", func(f *caseFile) { f.StandProperties = map[string]string{"access-control.other": "x"} },
+			"names the stand property access-control.other"},
+		{"a stand property value it cannot take", func(f *caseFile) {
+			f.StandProperties = map[string]string{"access-control.obligations.enabled": "yes"}
+		}, `sets the stand property access-control.obligations.enabled to "yes"`},
 		{"emptyOperation beside bulk", func(f *caseFile) {
 			f.Cases[0].Requests[0].Bulk = []any{}
 			f.Cases[0].Requests[0].EmptyOperation = true

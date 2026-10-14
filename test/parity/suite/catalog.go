@@ -90,6 +90,16 @@ const (
 	// PSUITE_USER_MANAGEMENT_CALL is what the User Management stub received
 	// from the service under test over one request.
 	PSUITE_USER_MANAGEMENT_CALL
+	// PSUITE_ROW_7_CHECK_RESOURCE_V2_OUTCOME is row 7 sent by a case file with
+	// its own obligations parameter, recorded with its HTTP status and the
+	// obligations member of the answer.
+	PSUITE_ROW_7_CHECK_RESOURCE_V2_OUTCOME
+	// PSUITE_ROW_8_CHECK_RESOURCE_BULK_OPERATIONS_V2_OUTCOME is row 8 sent and
+	// recorded as PSUITE_ROW_7_CHECK_RESOURCE_V2_OUTCOME is.
+	PSUITE_ROW_8_CHECK_RESOURCE_BULK_OPERATIONS_V2_OUTCOME
+	// PSUITE_ROW_10_CHECK_FILTER_V2_OUTCOME is row 10 sent and recorded as
+	// PSUITE_ROW_7_CHECK_RESOURCE_V2_OUTCOME is.
+	PSUITE_ROW_10_CHECK_FILTER_V2_OUTCOME
 )
 
 // RowMeta holds the canonical per-row metadata the GoldenComparator and
@@ -232,6 +242,19 @@ var rowMetas = map[ParityEndpointID]RowMeta{
 		ID: PSUITE_PAP_READ_RAW, Name: "pap-read-raw-v1", HTTPMethod: "GET",
 		PathTmpl: "/access/v1", GoldenDir: "pap-read-raw-v1",
 	},
+	PSUITE_ROW_7_CHECK_RESOURCE_V2_OUTCOME: {
+		ID: PSUITE_ROW_7_CHECK_RESOURCE_V2_OUTCOME, Name: "check-resource-v2-outcome", HTTPMethod: "POST",
+		PathTmpl: "/access/v2/check/resource", GoldenDir: "check-resource-v2-outcome",
+	},
+	PSUITE_ROW_8_CHECK_RESOURCE_BULK_OPERATIONS_V2_OUTCOME: {
+		ID: PSUITE_ROW_8_CHECK_RESOURCE_BULK_OPERATIONS_V2_OUTCOME, Name: "check-resource-bulk-operations-v2-outcome", HTTPMethod: "POST",
+		PathTmpl: "/access/v2/check/resource/bulk/operations", GoldenDir: "check-resource-bulk-operations-v2-outcome",
+		SortSlices: true,
+	},
+	PSUITE_ROW_10_CHECK_FILTER_V2_OUTCOME: {
+		ID: PSUITE_ROW_10_CHECK_FILTER_V2_OUTCOME, Name: "check-filter-v2-outcome", HTTPMethod: "POST",
+		PathTmpl: "/access/v2/check/filter", GoldenDir: "check-filter-v2-outcome",
+	},
 }
 
 // Meta returns a copy of the row metadata for the given id; panics on
@@ -294,6 +317,12 @@ func NewGoldenTarget(id ParityEndpointID) any {
 		return &model.CheckResourceBulkOutcome{}
 	case PSUITE_ROW_4_CHECK_RESOURCE_BULK_OPERATIONS_V1_OUTCOME:
 		return &model.CheckResourceBulkOperationsOutcome{}
+	case PSUITE_ROW_7_CHECK_RESOURCE_V2_OUTCOME:
+		return &model.CheckResourceV2Outcome{}
+	case PSUITE_ROW_8_CHECK_RESOURCE_BULK_OPERATIONS_V2_OUTCOME:
+		return &model.CheckResourceBulkOperationsV2Outcome{}
+	case PSUITE_ROW_10_CHECK_FILTER_V2_OUTCOME:
+		return &model.FilterV2Outcome{}
 	}
 	panic(fmt.Sprintf("paritysuite: no golden factory for ParityEndpointID %d", int(id)))
 }

@@ -127,6 +127,11 @@ type isolatedRequest struct {
 	// place of the check or filter request.
 	bulk           []any
 	bulkOperations []any
+	// v2 sends the check, the filter, or the bulk operations request through
+	// its v2 endpoint with the obligations parameter obligations, none when
+	// it is nil; see requestSpec.V2.
+	v2          bool
+	obligations *string
 }
 
 // callOptions returns the per-call options req is sent with: its headers, its

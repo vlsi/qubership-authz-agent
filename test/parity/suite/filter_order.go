@@ -47,6 +47,10 @@ func normalizeFilterOrder(v any) any {
 		clone := *typed
 		normalizeOldFilterResultOrder(&clone.Result)
 		return &clone
+	case *model.FilterV2Outcome:
+		clone := *typed
+		normalizeOldFilterResultOrder(&clone.Result)
+		return &clone
 	case *model.FilterResponse:
 		clone := *typed
 		clone.FilterCondition = canonicalMethodChain(clone.FilterCondition)
