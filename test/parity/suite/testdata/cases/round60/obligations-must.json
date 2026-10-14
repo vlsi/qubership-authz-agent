@@ -1,0 +1,2765 @@
+{
+ "about": "Round 60 (must): obligations written, read back by domain and exported raw and merged, and v2 requests that ask for obligations, on a stand with access-control.obligations.enabled=false. Each case runs in a tenant of its own and reads the merged export first; a control goes first and last.",
+ "standVersion": true,
+ "standProperties": {
+  "access-control.obligations.enabled": "false"
+ },
+ "cases": [
+  {
+   "id": "p60o-901-control-must-first",
+   "about": "control: one obligation written, read back and decided the same way first and last",
+   "resourceType": "PARITY_SUITE_P60O_901",
+   "tenant": "parity-p60o-901",
+   "steps": [
+    {
+     "name": "before",
+     "op": "read-merged-obligations",
+     "args": {},
+     "observe": [
+      "read:read-merged-obligations"
+     ],
+     "markers": [
+      "parity-p60o-901"
+     ]
+    },
+    {
+     "name": "declare",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_P60O_901"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": []
+    },
+    {
+     "name": "write",
+     "op": "write-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_901"
+     },
+     "observe": [
+      "status",
+      "error-class"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "id": "e90dbd3a-9733-b6e0-e9a8-b0afe3f0094a",
+       "component": "PARITY_SUITE_P60O_901",
+       "roles": [
+        "ROLE_PARITY_P60O_901_A"
+       ],
+       "reason": "parity p60o-901-control-must-first",
+       "resourceType": "PARITY_SUITE_P60O_901",
+       "fieldPolicyOperation": "READ",
+       "fieldPolicyType": "WHITELIST",
+       "fields": [
+        "f1"
+       ]
+      }
+     ]
+    },
+    {
+     "name": "after-domain",
+     "op": "read-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_901"
+     },
+     "observe": [
+      "read:read-domain-obligations"
+     ],
+     "markers": [
+      "parity-p60o-901"
+     ]
+    },
+    {
+     "name": "after-raw",
+     "op": "read-raw-obligations",
+     "args": {},
+     "observe": [
+      "read:read-raw-obligations"
+     ],
+     "markers": [
+      "parity-p60o-901"
+     ]
+    },
+    {
+     "name": "after-merged",
+     "op": "read-merged-obligations",
+     "args": {},
+     "observe": [
+      "read:read-merged-obligations"
+     ],
+     "markers": [
+      "parity-p60o-901"
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "delete-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_901"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    }
+   ]
+  },
+  {
+   "id": "p60o-001-export-example",
+   "about": "the documentation's export example: five obligations of four roles, one of type All, read back by domain, raw and merged",
+   "resourceType": "PARITY_SUITE_P60O_001",
+   "tenant": "parity-p60o-001",
+   "steps": [
+    {
+     "name": "before",
+     "op": "read-merged-obligations",
+     "args": {},
+     "observe": [
+      "read:read-merged-obligations"
+     ],
+     "markers": [
+      "parity-p60o-001"
+     ]
+    },
+    {
+     "name": "declare",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_P60O_001"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": []
+    },
+    {
+     "name": "write",
+     "op": "write-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_001"
+     },
+     "observe": [
+      "status",
+      "error-class"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "id": "35bf2ec2-5cb3-e37a-ac9a-37f41d44709e",
+       "component": "PARITY_SUITE_P60O_001",
+       "roles": [
+        "ROLE_PARITY_P60O_001_1"
+       ],
+       "reason": "parity p60o-001-export-example",
+       "resourceType": "PARITY_SUITE_P60O_001",
+       "fieldPolicyOperation": "READ",
+       "fieldPolicyType": "WHITELIST",
+       "fields": [
+        "101",
+        "102",
+        "103"
+       ]
+      },
+      {
+       "id": "fac9cbce-1226-ff10-f161-d79a1c6ca9bc",
+       "component": "PARITY_SUITE_P60O_001",
+       "roles": [
+        "ROLE_PARITY_P60O_001_1"
+       ],
+       "reason": "parity p60o-001-export-example",
+       "resourceType": "PARITY_SUITE_P60O_001",
+       "fieldPolicyOperation": "WRITE",
+       "fieldPolicyType": "WHITELIST",
+       "fields": [
+        "101",
+        "102"
+       ]
+      },
+      {
+       "id": "9691852d-718a-44b0-ccf7-5f5b9fce0b69",
+       "component": "PARITY_SUITE_P60O_001",
+       "roles": [
+        "ROLE_PARITY_P60O_001_2",
+        "ROLE_PARITY_P60O_001_3"
+       ],
+       "reason": "parity p60o-001-export-example",
+       "resourceType": "PARITY_SUITE_P60O_001",
+       "fieldPolicyOperation": "ALL",
+       "fieldPolicyType": "FULL_ACCESS",
+       "fields": []
+      },
+      {
+       "id": "91d60b2c-b12c-d813-4057-cc580636625f",
+       "component": "PARITY_SUITE_P60O_001",
+       "roles": [
+        "ROLE_PARITY_P60O_001_2"
+       ],
+       "reason": "parity p60o-001-export-example",
+       "resourceType": "PARITY_SUITE_P60O_001",
+       "fieldPolicyOperation": "READ",
+       "fieldPolicyType": "WHITELIST",
+       "fields": [
+        "102",
+        "104"
+       ]
+      },
+      {
+       "id": "4a6f2fa3-4695-117d-9e70-5549394f2a63",
+       "component": "PARITY_SUITE_P60O_001",
+       "roles": [
+        "ROLE_PARITY_P60O_001_4"
+       ],
+       "reason": "parity p60o-001-export-example",
+       "resourceType": "All",
+       "fieldPolicyOperation": "ALL",
+       "fieldPolicyType": "FULL_ACCESS",
+       "fields": []
+      }
+     ]
+    },
+    {
+     "name": "after-domain",
+     "op": "read-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_001"
+     },
+     "observe": [
+      "read:read-domain-obligations"
+     ],
+     "markers": [
+      "parity-p60o-001"
+     ]
+    },
+    {
+     "name": "after-raw",
+     "op": "read-raw-obligations",
+     "args": {},
+     "observe": [
+      "read:read-raw-obligations"
+     ],
+     "markers": [
+      "parity-p60o-001"
+     ]
+    },
+    {
+     "name": "after-merged",
+     "op": "read-merged-obligations",
+     "args": {},
+     "observe": [
+      "read:read-merged-obligations"
+     ],
+     "markers": [
+      "parity-p60o-001"
+     ]
+    },
+    {
+     "name": "after-raw-typed",
+     "op": "read-raw-obligations",
+     "args": {
+      "resource_types": "PARITY_SUITE_P60O_001"
+     },
+     "observe": [
+      "read:read-raw-obligations"
+     ],
+     "markers": [
+      "parity-p60o-001"
+     ]
+    },
+    {
+     "name": "after-merged-typed",
+     "op": "read-merged-obligations",
+     "args": {
+      "resource_types": "PARITY_SUITE_P60O_001"
+     },
+     "observe": [
+      "read:read-merged-obligations"
+     ],
+     "markers": [
+      "parity-p60o-001"
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "delete-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_001"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "gone",
+     "op": "read-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_001"
+     },
+     "observe": [
+      "read:read-domain-obligations"
+     ],
+     "markers": [
+      "parity-p60o-001"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p60o-002-merge-example",
+   "about": "the documentation's merge example: two roles, read back by domain, raw and merged",
+   "resourceType": "PARITY_SUITE_P60O_002",
+   "tenant": "parity-p60o-002",
+   "steps": [
+    {
+     "name": "before",
+     "op": "read-merged-obligations",
+     "args": {},
+     "observe": [
+      "read:read-merged-obligations"
+     ],
+     "markers": [
+      "parity-p60o-002"
+     ]
+    },
+    {
+     "name": "declare",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_P60O_002"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": []
+    },
+    {
+     "name": "write",
+     "op": "write-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_002"
+     },
+     "observe": [
+      "status",
+      "error-class"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "id": "0331cec0-49b6-0749-f5e8-5f4e064ea006",
+       "component": "PARITY_SUITE_P60O_002",
+       "roles": [
+        "ROLE_PARITY_P60O_002_1"
+       ],
+       "reason": "parity p60o-002-merge-example",
+       "resourceType": "PARITY_SUITE_P60O_002",
+       "fieldPolicyOperation": "READ",
+       "fieldPolicyType": "WHITELIST",
+       "fields": [
+        "101",
+        "102",
+        "103"
+       ]
+      },
+      {
+       "id": "85970ed3-a8e5-5de4-6af9-bc877dd05f1a",
+       "component": "PARITY_SUITE_P60O_002",
+       "roles": [
+        "ROLE_PARITY_P60O_002_1"
+       ],
+       "reason": "parity p60o-002-merge-example",
+       "resourceType": "PARITY_SUITE_P60O_002",
+       "fieldPolicyOperation": "WRITE",
+       "fieldPolicyType": "WHITELIST",
+       "fields": [
+        "101",
+        "102"
+       ]
+      },
+      {
+       "id": "962693fb-2335-fcdb-fdfc-62dca639b948",
+       "component": "PARITY_SUITE_P60O_002",
+       "roles": [
+        "ROLE_PARITY_P60O_002_2"
+       ],
+       "reason": "parity p60o-002-merge-example",
+       "resourceType": "PARITY_SUITE_P60O_002",
+       "fieldPolicyOperation": "WRITE",
+       "fieldPolicyType": "FULL_ACCESS"
+      }
+     ]
+    },
+    {
+     "name": "after-domain",
+     "op": "read-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_002"
+     },
+     "observe": [
+      "read:read-domain-obligations"
+     ],
+     "markers": [
+      "parity-p60o-002"
+     ]
+    },
+    {
+     "name": "after-raw",
+     "op": "read-raw-obligations",
+     "args": {},
+     "observe": [
+      "read:read-raw-obligations"
+     ],
+     "markers": [
+      "parity-p60o-002"
+     ]
+    },
+    {
+     "name": "after-merged",
+     "op": "read-merged-obligations",
+     "args": {},
+     "observe": [
+      "read:read-merged-obligations"
+     ],
+     "markers": [
+      "parity-p60o-002"
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "delete-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_002"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "gone",
+     "op": "read-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_002"
+     },
+     "observe": [
+      "read:read-domain-obligations"
+     ],
+     "markers": [
+      "parity-p60o-002"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p60o-003-read-whitelist",
+   "about": "one role, one type, READ WHITELIST, read back",
+   "resourceType": "PARITY_SUITE_P60O_003",
+   "tenant": "parity-p60o-003",
+   "steps": [
+    {
+     "name": "before",
+     "op": "read-merged-obligations",
+     "args": {},
+     "observe": [
+      "read:read-merged-obligations"
+     ],
+     "markers": [
+      "parity-p60o-003"
+     ]
+    },
+    {
+     "name": "declare",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_P60O_003"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": []
+    },
+    {
+     "name": "write",
+     "op": "write-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_003"
+     },
+     "observe": [
+      "status",
+      "error-class"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "id": "e5e8ac1c-87c8-cf04-3ba9-d033046bac86",
+       "component": "PARITY_SUITE_P60O_003",
+       "roles": [
+        "ROLE_PARITY_P60O_003_A"
+       ],
+       "reason": "parity p60o-003-read-whitelist",
+       "resourceType": "PARITY_SUITE_P60O_003",
+       "fieldPolicyOperation": "READ",
+       "fieldPolicyType": "WHITELIST",
+       "fields": [
+        "f1",
+        "f2"
+       ]
+      }
+     ]
+    },
+    {
+     "name": "after-domain",
+     "op": "read-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_003"
+     },
+     "observe": [
+      "read:read-domain-obligations"
+     ],
+     "markers": [
+      "parity-p60o-003"
+     ]
+    },
+    {
+     "name": "after-raw",
+     "op": "read-raw-obligations",
+     "args": {},
+     "observe": [
+      "read:read-raw-obligations"
+     ],
+     "markers": [
+      "parity-p60o-003"
+     ]
+    },
+    {
+     "name": "after-merged",
+     "op": "read-merged-obligations",
+     "args": {},
+     "observe": [
+      "read:read-merged-obligations"
+     ],
+     "markers": [
+      "parity-p60o-003"
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "delete-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_003"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "gone",
+     "op": "read-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_003"
+     },
+     "observe": [
+      "read:read-domain-obligations"
+     ],
+     "markers": [
+      "parity-p60o-003"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p60o-004-read-full-access",
+   "about": "one role, one type, READ FULL_ACCESS, read back",
+   "resourceType": "PARITY_SUITE_P60O_004",
+   "tenant": "parity-p60o-004",
+   "steps": [
+    {
+     "name": "before",
+     "op": "read-merged-obligations",
+     "args": {},
+     "observe": [
+      "read:read-merged-obligations"
+     ],
+     "markers": [
+      "parity-p60o-004"
+     ]
+    },
+    {
+     "name": "declare",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_P60O_004"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": []
+    },
+    {
+     "name": "write",
+     "op": "write-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_004"
+     },
+     "observe": [
+      "status",
+      "error-class"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "id": "c5379b0b-6da2-0f54-0eaa-d664ed06e11f",
+       "component": "PARITY_SUITE_P60O_004",
+       "roles": [
+        "ROLE_PARITY_P60O_004_A"
+       ],
+       "reason": "parity p60o-004-read-full-access",
+       "resourceType": "PARITY_SUITE_P60O_004",
+       "fieldPolicyOperation": "READ",
+       "fieldPolicyType": "FULL_ACCESS",
+       "fields": []
+      }
+     ]
+    },
+    {
+     "name": "after-domain",
+     "op": "read-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_004"
+     },
+     "observe": [
+      "read:read-domain-obligations"
+     ],
+     "markers": [
+      "parity-p60o-004"
+     ]
+    },
+    {
+     "name": "after-raw",
+     "op": "read-raw-obligations",
+     "args": {},
+     "observe": [
+      "read:read-raw-obligations"
+     ],
+     "markers": [
+      "parity-p60o-004"
+     ]
+    },
+    {
+     "name": "after-merged",
+     "op": "read-merged-obligations",
+     "args": {},
+     "observe": [
+      "read:read-merged-obligations"
+     ],
+     "markers": [
+      "parity-p60o-004"
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "delete-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_004"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "gone",
+     "op": "read-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_004"
+     },
+     "observe": [
+      "read:read-domain-obligations"
+     ],
+     "markers": [
+      "parity-p60o-004"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p60o-005-write-whitelist",
+   "about": "one role, one type, WRITE WHITELIST, read back",
+   "resourceType": "PARITY_SUITE_P60O_005",
+   "tenant": "parity-p60o-005",
+   "steps": [
+    {
+     "name": "before",
+     "op": "read-merged-obligations",
+     "args": {},
+     "observe": [
+      "read:read-merged-obligations"
+     ],
+     "markers": [
+      "parity-p60o-005"
+     ]
+    },
+    {
+     "name": "declare",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_P60O_005"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": []
+    },
+    {
+     "name": "write",
+     "op": "write-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_005"
+     },
+     "observe": [
+      "status",
+      "error-class"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "id": "6ef1f1d3-f313-1975-a1aa-af78e8188a4d",
+       "component": "PARITY_SUITE_P60O_005",
+       "roles": [
+        "ROLE_PARITY_P60O_005_A"
+       ],
+       "reason": "parity p60o-005-write-whitelist",
+       "resourceType": "PARITY_SUITE_P60O_005",
+       "fieldPolicyOperation": "WRITE",
+       "fieldPolicyType": "WHITELIST",
+       "fields": [
+        "f1",
+        "f2"
+       ]
+      }
+     ]
+    },
+    {
+     "name": "after-domain",
+     "op": "read-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_005"
+     },
+     "observe": [
+      "read:read-domain-obligations"
+     ],
+     "markers": [
+      "parity-p60o-005"
+     ]
+    },
+    {
+     "name": "after-raw",
+     "op": "read-raw-obligations",
+     "args": {},
+     "observe": [
+      "read:read-raw-obligations"
+     ],
+     "markers": [
+      "parity-p60o-005"
+     ]
+    },
+    {
+     "name": "after-merged",
+     "op": "read-merged-obligations",
+     "args": {},
+     "observe": [
+      "read:read-merged-obligations"
+     ],
+     "markers": [
+      "parity-p60o-005"
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "delete-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_005"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "gone",
+     "op": "read-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_005"
+     },
+     "observe": [
+      "read:read-domain-obligations"
+     ],
+     "markers": [
+      "parity-p60o-005"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p60o-006-write-full-access",
+   "about": "one role, one type, WRITE FULL_ACCESS, read back",
+   "resourceType": "PARITY_SUITE_P60O_006",
+   "tenant": "parity-p60o-006",
+   "steps": [
+    {
+     "name": "before",
+     "op": "read-merged-obligations",
+     "args": {},
+     "observe": [
+      "read:read-merged-obligations"
+     ],
+     "markers": [
+      "parity-p60o-006"
+     ]
+    },
+    {
+     "name": "declare",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_P60O_006"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": []
+    },
+    {
+     "name": "write",
+     "op": "write-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_006"
+     },
+     "observe": [
+      "status",
+      "error-class"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "id": "256426df-ab38-77b9-4410-c3220361dea3",
+       "component": "PARITY_SUITE_P60O_006",
+       "roles": [
+        "ROLE_PARITY_P60O_006_A"
+       ],
+       "reason": "parity p60o-006-write-full-access",
+       "resourceType": "PARITY_SUITE_P60O_006",
+       "fieldPolicyOperation": "WRITE",
+       "fieldPolicyType": "FULL_ACCESS",
+       "fields": []
+      }
+     ]
+    },
+    {
+     "name": "after-domain",
+     "op": "read-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_006"
+     },
+     "observe": [
+      "read:read-domain-obligations"
+     ],
+     "markers": [
+      "parity-p60o-006"
+     ]
+    },
+    {
+     "name": "after-raw",
+     "op": "read-raw-obligations",
+     "args": {},
+     "observe": [
+      "read:read-raw-obligations"
+     ],
+     "markers": [
+      "parity-p60o-006"
+     ]
+    },
+    {
+     "name": "after-merged",
+     "op": "read-merged-obligations",
+     "args": {},
+     "observe": [
+      "read:read-merged-obligations"
+     ],
+     "markers": [
+      "parity-p60o-006"
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "delete-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_006"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "gone",
+     "op": "read-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_006"
+     },
+     "observe": [
+      "read:read-domain-obligations"
+     ],
+     "markers": [
+      "parity-p60o-006"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p60o-007-all-whitelist",
+   "about": "one role, one type, ALL WHITELIST, read back",
+   "resourceType": "PARITY_SUITE_P60O_007",
+   "tenant": "parity-p60o-007",
+   "steps": [
+    {
+     "name": "before",
+     "op": "read-merged-obligations",
+     "args": {},
+     "observe": [
+      "read:read-merged-obligations"
+     ],
+     "markers": [
+      "parity-p60o-007"
+     ]
+    },
+    {
+     "name": "declare",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_P60O_007"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": []
+    },
+    {
+     "name": "write",
+     "op": "write-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_007"
+     },
+     "observe": [
+      "status",
+      "error-class"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "id": "e868e67a-88f0-bc1a-8e66-6d6dd13e5a8b",
+       "component": "PARITY_SUITE_P60O_007",
+       "roles": [
+        "ROLE_PARITY_P60O_007_A"
+       ],
+       "reason": "parity p60o-007-all-whitelist",
+       "resourceType": "PARITY_SUITE_P60O_007",
+       "fieldPolicyOperation": "ALL",
+       "fieldPolicyType": "WHITELIST",
+       "fields": [
+        "f1",
+        "f2"
+       ]
+      }
+     ]
+    },
+    {
+     "name": "after-domain",
+     "op": "read-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_007"
+     },
+     "observe": [
+      "read:read-domain-obligations"
+     ],
+     "markers": [
+      "parity-p60o-007"
+     ]
+    },
+    {
+     "name": "after-raw",
+     "op": "read-raw-obligations",
+     "args": {},
+     "observe": [
+      "read:read-raw-obligations"
+     ],
+     "markers": [
+      "parity-p60o-007"
+     ]
+    },
+    {
+     "name": "after-merged",
+     "op": "read-merged-obligations",
+     "args": {},
+     "observe": [
+      "read:read-merged-obligations"
+     ],
+     "markers": [
+      "parity-p60o-007"
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "delete-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_007"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "gone",
+     "op": "read-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_007"
+     },
+     "observe": [
+      "read:read-domain-obligations"
+     ],
+     "markers": [
+      "parity-p60o-007"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p60o-008-all-full-access",
+   "about": "one role, one type, ALL FULL_ACCESS, read back",
+   "resourceType": "PARITY_SUITE_P60O_008",
+   "tenant": "parity-p60o-008",
+   "steps": [
+    {
+     "name": "before",
+     "op": "read-merged-obligations",
+     "args": {},
+     "observe": [
+      "read:read-merged-obligations"
+     ],
+     "markers": [
+      "parity-p60o-008"
+     ]
+    },
+    {
+     "name": "declare",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_P60O_008"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": []
+    },
+    {
+     "name": "write",
+     "op": "write-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_008"
+     },
+     "observe": [
+      "status",
+      "error-class"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "id": "b89baaeb-502f-7257-62bb-72357523e5f4",
+       "component": "PARITY_SUITE_P60O_008",
+       "roles": [
+        "ROLE_PARITY_P60O_008_A"
+       ],
+       "reason": "parity p60o-008-all-full-access",
+       "resourceType": "PARITY_SUITE_P60O_008",
+       "fieldPolicyOperation": "ALL",
+       "fieldPolicyType": "FULL_ACCESS",
+       "fields": []
+      }
+     ]
+    },
+    {
+     "name": "after-domain",
+     "op": "read-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_008"
+     },
+     "observe": [
+      "read:read-domain-obligations"
+     ],
+     "markers": [
+      "parity-p60o-008"
+     ]
+    },
+    {
+     "name": "after-raw",
+     "op": "read-raw-obligations",
+     "args": {},
+     "observe": [
+      "read:read-raw-obligations"
+     ],
+     "markers": [
+      "parity-p60o-008"
+     ]
+    },
+    {
+     "name": "after-merged",
+     "op": "read-merged-obligations",
+     "args": {},
+     "observe": [
+      "read:read-merged-obligations"
+     ],
+     "markers": [
+      "parity-p60o-008"
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "delete-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_008"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "gone",
+     "op": "read-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_008"
+     },
+     "observe": [
+      "read:read-domain-obligations"
+     ],
+     "markers": [
+      "parity-p60o-008"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p60o-009-empty-whitelist",
+   "about": "a WHITELIST with no field, read back",
+   "resourceType": "PARITY_SUITE_P60O_009",
+   "tenant": "parity-p60o-009",
+   "steps": [
+    {
+     "name": "before",
+     "op": "read-merged-obligations",
+     "args": {},
+     "observe": [
+      "read:read-merged-obligations"
+     ],
+     "markers": [
+      "parity-p60o-009"
+     ]
+    },
+    {
+     "name": "declare",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_P60O_009"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": []
+    },
+    {
+     "name": "write",
+     "op": "write-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_009"
+     },
+     "observe": [
+      "status",
+      "error-class"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "id": "7c9b5215-df68-ba23-2679-0d3d563036e0",
+       "component": "PARITY_SUITE_P60O_009",
+       "roles": [
+        "ROLE_PARITY_P60O_009_A"
+       ],
+       "reason": "parity p60o-009-empty-whitelist",
+       "resourceType": "PARITY_SUITE_P60O_009",
+       "fieldPolicyOperation": "READ",
+       "fieldPolicyType": "WHITELIST",
+       "fields": []
+      }
+     ]
+    },
+    {
+     "name": "after-domain",
+     "op": "read-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_009"
+     },
+     "observe": [
+      "read:read-domain-obligations"
+     ],
+     "markers": [
+      "parity-p60o-009"
+     ]
+    },
+    {
+     "name": "after-raw",
+     "op": "read-raw-obligations",
+     "args": {},
+     "observe": [
+      "read:read-raw-obligations"
+     ],
+     "markers": [
+      "parity-p60o-009"
+     ]
+    },
+    {
+     "name": "after-merged",
+     "op": "read-merged-obligations",
+     "args": {},
+     "observe": [
+      "read:read-merged-obligations"
+     ],
+     "markers": [
+      "parity-p60o-009"
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "delete-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_009"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "gone",
+     "op": "read-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_009"
+     },
+     "observe": [
+      "read:read-domain-obligations"
+     ],
+     "markers": [
+      "parity-p60o-009"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p60o-010-all-alone",
+   "about": "resourceType all alone, exported with and without resource_types of a concrete type",
+   "resourceType": "PARITY_SUITE_P60O_010",
+   "tenant": "parity-p60o-010",
+   "steps": [
+    {
+     "name": "before",
+     "op": "read-merged-obligations",
+     "args": {},
+     "observe": [
+      "read:read-merged-obligations"
+     ],
+     "markers": [
+      "parity-p60o-010"
+     ]
+    },
+    {
+     "name": "declare",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_P60O_010"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": []
+    },
+    {
+     "name": "write",
+     "op": "write-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_010"
+     },
+     "observe": [
+      "status",
+      "error-class"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "id": "8232c753-45bb-be6a-f653-5f55604a7978",
+       "component": "PARITY_SUITE_P60O_010",
+       "roles": [
+        "ROLE_PARITY_P60O_010_A"
+       ],
+       "reason": "parity p60o-010-all-alone",
+       "resourceType": "all",
+       "fieldPolicyOperation": "READ",
+       "fieldPolicyType": "WHITELIST",
+       "fields": [
+        "f1"
+       ]
+      }
+     ]
+    },
+    {
+     "name": "after-domain",
+     "op": "read-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_010"
+     },
+     "observe": [
+      "read:read-domain-obligations"
+     ],
+     "markers": [
+      "parity-p60o-010"
+     ]
+    },
+    {
+     "name": "after-raw",
+     "op": "read-raw-obligations",
+     "args": {},
+     "observe": [
+      "read:read-raw-obligations"
+     ],
+     "markers": [
+      "parity-p60o-010"
+     ]
+    },
+    {
+     "name": "after-merged",
+     "op": "read-merged-obligations",
+     "args": {},
+     "observe": [
+      "read:read-merged-obligations"
+     ],
+     "markers": [
+      "parity-p60o-010"
+     ]
+    },
+    {
+     "name": "after-raw-typed",
+     "op": "read-raw-obligations",
+     "args": {
+      "resource_types": "PARITY_SUITE_P60O_010"
+     },
+     "observe": [
+      "read:read-raw-obligations"
+     ],
+     "markers": [
+      "parity-p60o-010"
+     ]
+    },
+    {
+     "name": "after-merged-typed",
+     "op": "read-merged-obligations",
+     "args": {
+      "resource_types": "PARITY_SUITE_P60O_010"
+     },
+     "observe": [
+      "read:read-merged-obligations"
+     ],
+     "markers": [
+      "parity-p60o-010"
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "delete-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_010"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "gone",
+     "op": "read-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_010"
+     },
+     "observe": [
+      "read:read-domain-obligations"
+     ],
+     "markers": [
+      "parity-p60o-010"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p60o-011-all-beside-concrete",
+   "about": "resourceType all beside a concrete type of the same role",
+   "resourceType": "PARITY_SUITE_P60O_011",
+   "tenant": "parity-p60o-011",
+   "steps": [
+    {
+     "name": "before",
+     "op": "read-merged-obligations",
+     "args": {},
+     "observe": [
+      "read:read-merged-obligations"
+     ],
+     "markers": [
+      "parity-p60o-011"
+     ]
+    },
+    {
+     "name": "declare",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_P60O_011"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": []
+    },
+    {
+     "name": "write",
+     "op": "write-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_011"
+     },
+     "observe": [
+      "status",
+      "error-class"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "id": "aea8f774-6ddc-01fc-8df9-84e78947bb4c",
+       "component": "PARITY_SUITE_P60O_011",
+       "roles": [
+        "ROLE_PARITY_P60O_011_A"
+       ],
+       "reason": "parity p60o-011-all-beside-concrete",
+       "resourceType": "all",
+       "fieldPolicyOperation": "READ",
+       "fieldPolicyType": "FULL_ACCESS",
+       "fields": []
+      },
+      {
+       "id": "1dcbb2a4-4019-7682-d14c-978c79eb1ce5",
+       "component": "PARITY_SUITE_P60O_011",
+       "roles": [
+        "ROLE_PARITY_P60O_011_A"
+       ],
+       "reason": "parity p60o-011-all-beside-concrete",
+       "resourceType": "PARITY_SUITE_P60O_011",
+       "fieldPolicyOperation": "READ",
+       "fieldPolicyType": "WHITELIST",
+       "fields": [
+        "f1"
+       ]
+      }
+     ]
+    },
+    {
+     "name": "after-domain",
+     "op": "read-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_011"
+     },
+     "observe": [
+      "read:read-domain-obligations"
+     ],
+     "markers": [
+      "parity-p60o-011"
+     ]
+    },
+    {
+     "name": "after-raw",
+     "op": "read-raw-obligations",
+     "args": {},
+     "observe": [
+      "read:read-raw-obligations"
+     ],
+     "markers": [
+      "parity-p60o-011"
+     ]
+    },
+    {
+     "name": "after-merged",
+     "op": "read-merged-obligations",
+     "args": {},
+     "observe": [
+      "read:read-merged-obligations"
+     ],
+     "markers": [
+      "parity-p60o-011"
+     ]
+    },
+    {
+     "name": "after-raw-typed",
+     "op": "read-raw-obligations",
+     "args": {
+      "resource_types": "PARITY_SUITE_P60O_011"
+     },
+     "observe": [
+      "read:read-raw-obligations"
+     ],
+     "markers": [
+      "parity-p60o-011"
+     ]
+    },
+    {
+     "name": "after-merged-typed",
+     "op": "read-merged-obligations",
+     "args": {
+      "resource_types": "PARITY_SUITE_P60O_011"
+     },
+     "observe": [
+      "read:read-merged-obligations"
+     ],
+     "markers": [
+      "parity-p60o-011"
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "delete-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_011"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "gone",
+     "op": "read-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_011"
+     },
+     "observe": [
+      "read:read-domain-obligations"
+     ],
+     "markers": [
+      "parity-p60o-011"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p60o-012-all-unlisted-type",
+   "about": "resourceType all, exported for a type no obligation names while another type has some",
+   "resourceType": "PARITY_SUITE_P60O_012",
+   "tenant": "parity-p60o-012",
+   "steps": [
+    {
+     "name": "before",
+     "op": "read-merged-obligations",
+     "args": {},
+     "observe": [
+      "read:read-merged-obligations"
+     ],
+     "markers": [
+      "parity-p60o-012"
+     ]
+    },
+    {
+     "name": "declare",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_P60O_012"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": []
+    },
+    {
+     "name": "write",
+     "op": "write-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_012"
+     },
+     "observe": [
+      "status",
+      "error-class"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "id": "4397f3a6-0194-7c67-ad47-16aaead66d60",
+       "component": "PARITY_SUITE_P60O_012",
+       "roles": [
+        "ROLE_PARITY_P60O_012_A"
+       ],
+       "reason": "parity p60o-012-all-unlisted-type",
+       "resourceType": "all",
+       "fieldPolicyOperation": "READ",
+       "fieldPolicyType": "WHITELIST",
+       "fields": [
+        "f1"
+       ]
+      },
+      {
+       "id": "d4be0a47-d86a-0741-db26-e83ab31d4dfb",
+       "component": "PARITY_SUITE_P60O_012",
+       "roles": [
+        "ROLE_PARITY_P60O_012_B"
+       ],
+       "reason": "parity p60o-012-all-unlisted-type",
+       "resourceType": "PARITY_SUITE_P60O_012",
+       "fieldPolicyOperation": "READ",
+       "fieldPolicyType": "WHITELIST",
+       "fields": [
+        "f2"
+       ]
+      }
+     ]
+    },
+    {
+     "name": "after-domain",
+     "op": "read-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_012"
+     },
+     "observe": [
+      "read:read-domain-obligations"
+     ],
+     "markers": [
+      "parity-p60o-012"
+     ]
+    },
+    {
+     "name": "after-raw",
+     "op": "read-raw-obligations",
+     "args": {},
+     "observe": [
+      "read:read-raw-obligations"
+     ],
+     "markers": [
+      "parity-p60o-012"
+     ]
+    },
+    {
+     "name": "after-merged",
+     "op": "read-merged-obligations",
+     "args": {},
+     "observe": [
+      "read:read-merged-obligations"
+     ],
+     "markers": [
+      "parity-p60o-012"
+     ]
+    },
+    {
+     "name": "after-raw-typed",
+     "op": "read-raw-obligations",
+     "args": {
+      "resource_types": "PARITY_SUITE_P60O_012_OTHER"
+     },
+     "observe": [
+      "read:read-raw-obligations"
+     ],
+     "markers": [
+      "parity-p60o-012"
+     ]
+    },
+    {
+     "name": "after-merged-typed",
+     "op": "read-merged-obligations",
+     "args": {
+      "resource_types": "PARITY_SUITE_P60O_012_OTHER"
+     },
+     "observe": [
+      "read:read-merged-obligations"
+     ],
+     "markers": [
+      "parity-p60o-012"
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "delete-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_012"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "gone",
+     "op": "read-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_012"
+     },
+     "observe": [
+      "read:read-domain-obligations"
+     ],
+     "markers": [
+      "parity-p60o-012"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p60o-013-two-tenants",
+   "about": "one domain and role written in two tenants, read back in each",
+   "resourceType": "PARITY_SUITE_P60O_013",
+   "tenant": "parity-p60o-013",
+   "steps": [
+    {
+     "name": "before",
+     "op": "read-merged-obligations",
+     "args": {},
+     "observe": [
+      "read:read-merged-obligations"
+     ],
+     "markers": [
+      "parity-p60o-013"
+     ]
+    },
+    {
+     "name": "declare",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_P60O_013"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": []
+    },
+    {
+     "name": "write",
+     "op": "write-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_013"
+     },
+     "observe": [
+      "status",
+      "error-class"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "id": "60f2178a-ef78-5176-5716-21f5886aee12",
+       "component": "PARITY_SUITE_P60O_013",
+       "roles": [
+        "ROLE_PARITY_P60O_013_A"
+       ],
+       "reason": "parity p60o-013-two-tenants",
+       "resourceType": "PARITY_SUITE_P60O_013",
+       "fieldPolicyOperation": "READ",
+       "fieldPolicyType": "WHITELIST",
+       "fields": [
+        "f1"
+       ]
+      }
+     ]
+    },
+    {
+     "name": "declare-second",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_P60O_013"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": [],
+     "tenant": "parity-p60o-013-t"
+    },
+    {
+     "name": "write-second",
+     "op": "write-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_013"
+     },
+     "observe": [
+      "status",
+      "error-class"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "id": "d578aa37-f48c-d234-129c-d6ac3876a70b",
+       "component": "PARITY_SUITE_P60O_013",
+       "roles": [
+        "ROLE_PARITY_P60O_013_A"
+       ],
+       "reason": "parity p60o-013-two-tenants",
+       "resourceType": "PARITY_SUITE_P60O_013",
+       "fieldPolicyOperation": "READ",
+       "fieldPolicyType": "WHITELIST",
+       "fields": [
+        "f9"
+       ]
+      }
+     ],
+     "tenant": "parity-p60o-013-t"
+    },
+    {
+     "name": "after-domain",
+     "op": "read-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_013"
+     },
+     "observe": [
+      "read:read-domain-obligations"
+     ],
+     "markers": [
+      "parity-p60o-013"
+     ]
+    },
+    {
+     "name": "after-raw",
+     "op": "read-raw-obligations",
+     "args": {},
+     "observe": [
+      "read:read-raw-obligations"
+     ],
+     "markers": [
+      "parity-p60o-013"
+     ]
+    },
+    {
+     "name": "after-merged",
+     "op": "read-merged-obligations",
+     "args": {},
+     "observe": [
+      "read:read-merged-obligations"
+     ],
+     "markers": [
+      "parity-p60o-013"
+     ]
+    },
+    {
+     "name": "second-domain",
+     "op": "read-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_013"
+     },
+     "observe": [
+      "read:read-domain-obligations"
+     ],
+     "markers": [
+      "parity-p60o-013"
+     ],
+     "tenant": "parity-p60o-013-t"
+    },
+    {
+     "name": "second-raw",
+     "op": "read-raw-obligations",
+     "args": {},
+     "observe": [
+      "read:read-raw-obligations"
+     ],
+     "markers": [
+      "parity-p60o-013"
+     ],
+     "tenant": "parity-p60o-013-t"
+    },
+    {
+     "name": "second-merged",
+     "op": "read-merged-obligations",
+     "args": {},
+     "observe": [
+      "read:read-merged-obligations"
+     ],
+     "markers": [
+      "parity-p60o-013"
+     ],
+     "tenant": "parity-p60o-013-t"
+    },
+    {
+     "name": "cleanup-second",
+     "op": "delete-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_013"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "tenant": "parity-p60o-013-t"
+    },
+    {
+     "name": "between",
+     "op": "read-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_013"
+     },
+     "observe": [
+      "read:read-domain-obligations"
+     ],
+     "markers": [
+      "parity-p60o-013"
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "delete-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_013"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    }
+   ]
+  },
+  {
+   "id": "p60o-014-rewrite",
+   "about": "a second write of the domain with another obligation, both exports after each write",
+   "resourceType": "PARITY_SUITE_P60O_014",
+   "tenant": "parity-p60o-014",
+   "steps": [
+    {
+     "name": "before",
+     "op": "read-merged-obligations",
+     "args": {},
+     "observe": [
+      "read:read-merged-obligations"
+     ],
+     "markers": [
+      "parity-p60o-014"
+     ]
+    },
+    {
+     "name": "declare",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_P60O_014"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": []
+    },
+    {
+     "name": "write",
+     "op": "write-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_014"
+     },
+     "observe": [
+      "status",
+      "error-class"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "id": "b7e77078-f831-5d0f-23ec-bf61efe440a5",
+       "component": "PARITY_SUITE_P60O_014",
+       "roles": [
+        "ROLE_PARITY_P60O_014_A"
+       ],
+       "reason": "parity p60o-014-rewrite",
+       "resourceType": "PARITY_SUITE_P60O_014",
+       "fieldPolicyOperation": "READ",
+       "fieldPolicyType": "WHITELIST",
+       "fields": [
+        "f1"
+       ]
+      }
+     ]
+    },
+    {
+     "name": "first-domain",
+     "op": "read-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_014"
+     },
+     "observe": [
+      "read:read-domain-obligations"
+     ],
+     "markers": [
+      "parity-p60o-014"
+     ]
+    },
+    {
+     "name": "first-raw",
+     "op": "read-raw-obligations",
+     "args": {},
+     "observe": [
+      "read:read-raw-obligations"
+     ],
+     "markers": [
+      "parity-p60o-014"
+     ]
+    },
+    {
+     "name": "first-merged",
+     "op": "read-merged-obligations",
+     "args": {},
+     "observe": [
+      "read:read-merged-obligations"
+     ],
+     "markers": [
+      "parity-p60o-014"
+     ]
+    },
+    {
+     "name": "first-raw-typed",
+     "op": "read-raw-obligations",
+     "args": {
+      "resource_types": "PARITY_SUITE_P60O_014"
+     },
+     "observe": [
+      "read:read-raw-obligations"
+     ],
+     "markers": [
+      "parity-p60o-014"
+     ]
+    },
+    {
+     "name": "first-merged-typed",
+     "op": "read-merged-obligations",
+     "args": {
+      "resource_types": "PARITY_SUITE_P60O_014"
+     },
+     "observe": [
+      "read:read-merged-obligations"
+     ],
+     "markers": [
+      "parity-p60o-014"
+     ]
+    },
+    {
+     "name": "rewrite",
+     "op": "write-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_014"
+     },
+     "observe": [
+      "status",
+      "error-class"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "id": "e02833ab-ac71-391b-6883-f6cb8c6d3a96",
+       "component": "PARITY_SUITE_P60O_014",
+       "roles": [
+        "ROLE_PARITY_P60O_014_A"
+       ],
+       "reason": "parity p60o-014-rewrite",
+       "resourceType": "PARITY_SUITE_P60O_014",
+       "fieldPolicyOperation": "WRITE",
+       "fieldPolicyType": "WHITELIST",
+       "fields": [
+        "f2"
+       ]
+      }
+     ]
+    },
+    {
+     "name": "second-domain",
+     "op": "read-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_014"
+     },
+     "observe": [
+      "read:read-domain-obligations"
+     ],
+     "markers": [
+      "parity-p60o-014"
+     ]
+    },
+    {
+     "name": "second-raw",
+     "op": "read-raw-obligations",
+     "args": {},
+     "observe": [
+      "read:read-raw-obligations"
+     ],
+     "markers": [
+      "parity-p60o-014"
+     ]
+    },
+    {
+     "name": "second-merged",
+     "op": "read-merged-obligations",
+     "args": {},
+     "observe": [
+      "read:read-merged-obligations"
+     ],
+     "markers": [
+      "parity-p60o-014"
+     ]
+    },
+    {
+     "name": "second-raw-typed",
+     "op": "read-raw-obligations",
+     "args": {
+      "resource_types": "PARITY_SUITE_P60O_014"
+     },
+     "observe": [
+      "read:read-raw-obligations"
+     ],
+     "markers": [
+      "parity-p60o-014"
+     ]
+    },
+    {
+     "name": "second-merged-typed",
+     "op": "read-merged-obligations",
+     "args": {
+      "resource_types": "PARITY_SUITE_P60O_014"
+     },
+     "observe": [
+      "read:read-merged-obligations"
+     ],
+     "markers": [
+      "parity-p60o-014"
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "delete-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_014"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "gone",
+     "op": "read-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_014"
+     },
+     "observe": [
+      "read:read-domain-obligations"
+     ],
+     "markers": [
+      "parity-p60o-014"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p60o-015-undeclared-domain",
+   "about": "obligations written to a domain no PIP or simplified policy declares, read back",
+   "resourceType": "PARITY_SUITE_P60O_015",
+   "tenant": "parity-p60o-015",
+   "steps": [
+    {
+     "name": "before",
+     "op": "read-merged-obligations",
+     "args": {},
+     "observe": [
+      "read:read-merged-obligations"
+     ],
+     "markers": [
+      "parity-p60o-015"
+     ]
+    },
+    {
+     "name": "write",
+     "op": "write-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_015"
+     },
+     "observe": [
+      "status",
+      "error-class"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "id": "9dfe9e04-8332-efd8-a353-a85cd3b29ed1",
+       "component": "PARITY_SUITE_P60O_015",
+       "roles": [
+        "ROLE_PARITY_P60O_015_A"
+       ],
+       "reason": "parity p60o-015-undeclared-domain",
+       "resourceType": "PARITY_SUITE_P60O_015",
+       "fieldPolicyOperation": "READ",
+       "fieldPolicyType": "WHITELIST",
+       "fields": [
+        "f1"
+       ]
+      }
+     ]
+    },
+    {
+     "name": "domain",
+     "op": "read-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_015"
+     },
+     "observe": [
+      "read:read-domain-obligations"
+     ],
+     "markers": [
+      "parity-p60o-015"
+     ]
+    },
+    {
+     "name": "merged",
+     "op": "read-merged-obligations",
+     "args": {},
+     "observe": [
+      "read:read-merged-obligations"
+     ],
+     "markers": [
+      "parity-p60o-015"
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "delete-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_015"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    }
+   ]
+  },
+  {
+   "id": "p60o-018-write-twice",
+   "about": "the same body written twice and the domain deleted twice, read back after each",
+   "resourceType": "PARITY_SUITE_P60O_018",
+   "tenant": "parity-p60o-018",
+   "steps": [
+    {
+     "name": "before",
+     "op": "read-merged-obligations",
+     "args": {},
+     "observe": [
+      "read:read-merged-obligations"
+     ],
+     "markers": [
+      "parity-p60o-018"
+     ]
+    },
+    {
+     "name": "declare",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_P60O_018"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": []
+    },
+    {
+     "name": "write",
+     "op": "write-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_018"
+     },
+     "observe": [
+      "status",
+      "error-class"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "id": "acc6139c-863c-fef0-c381-68351b1c4354",
+       "component": "PARITY_SUITE_P60O_018",
+       "roles": [
+        "ROLE_PARITY_P60O_018_A"
+       ],
+       "reason": "parity p60o-018-write-twice",
+       "resourceType": "PARITY_SUITE_P60O_018",
+       "fieldPolicyOperation": "READ",
+       "fieldPolicyType": "WHITELIST",
+       "fields": [
+        "f1"
+       ]
+      }
+     ]
+    },
+    {
+     "name": "first-domain",
+     "op": "read-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_018"
+     },
+     "observe": [
+      "read:read-domain-obligations"
+     ],
+     "markers": [
+      "parity-p60o-018"
+     ]
+    },
+    {
+     "name": "first-raw",
+     "op": "read-raw-obligations",
+     "args": {},
+     "observe": [
+      "read:read-raw-obligations"
+     ],
+     "markers": [
+      "parity-p60o-018"
+     ]
+    },
+    {
+     "name": "first-merged",
+     "op": "read-merged-obligations",
+     "args": {},
+     "observe": [
+      "read:read-merged-obligations"
+     ],
+     "markers": [
+      "parity-p60o-018"
+     ]
+    },
+    {
+     "name": "again",
+     "op": "write-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_018"
+     },
+     "observe": [
+      "status",
+      "error-class"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "id": "acc6139c-863c-fef0-c381-68351b1c4354",
+       "component": "PARITY_SUITE_P60O_018",
+       "roles": [
+        "ROLE_PARITY_P60O_018_A"
+       ],
+       "reason": "parity p60o-018-write-twice",
+       "resourceType": "PARITY_SUITE_P60O_018",
+       "fieldPolicyOperation": "READ",
+       "fieldPolicyType": "WHITELIST",
+       "fields": [
+        "f1"
+       ]
+      }
+     ]
+    },
+    {
+     "name": "second-domain",
+     "op": "read-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_018"
+     },
+     "observe": [
+      "read:read-domain-obligations"
+     ],
+     "markers": [
+      "parity-p60o-018"
+     ]
+    },
+    {
+     "name": "second-raw",
+     "op": "read-raw-obligations",
+     "args": {},
+     "observe": [
+      "read:read-raw-obligations"
+     ],
+     "markers": [
+      "parity-p60o-018"
+     ]
+    },
+    {
+     "name": "second-merged",
+     "op": "read-merged-obligations",
+     "args": {},
+     "observe": [
+      "read:read-merged-obligations"
+     ],
+     "markers": [
+      "parity-p60o-018"
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "delete-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_018"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "cleanup-again",
+     "op": "delete-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_018"
+     },
+     "observe": [
+      "status",
+      "error-class"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "gone",
+     "op": "read-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_018"
+     },
+     "observe": [
+      "read:read-domain-obligations"
+     ],
+     "markers": [
+      "parity-p60o-018"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p60o-101-v2-feature-off",
+   "about": "v2 requests that ask for obligations, and ones that do not, while the stand runs with obligations off",
+   "resourceType": "PARITY_SUITE_P60O_101",
+   "tenant": "parity-p60o-101",
+   "steps": [
+    {
+     "name": "before",
+     "op": "read-merged-obligations",
+     "args": {},
+     "observe": [
+      "read:read-merged-obligations"
+     ],
+     "markers": [
+      "parity-p60o-101"
+     ]
+    },
+    {
+     "name": "declare",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_P60O_101"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": []
+    },
+    {
+     "name": "allow",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p60o-101"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "cf4e0463-5d16-11da-2528-1f362a19d99b",
+       "name": "p60o-101-v2-feature-off allow",
+       "status": "ACTIVE",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P60O_101'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "56e6122c-fe86-051a-f73e-322ab33509a3",
+         "name": "p60o-101-v2-feature-off allow",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "operation == 'READ'",
+         "rules": [
+          {
+           "ruleId": "d872dd61-af06-111b-9964-591d6418e83b",
+           "name": "p60o-101-v2-feature-off allow",
+           "target": "true",
+           "condition": "resource.a == 'y'",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "write",
+     "op": "write-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_101"
+     },
+     "observe": [
+      "status",
+      "error-class"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "id": "4f0076d0-ed7b-56be-73ff-31f45900c864",
+       "component": "PARITY_SUITE_P60O_101",
+       "roles": [
+        "ROLE_PARITY_READER"
+       ],
+       "reason": "parity p60o-101-v2-feature-off",
+       "resourceType": "PARITY_SUITE_P60O_101",
+       "fieldPolicyOperation": "READ",
+       "fieldPolicyType": "WHITELIST",
+       "fields": [
+        "f1"
+       ]
+      }
+     ]
+    },
+    {
+     "name": "decide",
+     "op": "read-merged-obligations",
+     "args": {},
+     "observe": [
+      "decide:check",
+      "decide:check-false",
+      "decide:check-absent",
+      "decide:check-denied",
+      "decide:filter",
+      "decide:bulk"
+     ],
+     "requests": [
+      {
+       "name": "check",
+       "resource": {
+        "a": "y"
+       },
+       "v2": {
+        "obligations": "true"
+       }
+      },
+      {
+       "name": "check-false",
+       "resource": {
+        "a": "y"
+       },
+       "v2": {
+        "obligations": "false"
+       }
+      },
+      {
+       "name": "check-absent",
+       "resource": {
+        "a": "y"
+       },
+       "v2": {}
+      },
+      {
+       "name": "check-denied",
+       "resource": {
+        "a": "n"
+       },
+       "v2": {
+        "obligations": "true"
+       }
+      },
+      {
+       "name": "filter",
+       "filter": true,
+       "operation": "READ",
+       "v2": {
+        "obligations": "true"
+       }
+      },
+      {
+       "name": "bulk",
+       "bulkOperations": [
+        {
+         "id": "y0",
+         "operations": [
+          "READ"
+         ],
+         "resource": {
+          "a": "y"
+         }
+        },
+        {
+         "id": "n1",
+         "operations": [
+          "READ"
+         ],
+         "resource": {
+          "a": "n"
+         }
+        }
+       ],
+       "v2": {
+        "obligations": "true"
+       }
+      }
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "delete-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_101"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "cleanup-set",
+     "op": "delete-set",
+     "args": {
+      "id": "cf4e0463-5d16-11da-2528-1f362a19d99b"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    }
+   ]
+  },
+  {
+   "id": "p60o-951-control-must-last",
+   "about": "control: one obligation written, read back and decided the same way first and last",
+   "resourceType": "PARITY_SUITE_P60O_951",
+   "tenant": "parity-p60o-951",
+   "steps": [
+    {
+     "name": "before",
+     "op": "read-merged-obligations",
+     "args": {},
+     "observe": [
+      "read:read-merged-obligations"
+     ],
+     "markers": [
+      "parity-p60o-951"
+     ]
+    },
+    {
+     "name": "declare",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_P60O_951"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": []
+    },
+    {
+     "name": "write",
+     "op": "write-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_951"
+     },
+     "observe": [
+      "status",
+      "error-class"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "id": "4a7e5a06-2b24-bc91-30c4-3939d294d10d",
+       "component": "PARITY_SUITE_P60O_951",
+       "roles": [
+        "ROLE_PARITY_P60O_951_A"
+       ],
+       "reason": "parity p60o-951-control-must-last",
+       "resourceType": "PARITY_SUITE_P60O_951",
+       "fieldPolicyOperation": "READ",
+       "fieldPolicyType": "WHITELIST",
+       "fields": [
+        "f1"
+       ]
+      }
+     ]
+    },
+    {
+     "name": "after-domain",
+     "op": "read-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_951"
+     },
+     "observe": [
+      "read:read-domain-obligations"
+     ],
+     "markers": [
+      "parity-p60o-951"
+     ]
+    },
+    {
+     "name": "after-raw",
+     "op": "read-raw-obligations",
+     "args": {},
+     "observe": [
+      "read:read-raw-obligations"
+     ],
+     "markers": [
+      "parity-p60o-951"
+     ]
+    },
+    {
+     "name": "after-merged",
+     "op": "read-merged-obligations",
+     "args": {},
+     "observe": [
+      "read:read-merged-obligations"
+     ],
+     "markers": [
+      "parity-p60o-951"
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "delete-domain-obligations",
+     "args": {
+      "domain": "PARITY_P60O_951"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    }
+   ]
+  }
+ ]
+}

@@ -203,6 +203,18 @@
     }
    }
   },
+  "delete-domain-obligations": {
+   "kind": "delete",
+   "bindings": {
+    "delete": {
+     "method": "DELETE",
+     "path": "/access/v2/obligations/domainObligations/{domain}",
+     "query": [],
+     "tier": "primary",
+     "golden": "pap-status-v1"
+    }
+   }
+  },
   "write-templates": {
    "kind": "write",
    "bindings": {
@@ -285,6 +297,46 @@
      "path": "/access/v1/pips",
      "query": [],
      "tier": "primary",
+     "golden": "pap-read"
+    }
+   }
+  },
+  "read-domain-obligations": {
+   "kind": "read",
+   "bindings": {
+    "get": {
+     "method": "GET",
+     "path": "/access/v2/obligations/domainObligations/{domain}",
+     "query": [],
+     "tier": "primary",
+     "golden": "pap-read"
+    }
+   }
+  },
+  "read-raw-obligations": {
+   "kind": "read",
+   "bindings": {
+    "get": {
+     "method": "GET",
+     "path": "/access/v2/obligations/raw",
+     "query": [
+      "resource_types"
+     ],
+     "tier": "contract",
+     "golden": "pap-read"
+    }
+   }
+  },
+  "read-merged-obligations": {
+   "kind": "read",
+   "bindings": {
+    "get": {
+     "method": "GET",
+     "path": "/access/v2/obligations/merged",
+     "query": [
+      "resource_types"
+     ],
+     "tier": "contract",
      "golden": "pap-read"
     }
    }

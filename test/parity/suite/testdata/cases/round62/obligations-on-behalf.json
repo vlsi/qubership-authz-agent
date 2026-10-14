@@ -1,0 +1,497 @@
+{
+ "about": "Round 62 (on-behalf): the obligations member of v2 checks, filters and bulk operations on a stand with access-control.obligations.enabled=true and access-control.obligations.merge.strategy=weak; the cases of the round before, under the other strategy. Each case runs in a tenant of its own and reads the merged export first; a control goes first and last. The checks send userId: record this file only on a stand whose user lookup answers for the parity realm's users (the User Management stub of round 63).",
+ "standVersion": true,
+ "standProperties": {
+  "access-control.obligations.enabled": "true",
+  "access-control.obligations.merge.strategy": "weak"
+ },
+ "cases": [
+  {
+   "id": "p62o-903-control-on-behalf-first",
+   "about": "control: one obligation written, read back and decided the same way first and last",
+   "resourceType": "PARITY_SUITE_P62O_903",
+   "tenant": "parity-p62o-903",
+   "steps": [
+    {
+     "name": "before",
+     "op": "read-merged-obligations",
+     "args": {},
+     "observe": [
+      "read:read-merged-obligations"
+     ],
+     "markers": [
+      "parity-p62o-903"
+     ]
+    },
+    {
+     "name": "declare",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_P62O_903"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": []
+    },
+    {
+     "name": "allow",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p62o-903"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "0f2e1702-795a-3b6e-437a-3fbaf22a7522",
+       "name": "p62o-903-control-on-behalf-first allow",
+       "status": "ACTIVE",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P62O_903'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "51d64f20-373f-e67b-ee83-5752d0f8986d",
+         "name": "p62o-903-control-on-behalf-first allow",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "operation == 'READ'",
+         "rules": [
+          {
+           "ruleId": "2f410848-1a24-4141-8b6e-eefc8d980aa5",
+           "name": "p62o-903-control-on-behalf-first allow",
+           "target": "true",
+           "condition": "resource.a == 'y'",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "write",
+     "op": "write-domain-obligations",
+     "args": {
+      "domain": "PARITY_P62O_903"
+     },
+     "observe": [
+      "status",
+      "error-class"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "id": "8974921e-d082-1c0d-7148-10680a950a09",
+       "component": "PARITY_SUITE_P62O_903",
+       "roles": [
+        "ROLE_PARITY_READER"
+       ],
+       "reason": "parity p62o-903-control-on-behalf-first",
+       "resourceType": "PARITY_SUITE_P62O_903",
+       "fieldPolicyOperation": "READ",
+       "fieldPolicyType": "WHITELIST",
+       "fields": [
+        "f1"
+       ]
+      }
+     ]
+    },
+    {
+     "name": "decide",
+     "op": "read-merged-obligations",
+     "args": {},
+     "observe": [
+      "decide:reader"
+     ],
+     "requests": [
+      {
+       "name": "reader",
+       "resource": {
+        "a": "y"
+       },
+       "v2": {
+        "obligations": "true"
+       }
+      }
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "delete-domain-obligations",
+     "args": {
+      "domain": "PARITY_P62O_903"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "cleanup-set",
+     "op": "delete-set",
+     "args": {
+      "id": "0f2e1702-795a-3b6e-437a-3fbaf22a7522"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    }
+   ]
+  },
+  {
+   "id": "p62o-201-on-behalf",
+   "about": "a check by the reader on behalf of the reviewer, which a set allows, the obligations of each role apart",
+   "resourceType": "PARITY_SUITE_P62O_201",
+   "tenant": "parity-p62o-201",
+   "steps": [
+    {
+     "name": "before",
+     "op": "read-merged-obligations",
+     "args": {},
+     "observe": [
+      "read:read-merged-obligations"
+     ],
+     "markers": [
+      "parity-p62o-201"
+     ]
+    },
+    {
+     "name": "declare",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_P62O_201"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": []
+    },
+    {
+     "name": "allow",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p62o-201"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "e017a3b9-ad5c-bca6-816b-a609109823b7",
+       "name": "p62o-201-on-behalf allow",
+       "status": "ACTIVE",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P62O_201'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "31eb8cf6-64ce-df11-4126-fd502ddb4e42",
+         "name": "p62o-201-on-behalf allow",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "operation == 'READ'",
+         "rules": [
+          {
+           "ruleId": "a2e7de0f-c385-ef62-6f0c-eefefc54e5c2",
+           "name": "p62o-201-on-behalf allow",
+           "target": "true",
+           "condition": "resource.a == 'y'",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "policySetId": "b702988e-498d-853d-b458-24dc00dda7dd",
+       "name": "p62o-201-on-behalf view as",
+       "status": "ACTIVE",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'OnBehalfOfUserAuthorization'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "7e930730-9b45-c765-4597-97b79c1d2eed",
+         "name": "p62o-201-on-behalf view as",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "operation == 'VIEW_AS_ANOTHER_USER'",
+         "rules": [
+          {
+           "ruleId": "6138abfc-9038-9877-f37c-efbd1c14445e",
+           "name": "p62o-201-on-behalf view as",
+           "target": "true",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "write",
+     "op": "write-domain-obligations",
+     "args": {
+      "domain": "PARITY_P62O_201"
+     },
+     "observe": [
+      "status",
+      "error-class"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "id": "38a3704e-dd3b-efb5-80c3-95d5cc8f9553",
+       "component": "PARITY_SUITE_P62O_201",
+       "roles": [
+        "ROLE_PARITY_READER"
+       ],
+       "reason": "parity p62o-201-on-behalf",
+       "resourceType": "PARITY_SUITE_P62O_201",
+       "fieldPolicyOperation": "READ",
+       "fieldPolicyType": "WHITELIST",
+       "fields": [
+        "f1"
+       ]
+      },
+      {
+       "id": "fad9fddd-dfc7-556c-e8f3-c4d4f9a6d70e",
+       "component": "PARITY_SUITE_P62O_201",
+       "roles": [
+        "ROLE_PARITY_REVIEWER"
+       ],
+       "reason": "parity p62o-201-on-behalf",
+       "resourceType": "PARITY_SUITE_P62O_201",
+       "fieldPolicyOperation": "READ",
+       "fieldPolicyType": "WHITELIST",
+       "fields": [
+        "f2"
+       ]
+      }
+     ]
+    },
+    {
+     "name": "decide",
+     "op": "read-merged-obligations",
+     "args": {},
+     "observe": [
+      "decide:as-reviewer",
+      "decide:as-self"
+     ],
+     "requests": [
+      {
+       "name": "as-reviewer",
+       "resource": {
+        "a": "y"
+       },
+       "userId": "00000000-0000-0000-0000-000000000102",
+       "v2": {
+        "obligations": "true"
+       },
+       "userManagement": {
+        "*": {
+         "statusCode": 200,
+         "body": {
+          "id": "00000000-0000-0000-0000-000000000102",
+          "username": "parity-reviewer",
+          "roles": [
+           "ROLE_PARITY_REVIEWER"
+          ]
+         }
+        }
+       }
+      },
+      {
+       "name": "as-self",
+       "resource": {
+        "a": "y"
+       },
+       "v2": {
+        "obligations": "true"
+       }
+      }
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "delete-domain-obligations",
+     "args": {
+      "domain": "PARITY_P62O_201"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "cleanup-set",
+     "op": "delete-set",
+     "args": {
+      "id": "e017a3b9-ad5c-bca6-816b-a609109823b7"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "cleanup-set-2",
+     "op": "delete-set",
+     "args": {
+      "id": "b702988e-498d-853d-b458-24dc00dda7dd"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    }
+   ]
+  },
+  {
+   "id": "p62o-953-control-on-behalf-last",
+   "about": "control: one obligation written, read back and decided the same way first and last",
+   "resourceType": "PARITY_SUITE_P62O_953",
+   "tenant": "parity-p62o-953",
+   "steps": [
+    {
+     "name": "before",
+     "op": "read-merged-obligations",
+     "args": {},
+     "observe": [
+      "read:read-merged-obligations"
+     ],
+     "markers": [
+      "parity-p62o-953"
+     ]
+    },
+    {
+     "name": "declare",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_P62O_953"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": []
+    },
+    {
+     "name": "allow",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p62o-953"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "d0fd706f-0dca-dd3e-1b25-90a0ebfa91b2",
+       "name": "p62o-953-control-on-behalf-last allow",
+       "status": "ACTIVE",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P62O_953'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "fd741d39-7552-5717-f21b-853ac69d25e9",
+         "name": "p62o-953-control-on-behalf-last allow",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "operation == 'READ'",
+         "rules": [
+          {
+           "ruleId": "b9784b69-1993-aadc-6a2e-b2b97392aed6",
+           "name": "p62o-953-control-on-behalf-last allow",
+           "target": "true",
+           "condition": "resource.a == 'y'",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "name": "write",
+     "op": "write-domain-obligations",
+     "args": {
+      "domain": "PARITY_P62O_953"
+     },
+     "observe": [
+      "status",
+      "error-class"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "id": "ef758975-cef4-528b-4643-44b6f4f0e0ca",
+       "component": "PARITY_SUITE_P62O_953",
+       "roles": [
+        "ROLE_PARITY_READER"
+       ],
+       "reason": "parity p62o-953-control-on-behalf-last",
+       "resourceType": "PARITY_SUITE_P62O_953",
+       "fieldPolicyOperation": "READ",
+       "fieldPolicyType": "WHITELIST",
+       "fields": [
+        "f1"
+       ]
+      }
+     ]
+    },
+    {
+     "name": "decide",
+     "op": "read-merged-obligations",
+     "args": {},
+     "observe": [
+      "decide:reader"
+     ],
+     "requests": [
+      {
+       "name": "reader",
+       "resource": {
+        "a": "y"
+       },
+       "v2": {
+        "obligations": "true"
+       }
+      }
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "delete-domain-obligations",
+     "args": {
+      "domain": "PARITY_P62O_953"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "cleanup-set",
+     "op": "delete-set",
+     "args": {
+      "id": "d0fd706f-0dca-dd3e-1b25-90a0ebfa91b2"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    }
+   ]
+  }
+ ]
+}
