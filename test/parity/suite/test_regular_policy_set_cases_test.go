@@ -302,9 +302,9 @@ type sequenceCase struct {
 // nothing for it, so a case that writes ends with steps that undo the write.
 // The one exception is what the cases leave in tenants other than the
 // stand's: when the last case of the function ends, the suite clears the set
-// and PIP customizations of every tenant a case or a step ran in, deletes the
-// regular sets a step uploaded there under an externalId, and empties each
-// domain a step wrote simplified policies or PIPs to there. The PAP reads
+// and PIP customizations and the policy sets of every tenant a case or a step
+// ran in, and empties each domain a step wrote simplified policies or PIPs to
+// there. The PAP reads
 // some of them for every tenant: a customization left over a set that no
 // longer exists makes those reads answer 500, and a set or a PIP customization
 // shows in the reads of the later functions' tenants. The goldens of the later
@@ -383,17 +383,16 @@ func (s *ParitySuite) requireRoutesRead(routes []string) {
 // sequenceCleanup returns the calls runSequenceCases sends when the last of
 // cases ends: for each tenant other than stand that a case or a step ran in,
 // in the order they first ran, the clear of its set and PIP customizations,
-// the upper level first, the delete of each externalId a step of that tenant
-// uploaded regular sets under, and an empty upload of the simplified policies
-// and then of the PIPs of each domain a step of that tenant wrote either to.
+// the upper level first, the clear of its policy sets, whether a step
+// uploaded them under an externalId or imported them, and an empty upload of
+// the simplified policies and then of the PIPs of each domain a step of that
+// tenant wrote either to.
 func sequenceCleanup(cases []sequenceCase, stand string) []papCall {
 	const (
-		externalIDPath     = "/access/v1/policySets/externalId/"
 		domainPoliciesPath = "/access/v1/simplifiedPolicies/domainPolicies/"
 		domainPIPsPath     = "/access/v1/simplifiedPolicies/domainPIPs/"
 	)
 	var tenants []string
-	externalIDs := map[string][]string{}
 	domains := map[string][]string{}
 	add := func(tenant string) {
 		if tenant != "" && tenant != stand && !slices.Contains(tenants, tenant) {
@@ -408,10 +407,7 @@ func sequenceCleanup(cases []sequenceCase, stand string) []papCall {
 			if st.call == nil || st.call.method != http.MethodPut || tenant == "" || tenant == stand {
 				continue
 			}
-			switch path := st.call.path; {
-			case strings.HasPrefix(path, externalIDPath) && !slices.Contains(externalIDs[tenant], path):
-				externalIDs[tenant] = append(externalIDs[tenant], path)
-			case strings.HasPrefix(path, domainPoliciesPath) || strings.HasPrefix(path, domainPIPsPath):
+			if path := st.call.path; strings.HasPrefix(path, domainPoliciesPath) || strings.HasPrefix(path, domainPIPsPath) {
 				domain := strings.TrimPrefix(strings.TrimPrefix(path, domainPoliciesPath), domainPIPsPath)
 				if !slices.Contains(domains[tenant], domain) {
 					domains[tenant] = append(domains[tenant], domain)
@@ -427,9 +423,7 @@ func sequenceCleanup(cases []sequenceCase, stand string) []papCall {
 					query: url.Values{"tenant_id": {tenant}, "level": {level}}})
 			}
 		}
-		for _, path := range externalIDs[tenant] {
-			calls = append(calls, papCall{method: http.MethodDelete, path: path, query: url.Values{"tenant_id": {tenant}}})
-		}
+		calls = append(calls, papCall{method: http.MethodPost, path: "/access/v1/config/clear", query: url.Values{"tenant_id": {tenant}}})
 		for _, prefix := range []string{domainPoliciesPath, domainPIPsPath} {
 			for _, domain := range domains[tenant] {
 				calls = append(calls, papCall{method: http.MethodPut, path: prefix + domain,

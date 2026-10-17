@@ -168,26 +168,26 @@ func TestRunSequenceCases_AStepRunsInItsOwnTenant(t *testing.T) {
 }
 
 // clearsIn returns the requests, as runSequenceCasesAgainst lists them, that
-// clear the customizations of each of tenants and empty its domain D when the
-// last case ends.
+// clear the customizations and the policy sets of each of tenants and empty
+// its domain D when the last case ends.
 func clearsIn(tenants ...string) []string {
 	var requests []string
 	for _, tenant := range tenants {
 		for _, path := range []string{"/access/v1/config/customization/clear", "/access/v1/pip/customization/clear"} {
 			requests = append(requests, "POST "+path+" "+tenant, "POST "+path+" "+tenant)
 		}
-		requests = append(requests, "PUT /access/v1/simplifiedPolicies/domainPolicies/D "+tenant,
+		requests = append(requests, "POST /access/v1/config/clear "+tenant,
+			"PUT /access/v1/simplifiedPolicies/domainPolicies/D "+tenant,
 			"PUT /access/v1/simplifiedPolicies/domainPIPs/D "+tenant)
 	}
 	return requests
 }
 
-// When the last case ends, the runner clears the customizations of each
-// tenant a case or a step ran in, and deletes the sets a step uploaded there
-// under an externalId: round48/papstate-must.json archives a set in its
-// case's tenant and uploads an empty list under its externalId, which deletes
-// nothing.
-func TestSequenceCleanup_DeletesTheExternalIDsAStepUploadedInItsTenant(t *testing.T) {
+// When the last case ends, the runner clears the customizations and the
+// policy sets of each tenant a case or a step ran in: round48/papstate-must.json
+// archives a set in its case's tenant and uploads an empty list under its
+// externalId, which deletes nothing. It sends nothing to the stand's tenant.
+func TestSequenceCleanup_ClearsTheTenantsOfTheCasesAndNotTheStands(t *testing.T) {
 	f, err := readCaseFile("round48/papstate-must.json")
 	if err != nil {
 		t.Fatal(err)
@@ -196,7 +196,7 @@ func TestSequenceCleanup_DeletesTheExternalIDsAStepUploadedInItsTenant(t *testin
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := papCall{method: http.MethodDelete, path: "/access/v1/policySets/externalId/parity-p48-state-002",
+	want := papCall{method: http.MethodPost, path: "/access/v1/config/clear",
 		query: url.Values{"tenant_id": {"parity-p48-state-002"}}}
 	got := sequenceCleanup(sequence, "default")
 	if !slices.ContainsFunc(got, func(c papCall) bool { return cmp.Equal(want, c, cmp.AllowUnexported(papCall{})) }) {
