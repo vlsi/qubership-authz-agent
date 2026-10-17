@@ -36,6 +36,7 @@ func (s *ParitySuite) runCaseFile(name string) {
 	s.Require().NoError(err)
 	s.errorBodies = recordsErrorBodies(name)
 	defer func() { s.errorBodies = false }()
+	s.scopeRead = s.scopeRead || readsPermissionScope(f)
 	ctx := context.Background()
 	if f.StandVersion {
 		function := path.Base(s.T().Name())

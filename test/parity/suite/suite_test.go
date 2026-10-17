@@ -39,6 +39,9 @@ type ParitySuite struct {
 	// errorBodies is set while runCaseFile runs a file that records the body
 	// of a 400 or 409 answer beside its status; see recordsErrorBodies.
 	errorBodies bool
+	// scopeRead is set while a test runs a case file that declares or pins a
+	// permission scope; see TearDownTest.
+	scopeRead bool
 }
 
 // scopeCacheTTL outlasts the cachePeriod the case files declare for the
@@ -95,17 +98,20 @@ func (s *ParitySuite) SetupSuite() {
 // SetupTest starts from a clean slate. Tests that do not pin routes still
 // pay nothing here — ResetPinnedRoutes is a no-op on an empty pin map.
 //
-// A test that pinned a permission scope route then waits scopeCacheTTL, so
-// that the scope it pinned has left the stand's cache when the next test
-// asks for the same subject's scope, pinned to another answer or not at all.
+// A test that pinned a permission scope route, or ran a case file that
+// declares one, then waits scopeCacheTTL, so that the scope it read has left
+// the stand's cache when the next test asks for the same subject's scope,
+// pinned to another answer or not at all.
 // On one stand for the whole suite, the next test read that scope otherwise:
 // TestRound23SecondCarrierScopeTwoGrantsCases after ...NoGrantsCases, and
-// TestRound46Diff2Part45Cases after Part43 and Part44, got the decisions of the
-// previous test's grants. The goldens were recorded one test per stand.
+// TestRound46Diff2Part45Cases after Part43 and Part44, and Part25 after Part24,
+// got the decisions of the previous test's grants. The goldens were recorded
+// one test per stand.
 func (s *ParitySuite) TearDownTest() {
 	ctx := context.Background()
-	if s.pipMock != nil && s.pipMock.pinnedPathContains("/permission-scope/") {
+	if s.scopeRead || (s.pipMock != nil && s.pipMock.pinnedPathContains("/permission-scope/")) {
 		time.Sleep(scopeCacheTTL)
+		s.scopeRead = false
 	}
 	if s.pipMock != nil {
 		if err := s.pipMock.ResetPinnedRoutes(ctx); err != nil {

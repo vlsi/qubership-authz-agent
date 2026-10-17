@@ -483,6 +483,13 @@ func customEntry(caseID, ruleIDsOf, kind string, e any, rt string) any {
 	return out
 }
 
+// readsPermissionScope reports whether f declares a PERMISSION_SCOPE PIP or
+// pins a permission scope route, anywhere in its PIPs, pins or steps.
+func readsPermissionScope(f caseFile) bool {
+	raw, err := json.Marshal(f)
+	return err != nil || bytes.Contains(raw, []byte(`"PERMISSION_SCOPE"`)) || bytes.Contains(raw, []byte("/permission-scope/"))
+}
+
 // customizationLevels are the levels a cleanup deletes at when a step names
 // no level of them, lower level first; see customizationCleanup.
 var customizationLevels = []string{"PROJECT", "CUSTOMER"}
