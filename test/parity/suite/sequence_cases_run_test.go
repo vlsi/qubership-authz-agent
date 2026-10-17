@@ -168,13 +168,16 @@ func TestRunSequenceCases_AStepRunsInItsOwnTenant(t *testing.T) {
 }
 
 // clearsIn returns the requests, as runSequenceCasesAgainst lists them, that
-// clear the customizations of each of tenants when the last case ends.
+// clear the customizations of each of tenants and empty its domain D when the
+// last case ends.
 func clearsIn(tenants ...string) []string {
 	var requests []string
 	for _, tenant := range tenants {
 		for _, path := range []string{"/access/v1/config/customization/clear", "/access/v1/pip/customization/clear"} {
 			requests = append(requests, "POST "+path+" "+tenant, "POST "+path+" "+tenant)
 		}
+		requests = append(requests, "PUT /access/v1/simplifiedPolicies/domainPolicies/D "+tenant,
+			"PUT /access/v1/simplifiedPolicies/domainPIPs/D "+tenant)
 	}
 	return requests
 }
