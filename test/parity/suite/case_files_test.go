@@ -153,7 +153,11 @@ type caseSpec struct {
 // its top level and of every PIP that an object of a step's PIPs or PIPBody
 // names. It deletes each at the level of the step, or at both PROJECT and
 // CUSTOMER where the step names another level or sets OmitLevel, so that a
-// customization an earlier run left behind does not reach the goldens.
+// customization an earlier run left behind does not reach the goldens. It
+// deletes at CUSTOMER before PROJECT: the PAP refuses to delete a PROJECT
+// customization while a CUSTOMER one stands on it, and the PROJECT one then
+// outlives the case and the set it customizes, and every later read of the
+// policy sets on the stand answers 500.
 type customizeStep struct {
 	Name string `json:"name"`
 	// Level is the level query parameter, sent as written; see OmitLevel.
@@ -480,7 +484,7 @@ func customEntry(caseID, ruleIDsOf, kind string, e any, rt string) any {
 }
 
 // customizationLevels are the levels a cleanup deletes at when a step names
-// no level of them.
+// no level of them, lower level first; see customizationCleanup.
 var customizationLevels = []string{"PROJECT", "CUSTOMER"}
 
 // cleanupLevels returns the levels the cleanup of st deletes at: its own when
@@ -493,9 +497,10 @@ func cleanupLevels(st customizeStep) []string {
 }
 
 // customizationCleanup returns the deletes, as customizeStep describes them,
-// that the runner sends before the upload of the case caseID and, in reverse
-// order, after its last step: the set customizations first, each level and set
-// once, then the PIP customizations. They record no golden.
+// that the runner sends, in reverse order, before the upload of the case
+// caseID and after its last step: the set customizations first, each level and
+// set once, then the PIP customizations, each group lower level first, so that
+// the runner deletes at the upper level first. They record no golden.
 func customizationCleanup(caseID string, steps []customizeStep, rt string) []papCall {
 	var sets, pips []papCall
 	seen := map[string]bool{}
@@ -530,6 +535,11 @@ func customizationCleanup(caseID string, steps []customizeStep, rt string) []pap
 			}
 		}
 	}
+	lowerFirst := func(a, b papCall) int {
+		return slices.Index(customizationLevels, a.query.Get("level")) - slices.Index(customizationLevels, b.query.Get("level"))
+	}
+	slices.SortStableFunc(sets, lowerFirst)
+	slices.SortStableFunc(pips, lowerFirst)
 	return append(sets, pips...)
 }
 

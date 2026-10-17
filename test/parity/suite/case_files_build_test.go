@@ -89,9 +89,12 @@ func TestCustomEntry_SendsAnEntryThatIsNotAnObjectAsWritten(t *testing.T) {
 
 // The cleanup deletes each level and set once, at a step's own level when it
 // is PROJECT or CUSTOMER and at both otherwise, and skips an entry that is not
-// an object, since it names no set.
+// an object, since it names no set. Each group is lower level first, also when
+// a CUSTOMER step comes first, so the runner, which sends it backward, deletes
+// at CUSTOMER first.
 func TestCustomizationCleanup_DeletesEachSetAndPIPOnceAtTheLevelsOfItsSteps(t *testing.T) {
 	steps := []customizeStep{
+		{Name: "upper-level", Level: stringOf("CUSTOMER"), Sets: []any{map[string]any{"key": "outer"}}},
 		{Name: "own-level", Level: stringOf("PROJECT"), Sets: []any{map[string]any{"key": "outer"}, json.Number("5")}},
 		{Name: "other-level", Level: stringOf("PARITY_OTHER"), Sets: []any{map[string]any{"key": "outer"}},
 			PIPs: []any{map[string]any{"name": "subject.{{resourceType}}"}}},

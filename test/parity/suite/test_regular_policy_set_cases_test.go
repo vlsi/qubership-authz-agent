@@ -48,7 +48,7 @@ type regularCase struct {
 	// steps run in order after requests, and only when every upload was
 	// accepted.
 	steps []regularStep
-	// cleanup is sent before the uploads and, in reverse order, when the case
+	// cleanup is sent in reverse order before the uploads and when the case
 	// ends, whatever its outcome; see customizationCleanup.
 	cleanup []papCall
 	// readsRoutes are the pip-mock routes that have to receive a call while
@@ -155,7 +155,7 @@ func (s *ParitySuite) runRegularCases(cases []regularCase) {
 					return
 				}
 			}
-			s.sendCustomizationCleanup(slices.All(tc.cleanup))
+			s.sendCustomizationCleanup(slices.Backward(tc.cleanup))
 			if len(tc.cleanup) > 0 {
 				s.T().Cleanup(func() { s.sendCustomizationCleanup(slices.Backward(tc.cleanup)) })
 			}
