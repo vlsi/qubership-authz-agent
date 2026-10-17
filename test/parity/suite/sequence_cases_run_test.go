@@ -21,7 +21,9 @@ import (
 	"io/fs"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"path/filepath"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
@@ -110,7 +112,7 @@ func TestRunSequenceCases(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			got := runSequenceCasesAgainst(t, tc.refuse, sequenceFile(tc.onRefusal))
-			if diff := cmp.Diff(tc.want, got); diff != "" {
+			if diff := cmp.Diff(append(tc.want, clearsIn("t")...), got); diff != "" {
 				t.Errorf("requests mismatch (-want +got):\n%s", diff)
 			}
 		})
@@ -158,10 +160,49 @@ func TestRunSequenceCases_AStepRunsInItsOwnTenant(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			got := runSequenceCasesAgainst(t, tc.refuse, stepTenantFile(tc.onRefusal))
-			if diff := cmp.Diff(tc.want, got); diff != "" {
+			if diff := cmp.Diff(append(tc.want, clearsIn("t", "u")...), got); diff != "" {
 				t.Errorf("requests mismatch (-want +got):\n%s", diff)
 			}
 		})
+	}
+}
+
+// clearsIn returns the requests, as runSequenceCasesAgainst lists them, that
+// clear the customizations of each of tenants when the last case ends.
+func clearsIn(tenants ...string) []string {
+	var requests []string
+	for _, tenant := range tenants {
+		for _, path := range []string{"/access/v1/config/customization/clear", "/access/v1/pip/customization/clear"} {
+			requests = append(requests, "POST "+path+" "+tenant, "POST "+path+" "+tenant)
+		}
+	}
+	return requests
+}
+
+// When the last case ends, the runner clears the customizations of each
+// tenant a case or a step ran in, and deletes the sets a step uploaded there
+// under an externalId: round48/papstate-must.json archives a set in its
+// case's tenant and uploads an empty list under its externalId, which deletes
+// nothing.
+func TestSequenceCleanup_DeletesTheExternalIDsAStepUploadedInItsTenant(t *testing.T) {
+	f, err := readCaseFile("round48/papstate-must.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, _, sequence, err := caseFileCases(f)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := papCall{method: http.MethodDelete, path: "/access/v1/policySets/externalId/parity-p48-state-002",
+		query: url.Values{"tenant_id": {"parity-p48-state-002"}}}
+	got := sequenceCleanup(sequence, "default")
+	if !slices.ContainsFunc(got, func(c papCall) bool { return cmp.Equal(want, c, cmp.AllowUnexported(papCall{})) }) {
+		t.Errorf("sequenceCleanup holds no %v", want)
+	}
+	for _, c := range got {
+		if c.query.Get("tenant_id") == "default" {
+			t.Errorf("sequenceCleanup sends %s %s to the stand's tenant", c.method, c.path)
+		}
 	}
 }
 

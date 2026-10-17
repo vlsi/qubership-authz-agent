@@ -17,11 +17,13 @@
 package paritysuite
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"iter"
 	"maps"
 	"net/http"
+	"net/url"
 	"slices"
 	"strings"
 
@@ -298,10 +300,22 @@ type sequenceCase struct {
 // own tenantId aside. A
 // sequence case leaves behind what its steps leave behind: the suite empties
 // nothing for it, so a case that writes ends with steps that undo the write.
+// The one exception is what the cases leave in tenants other than the
+// stand's: when the last case of the function ends, the suite clears the set
+// and PIP customizations of every tenant a case or a step ran in, and deletes
+// the regular sets a step uploaded there under an externalId. The PAP reads
+// some of them for every tenant: a customization left over a set that no
+// longer exists makes those reads answer 500, and a set or a PIP customization
+// shows in the reads of the later functions' tenants. The goldens of the later
+// cases of the same function were recorded with what the earlier ones left, so
+// the suite clears nothing between cases; it clears so that a later function
+// finds the stand as a fresh one.
 func (s *ParitySuite) runSequenceCases(cases []sequenceCase) {
 	if isAuthzAgentProfile(s.cfg.Profile) {
 		s.T().Skip("a sequence of PAP operations asks access-control's PAP; authz-policy-admin answers no such sequence")
 	}
+	cleanup := sequenceCleanup(cases, s.cfg.TenantID)
+	s.T().Cleanup(func() { s.sendCustomizationCleanup(slices.All(cleanup)) })
 	for _, tc := range cases {
 		s.Run(tc.id, func() {
 			if tc.tenant != "" {
@@ -363,6 +377,46 @@ func (s *ParitySuite) requireRoutesRead(routes []string) {
 			s.Assert().Positive(read[route], "pip-mock calls to %s", route)
 		}
 	})
+}
+
+// sequenceCleanup returns the calls runSequenceCases sends when the last of
+// cases ends: for each tenant other than stand that a case or a step ran in,
+// in the order they first ran, the clear of its set and PIP customizations,
+// the upper level first, and then the delete of each externalId a step of
+// that tenant uploaded regular sets under.
+func sequenceCleanup(cases []sequenceCase, stand string) []papCall {
+	const externalIDPath = "/access/v1/policySets/externalId/"
+	var tenants []string
+	externalIDs := map[string][]string{}
+	add := func(tenant string) {
+		if tenant != "" && tenant != stand && !slices.Contains(tenants, tenant) {
+			tenants = append(tenants, tenant)
+		}
+	}
+	for _, tc := range cases {
+		add(tc.tenant)
+		for _, st := range tc.steps {
+			tenant := cmp.Or(st.tenant, tc.tenant)
+			add(st.tenant)
+			if st.call != nil && st.call.method == http.MethodPut && strings.HasPrefix(st.call.path, externalIDPath) &&
+				tenant != "" && tenant != stand && !slices.Contains(externalIDs[tenant], st.call.path) {
+				externalIDs[tenant] = append(externalIDs[tenant], st.call.path)
+			}
+		}
+	}
+	var calls []papCall
+	for _, tenant := range tenants {
+		for _, path := range []string{"/access/v1/config/customization/clear", "/access/v1/pip/customization/clear"} {
+			for _, level := range []string{"CUSTOMER", "PROJECT"} {
+				calls = append(calls, papCall{method: http.MethodPost, path: path,
+					query: url.Values{"tenant_id": {tenant}, "level": {level}}})
+			}
+		}
+		for _, path := range externalIDs[tenant] {
+			calls = append(calls, papCall{method: http.MethodDelete, path: path, query: url.Values{"tenant_id": {tenant}}})
+		}
+	}
+	return calls
 }
 
 // sendCustomizationCleanup sends each of calls and never fails the test. It
