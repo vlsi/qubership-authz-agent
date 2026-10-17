@@ -2,14 +2,14 @@
  "about": "A permission scope PIP without cachePeriod, read by an iterating set twice, 61 s apart. Round 29 saw its answer served from the cache 5 s later. pipCalls records the calls to the scope route: 1 and 1 if the answer lives a minute, 1 and 0 if it lives longer.",
  "resourceTypePrefix": "PARITY_SUITE_R30G_",
  "pins": {
-  "/api/v1/permission-scope/user/00000000-0000-0000-0000-000000000101/policies": {
+  "/api/v1/permission-scope/user/00000000-0000-0000-0000-000000003003/policies": {
    "statusCode": 200,
    "body": {
     "permissionScope": [
      {
-      "id": "00000000-0000-0000-0000-000000000101",
+      "id": "00000000-0000-0000-0000-000000003003",
       "isInherited": false,
-      "name": "parity-reader",
+      "name": "parity-r30-scope",
       "type": "USER",
       "policies": [
        {
@@ -69,7 +69,8 @@
      "resource": {
       "id": "r30",
       "c": "n"
-     }
+     },
+     "subject": "user:parity-r30-scope"
     }
    ]
   },
@@ -112,7 +113,8 @@
       "id": "r30",
       "a": "n"
      },
-     "pipCalls": "/api/v1/permission-scope/user/00000000-0000-0000-0000-000000000101/policies"
+     "pipCalls": "/api/v1/permission-scope/user/00000000-0000-0000-0000-000000003003/policies",
+     "subject": "user:parity-r30-scope"
     },
     {
      "name": "after-61s",
@@ -120,8 +122,9 @@
       "id": "r30",
       "a": "n"
      },
-     "pipCalls": "/api/v1/permission-scope/user/00000000-0000-0000-0000-000000000101/policies",
-     "pauseMs": 61000
+     "pipCalls": "/api/v1/permission-scope/user/00000000-0000-0000-0000-000000003003/policies",
+     "pauseMs": 61000,
+     "subject": "user:parity-r30-scope"
     }
    ]
   },
@@ -156,7 +159,8 @@
      "resource": {
       "id": "r30",
       "c": "n"
-     }
+     },
+     "subject": "user:parity-r30-scope"
     }
    ]
   }

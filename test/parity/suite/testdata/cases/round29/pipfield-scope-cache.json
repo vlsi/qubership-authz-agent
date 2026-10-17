@@ -2,14 +2,14 @@
  "about": "Whether the permission scope service's answer lives past one request. The iterating set is read once, at once again, and 5 s later, with cachePeriod 3; then, 5 s after, with a declaration without cachePeriod, twice at once. pipCalls on the scope route records each read.",
  "resourceTypePrefix": "PARITY_SUITE_R29F_",
  "pins": {
-  "/api/v1/permission-scope/user/00000000-0000-0000-0000-000000000101/policies": {
+  "/api/v1/permission-scope/user/00000000-0000-0000-0000-000000002911/policies": {
    "statusCode": 200,
    "body": {
     "permissionScope": [
      {
-      "id": "00000000-0000-0000-0000-000000000101",
+      "id": "00000000-0000-0000-0000-000000002911",
       "isInherited": false,
-      "name": "parity-reader",
+      "name": "parity-r29-scope",
       "type": "USER",
       "policies": [
        {
@@ -84,7 +84,8 @@
       "id": "r29",
       "a": "n"
      },
-     "pipCalls": "/api/v1/permission-scope/user/00000000-0000-0000-0000-000000000101/policies"
+     "pipCalls": "/api/v1/permission-scope/user/00000000-0000-0000-0000-000000002911/policies",
+     "subject": "user:parity-r29-scope"
     },
     {
      "name": "again",
@@ -92,7 +93,8 @@
       "id": "r29",
       "a": "n"
      },
-     "pipCalls": "/api/v1/permission-scope/user/00000000-0000-0000-0000-000000000101/policies"
+     "pipCalls": "/api/v1/permission-scope/user/00000000-0000-0000-0000-000000002911/policies",
+     "subject": "user:parity-r29-scope"
     },
     {
      "name": "after-5s",
@@ -100,15 +102,17 @@
       "id": "r29",
       "a": "n"
      },
-     "pipCalls": "/api/v1/permission-scope/user/00000000-0000-0000-0000-000000000101/policies",
-     "pauseMs": 5000
+     "pipCalls": "/api/v1/permission-scope/user/00000000-0000-0000-0000-000000002911/policies",
+     "pauseMs": 5000,
+     "subject": "user:parity-r29-scope"
     },
     {
      "name": "a-y",
      "resource": {
       "id": "r29",
       "a": "y"
-     }
+     },
+     "subject": "user:parity-r29-scope"
     }
    ]
   },
@@ -151,8 +155,9 @@
       "id": "r29",
       "a": "n"
      },
-     "pipCalls": "/api/v1/permission-scope/user/00000000-0000-0000-0000-000000000101/policies",
-     "pauseMs": 5000
+     "pipCalls": "/api/v1/permission-scope/user/00000000-0000-0000-0000-000000002911/policies",
+     "pauseMs": 5000,
+     "subject": "user:parity-r29-scope"
     },
     {
      "name": "again",
@@ -160,7 +165,8 @@
       "id": "r29",
       "a": "n"
      },
-     "pipCalls": "/api/v1/permission-scope/user/00000000-0000-0000-0000-000000000101/policies"
+     "pipCalls": "/api/v1/permission-scope/user/00000000-0000-0000-0000-000000002911/policies",
+     "subject": "user:parity-r29-scope"
     }
    ]
   }

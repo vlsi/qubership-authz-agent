@@ -437,6 +437,32 @@
         "department": ["guest"],
         "tier": ["none"]
       }
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000002911",
+      "username": "parity-r29-scope",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Parity",
+      "lastName": "R29Scope",
+      "email": "parity-r29-scope@example.test",
+      "credentials": [
+        { "type": "password", "value": "ParityPass1!@#", "temporary": false }
+      ],
+      "realmRoles": ["ROLE_PARITY_READER"]
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000003003",
+      "username": "parity-r30-scope",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Parity",
+      "lastName": "R30Scope",
+      "email": "parity-r30-scope@example.test",
+      "credentials": [
+        { "type": "password", "value": "ParityPass1!@#", "temporary": false }
+      ],
+      "realmRoles": ["ROLE_PARITY_READER"]
     }
   ]
 }

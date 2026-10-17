@@ -19,6 +19,7 @@ package paritysuite
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 )
@@ -39,6 +40,11 @@ type ParitySuite struct {
 	// of a 400 or 409 answer beside its status; see recordsErrorBodies.
 	errorBodies bool
 }
+
+// scopeCacheTTL outlasts the cachePeriod the case files declare for the
+// permission scope PIP, one second. The stand caches a subject's scope per
+// (subject, tenant) for the cachePeriod of the declaration that read it.
+const scopeCacheTTL = 1500 * time.Millisecond
 
 // TestParitySuite is the `go test` entry. Use
 // `go test -tags integration -run ^TestParitySuite$ ./...` to drive it.
@@ -88,8 +94,19 @@ func (s *ParitySuite) SetupSuite() {
 // TearDownTest resets both mocks' pinned-route state so the next test's
 // SetupTest starts from a clean slate. Tests that do not pin routes still
 // pay nothing here — ResetPinnedRoutes is a no-op on an empty pin map.
+//
+// A test that pinned a permission scope route then waits scopeCacheTTL, so
+// that the scope it pinned has left the stand's cache when the next test
+// asks for the same subject's scope, pinned to another answer or not at all.
+// On one stand for the whole suite, the next test read that scope otherwise:
+// TestRound23SecondCarrierScopeTwoGrantsCases after ...NoGrantsCases, and
+// TestRound46Diff2Part45Cases after Part43 and Part44, got the decisions of the
+// previous test's grants. The goldens were recorded one test per stand.
 func (s *ParitySuite) TearDownTest() {
 	ctx := context.Background()
+	if s.pipMock != nil && s.pipMock.pinnedPathContains("/permission-scope/") {
+		time.Sleep(scopeCacheTTL)
+	}
 	if s.pipMock != nil {
 		if err := s.pipMock.ResetPinnedRoutes(ctx); err != nil {
 			s.T().Logf("pip-mock reset warning: %v", err)

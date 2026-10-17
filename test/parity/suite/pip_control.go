@@ -179,6 +179,19 @@ func (pc *PipController) GetCalls(ctx context.Context) ([]PipStubCall, error) {
 	return calls, nil
 }
 
+// pinnedPathContains reports whether a path pinned since the last
+// ResetPinnedRoutes contains part.
+func (pc *PipController) pinnedPathContains(part string) bool {
+	pc.mu.Lock()
+	defer pc.mu.Unlock()
+	for path := range pc.pinnedPaths {
+		if strings.Contains(path, part) {
+			return true
+		}
+	}
+	return false
+}
+
 // ResetPinnedRoutes re-issues /pip-stub/configure with a 404-fallback
 // response for every path pinned in this suite run. Use in TearDownTest to
 // ensure the next test's SetupTest starts from a known state even though
