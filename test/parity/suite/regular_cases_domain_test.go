@@ -111,7 +111,7 @@ func TestRunRegularCases_ARefusedPIPUploadEndsTheCaseAfterItsGolden(t *testing.T
 		"PUT " + domainPoliciesPath,
 		"PUT " + domainPIPsPath,
 		// the cleanups of the test: the sets of the case, then the domain
-		"PUT /access/v1/policySets/externalId/parity-c",
+		"DELETE /access/v1/policySets/externalId/parity-c",
 		"PUT " + domainPoliciesPath,
 		"PUT " + domainPIPsPath,
 		"PUT " + domainPoliciesPath,
@@ -136,8 +136,8 @@ func TestRunRegularCases_ARefusedPolicyUploadEndsOnlyItsOwnCase(t *testing.T) {
 		"PUT /access/v1/policySets/externalId/parity-next",
 		"POST /access/v1/check/resource",
 		// the cleanups of the test: the sets of both cases, then the domain
-		"PUT /access/v1/policySets/externalId/parity-refused",
-		"PUT /access/v1/policySets/externalId/parity-next",
+		"DELETE /access/v1/policySets/externalId/parity-refused",
+		"DELETE /access/v1/policySets/externalId/parity-next",
 		"PUT " + domainPoliciesPath,
 		"PUT " + domainPIPsPath,
 		"PUT " + domainPoliciesPath,
@@ -167,7 +167,7 @@ func TestRunRegularCases_AnAcceptedDomainUploadGoesOnToTheSetsRequestsAndSteps(t
 		"POST /access/v1/check/resource",
 		// the cleanups of the case, then of the test
 		"DELETE /access/v1/config/customization/policySet/s",
-		"PUT /access/v1/policySets/externalId/parity-c",
+		"DELETE /access/v1/policySets/externalId/parity-c",
 		"PUT " + domainPoliciesPath,
 		"PUT " + domainPIPsPath,
 		"PUT " + domainPoliciesPath,
