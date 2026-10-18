@@ -64,17 +64,21 @@ make e2e-down                                                     # the whole cl
 
 ## Identity provider
 
-The `idp` Deployment runs the public Keycloak image (`quay.io/keycloak/keycloak`, the version the goldens were
-captured against). The two realm import files
-([`cloud-common-realm.json`](../k8s/parity/idp-seed/cloud-common-realm.json) and
-[`parity-realm.json`](../k8s/parity/idp-seed/parity-realm.json)) use only built-in Keycloak protocol mappers and
-require no custom SPI extensions. The suite calls the standard OIDC token endpoint
-(`/auth/realms/parity/protocol/openid-connect/token`) for `client_credentials` and `password` grants; no custom
-Keycloak REST APIs are involved.
+The `idp` Deployment runs the test Keycloak image, `local/authz-test-keycloak:ci`, built by `make e2e-images` from
+[`test/keycloak/Dockerfile`](../keycloak/Dockerfile) on the public Keycloak image (`quay.io/keycloak/keycloak`, the
+version the goldens were captured against). Its database already holds the realms of
+[`cloud-common-realm.json`](../k8s/parity/idp-seed/cloud-common-realm.json) and
+[`parity-realm.json`](../k8s/parity/idp-seed/parity-realm.json), and the `parity` realm holds the users of
+`suite/testdata/realm/` as well, so the functions that need those users run on the kind harness with no partial import.
+The image gives those users the first name, last name, and email they have on the stand the goldens were recorded on:
+their files declare none, and Keycloak refuses a password grant to such a user with `Account is not fully set up`. The
+realm files use only built-in Keycloak protocol mappers and require no custom SPI extensions. The suite calls the
+standard OIDC token endpoint (`/auth/realms/parity/protocol/openid-connect/token`) for `client_credentials` and
+`password` grants; no custom Keycloak REST APIs are involved.
 
-`KC_HTTP_RELATIVE_PATH=/auth` is set so the realm is reachable at `/auth/realms/parity/...` (Keycloak dropped the
-`/auth` prefix in v17; the parity fixtures carry that prefix throughout, so it is restored via config). It prefixes the
-management endpoints too, which is why the probes hit `/auth/health/ready`.
+The image sets `KC_HTTP_RELATIVE_PATH=/auth` so the realm is reachable at `/auth/realms/parity/...` (Keycloak dropped
+the `/auth` prefix in v17; the parity fixtures carry that prefix throughout, so it is restored via config). It prefixes
+the management endpoints too, which is why the probes hit `/auth/health/ready`.
 
 ## Goldens, accepted divergences, and the divergence backlog
 

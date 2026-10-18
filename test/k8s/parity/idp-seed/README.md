@@ -1,8 +1,10 @@
 # Parity IdP seed realms
 
-These realm files are imported by the `idp` Deployment in [keycloak.yaml](../keycloak.yaml)
-with Keycloak's `--import-realm`; `make parity-harness` packs them into the `parity-realms`
-ConfigMap.
+These realm files are imported into the test Keycloak image when
+[`test/keycloak/Dockerfile`](../../../keycloak/Dockerfile) is built; the `idp` Deployment in
+[keycloak.yaml](../keycloak.yaml) runs that image. The image adds the `parity-m2m` client of
+`cloud-common-realm.json` to the `cloud-common` realm of `test/k8s/authn/`, and the users of
+`test/parity/suite/testdata/realm/` to the `parity` realm.
 
 ## Why the notes live here and not in the JSON
 

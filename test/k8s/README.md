@@ -6,8 +6,8 @@ apply them by hand. CI runs the same targets one step at a time.
 
 | File | What it is |
 | --- | --- |
-| `keycloak.yaml` | Keycloak with the realm imports from `authn/` |
-| `authn/` | The realm imports, their description, and the M2M client credentials |
+| `keycloak.yaml` | Keycloak from the test image, which holds the realms of `authn/` |
+| `authn/` | The realm files, their description, and the M2M client credentials |
 | `pip-stub.yaml` | The PIP stub the uploaded PIP definitions call |
 | `entitlements-mock.yaml` | A second stub instance for the entitlements endpoint |
 | `values.yaml` | Chart values that point the agent at the harness Services and at the stub |
@@ -15,12 +15,25 @@ apply them by hand. CI runs the same targets one step at a time.
 | `runtime-suite-job.yaml` | The suite itself, built from `test/integration/testify/Dockerfile` |
 | `runtime-suite-rbac.yaml` | The ServiceAccount the Job names; it is granted no rules |
 
-The ConfigMap with the realm imports and the M2M client-credentials Secret
-are generated from the files under `authn/` by `make e2e-harness`, so they
-have no manifest of their own.
+Both namespaces run Keycloak from one image, `local/authz-test-keycloak:ci`,
+built from [`test/keycloak/Dockerfile`](../keycloak/Dockerfile) by
+`make e2e-images`. The image holds every realm the suites use, already
+imported into its database: `authz-test` and `cloud-common` from `authn/`,
+`parity` from `parity/idp-seed/`, and the users of
+`test/parity/suite/testdata/realm/`. The Pod imports nothing at startup, and no
+test adds a realm, a client, or a user to it. Each Deployment sets
+`KC_HOSTNAME` to its own Service, so one image serves both issuers.
+
+The two `cloud-common-realm.json` files differ, and the image holds one realm
+of that name: the one from `authn/`, with the `parity-m2m` client of the
+parity file added. A change to any of these realm files takes effect after
+`make e2e-images` and `make e2e-restart` or `make parity-restart`.
+
+The M2M client-credentials Secret is generated from the files under `authn/`
+by `make e2e-harness`, so it has no manifest of its own.
 
 `parity/` holds the same shape for the parity replay suite (`test/parity`):
-Keycloak as `idp` with the realm imports from `parity/idp-seed/`,
+Keycloak as `idp` from the same image,
 `pip-mock` with the request-args rule set, `entitlements-mock`, chart values
 with the parity realm as an explicit trusted provider, and the suite Job built
 from `test/parity/suite/Dockerfile`. It runs in its own namespace, so its
@@ -42,8 +55,8 @@ Step by step, in the order `make e2e` runs them:
 | Target | What it does |
 | --- | --- |
 | `e2e-cluster` | Creates the kind cluster `authz-e2e` unless it exists |
-| `e2e-images` | Builds the two product images, pip-stub, and the suite images, then loads them into the cluster |
-| `e2e-harness` | Namespace, realm ConfigMap, client-credentials Secret, Keycloak and the stubs; waits until they are Ready |
+| `e2e-images` | Builds the two product images, pip-stub, the suite images, and the Keycloak image, then loads them into the cluster |
+| `e2e-harness` | Namespace, client-credentials Secret, Keycloak and the stubs; waits until they are Ready |
 | `e2e-install` | `helm upgrade --install` of the stub chart with `policy-admin-values.yaml`, then of the agent chart with `values.yaml`, each with `--wait` |
 | `e2e-suite` | Runs the Job, streams its log, and fails if the Job did not complete |
 | `e2e-restart` | Restarts the Deployments that run local images and waits for them; needed after `e2e-images` on a running stand, because the tags do not change |

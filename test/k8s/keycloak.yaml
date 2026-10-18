@@ -1,10 +1,10 @@
 # Keycloak for the kind end-to-end run (`make e2e-harness`).
 #
-# The realm imports come from test/k8s/authn/ and are packed into the
-# keycloak-realms ConfigMap by `make e2e-harness`, so this file does not
-# duplicate them. KC_HOSTNAME must match the in-cluster Service name: the issuer and the
-# JWKS URI in the discovery document derive from it, and the agent fetches them
-# from inside the cluster.
+# The image, built from test/keycloak/Dockerfile by `make e2e-images`, has the
+# realms of test/k8s/authn/ already in its database, so the Pod imports
+# nothing at startup. KC_HOSTNAME must match the in-cluster Service name: the
+# issuer and the JWKS URI in the discovery document derive from it, and the
+# agent fetches them from inside the cluster.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -25,26 +25,21 @@ spec:
       automountServiceAccountToken: false
       containers:
         - name: keycloak
-          image: quay.io/keycloak/keycloak:26.3.5
-          args: ["start-dev", "--import-realm", "--health-enabled=true"]
+          image: local/authz-test-keycloak:ci
+          imagePullPolicy: Never
           # No bootstrap admin: nothing in the harness uses the admin API, the
-          # realm imports carry every client and user the suites need, and a
+          # realms carry every client and user the suites need, and a
           # credential the manifest does not hold cannot leak from it.
           env:
             - name: KC_HOSTNAME
               value: http://keycloak:8080/auth
-            - name: KC_HTTP_RELATIVE_PATH
-              value: /auth
-            - name: JAVA_OPTS_APPEND
-              value: -Dkeycloak.migration.strategy=OVERWRITE_EXISTING
           ports:
             - name: http
               containerPort: 8080
             - name: management
               containerPort: 9000
-          # KC_HTTP_RELATIVE_PATH prefixes the management endpoints too, so the
-          # health path carries /auth. Cold start with two realm imports takes
-          # about a minute; the startup probe allows five.
+          # The image sets KC_HTTP_RELATIVE_PATH=/auth, which prefixes the
+          # management endpoints too, so the health path carries /auth.
           startupProbe:
             httpGet:
               path: /auth/health/ready
@@ -60,20 +55,11 @@ spec:
             requests:
               cpu: 500m
               memory: 768Mi
-              # The dev-mode H2 database and the realm imports live on the
-              # container filesystem.
+              # The dev-mode H2 database lives on the container filesystem.
               ephemeral-storage: 512Mi
             limits:
               memory: 1536Mi
               ephemeral-storage: 1Gi
-          volumeMounts:
-            - name: realms
-              mountPath: /opt/keycloak/data/import
-              readOnly: true
-      volumes:
-        - name: realms
-          configMap:
-            name: keycloak-realms
 ---
 apiVersion: v1
 kind: Service

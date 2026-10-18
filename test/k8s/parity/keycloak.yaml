@@ -1,9 +1,11 @@
 # Keycloak for the parity replay on kind (`make parity-harness`).
 #
-# The replay does not depend on persistence, so dev mode with the two realm
-# imports is enough. The realm files come from test/k8s/parity/idp-seed/ and
-# are packed into the parity-realms ConfigMap by `make parity-harness`. The Service is named `idp` because that host is the issuer
-# in the trusted-providers entry and in KC_HOSTNAME.
+# The replay does not depend on persistence, so dev mode is enough. The image,
+# built from test/keycloak/Dockerfile by `make e2e-images`, has the realms of
+# test/k8s/parity/idp-seed/ and the users of test/parity/suite/testdata/realm/
+# already in its database, so the Pod imports nothing at startup. The Service
+# is named `idp` because that host is the issuer in the trusted-providers
+# entry and in KC_HOSTNAME.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -24,22 +26,21 @@ spec:
       automountServiceAccountToken: false
       containers:
         - name: keycloak
-          image: quay.io/keycloak/keycloak:26.3.5
-          args: ["start-dev", "--import-realm", "--health-enabled=true"]
+          image: local/authz-test-keycloak:ci
+          imagePullPolicy: Never
           # No bootstrap admin: nothing in the harness uses the admin API, the
-          # realm imports carry every client and user the suites need, and a
+          # realms carry every client and user the suites need, and a
           # credential the manifest does not hold cannot leak from it.
           env:
             - name: KC_HOSTNAME
               value: http://idp:8080/auth
-            - name: KC_HTTP_RELATIVE_PATH
-              value: /auth
           ports:
             - name: http
               containerPort: 8080
             - name: management
               containerPort: 9000
-          # KC_HTTP_RELATIVE_PATH prefixes the management endpoints too.
+          # The image sets KC_HTTP_RELATIVE_PATH=/auth, which prefixes the
+          # management endpoints too.
           startupProbe:
             httpGet:
               path: /auth/health/ready
@@ -59,14 +60,6 @@ spec:
             limits:
               memory: 1536Mi
               ephemeral-storage: 1Gi
-          volumeMounts:
-            - name: realms
-              mountPath: /opt/keycloak/data/import
-              readOnly: true
-      volumes:
-        - name: realms
-          configMap:
-            name: parity-realms
 ---
 apiVersion: v1
 kind: Service

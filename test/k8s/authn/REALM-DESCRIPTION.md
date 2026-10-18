@@ -67,20 +67,20 @@ Both users have `emailVerified: true` and `enabled: true`.
 
 ## Import Procedure
 
-1. The realm JSON file is mounted into the Keycloak container at
-   `/opt/keycloak/data/import/authz-test-realm.json`.
-2. Keycloak is started with `start-dev --import-realm --health-enabled=true`.
+1. `docker build -f test/keycloak/Dockerfile .` runs `kc.sh import` over the realm JSON
+   files, and the image keeps the resulting database.
+2. The container starts with `start-dev` and imports nothing.
    The `KC_HOSTNAME=http://keycloak:8080` env var fixes the token issuer to the
    container-network hostname regardless of the host-side access URL, ensuring
    that tokens acquired from `http://localhost:<KC_HTTP_PORT>` still carry
    `iss: http://keycloak:8080/realms/authz-test` matching the trusted-provider config.
-3. On first startup, Keycloak imports the realm, clients, roles, and users from the JSON file.
-4. The import creates the realm with all configuration as a single atomic operation.
+3. The build imports the realm, clients, roles, and users from the JSON file, so a change to
+   the file takes effect only after the image is rebuilt.
 
 ## How the Runtime Environment Uses This Import
 
-1. `make e2e-harness` packs `authz-test-realm.json` into the `keycloak-realms` ConfigMap, which
-   `test/k8s/keycloak.yaml` mounts into the Keycloak container.
+1. `make e2e-images` builds the Keycloak image with `authz-test-realm.json` imported, and
+   `test/k8s/keycloak.yaml` runs it.
 2. `authz-agent` trusted-provider config points to `http://keycloak:8080/realms/authz-test`.
 3. On startup, `authz-agent` bootstrap fetches OIDC discovery from the Keycloak issuer,
    resolves the `jwks_uri`, downloads the JWKS, and writes it into the OPA data path.

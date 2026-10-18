@@ -49,7 +49,7 @@ E2E_BASE_URL ?= http://authz-agent:8080
 PARITY_AC_BASE_URL ?= http://authz-agent:8080
 E2E_AUTHN := test/k8s/authn
 E2E_IMAGES := authz-agent authz-policy-admin pip-stub authz-runtime-suite \
-              authz-parity-suite
+              authz-parity-suite authz-test-keycloak
 
 e2e: e2e-cluster e2e-images e2e-harness e2e-install e2e-suite
 
@@ -63,13 +63,13 @@ e2e-images:
 	docker build -t local/pip-stub:ci                  -f test/integration/pipstub/Dockerfile test/integration/pipstub
 	docker build -t local/authz-runtime-suite:ci       -f test/integration/testify/Dockerfile .
 	docker build -t local/authz-parity-suite:ci        -f test/parity/suite/Dockerfile test/parity/suite
+	docker build -t local/authz-test-keycloak:ci       -f test/keycloak/Dockerfile .
 	kind load docker-image --name $(KIND_CLUSTER) $(addprefix local/,$(addsuffix :ci,$(E2E_IMAGES)))
 
-# Keycloak with the repository realm imports, the two stubs, and the M2M
-# client-credentials Secret the chart expects the platform to provision.
+# Keycloak with the test realms built into its image, the two stubs, and the
+# M2M client-credentials Secret the chart expects the platform to provision.
 e2e-harness:
 	kubectl --context kind-$(KIND_CLUSTER) create namespace $(E2E_NAMESPACE) --dry-run=client -o yaml | kubectl --context kind-$(KIND_CLUSTER) apply -f -
-	$(E2E_KUBECTL) create configmap keycloak-realms --from-file=$(E2E_AUTHN)/authz-test-realm.json --from-file=$(E2E_AUTHN)/cloud-common-realm.json --dry-run=client -o yaml | $(E2E_KUBECTL) apply -f -
 	$(E2E_KUBECTL) create secret generic authz-agent-client-credentials --from-file=username=$(E2E_AUTHN)/m2m-credentials/username --from-file=password=$(E2E_AUTHN)/m2m-credentials/password --from-literal=name=authz-agent --dry-run=client -o yaml | $(E2E_KUBECTL) apply -f -
 	$(E2E_KUBECTL) apply -f test/k8s/keycloak.yaml -f test/k8s/pip-stub.yaml -f test/k8s/entitlements-mock.yaml
 	$(E2E_KUBECTL) rollout status deploy/pip-stub --timeout=2m
@@ -95,9 +95,8 @@ e2e-suite:
 # `make e2e-images` rebuilds the local images under the same tags, and a
 # running Pod keeps the old content: the kubelet never re-reads a tag it
 # already has. Restart every Deployment that runs a local image and wait until
-# it is Ready again, so the next `e2e-suite` tests the new build. Keycloak is
-# pulled, not built, and keeps running.
-E2E_LOCAL_DEPLOYMENTS := authz-agent authz-policy-admin pip-stub entitlements-mock
+# it is Ready again, so the next `e2e-suite` tests the new build.
+E2E_LOCAL_DEPLOYMENTS := authz-agent authz-policy-admin pip-stub entitlements-mock keycloak
 e2e-restart:
 	$(E2E_KUBECTL) rollout restart $(addprefix deploy/,$(E2E_LOCAL_DEPLOYMENTS))
 	for d in $(E2E_LOCAL_DEPLOYMENTS); do $(E2E_KUBECTL) rollout status deploy/$$d --timeout=3m || exit 1; done
@@ -119,15 +118,14 @@ e2e-down:
 # cluster and the images with the e2e targets above.
 PARITY_NAMESPACE ?= authz-parity
 PARITY_KUBECTL := kubectl --context kind-$(KIND_CLUSTER) -n $(PARITY_NAMESPACE)
-PARITY_SEED := test/k8s/parity/idp-seed
 
 parity: e2e-cluster e2e-images parity-harness parity-install parity-suite
 
-# Keycloak with the parity realm imports, the two stubs, and the M2M
-# client-credentials Secret for the parity-m2m client of the cloud-common realm.
+# Keycloak with the test realms built into its image, the two stubs, and the
+# M2M client-credentials Secret for the parity-m2m client of the cloud-common
+# realm.
 parity-harness:
 	kubectl --context kind-$(KIND_CLUSTER) create namespace $(PARITY_NAMESPACE) --dry-run=client -o yaml | kubectl --context kind-$(KIND_CLUSTER) apply -f -
-	$(PARITY_KUBECTL) create configmap parity-realms --from-file=$(PARITY_SEED)/cloud-common-realm.json --from-file=$(PARITY_SEED)/parity-realm.json --dry-run=client -o yaml | $(PARITY_KUBECTL) apply -f -
 	$(PARITY_KUBECTL) create configmap pip-mock-config --from-file=test/integration/pipstub/config/requestargs.responses.yaml --dry-run=client -o yaml | $(PARITY_KUBECTL) apply -f -
 	$(PARITY_KUBECTL) create secret generic authz-agent-client-credentials --from-literal=username=parity-m2m '--from-literal=password=ParityM2MSecret1!@#' --from-literal=name=authz-agent --dry-run=client -o yaml | $(PARITY_KUBECTL) apply -f -
 	$(PARITY_KUBECTL) apply -f test/k8s/parity/keycloak.yaml -f test/k8s/parity/pip-mock.yaml -f test/k8s/parity/entitlements-mock.yaml
@@ -150,7 +148,7 @@ parity-suite:
 	$(PARITY_KUBECTL) wait --for=condition=Complete job/parity-suite --timeout=1m
 
 # The parity counterpart of e2e-restart, for the same reason.
-PARITY_LOCAL_DEPLOYMENTS := authz-agent authz-policy-admin pip-mock entitlements-mock
+PARITY_LOCAL_DEPLOYMENTS := authz-agent authz-policy-admin pip-mock entitlements-mock idp
 parity-restart:
 	$(PARITY_KUBECTL) rollout restart $(addprefix deploy/,$(PARITY_LOCAL_DEPLOYMENTS))
 	for d in $(PARITY_LOCAL_DEPLOYMENTS); do $(PARITY_KUBECTL) rollout status deploy/$$d --timeout=3m || exit 1; done
