@@ -270,3 +270,25 @@ func TestCaseSteps_ACustomizeStepIsItsCallThenItsRequests(t *testing.T) {
 	}
 	t.Logf("%d customize steps", n)
 }
+
+// A request classed by classifyBy is compared with its unclassified golden on
+// the authz-agent profile when that golden is recorded, and with the golden of
+// its order class otherwise: an order-dependent answer is accepted from legacy
+// access-control only. regular/d2r46-d2cff13835/ry has that golden, and
+// regular/o16-01/ry has only its classes.
+func TestComparesWithTheUnclassifiedGolden(t *testing.T) {
+	cases := []struct {
+		profile, subCase string
+		want             bool
+	}{
+		{"authz-agent", "regular/d2r46-d2cff13835/ry", true},
+		{"legacy", "regular/d2r46-d2cff13835/ry", false},
+		{"authz-agent", "regular/o16-01/ry", false},
+	}
+	for _, tc := range cases {
+		s := &ParitySuite{cfg: Config{Profile: tc.profile}, comparator: NewGoldenComparator(Config{})}
+		if got := s.comparesWithTheUnclassifiedGolden(PSUITE_ROW_2_CHECK_RESOURCE_V1_OUTCOME, tc.subCase); got != tc.want {
+			t.Errorf("%s %s: got %v, want %v", tc.profile, tc.subCase, got, tc.want)
+		}
+	}
+}

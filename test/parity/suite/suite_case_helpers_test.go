@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"os"
 	"sort"
 	"time"
 
@@ -408,6 +409,8 @@ func (s *ParitySuite) runRequest(subCase, resourceType string, req isolatedReque
 	id, outcome := s.sendRequest(resourceType, req, tokens)
 	s.requireRoutesRead(req.readsRoutes)
 	switch {
+	case req.classifyBy != "" && s.comparesWithTheUnclassifiedGolden(id, subCase):
+		s.T().Logf("%s: the %s profile is compared with the unclassified golden", subCase, s.cfg.Profile)
 	case req.classifyBy != "":
 		read := s.pipCalls(req.classifyBy)
 		s.T().Logf("%s: pip-mock received %d call(s) to %s", subCase, read, req.classifyBy)
@@ -432,6 +435,21 @@ func (s *ParitySuite) runRequest(subCase, resourceType string, req isolatedReque
 		})
 	}
 	s.requirePendingGolden(id, subCase, outcome)
+}
+
+// comparesWithTheUnclassifiedGolden reports whether a request classed by
+// classifyBy is compared with its golden subCase itself rather than with the
+// golden of its order class: on the authz-agent profile, when that golden is
+// recorded. An answer that depends on the order the stand evaluates in is
+// accepted from legacy access-control only; the agent has to give the one
+// answer that golden holds on every run. A request with no such golden keeps
+// its order classes on both profiles.
+func (s *ParitySuite) comparesWithTheUnclassifiedGolden(id ParityEndpointID, subCase string) bool {
+	if !isAuthzAgentProfile(s.cfg.Profile) {
+		return false
+	}
+	_, err := os.Stat(s.comparator.GoldenPath(id, subCase))
+	return err == nil
 }
 
 // pipCalls counts the calls pip-mock received on route since its call log was
