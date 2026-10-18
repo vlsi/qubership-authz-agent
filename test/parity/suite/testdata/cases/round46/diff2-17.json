@@ -52,6 +52,15 @@
   },
   {
    "id": "d2r46-d2cff13835",
+   "about": "Two root sets: one reads a PIP that fails, the other allows. Legacy access-control answers by the order it evaluates the roots in, so ry is classed by whether the PIP was read; the agent is compared with ry, which holds the allow.",
+   "pins": {
+    "/api/v1/pip/r16-failing": {
+     "statusCode": 500,
+     "body": {
+      "error": "parity round 16 case"
+     }
+    }
+   },
    "pips": [
     "failing"
    ],
@@ -60,7 +69,8 @@
      "name": "ry",
      "resource": {
       "id": "r16"
-     }
+     },
+     "classifyBy": "/api/v1/pip/r16-failing"
     }
    ],
    "sets": [
@@ -126,6 +136,15 @@
   },
   {
    "id": "d2r46-f16-control-last-or",
+   "about": "Control. The root sets of d2r46-d2cff13835, whose target is true, are still loaded, so legacy access-control answers by the order it evaluates the roots in here too: a-n is classed by whether their PIP was read, and the agent is compared with a-n, which holds the allow.",
+   "pins": {
+    "/api/v1/pip/r16-failing": {
+     "statusCode": 500,
+     "body": {
+      "error": "parity round 16 case"
+     }
+    }
+   },
    "sets": [
     {
      "key": "set",
@@ -155,7 +174,8 @@
       "x": "v",
       "id": "obs",
       "a": "n"
-     }
+     },
+     "classifyBy": "/api/v1/pip/r16-failing"
     }
    ]
   }
