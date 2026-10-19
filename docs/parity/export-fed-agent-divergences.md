@@ -50,3 +50,9 @@ The other classes are not accepted; they are defects of the conversion:
   grows.
 - When the agent gains an evaluator for regular policy sets, this entry is removed, and the profile then compares
   those goldens with legacy directly.
+- Part A of the profile (`TestExportFedLegacyAgent`, `make parity-export-legacy`) mounts the exports legacy
+  access-control recorded, and has no prediction of the agent's answer. There a golden whose point holds a regular
+  policy set (class `set-type`) passes when the agent allows nothing the golden denies. Its other classes are
+  `pull-failure`, the remaining export features (`status`, `rule-effect`, `customization`, `tenant`, `pip-kind`), and
+  `agent` for a difference at a point with none of them, which is a defect of the agent's evaluation rather than of
+  the conversion.

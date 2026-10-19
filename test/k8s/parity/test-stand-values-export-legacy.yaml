@@ -1,0 +1,17 @@
+# Values of the authz-test-stand chart for part A of the export-fed parity
+# profile (`make parity-export-legacy`), layered over test-stand-values.yaml
+# and test-stand-values-export.yaml: the same stand, with the Job running
+# TestExportFedLegacyAgent from the parity suite's own image, which carries the
+# case files and goldens that test reads and no export bundle.
+suite:
+  imageRepository: local/authz-parity-suite
+  # Each point mounts an export and waits for a pull of about two seconds;
+  # the recorded raw reads give a few dozen points.
+  args:
+    - ./parity.test
+    - -test.v
+    - -test.timeout
+    - 3600s
+    - -test.run
+    - ^TestExportFedLegacyAgent$
+  activeDeadlineSeconds: 4500

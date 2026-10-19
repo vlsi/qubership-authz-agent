@@ -71,6 +71,9 @@ the same namespace: `parity-export-image`, `parity-export-harness`,
 `parity-export-install`, and `parity-export-suite` after the cluster and image
 targets, and `parity-export-restart` after `e2e-images`.
 `PARITY_EXPORT_RUN=<regexp>` narrows the run to the test functions it matches.
+`make parity-export-legacy` runs part A of the profile on the same stand, the legacy exports that the sequence cases
+recorded, from the parity suite image with no bundle: `parity-export-legacy-harness`, `parity-export-install`, and
+`parity-export-legacy-suite`. There `PARITY_EXPORT_RUN` matches `<case file>/<case id>`.
 
 `KIND_CLUSTER`, `E2E_NAMESPACE`, `PARITY_NAMESPACE`, and `E2E_ARTIFACTS`
 override the defaults. `E2E_HELM_ARGS` adds arguments to every chart install, the test stand's included;

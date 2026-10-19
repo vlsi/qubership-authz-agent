@@ -174,7 +174,7 @@ PARITY_EXPORT_SEED = $(PARITY_KUBECTL) rollout status deploy/export-source --tim
 # export-source beside the parity stubs, and the suite Job of the profile.
 # PARITY_EXPORT_RUN reaches the Job through stdin and --set-file, which keeps
 # the commas and backslashes of a regexp that --set would split or unescape.
-PARITY_EXPORT_STAND = printf '%s' '$(subst ','\'',$(value PARITY_EXPORT_RUN))' | $(PARITY_HELM) upgrade --install authz-test-stand $(TEST_STAND_CHART) --create-namespace -f test/k8s/parity/test-stand-values.yaml -f test/k8s/parity/test-stand-values-export.yaml --set suite.env.PARITY_AC_BASE_URL=$(PARITY_AC_BASE_URL) --set-file suite.env.PARITY_EXPORT_RUN=- --wait --timeout 10m $(E2E_HELM_ARGS)
+PARITY_EXPORT_STAND = printf '%s' '$(subst ','\'',$(value PARITY_EXPORT_RUN))' | $(PARITY_HELM) upgrade --install authz-test-stand $(TEST_STAND_CHART) --create-namespace -f test/k8s/parity/test-stand-values.yaml -f test/k8s/parity/test-stand-values-export.yaml $(PARITY_EXPORT_EXTRA_VALUES) --set suite.env.PARITY_AC_BASE_URL=$(PARITY_AC_BASE_URL) --set-file suite.env.PARITY_EXPORT_RUN=- --wait --timeout 10m $(E2E_HELM_ARGS)
 
 parity-export: e2e-cluster e2e-images parity-export-image parity-export-harness parity-export-install parity-export-suite
 
@@ -198,6 +198,24 @@ parity-export-suite:
 	$(PARITY_EXPORT_STAND)
 	$(call run-suite,$(PARITY_KUBECTL),$(PARITY_HELM),parity-export,8h15m)
 
+# Part A of the export-fed profile: TestExportFedLegacyAgent mounts the v3
+# exports that the raw reads of the sequence cases recorded on legacy
+# access-control and compares the agent with the goldens of the same point. It
+# reads the goldens of the parity suite image, so it needs no bundle; the
+# values file below runs that image and that test in the Job. PARITY_EXPORT_RUN
+# selects the cases by <case file>/<case id>.
+parity-export-legacy-harness parity-export-legacy-suite: PARITY_EXPORT_EXTRA_VALUES = -f test/k8s/parity/test-stand-values-export-legacy.yaml
+
+parity-export-legacy: e2e-cluster e2e-images parity-export-legacy-harness parity-export-install parity-export-legacy-suite
+
+parity-export-legacy-harness: test-stand-files
+	$(PARITY_EXPORT_STAND)
+	$(PARITY_EXPORT_SEED)
+
+parity-export-legacy-suite:
+	$(PARITY_EXPORT_STAND)
+	$(call run-suite,$(PARITY_KUBECTL),$(PARITY_HELM),parity-export,1h30m)
+
 # The parity counterpart of e2e-restart, for the same reason.
 PARITY_LOCAL_DEPLOYMENTS := authz-agent authz-policy-admin pip-mock entitlements-mock user-management-mock
 parity-restart:
@@ -219,4 +237,4 @@ parity-logs:
 	$(PARITY_KUBECTL) get events --sort-by=.lastTimestamp > $(E2E_ARTIFACTS)/parity/events.txt
 	-$(PARITY_KUBECTL) exec deploy/pip-mock -- wget -qO- http://authz-agent:8080/internal/v1/decision-logs > $(E2E_ARTIFACTS)/parity/decision-logs.jsonl
 
-.PHONY: lint install-hooks e2e e2e-cluster e2e-images test-stand-files e2e-harness e2e-install e2e-suite e2e-restart e2e-logs e2e-down parity parity-harness parity-install parity-suite parity-export parity-export-image parity-export-harness parity-export-install parity-export-suite parity-restart parity-export-restart parity-logs
+.PHONY: lint install-hooks e2e e2e-cluster e2e-images test-stand-files e2e-harness e2e-install e2e-suite e2e-restart e2e-logs e2e-down parity parity-harness parity-install parity-suite parity-export parity-export-image parity-export-harness parity-export-install parity-export-suite parity-export-legacy parity-export-legacy-harness parity-export-legacy-suite parity-restart parity-export-restart parity-logs

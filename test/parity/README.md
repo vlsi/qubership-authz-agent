@@ -107,6 +107,24 @@ matches it. It also passes when its class is listed in `acceptedExportDivergence
 for that class, unless the agent allows what the golden denies. The report at the end of the run counts the verdicts per
 family (simplified, policy-set, customization, status, tenant, pip-kind) and lists every golden that differs.
 
+### Legacy exports
+
+`make parity-export-legacy` runs `TestExportFedLegacyAgent` on the same stand. It needs no bundle: it feeds the agent
+the v3 exports that legacy access-control held, as the raw reads (`pap-read-raw-v1`) of the sequence cases recorded
+them, and compares the agent's decisions with the goldens recorded at the same point. A document of a tenant is known
+at a decision when a raw read of it lies between the same two accepted writes that change it, or, in a tenant of the
+case's own, when no accepted write changed it yet; a write whose status golden is missing counts as accepted. A
+decision for which one document is not known is not compared, and the report counts such decisions by the document
+that is missing.
+
+Each point's export is mounted with a canary policy set of a resource type of its own, and a check of that type
+before the decisions tells a loaded export from a pull that failed and kept the previous one; the decisions of such a
+point get the class `pull-failure`. Otherwise a difference gets the first feature of its point that the agent's
+conversion drops or ignores (`set-type`, `status`, `rule-effect`, `customization`, `tenant`, `pip-kind`), or `agent`
+when the point has none. The report counts the verdicts per family and the differences per class, and lists the wrong
+allows, where the agent allows what the golden denies, before the other differences. `PARITY_EXPORT_RUN` selects the
+cases whose `<case file>/<case id>` it matches.
+
 The bundle also checks the specification's model of the agent's conversion. Without a stand, from the repository
 root:
 
