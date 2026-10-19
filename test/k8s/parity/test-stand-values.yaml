@@ -36,6 +36,21 @@ suite:
   enabled: true
   name: parity-suite
   imageRepository: local/authz-parity-suite
+  # On the authz-agent profile each simplified case waits
+  # PARITY_PULL_SETTLE_SECONDS (2 s) for the agent's pull: the 4846 such cases
+  # of testdata/cases take about 2.7 h, emptying their domains and their pauses
+  # about 10 min, and the Go functions about 25 min more.
+  # 5 h leaves a margin for a slower runner; the Job deadline is 15 min longer,
+  # so that the test binary's own timeout fires first and prints the running
+  # tests.
+  args:
+    - ./parity.test
+    - -test.v
+    - -test.timeout
+    - 18000s
+    - -test.run
+    - ^TestParitySuite$
+  activeDeadlineSeconds: 18900
   env:
     PARITY_PROFILE: authz-agent
     # The chart's Service, which fronts the agent Pod. `make parity-harness`

@@ -92,10 +92,11 @@ e2e-install:
 # It prints the log only at the end, so the log is streamed while it runs.
 # `kubectl logs -f` fails at once while the container is still being created,
 # so the loop polls for up to three minutes until the log can be read.
-# $(1) is kubectl, $(2) is helm, $(3) is the Job name.
+# $(1) is kubectl, $(2) is helm, $(3) is the Job name, $(4) is how long helm
+# waits for the Job, no shorter than its activeDeadlineSeconds.
 define run-suite
 $(1) delete job $(3) --ignore-not-found --wait
-$(2) test authz-test-stand --timeout 15m & helm_pid=$$!; \
+$(2) test authz-test-stand --timeout $(4) & helm_pid=$$!; \
 	$(1) wait --for=create job/$(3) --timeout=2m \
 	&& for i in $$(seq 90); do $(1) logs job/$(3) >/dev/null 2>&1 && break; sleep 2; done; \
 	$(1) logs -f job/$(3); \
@@ -103,7 +104,7 @@ $(2) test authz-test-stand --timeout 15m & helm_pid=$$!; \
 endef
 
 e2e-suite:
-	$(call run-suite,$(E2E_KUBECTL),$(E2E_HELM),runtime-suite)
+	$(call run-suite,$(E2E_KUBECTL),$(E2E_HELM),runtime-suite,15m)
 
 # `make e2e-images` rebuilds the local images under the same tags, and a
 # running Pod keeps the old content: the kubelet never re-reads a tag it
@@ -151,7 +152,7 @@ parity-install:
 	$(PARITY_HELM) upgrade --install authz-agent helm-templates/authz-agent -f test/k8s/parity/values.yaml --wait --timeout 5m $(E2E_HELM_ARGS)
 
 parity-suite:
-	$(call run-suite,$(PARITY_KUBECTL),$(PARITY_HELM),parity-suite)
+	$(call run-suite,$(PARITY_KUBECTL),$(PARITY_HELM),parity-suite,5h30m)
 
 # The parity counterpart of e2e-restart, for the same reason.
 PARITY_LOCAL_DEPLOYMENTS := authz-agent authz-policy-admin pip-mock entitlements-mock user-management-mock
