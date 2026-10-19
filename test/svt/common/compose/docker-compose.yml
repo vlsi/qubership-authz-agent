@@ -1,6 +1,6 @@
 services:
   keycloak:
-    image: quay.io/keycloak/keycloak:26.0
+    image: quay.io/keycloak/keycloak:26.3.5@sha256:357829ec7c4693397533035092ad13b0644bcc95ded311f33a3738c4d9e9bdba
     command: ["start-dev", "--import-realm", "--health-enabled=true"]
     ports:
       - "${SVT_KC_PORT:-25556}:8080"

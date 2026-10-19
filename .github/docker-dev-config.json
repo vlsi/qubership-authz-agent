@@ -9,6 +9,21 @@
       "name": "authz-policy-admin",
       "file": "./build/authz-policy-admin/Dockerfile",
       "context": "."
+    },
+    {
+      "name": "pip-stub",
+      "file": "./test/integration/pipstub/Dockerfile",
+      "context": "./test/integration/pipstub"
+    },
+    {
+      "name": "authz-parity-suite",
+      "file": "./test/parity/suite/Dockerfile",
+      "context": "./test/parity/suite"
+    },
+    {
+      "name": "authz-agent-transfer",
+      "file": "./build/authz-agent-transfer/Dockerfile",
+      "context": "."
     }
   ],
   "platforms": "linux/amd64,linux/arm64"

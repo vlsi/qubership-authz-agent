@@ -1,12 +1,12 @@
 # Parity IdP seed realms
 
-These realm files are imported into the test Keycloak image when
-[`test/keycloak/Dockerfile`](../../../keycloak/Dockerfile) is built; the `idp` Deployment in
-[keycloak.yaml](../keycloak.yaml) runs that image. The image adds the `parity-m2m` client of
-`cloud-common-realm.json` to the `cloud-common` realm of `test/k8s/authn/`, and the users of
-`test/parity/suite/testdata/realm/` to the `parity` realm.
+These realm files are the realms of the parity test stand. The test-stand chart,
+[`helm-templates/authz-test-stand`](../../../../helm-templates/authz-test-stand), imports them
+into Keycloak at every start when its `idp.realms` value is `parity`, as in
+[`test-stand-values.yaml`](../test-stand-values.yaml). `make test-stand-files` copies them into
+the chart and adds the users of `test/parity/suite/testdata/realm/` to the `parity` realm.
 
-The image is also a two-tenant stand for the cases that need one (see "Two-tenant stand" in
+The stand is also a two-tenant stand for the cases that need one (see "Two-tenant stand" in
 [`test/parity/README.md`](../../../parity/README.md)): `parity-realm.json` holds `mt-a` and
 `mt-a-admin` with `ROLE_MT_READER` and `ROLE_MT_ADMIN`, the users of tenant A, and
 `parity-mt-b-realm.json` is the realm of tenant B, `parity-mt-b`, with `mt-b`, `mt-b-admin` and

@@ -1,0 +1,9 @@
+apiVersion: v2
+appVersion: "1.0"
+description: >-
+  The test stand of the authz-agent suites: Keycloak with the test realms, the
+  PIP and entitlements stubs, and a suite Job that `helm test` runs. Not for
+  production.
+name: authz-test-stand
+# The effective version is computed during Helm generation by the build pipeline (GitLab Builder).
+version: 0.0.1

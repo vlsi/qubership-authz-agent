@@ -71,10 +71,17 @@ jobs:
         with:
           version: v4.3.0
 
+      # The test-stand chart reads generated realm and stub files; without
+      # them its templates fail, so lint renders it after the files exist.
+      - name: Generate the test-stand files
+        run: make test-stand-files
+
       - name: Lint the charts
         run: |
           helm lint helm-templates/authz-agent -f test/k8s/values.yaml
           helm lint helm-templates/authz-policy-admin -f test/k8s/policy-admin-values.yaml
+          helm lint helm-templates/authz-test-stand -f test/k8s/test-stand-values.yaml
+          helm lint helm-templates/authz-test-stand -f test/k8s/parity/test-stand-values.yaml
 
       - name: Render assertions
         run: bash test/scripts/test-chart-render.sh

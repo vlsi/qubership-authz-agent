@@ -78,9 +78,10 @@ type RuntimeConfig struct {
 }
 
 // LoadConfig builds RuntimeConfig from environment variables. The kind Job
-// (test/k8s/runtime-suite-job.yaml) sets every address to a Service name. The
-// defaults only keep the config well-formed: the suite runs inside the
-// cluster, where every target is reachable by Service name.
+// sets every address to a Service name (suite.env in
+// test/k8s/test-stand-values.yaml). The defaults only keep the config
+// well-formed: the suite runs inside the cluster, where every target is
+// reachable by Service name.
 func LoadConfig() RuntimeConfig {
 	waitSec := 6
 	if v := os.Getenv("KC_EXPIRED_WAIT_SECONDS"); v != "" {

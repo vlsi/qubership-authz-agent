@@ -1,0 +1,43 @@
+# Values of the authz-test-stand chart for the parity replay on kind
+# (`make parity-harness`). The images come from `make e2e-images`, which
+# side-loads them into the kind node.
+TAG: ci
+IMAGE_PULL_POLICY: Never
+
+# The Service is named idp because that host is the issuer in the
+# trusted-providers entry of values.yaml.
+idp:
+  enabled: true
+  name: idp
+  realms: parity
+  hostname: http://idp:8080/auth
+
+pipStub:
+  imageRepository: local/pip-stub
+  instances:
+    # The PIP mock, with the request-args rule set.
+    pip-mock:
+      port: 8090
+      config: requestargs.responses.yaml
+    entitlements-mock:
+      port: 8080
+
+# The parity-m2m client of the cloud-common realm in idp-seed/.
+clientCredentials:
+  enabled: true
+  username: parity-m2m
+  password: ParityM2MSecret1!@#
+
+suite:
+  enabled: true
+  name: parity-suite
+  imageRepository: local/authz-parity-suite
+  env:
+    PARITY_PROFILE: authz-agent
+    # The chart's Service, which fronts the agent Pod. `make parity-harness`
+    # replaces it with PARITY_AC_BASE_URL.
+    PARITY_AC_BASE_URL: http://authz-agent:8080
+    PARITY_IDP_BASE_URL: http://idp:8080/auth/realms/parity
+    PARITY_AUTHZ_POLICY_ADMIN_BASE_URL: http://authz-policy-admin:18090
+    PARITY_PIP_MOCK_CONTROL_URL: http://pip-mock:8090
+    PARITY_EA_MOCK_CONTROL_URL: http://entitlements-mock:8080

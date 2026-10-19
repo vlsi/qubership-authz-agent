@@ -1,0 +1,80 @@
+{{- range $name, $instance := .Values.pipStub.instances }}
+{{- $port := int (required (printf "pipStub.instances.%s.port is required" $name) $instance.port) }}
+{{- if $instance.config }}
+{{- $config := $.Files.Get (printf "files/pip-stub/%s" $instance.config) }}
+{{- if not $config }}
+{{- fail (printf "no file files/pip-stub/%s: run `make test-stand-files` before installing the chart from a checkout" $instance.config) }}
+{{- end }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $name }}-config
+data:
+  {{ $instance.config }}: |-
+{{ $config | indent 4 }}
+---
+{{- end }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $name }}
+  labels:
+    app: {{ $name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ $name }}
+  template:
+    metadata:
+      labels:
+        app: {{ $name }}
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - name: pip-stub
+          image: {{ printf "%s:%s" $.Values.pipStub.imageRepository (required "TAG is required" $.Values.TAG) }}
+          imagePullPolicy: {{ $.Values.IMAGE_PULL_POLICY }}
+          env:
+            - name: PIP_STUB_PORT
+              value: {{ $port | quote }}
+            {{- if $instance.config }}
+            - name: PIP_STUB_CONFIG
+              value: /etc/pip-stub/{{ $instance.config }}
+            {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ $port }}
+          readinessProbe:
+            httpGet:
+              path: /pip-stub/calls
+              port: http
+            periodSeconds: 2
+          resources:
+            {{- toYaml $.Values.pipStub.resources | nindent 12 }}
+          {{- if $instance.config }}
+          volumeMounts:
+            - name: config
+              mountPath: /etc/pip-stub
+              readOnly: true
+          {{- end }}
+      {{- if $instance.config }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ $name }}-config
+      {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $name }}
+spec:
+  selector:
+    app: {{ $name }}
+  ports:
+    - name: http
+      port: {{ $port }}
+      targetPort: http
+---
+{{- end }}

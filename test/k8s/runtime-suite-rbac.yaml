@@ -1,8 +1,0 @@
-# The runtime suite reaches every target by Service name and touches the API
-# server for nothing, so its ServiceAccount is granted no rules and its token
-# is not mounted. It exists because the Job names it.
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: runtime-suite
-automountServiceAccountToken: false

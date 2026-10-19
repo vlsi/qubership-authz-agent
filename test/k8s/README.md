@@ -1,44 +1,38 @@
 # Kind end-to-end harness
 
-Manifests and chart values for running the runtime suite against the Helm
-chart on a kind cluster. The Makefile targets below apply them; you do not
-apply them by hand. CI runs the same targets one step at a time.
+Chart values for running the runtime suite against the Helm chart on a kind
+cluster. The Makefile targets below install the charts with them; you do not
+install them by hand. CI runs the same targets one step at a time.
 
 | File | What it is |
 | --- | --- |
-| `keycloak.yaml` | Keycloak from the test image, which holds the realms of `authn/` |
-| `authn/` | The realm files, their description, and the M2M client credentials |
-| `pip-stub.yaml` | The PIP stub the uploaded PIP definitions call |
-| `entitlements-mock.yaml` | A second stub instance for the entitlements endpoint |
+| `test-stand-values.yaml` | Values of the test-stand chart, [`helm-templates/authz-test-stand`](../../helm-templates/authz-test-stand): Keycloak with the realms of `authn/`, the PIP stub, the entitlements stub, the M2M client-credentials Secret, and the suite Job |
+| `authn/` | The realm files and their description |
 | `values.yaml` | Chart values that point the agent at the harness Services and at the stub |
 | `policy-admin-values.yaml` | Chart values for the `authz-policy-admin` stub, installed from its own chart |
-| `runtime-suite-job.yaml` | The suite itself, built from `test/integration/testify/Dockerfile` |
-| `runtime-suite-rbac.yaml` | The ServiceAccount the Job names; it is granted no rules |
 
-Both namespaces run Keycloak from one image, `local/authz-test-keycloak:ci`,
-built from [`test/keycloak/Dockerfile`](../keycloak/Dockerfile) by
-`make e2e-images`. The image holds every realm the suites use, already
-imported into its database: `authz-test` and `cloud-common` from `authn/`,
-`parity` from `parity/idp-seed/`, and the users of
-`test/parity/suite/testdata/realm/`. The Pod imports nothing at startup, and no
-test adds a realm, a client, or a user to it. Each Deployment sets
-`KC_HOSTNAME` to its own Service, so one image serves both issuers.
+The test stand runs the public Keycloak image, `quay.io/keycloak/keycloak`, in
+dev mode. The chart puts the realm files into a ConfigMap, and Keycloak imports
+them with `--import-realm` at every start; no test adds a realm, a client, or a
+user afterwards. The realm files of the chart are generated: `make
+test-stand-files` writes them into `helm-templates/authz-test-stand/files/`
+from `authn/`, `parity/idp-seed/`, and `test/parity/suite/testdata/realm/`, and
+`make e2e-harness` and `make parity-harness` run it first. A changed realm file
+reaches Keycloak with the next `make e2e-harness` or `make parity-harness`,
+which restarts the Pod.
 
-The two `cloud-common-realm.json` files differ, and the image holds one realm
-of that name: the one from `authn/`, with the `parity-m2m` client of the
-parity file added. A change to any of these realm files takes effect after
-`make e2e-images` and `make e2e-restart` or `make parity-restart`.
-
-The M2M client-credentials Secret is generated from the files under `authn/`
-by `make e2e-harness`, so it has no manifest of its own.
+The stubs run the pip-stub image, one Deployment per instance that the values
+file lists. The suite Job is a `helm test` hook of the test-stand release, so
+installing the stand does not start it.
 
 `parity/` holds the same shape for the parity replay suite (`test/parity`):
-Keycloak as `idp` from the same image,
-`pip-mock` with the request-args rule set, `entitlements-mock`, chart values
-with the parity realm as an explicit trusted provider, and the suite Job built
-from `test/parity/suite/Dockerfile`. It runs in its own namespace, so its
-Keycloak can be named `idp`, the issuer host in the parity realm's tokens,
-next to the e2e namespace's `keycloak`.
+its `test-stand-values.yaml` sets up Keycloak as `idp` with the realms of
+`parity/idp-seed/` and the users of `test/parity/suite/testdata/realm/`,
+`pip-mock` with the request-args rule set, `entitlements-mock`, and the parity
+suite Job. Its chart values add the parity realm as an explicit trusted
+provider. It runs in its own namespace, so its Keycloak can be named `idp`, the
+issuer host in the parity realm's tokens, next to the e2e namespace's
+`keycloak`.
 
 ## Run
 
@@ -55,29 +49,31 @@ Step by step, in the order `make e2e` runs them:
 | Target | What it does |
 | --- | --- |
 | `e2e-cluster` | Creates the kind cluster `authz-e2e` unless it exists |
-| `e2e-images` | Builds the two product images, pip-stub, the suite images, and the Keycloak image, then loads them into the cluster |
-| `e2e-harness` | Namespace, client-credentials Secret, Keycloak and the stubs; waits until they are Ready |
+| `e2e-images` | Builds the two product images, pip-stub, and the suite images, then loads them into the cluster |
+| `e2e-harness` | Generates the realm files (`test-stand-files`), then installs the test-stand chart with `test-stand-values.yaml` in the namespace: Keycloak, the stubs, and the client-credentials Secret; waits until they are Ready |
 | `e2e-install` | `helm upgrade --install` of the stub chart with `policy-admin-values.yaml`, then of the agent chart with `values.yaml`, each with `--wait` |
-| `e2e-suite` | Runs the Job, streams its log, and fails if the Job did not complete |
-| `e2e-restart` | Restarts the Deployments that run local images and waits for them; needed after `e2e-images` on a running stand, because the tags do not change |
+| `e2e-suite` | Runs the suite Job with `helm test`, streams its log, and fails if the Job did not complete |
+| `e2e-restart` | Restarts the Deployments that run local images and waits for them; needed after `e2e-images` on a running stand, because the tags do not change. Keycloak runs the public image and is not restarted |
 
 The parity targets mirror these: `parity-harness`, `parity-install`,
 `parity-suite`, `parity-restart`, and `parity-logs`, all in `PARITY_NAMESPACE`. `parity` runs the
 cluster and image targets first, then the three.
 
 `KIND_CLUSTER`, `E2E_NAMESPACE`, `PARITY_NAMESPACE`, and `E2E_ARTIFACTS`
-override the defaults. `E2E_HELM_ARGS` adds arguments to both chart installs;
+override the defaults. `E2E_HELM_ARGS` adds arguments to every chart install, the test stand's included;
 `E2E_BASE_URL` and `PARITY_AC_BASE_URL` set where the suites send their
-requests, the chart's Service by default.
+requests, the chart's Service by default. They go into the suite Job's values,
+so they take effect at `e2e-harness` or `parity-harness`, not at `e2e-suite` or
+`parity-suite`.
 
 ## What runs
 
-`runtime-suite-job.yaml` runs the whole Testify suite, including the two
+The suite Job of `test-stand-values.yaml` runs the whole Testify suite, including the two
 coverage checks that need a full run (`FULL_RUNTIME_SUITE=true`). Groups that
 inspect what the engine received, such as `TestOPARequestParity`, read the decision
 logs the agent serves at `/internal/v1/decision-logs` instead of a capture
 proxy: the agent's own store of the decisions it made.
 
 The Job reaches every target by Service name and asks the API server for
-nothing, so the `runtime-suite` ServiceAccount from `runtime-suite-rbac.yaml`
+nothing, so the `runtime-suite` ServiceAccount the chart creates for it
 is granted no rules and its token is not mounted.

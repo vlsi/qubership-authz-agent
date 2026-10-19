@@ -4,7 +4,7 @@
 # Triggered manually (workflow_dispatch) when a release version is ready.
 # Performs the following steps:
 #   1. Tags the commit with the release version (checks for duplicate tags).
-#   2. Builds and publishes the two Docker images of the component list below.
+#   2. Builds and publishes the Docker images of the component list below.
 #   3. Creates a GitHub release entry.
 #   4. On failure, deletes the tag to keep the tag list clean.
 #
@@ -56,13 +56,19 @@ jobs:
     with:
       ref: v${{ inputs.version }}
       dry-run: ${{ github.event.inputs.dry-run == 'true' }}
-      # Two images: the agent and the standalone authz-policy-admin, which is
-      # its own Deployment rather than a container of the agent Pod.
+      # The agent and the standalone authz-policy-admin, which is its own
+      # Deployment rather than a container of the agent Pod; the test stand's
+      # images, pip-stub and authz-parity-suite; and the transfer image with
+      # the three charts. One version for all of them, as
+      # .github/docker-dev-config.json lists them.
       # arm64 is required; do not change platforms to amd64-only.
       component: |
         [
-          { "name": "authz-agent",               "file": "./build/authz-agent/Dockerfile",        "context": "." },
-          { "name": "authz-policy-admin",        "file": "./build/authz-policy-admin/Dockerfile", "context": "." }
+          { "name": "authz-agent",               "file": "./build/authz-agent/Dockerfile",            "context": "." },
+          { "name": "authz-policy-admin",        "file": "./build/authz-policy-admin/Dockerfile",     "context": "." },
+          { "name": "pip-stub",                  "file": "./test/integration/pipstub/Dockerfile",     "context": "./test/integration/pipstub" },
+          { "name": "authz-parity-suite",        "file": "./test/parity/suite/Dockerfile",            "context": "./test/parity/suite" },
+          { "name": "authz-agent-transfer",      "file": "./build/authz-agent-transfer/Dockerfile",   "context": "." }
         ]
       platforms: linux/amd64,linux/arm64
 

@@ -54,7 +54,8 @@ docker build -t authz-agent:local        -f build/authz-agent/Dockerfile .
 docker build -t authz-policy-admin:local -f build/authz-policy-admin/Dockerfile .
 ```
 
-CI builds both via `.github/docker-dev-config.json`.
+CI builds them, together with the test images and the transfer image of the charts, from the component list in
+`.github/docker-dev-config.json`.
 
 ## Testing
 

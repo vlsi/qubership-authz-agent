@@ -1,0 +1,98 @@
+{{- if .Values.idp.enabled }}
+{{- $realms := .Files.Glob (printf "files/realms/%s/*.json" .Values.idp.realms) }}
+{{- if not $realms }}
+{{- fail (printf "no realm files under files/realms/%s/: run `make test-stand-files` before installing the chart from a checkout" .Values.idp.realms) }}
+{{- end }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.idp.name }}-realms
+data:
+{{- range $path, $_ := $realms }}
+  {{ base $path }}: |-
+{{ $.Files.Get $path | indent 4 }}
+{{- end }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.idp.name }}
+  labels:
+    app: {{ .Values.idp.name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.idp.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.idp.name }}
+      annotations:
+        # A changed realm file restarts the Pod, which imports it again.
+        checksum/realms: {{ $realms | toString | sha256sum }}
+    spec:
+      # Keycloak calls no Kubernetes API.
+      automountServiceAccountToken: false
+      containers:
+        - name: keycloak
+          image: {{ .Values.idp.image }}
+          imagePullPolicy: {{ .Values.idp.imagePullPolicy }}
+          args: ["start-dev", "--import-realm"]
+          # No bootstrap admin: nothing in the suites uses the admin API, the
+          # realm files carry every client and user the suites need, and a
+          # credential the chart does not hold cannot leak from it.
+          env:
+            - name: KC_HOSTNAME
+              value: {{ .Values.idp.hostname | quote }}
+            # The fixtures address the realms under /auth, which Keycloak 17
+            # dropped from its paths. The prefix applies to the management
+            # endpoints too, so the health check is /auth/health/ready.
+            - name: KC_HTTP_RELATIVE_PATH
+              value: /auth
+            - name: KC_HEALTH_ENABLED
+              value: "true"
+          ports:
+            - name: http
+              containerPort: 8080
+            - name: management
+              containerPort: 9000
+          # A cold start imports every realm file before Keycloak reports
+          # ready, about a minute on kind; the startup probe allows five.
+          startupProbe:
+            httpGet:
+              path: /auth/health/ready
+              port: management
+            periodSeconds: 5
+            failureThreshold: 60
+          readinessProbe:
+            httpGet:
+              path: /auth/health/ready
+              port: management
+            periodSeconds: 5
+          resources:
+            {{- toYaml .Values.idp.resources | nindent 12 }}
+          volumeMounts:
+            - name: realms
+              mountPath: /opt/keycloak/data/import
+              readOnly: true
+      volumes:
+        - name: realms
+          configMap:
+            name: {{ .Values.idp.name }}-realms
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.idp.name }}
+spec:
+  selector:
+    app: {{ .Values.idp.name }}
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+    - name: management
+      port: 9000
+      targetPort: management
+{{- end }}

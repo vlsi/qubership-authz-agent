@@ -1,0 +1,87 @@
+# Values of the authz-test-stand chart for the kind end-to-end harness
+# (`make e2e-harness`). The images come from `make e2e-images`, which
+# side-loads them into the kind node.
+TAG: ci
+IMAGE_PULL_POLICY: Never
+
+# The Service is named keycloak because that host is the issuer in
+# IDENTITY_PROVIDER_URL of values.yaml.
+idp:
+  enabled: true
+  name: keycloak
+  realms: e2e
+  hostname: http://keycloak:8080/auth
+
+pipStub:
+  imageRepository: local/pip-stub
+  instances:
+    # The PIP stub the uploaded PIP definitions call.
+    pip-stub:
+      port: 8090
+    # A second instance for the entitlements endpoint.
+    entitlements-mock:
+      port: 8090
+
+# The M2M client of the cloud-common realm in authn/.
+clientCredentials:
+  enabled: true
+  username: test-app-client
+  password: test-app-secret
+
+# RUNTIME_SUITE_RUN selects the whole suite: every group works against the
+# chart as installed, and FULL_RUNTIME_SUITE turns on the two coverage checks
+# that only make sense for a full run.
+suite:
+  enabled: true
+  name: runtime-suite
+  imageRepository: local/authz-runtime-suite
+  # The image inherits the Qubership base entrypoint, which execs its
+  # arguments, so the binary is the first argument rather than the image's
+  # CMD.
+  args:
+    - ./runtime.test
+    - -test.v
+    - -test.timeout
+    - 600s
+    - -test.run
+    - $(RUNTIME_SUITE_RUN)
+  serviceAccount: true
+  env:
+    RUNTIME_SUITE_RUN: ^TestRuntimeSuite$
+    FULL_RUNTIME_SUITE: "true"
+    # The agent takes its M2M token from the harness Keycloak, so the
+    # m2m_keycloak steps are real here rather than skipped.
+    M2M_KEYCLOAK_PROFILE: "true"
+    # The chart's Service, which fronts the agent Pod. `make e2e-harness`
+    # replaces it with E2E_BASE_URL.
+    BASE_URL: http://authz-agent:8080
+    OPA_DIRECT_URL: http://authz-agent:8181
+    AUTHZ_POLICY_ADMIN_URL: http://authz-policy-admin:18090
+    AUTHZ_PAP_CLIENT_PULL_INTERVAL: "2"
+    KC_BASE_URL: http://keycloak:8080/auth/realms/authz-test
+    KC_CLIENT_ID: authz-agent
+    KC_CLIENT_SECRET: authz-agent-secret
+    KC_EXPIRED_CLIENT_ID: authz-agent-expired
+    KC_EXPIRED_CLIENT_SECRET: authz-agent-expired-secret
+    KC_USERNAME: order-reader
+    KC_ADMIN_USERNAME: admin
+    KC_PASSWORD: password
+    KC_TOKEN_SCOPE: openid
+    KC_EXPIRED_WAIT_SECONDS: "6"
+    PIP_STUB_URL: http://pip-stub:8090
+    PIP_STUB_INTERNAL_URL: http://pip-stub:8090
+    ENTITLEMENTS_MOCK_URL: http://entitlements-mock:8090
+  secretEnv:
+    # The chart generates this token per install; the opa_lockdown steps read
+    # it from the Secret the agent reads.
+    OPA_AUTH_TOKEN:
+      secret: authz-agent-opa-auth
+      key: token
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+      ephemeral-storage: 128Mi
+    limits:
+      memory: 256Mi
+      ephemeral-storage: 256Mi

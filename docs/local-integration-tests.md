@@ -13,13 +13,14 @@ executed as a Job inside that cluster. CI runs the same Makefile targets
 ## 1. What these tests are
 
 - Orchestrator: the `e2e-*` targets in the [Makefile](../Makefile). `make e2e` runs them in order.
-- The harness under [test/k8s/](../test/k8s/): Keycloak with the realm imports from `test/k8s/authn/`, the `pip-stub`
-  the uploaded PIP definitions call, a second stub instance as `entitlements-mock`, and chart values that point the
-  agent at them.
+- The harness: the test-stand chart in `helm-templates/authz-test-stand`, installed with
+  [test/k8s/test-stand-values.yaml](../test/k8s/test-stand-values.yaml). It runs Keycloak, which imports the realms of
+  `test/k8s/authn/` at start, the `pip-stub` the uploaded PIP definitions call, and a second stub instance as
+  `entitlements-mock`. Chart values under [test/k8s/](../test/k8s/) point the agent at them.
 - The agent under test comes from the Helm chart in `helm-templates/authz-agent`, installed with `test/k8s/values.yaml`;
   its policy source, the `authz-policy-admin` stub, from `helm-templates/authz-policy-admin` with
   `test/k8s/policy-admin-values.yaml`.
-- The suite runs as the Job in `test/k8s/runtime-suite-job.yaml`, built from `test/integration/testify/Dockerfile`.
+- The suite runs as the Job of the test stand, a `helm test` hook, built from `test/integration/testify/Dockerfile`.
   Every target is a Service name, so no port has to leave the cluster.
 - The step catalog (source of truth) is [test/readme.md](../test/readme.md) plus `test/integration/testify/catalog.go`;
   dedicated validation tests enforce that the two stay in sync.
@@ -32,8 +33,8 @@ executed as a Job inside that cluster. CI runs the same Makefile targets
 | --- | --- | --- |
 | **Docker** | builds the images and runs the kind node | `docker info` |
 | **kind** | the cluster | `kind version` |
-| **kubectl** | applies the harness, streams the Job log | `kubectl version --client` |
-| **helm** | installs the chart | `helm version` |
+| **kubectl** | streams the Job log, restarts Deployments | `kubectl version --client` |
+| **helm** | installs the charts, runs the suite Job | `helm version` |
 | **Go 1.24+** (the version `test/integration/testify/go.mod` declares) | the structural tests and `go vet`; the suite itself is compiled inside its image | `go version` |
 
 You do **not** need a local OPA binary for the runtime tests (the agent carries the engine). It is only needed for the
@@ -121,16 +122,23 @@ make e2e-down     # delete the cluster
   running Pod keeps the old content until it is restarted; `e2e-restart` restarts every Deployment that runs a local
   image and waits until it is Ready again. Without it the suite tests the previous build.
 - Changed chart values: `make e2e-install e2e-suite`.
-- Re-running `e2e-harness` on its own replaces the Keycloak Pod, and a dev-mode Keycloak mints new realm keys on every
-  start. Restart the agent afterwards so its JWKS bootstrap picks the new keys up, or the suite fails at
+- Re-running `e2e-harness` after a change to a realm file replaces the Keycloak Pod, and a dev-mode Keycloak mints new
+  realm keys on every start. Restart the agent afterwards so its JWKS bootstrap picks the new keys up, or the suite fails at
   `setup.wait_for_agent`:
 
   ```bash
   kubectl --context kind-authz-e2e -n authz-e2e rollout restart deploy/authz-agent
   ```
 
-- A subset: edit `RUNTIME_SUITE_RUN` in `test/k8s/runtime-suite-job.yaml` (a `-test.run` regular expression) and set
-  `FULL_RUNTIME_SUITE` to `false` there, so the coverage checks do not fail on a filtered run. Do not commit that change.
+- A subset: set `RUNTIME_SUITE_RUN` (a `-test.run` regular expression) on the test-stand release, with
+  `FULL_RUNTIME_SUITE` set to `false` so the coverage checks do not fail on a filtered run, then run `make e2e-suite`:
+
+  ```bash
+  helm --kube-context kind-authz-e2e -n authz-e2e upgrade authz-test-stand helm-templates/authz-test-stand \
+    --reuse-values --set suite.env.RUNTIME_SUITE_RUN='^TestRuntimeSuite$/^TestCheckResource$' --set-string suite.env.FULL_RUNTIME_SUITE=false
+  ```
+
+  `make e2e-harness` restores the values of `test/k8s/test-stand-values.yaml`.
 - Poking at the stack from the host, for example with the Postman collection in `test/`:
 
   ```bash

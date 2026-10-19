@@ -1,0 +1,52 @@
+{{- if .Values.suite.enabled }}
+{{- if .Values.suite.serviceAccount }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ .Values.suite.name }}
+automountServiceAccountToken: false
+---
+{{- end }}
+# `helm test` deletes the Job of the previous run before it creates this one,
+# and keeps it afterwards so its log stays readable.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Values.suite.name }}
+  annotations:
+    helm.sh/hook: test
+    helm.sh/hook-delete-policy: before-hook-creation
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: {{ .Values.suite.activeDeadlineSeconds }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.suite.name }}
+    spec:
+      restartPolicy: Never
+      {{- if .Values.suite.serviceAccount }}
+      serviceAccountName: {{ .Values.suite.name }}
+      {{- end }}
+      automountServiceAccountToken: false
+      containers:
+        - name: {{ .Values.suite.name }}
+          image: {{ printf "%s:%s" .Values.suite.imageRepository (required "TAG is required" .Values.TAG) }}
+          imagePullPolicy: {{ .Values.IMAGE_PULL_POLICY }}
+          args:
+            {{- toYaml .Values.suite.args | nindent 12 }}
+          env:
+            {{- range $name, $value := .Values.suite.env }}
+            - name: {{ $name }}
+              value: {{ $value | toString | quote }}
+            {{- end }}
+            {{- range $name, $ref := .Values.suite.secretEnv }}
+            - name: {{ $name }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $ref.secret }}
+                  key: {{ $ref.key }}
+            {{- end }}
+          resources:
+            {{- toYaml .Values.suite.resources | nindent 12 }}
+{{- end }}

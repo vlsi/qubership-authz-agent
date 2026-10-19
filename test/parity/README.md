@@ -36,9 +36,9 @@ the suite image built from [`suite/Dockerfile`](suite/Dockerfile)), then:
 
 | Target | What it does |
 | --- | --- |
-| `parity-harness` | Namespace `authz-parity`; Keycloak as `idp` in dev mode with the two realm imports; `pip-mock` with the request-args rule set; `entitlements-mock`; the M2M client-credentials Secret |
+| `parity-harness` | The test-stand chart with [`test/k8s/parity/test-stand-values.yaml`](../k8s/parity/test-stand-values.yaml) in namespace `authz-parity`: Keycloak as `idp` in dev mode with the parity realms; `pip-mock` with the request-args rule set; `entitlements-mock`; the M2M client-credentials Secret |
 | `parity-install` | `helm upgrade --install` of the stub chart with [`test/k8s/parity/policy-admin-values.yaml`](../k8s/parity/policy-admin-values.yaml), then of the agent chart with [`test/k8s/parity/values.yaml`](../k8s/parity/values.yaml) |
-| `parity-suite` | The Job from [`test/k8s/parity/parity-suite-job.yaml`](../k8s/parity/parity-suite-job.yaml); its log is streamed |
+| `parity-suite` | The suite Job of the test-stand release, run by `helm test`; its log is streamed |
 
 Expected result: 135/135 cases green against authz-agent, and the cases that wait for a golden skipped (see
 [Cases waiting for a golden](#cases-waiting-for-a-golden)). CI runs the same targets (job `Parity on kind` in
@@ -64,19 +64,18 @@ make e2e-down                                                     # the whole cl
 
 ## Identity provider
 
-The `idp` Deployment runs the test Keycloak image, `local/authz-test-keycloak:ci`, built by `make e2e-images` from
-[`test/keycloak/Dockerfile`](../keycloak/Dockerfile) on the public Keycloak image (`quay.io/keycloak/keycloak`, the
-version the goldens were captured against). Its database already holds the realms of
-[`cloud-common-realm.json`](../k8s/parity/idp-seed/cloud-common-realm.json) and
-[`parity-realm.json`](../k8s/parity/idp-seed/parity-realm.json), and the `parity` realm holds the users of
-`suite/testdata/realm/` as well, so the functions that need those users run on the kind harness with no partial import.
-The image gives those users the first name, last name, and email they have on the stand the goldens were recorded on:
-their files declare none, and Keycloak refuses a password grant to such a user with `Account is not fully set up`. The
-realm files use only built-in Keycloak protocol mappers and require no custom SPI extensions. The suite calls the
-standard OIDC token endpoint (`/auth/realms/parity/protocol/openid-connect/token`) for `client_credentials` and
-`password` grants; no custom Keycloak REST APIs are involved.
+The `idp` Deployment runs the public Keycloak image (`quay.io/keycloak/keycloak`, the version the goldens were captured
+against) and imports the realms of [`cloud-common-realm.json`](../k8s/parity/idp-seed/cloud-common-realm.json),
+[`parity-realm.json`](../k8s/parity/idp-seed/parity-realm.json), and
+[`parity-mt-b-realm.json`](../k8s/parity/idp-seed/parity-mt-b-realm.json) at every start. The `parity` realm it imports
+holds the users of `suite/testdata/realm/` as well, so the functions that need those users run on the kind harness with
+no partial import. `make test-stand-files` adds them and gives them the first name, last name, and email they have on
+the stand the goldens were recorded on: their files declare none, and Keycloak refuses a password grant to such a user
+with `Account is not fully set up`. The realm files use only built-in Keycloak protocol mappers and require no custom
+SPI extensions. The suite calls the standard OIDC token endpoint (`/auth/realms/parity/protocol/openid-connect/token`)
+for `client_credentials` and `password` grants; no custom Keycloak REST APIs are involved.
 
-The image sets `KC_HTTP_RELATIVE_PATH=/auth` so the realm is reachable at `/auth/realms/parity/...` (Keycloak dropped
+The chart sets `KC_HTTP_RELATIVE_PATH=/auth` so the realm is reachable at `/auth/realms/parity/...` (Keycloak dropped
 the `/auth` prefix in v17; the parity fixtures carry that prefix throughout, so it is restored via config). It prefixes
 the management endpoints too, which is why the probes hit `/auth/health/ready`.
 
@@ -556,7 +555,7 @@ query parameter and the header select a tenant.
 `TestInterpreterTenantClaimCases` mints its tokens from five more clients of the `parity` realm, declared in
 [`parity-realm.json`](../k8s/parity/idp-seed/parity-realm.json) with a hardcoded `tenant-id` claim: `parity-m2m-tenant-a`
 and `parity-end-user-tenant-a` carry `default`, the kind harness's tenant; `parity-m2m-tenant-b` carries `parity-mt-b`,
-the tenant B of the realm `parity-mt-b` that the test Keycloak image holds; `parity-m2m-tenant-unknown` carries `7f3c2e1a-0b9d-4c6e-8a5f-2d1b3c4e5f60`; and
+the tenant B of the realm `parity-mt-b` that the test stand's Keycloak imports; `parity-m2m-tenant-unknown` carries `7f3c2e1a-0b9d-4c6e-8a5f-2d1b3c4e5f60`; and
 `parity-m2m-tenant-empty` carries the empty string. On a stand whose tenant A is not `default`, `parity-m2m-tenant-a`
 and `parity-end-user-tenant-a` have to carry tenant A's identifier, and on a two-tenant stand `parity-m2m-tenant-b`
 has to carry tenant B's; the test decodes each token and fails when the claim is not the value it assumes.

@@ -32,6 +32,6 @@ WORKDIR /app/test/integration/testify
 USER 10001:10001
 
 # The base image's entrypoint execs its arguments, so a caller passing its own
-# flags passes the binary too — see the args block in
-# test/k8s/runtime-suite-job.yaml.
+# flags passes the binary too — see suite.args in
+# test/k8s/test-stand-values.yaml.
 CMD ["./runtime.test"]
