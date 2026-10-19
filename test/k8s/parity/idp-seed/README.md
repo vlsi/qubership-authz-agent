@@ -6,6 +6,14 @@ These realm files are imported into the test Keycloak image when
 `cloud-common-realm.json` to the `cloud-common` realm of `test/k8s/authn/`, and the users of
 `test/parity/suite/testdata/realm/` to the `parity` realm.
 
+The image is also a two-tenant stand for the cases that need one (see "Two-tenant stand" in
+[`test/parity/README.md`](../../../parity/README.md)): `parity-realm.json` holds `mt-a` and
+`mt-a-admin` with `ROLE_MT_READER` and `ROLE_MT_ADMIN`, the users of tenant A, and
+`parity-mt-b-realm.json` is the realm of tenant B, `parity-mt-b`, with `mt-b`, `mt-b-admin` and
+the `parity-end-user` client. The client `parity-m2m-tenant-b` carries tenant B's identifier,
+`parity-mt-b`, in its `tenant-id` claim. Such a stand sets `PARITY_MT_TENANT_A_ID=default`,
+`PARITY_MT_TENANT_B_ID=parity-mt-b`, and the two realms' base URLs.
+
 ## Why the notes live here and not in the JSON
 
 Each entry below used to be a `_comment` key inside the realm JSON. The

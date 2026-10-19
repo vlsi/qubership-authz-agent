@@ -1,0 +1,98 @@
+{
+  "realm": "parity-mt-b",
+  "enabled": true,
+  "sslRequired": "none",
+  "accessTokenLifespan": 900,
+  "roles": {
+    "realm": [
+      {
+        "name": "ROLE_MT_READER",
+        "description": "Reader role of tenant B - deliberately the same name as in the parity realm so a check can only differ by tenant, never by role name"
+      },
+      {
+        "name": "ROLE_MT_ADMIN",
+        "description": "Admin role of tenant B - tenant B grants it no wildcard policy, which is what t9a asserts"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "parity-end-user",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "serviceAccountsEnabled": false,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "secret": "ParityEndUserSecret1!@#",
+      "defaultClientScopes": ["basic", "web-origins", "profile", "roles", "email"],
+      "optionalClientScopes": [],
+      "protocolMappers": [
+        {
+          "name": "parity-department-claim",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "department",
+            "claim.name": "department",
+            "jsonType.label": "String",
+            "id.token.claim": "false",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "false"
+          }
+        },
+        {
+          "name": "parity-tier-claim",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "tier",
+            "claim.name": "tier",
+            "jsonType.label": "String",
+            "id.token.claim": "false",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "false"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "id": "00000000-0000-0000-0000-000000000201",
+      "username": "mt-b",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Tenant",
+      "lastName": "BReader",
+      "email": "mt-b@example.test",
+      "credentials": [
+        { "type": "password", "value": "ParityPass1!@#", "temporary": false }
+      ],
+      "realmRoles": ["ROLE_MT_READER"],
+      "attributes": {
+        "department": ["finance"],
+        "tier": ["gold"]
+      }
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000202",
+      "username": "mt-b-admin",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Tenant",
+      "lastName": "BAdmin",
+      "email": "mt-b-admin@example.test",
+      "credentials": [
+        { "type": "password", "value": "ParityPass1!@#", "temporary": false }
+      ],
+      "realmRoles": ["ROLE_MT_ADMIN"],
+      "attributes": {
+        "department": ["finance"],
+        "tier": ["gold"]
+      }
+    }
+  ]
+}

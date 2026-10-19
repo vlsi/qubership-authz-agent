@@ -10,6 +10,8 @@
 #                 test/k8s/parity/idp-seed/cloud-common-realm.json
 #   parity        test/k8s/parity/idp-seed/parity-realm.json, plus the users
 #                 of test/parity/suite/testdata/realm/*.json
+#   parity-mt-b   test/k8s/parity/idp-seed/parity-mt-b-realm.json, the realm
+#                 of tenant B of the two-tenant cases (PARITY_MT_TENANT_B_*)
 #
 # The issuer is not part of the image: each Deployment sets KC_HOSTNAME to its
 # own Service name.
@@ -27,7 +29,8 @@ FROM --platform=$BUILDPLATFORM alpine:3.22@sha256:5291449c3df73caf6ed85e649dec1b
 COPY --from=jq /jq /usr/local/bin/jq
 WORKDIR /src
 COPY test/k8s/authn/authz-test-realm.json test/k8s/authn/cloud-common-realm.json authn/
-COPY test/k8s/parity/idp-seed/cloud-common-realm.json test/k8s/parity/idp-seed/parity-realm.json parity/
+COPY test/k8s/parity/idp-seed/cloud-common-realm.json test/k8s/parity/idp-seed/parity-realm.json \
+     test/k8s/parity/idp-seed/parity-mt-b-realm.json parity/
 COPY test/parity/suite/testdata/realm/ users/
 # The user files under testdata/realm/ hold no first name, last name, or
 # email, and Keycloak 26 refuses a password grant to such a user with "Account
@@ -38,6 +41,7 @@ COPY test/parity/suite/testdata/realm/ users/
 COPY test/keycloak/profile.jq /root/.jq
 RUN mkdir /realms \
  && cp authn/authz-test-realm.json /realms/authz-test-realm.json \
+ && cp parity/parity-mt-b-realm.json /realms/parity-mt-b-realm.json \
  && jq --slurpfile p parity/cloud-common-realm.json '.clients += $p[0].clients' \
       authn/cloud-common-realm.json > /realms/cloud-common-realm.json \
  && jq --slurp '.[0].users += ([.[1:][]] | add | map(profile)) | .[0]' \

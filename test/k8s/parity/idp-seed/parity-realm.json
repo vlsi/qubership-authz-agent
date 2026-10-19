@@ -24,6 +24,14 @@
       {
         "name": "ROLE_PARITY_OTHER",
         "description": "Third parity role reserved for negative isolation tests - no seed policy grants anything to this role, so any check against it is a guaranteed DENY"
+      },
+      {
+        "name": "ROLE_MT_READER",
+        "description": "Reader role of the two-tenant cases (TestTenantScopedDecisions and others); tenant B's realm has a role of the same name, so a check can differ by tenant only"
+      },
+      {
+        "name": "ROLE_MT_ADMIN",
+        "description": "Admin role of the two-tenant cases; the wildcard policy of tenant A grants it, tenant B grants it nothing"
       }
     ]
   },
@@ -178,7 +186,7 @@
           "consentRequired": false,
           "config": {
             "claim.name": "tenant-id",
-            "claim.value": "parity-tenant-b",
+            "claim.value": "parity-mt-b",
             "jsonType.label": "String",
             "id.token.claim": "false",
             "access.token.claim": "true",
@@ -463,6 +471,40 @@
         { "type": "password", "value": "ParityPass1!@#", "temporary": false }
       ],
       "realmRoles": ["ROLE_PARITY_READER"]
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000211",
+      "username": "mt-a",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Tenant",
+      "lastName": "AReader",
+      "email": "mt-a@example.test",
+      "credentials": [
+        { "type": "password", "value": "ParityPass1!@#", "temporary": false }
+      ],
+      "realmRoles": ["ROLE_MT_READER"],
+      "attributes": {
+        "department": ["finance"],
+        "tier": ["gold"]
+      }
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000212",
+      "username": "mt-a-admin",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Tenant",
+      "lastName": "AAdmin",
+      "email": "mt-a-admin@example.test",
+      "credentials": [
+        { "type": "password", "value": "ParityPass1!@#", "temporary": false }
+      ],
+      "realmRoles": ["ROLE_MT_ADMIN"],
+      "attributes": {
+        "department": ["finance"],
+        "tier": ["gold"]
+      }
     }
   ]
 }

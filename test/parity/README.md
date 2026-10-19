@@ -555,8 +555,8 @@ query parameter and the header select a tenant.
 
 `TestInterpreterTenantClaimCases` mints its tokens from five more clients of the `parity` realm, declared in
 [`parity-realm.json`](../k8s/parity/idp-seed/parity-realm.json) with a hardcoded `tenant-id` claim: `parity-m2m-tenant-a`
-and `parity-end-user-tenant-a` carry `default`, the kind harness's tenant; `parity-m2m-tenant-b` carries the placeholder
-`parity-tenant-b`; `parity-m2m-tenant-unknown` carries `7f3c2e1a-0b9d-4c6e-8a5f-2d1b3c4e5f60`; and
+and `parity-end-user-tenant-a` carry `default`, the kind harness's tenant; `parity-m2m-tenant-b` carries `parity-mt-b`,
+the tenant B of the realm `parity-mt-b` that the test Keycloak image holds; `parity-m2m-tenant-unknown` carries `7f3c2e1a-0b9d-4c6e-8a5f-2d1b3c4e5f60`; and
 `parity-m2m-tenant-empty` carries the empty string. On a stand whose tenant A is not `default`, `parity-m2m-tenant-a`
 and `parity-end-user-tenant-a` have to carry tenant A's identifier, and on a two-tenant stand `parity-m2m-tenant-b`
 has to carry tenant B's; the test decodes each token and fails when the claim is not the value it assumes.
