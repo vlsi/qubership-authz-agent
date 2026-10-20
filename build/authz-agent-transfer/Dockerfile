@@ -13,6 +13,8 @@
 #   files/realms/parity/   cloud-common, parity-mt-b, and parity from
 #                          test/k8s/parity/idp-seed/; the parity realm also
 #                          holds the users of test/parity/suite/testdata/realm/
+#                          and the clients of
+#                          test/parity/suite/testdata/realm-clients/
 #   files/pip-stub/        the rule files of test/integration/pipstub/config/
 #
 # Build context is the repository root:
@@ -27,20 +29,25 @@ COPY test/k8s/authn/authz-test-realm.json test/k8s/authn/cloud-common-realm.json
 COPY test/k8s/parity/idp-seed/cloud-common-realm.json test/k8s/parity/idp-seed/parity-realm.json \
      test/k8s/parity/idp-seed/parity-mt-b-realm.json parity/
 COPY test/parity/suite/testdata/realm/ users/
+COPY test/parity/suite/testdata/realm-clients/ clients/
 COPY test/integration/pipstub/config/ pip-stub/
 # The user files under testdata/realm/ hold no first name, last name, or email,
 # and Keycloak 26 refuses a password grant to such a user with "Account is not
 # fully set up". The profile function fills them in with the values these users
 # have on the stand the goldens were recorded on, for example Parity,
 # R29LevelM2M, and parity-r29-level-m2m@example.test, so the tokens carry the
-# same claims as the ones the goldens were recorded with. The build fails if a
-# user is declared twice.
+# same claims as the ones the goldens were recorded with. The clients under
+# testdata/realm-clients/ are added to the realm as they are. The build fails
+# if a user or a client is declared twice.
 COPY build/authz-agent-transfer/profile.jq /root/.jq
 RUN mkdir -p /out/realms/e2e /out/realms/parity /out/pip-stub \
  && cp e2e/*.json /out/realms/e2e/ \
  && cp parity/cloud-common-realm.json parity/parity-mt-b-realm.json /out/realms/parity/ \
  && jq --slurp '.[0].users += ([.[1:][]] | add | map(profile)) | .[0]' \
-      parity/parity-realm.json users/*.json > /out/realms/parity/parity-realm.json \
+      parity/parity-realm.json users/*.json > parity-with-users.json \
+ && jq --slurp '.[0].clients += ([.[1:][]] | add) | .[0]' \
+      parity-with-users.json clients/*.json > /out/realms/parity/parity-realm.json \
+ && jq -e '[.clients[].clientId] | length == (unique | length)' /out/realms/parity/parity-realm.json \
  && jq -e '[.users[].username] | length == (unique | length)' /out/realms/parity/parity-realm.json \
  && jq -e '[.users[].id | select(.)] | length == (unique | length)' /out/realms/parity/parity-realm.json \
  && cp pip-stub/* /out/pip-stub/

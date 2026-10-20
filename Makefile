@@ -69,7 +69,8 @@ e2e-images:
 
 # The realm and stub files the test-stand chart reads from files/: the realms
 # of test/k8s/authn/ and test/k8s/parity/idp-seed/, the users of
-# test/parity/suite/testdata/realm/, and the pip-stub rule files. The transfer
+# test/parity/suite/testdata/realm/, the clients of
+# test/parity/suite/testdata/realm-clients/, and the pip-stub rule files. The transfer
 # image generates the same files in the same Dockerfile stage.
 test-stand-files:
 	rm -rf $(TEST_STAND_CHART)/files
@@ -138,8 +139,9 @@ PARITY_HELM := helm --kube-context kind-$(KIND_CLUSTER) -n $(PARITY_NAMESPACE)
 parity: e2e-cluster e2e-images parity-harness parity-install parity-suite
 
 # The test stand of test/k8s/parity/test-stand-values.yaml: Keycloak with the
-# realms of test/k8s/parity/idp-seed/ and the users of
-# test/parity/suite/testdata/realm/, pip-mock with the request-args rule set,
+# realms of test/k8s/parity/idp-seed/, the users of
+# test/parity/suite/testdata/realm/ and the clients of
+# test/parity/suite/testdata/realm-clients/, pip-mock with the request-args rule set,
 # entitlements-mock, user-management-mock, the M2M client-credentials Secret
 # for the parity-m2m client of the cloud-common realm, and the parity suite
 # Job, which parity-suite runs.

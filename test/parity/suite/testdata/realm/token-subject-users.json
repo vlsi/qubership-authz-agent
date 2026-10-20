@@ -1,0 +1,58 @@
+[
+ {
+  "id": "00000000-0000-0000-0000-000000001001",
+  "username": "parity-ts-many",
+  "enabled": true,
+  "emailVerified": true,
+  "credentials": [
+   {
+    "type": "password",
+    "value": "ParityPass1!@#",
+    "temporary": false
+   }
+  ],
+  "realmRoles": [
+   "ROLE_PARITY_READER"
+  ],
+  "attributes": {
+   "parityTsId": [
+    "parity-ts-id-a",
+    "parity-ts-id-b"
+   ],
+   "parityTsName": [
+    "parity-ts-name-a",
+    "parity-ts-name-b"
+   ],
+   "parityTsRole": [
+    "ROLE_PARITY_READER"
+   ]
+  }
+ },
+ {
+  "id": "00000000-0000-0000-0000-000000001002",
+  "username": "parity-ts-one",
+  "enabled": true,
+  "emailVerified": true,
+  "credentials": [
+   {
+    "type": "password",
+    "value": "ParityPass1!@#",
+    "temporary": false
+   }
+  ],
+  "realmRoles": [
+   "ROLE_PARITY_READER"
+  ],
+  "attributes": {
+   "parityTsId": [
+    "parity-ts-id-one"
+   ],
+   "parityTsName": [
+    "parity-ts-name-one"
+   ],
+   "parityTsRole": [
+    "ROLE_PARITY_READER"
+   ]
+  }
+ }
+]

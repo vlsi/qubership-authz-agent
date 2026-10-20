@@ -1,0 +1,1667 @@
+{
+ "about": "The subject a token yields. Each case is one subject: a token of a client of testdata/realm-clients/token-subject-clients.json lacks a claim or carries an array in place of a string, and its requests ask conditions over subject.id, name, type, serviceAccount, scopes and roles. Needs those clients and the users of testdata/realm/token-subject-users.json in the parity realm; subjectClaims stops a request whose token carries other claims.",
+ "resourceTypePrefix": "PARITY_SUITE_",
+ "standVersion": true,
+ "cases": [
+  {
+   "id": "r68ts-control-first",
+   "about": "Control: a DENY rule over a resource attribute that does not hold. True unless the stand answers every check with 400.",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "PERMIT_UNLESS_DENY",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "PERMIT_UNLESS_DENY",
+       "rules": [
+        {
+         "key": "deny",
+         "target": "true",
+         "condition": "resource.c == 'zz'",
+         "effect": "DENY"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "name": "read",
+     "resource": {
+      "id": "r33",
+      "c": "n"
+     }
+    }
+   ]
+  },
+  {
+   "id": "r68ts-m2m",
+   "about": "Subject the suite's service account alone.",
+   "resourceType": "PARITY_SUITE_R68TS_M2M",
+   "sets": [
+    {
+     "key": "token",
+     "target": "resourceType == 'PARITY_SUITE_R68TS_M2M_TOKEN'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "anyone",
+       "target": "true",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "token",
+         "target": "true",
+         "condition": "true",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "key": "or-service-account-is-null",
+     "target": "resourceType == 'PARITY_SUITE_R68TS_M2M_SERVICE_ACCOUNT_IS_NULL'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "p-service-account-is-null",
+       "target": "true",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit-service-account-is-null",
+         "target": "true",
+         "condition": "subject.serviceAccount IS NULL OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "key": "deny-service-account-is-null",
+     "target": "resourceType == 'PARITY_SUITE_R68TS_M2M_SERVICE_ACCOUNT_IS_NULL_D'",
+     "algorithm": "PERMIT_UNLESS_DENY",
+     "policies": [
+      {
+       "key": "d-service-account-is-null",
+       "target": "true",
+       "algorithm": "PERMIT_UNLESS_DENY",
+       "rules": [
+        {
+         "key": "deny-service-account-is-null",
+         "target": "true",
+         "condition": "subject.serviceAccount IS NULL",
+         "effect": "DENY"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "name": "token-accepted",
+     "type": "PARITY_SUITE_R68TS_M2M_TOKEN",
+     "resource": {
+      "id": "ts"
+     },
+     "subject": "m2m",
+     "subjectClaims": {
+      "client_id": "parity-m2m"
+     }
+    },
+    {
+     "name": "service-account-is-null-a-n",
+     "type": "PARITY_SUITE_R68TS_M2M_SERVICE_ACCOUNT_IS_NULL",
+     "resource": {
+      "id": "ts",
+      "a": "n"
+     },
+     "subject": "m2m",
+     "subjectClaims": {
+      "client_id": "parity-m2m"
+     }
+    },
+    {
+     "name": "service-account-is-null-a-y",
+     "type": "PARITY_SUITE_R68TS_M2M_SERVICE_ACCOUNT_IS_NULL",
+     "resource": {
+      "id": "ts",
+      "a": "y"
+     },
+     "subject": "m2m",
+     "subjectClaims": {
+      "client_id": "parity-m2m"
+     }
+    },
+    {
+     "name": "service-account-is-null-deny",
+     "type": "PARITY_SUITE_R68TS_M2M_SERVICE_ACCOUNT_IS_NULL_D",
+     "resource": {
+      "id": "ts",
+      "a": "n"
+     },
+     "subject": "m2m",
+     "subjectClaims": {
+      "client_id": "parity-m2m"
+     }
+    }
+   ]
+  },
+  {
+   "id": "r68ts-level-m2m",
+   "about": "Subject a user whose claim level is m2m, which subject.isM2M reads as a service account (round 42).",
+   "resourceType": "PARITY_SUITE_R68TS_LEVEL_M2M",
+   "sets": [
+    {
+     "key": "token",
+     "target": "resourceType == 'PARITY_SUITE_R68TS_LEVEL_M2M_TOKEN'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "anyone",
+       "target": "true",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "token",
+         "target": "true",
+         "condition": "true",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "key": "or-type-is-service",
+     "target": "resourceType == 'PARITY_SUITE_R68TS_LEVEL_M2M_TYPE_IS_SERVICE'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "p-type-is-service",
+       "target": "true",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit-type-is-service",
+         "target": "true",
+         "condition": "subject.type == 'SERVICE' OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "key": "deny-type-is-service",
+     "target": "resourceType == 'PARITY_SUITE_R68TS_LEVEL_M2M_TYPE_IS_SERVICE_D'",
+     "algorithm": "PERMIT_UNLESS_DENY",
+     "policies": [
+      {
+       "key": "d-type-is-service",
+       "target": "true",
+       "algorithm": "PERMIT_UNLESS_DENY",
+       "rules": [
+        {
+         "key": "deny-type-is-service",
+         "target": "true",
+         "condition": "subject.type == 'SERVICE'",
+         "effect": "DENY"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "name": "token-accepted",
+     "type": "PARITY_SUITE_R68TS_LEVEL_M2M_TOKEN",
+     "resource": {
+      "id": "ts"
+     },
+     "subject": "user:parity-r29-level-m2m",
+     "subjectClaims": {
+      "level": "m2m"
+     }
+    },
+    {
+     "name": "type-is-service-a-n",
+     "type": "PARITY_SUITE_R68TS_LEVEL_M2M_TYPE_IS_SERVICE",
+     "resource": {
+      "id": "ts",
+      "a": "n"
+     },
+     "subject": "user:parity-r29-level-m2m",
+     "subjectClaims": {
+      "level": "m2m"
+     }
+    },
+    {
+     "name": "type-is-service-a-y",
+     "type": "PARITY_SUITE_R68TS_LEVEL_M2M_TYPE_IS_SERVICE",
+     "resource": {
+      "id": "ts",
+      "a": "y"
+     },
+     "subject": "user:parity-r29-level-m2m",
+     "subjectClaims": {
+      "level": "m2m"
+     }
+    },
+    {
+     "name": "type-is-service-deny",
+     "type": "PARITY_SUITE_R68TS_LEVEL_M2M_TYPE_IS_SERVICE_D",
+     "resource": {
+      "id": "ts",
+      "a": "n"
+     },
+     "subject": "user:parity-r29-level-m2m",
+     "subjectClaims": {
+      "level": "m2m"
+     }
+    }
+   ]
+  },
+  {
+   "id": "r68ts-bare-user",
+   "about": "Subject parity-reader through a client without the basic, profile, email and roles scopes: no sub, preferred_username, names or realm_access.",
+   "resourceType": "PARITY_SUITE_R68TS_BARE_USER",
+   "sets": [
+    {
+     "key": "token",
+     "target": "resourceType == 'PARITY_SUITE_R68TS_BARE_USER_TOKEN'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "anyone",
+       "target": "true",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "token",
+         "target": "true",
+         "condition": "true",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "key": "or-id-is-empty-text",
+     "target": "resourceType == 'PARITY_SUITE_R68TS_BARE_USER_ID_IS_EMPTY_TEXT'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "p-id-is-empty-text",
+       "target": "true",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit-id-is-empty-text",
+         "target": "true",
+         "condition": "subject.id == '' OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "key": "deny-id-is-empty-text",
+     "target": "resourceType == 'PARITY_SUITE_R68TS_BARE_USER_ID_IS_EMPTY_TEXT_D'",
+     "algorithm": "PERMIT_UNLESS_DENY",
+     "policies": [
+      {
+       "key": "d-id-is-empty-text",
+       "target": "true",
+       "algorithm": "PERMIT_UNLESS_DENY",
+       "rules": [
+        {
+         "key": "deny-id-is-empty-text",
+         "target": "true",
+         "condition": "subject.id == ''",
+         "effect": "DENY"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "key": "or-name-is-empty-text",
+     "target": "resourceType == 'PARITY_SUITE_R68TS_BARE_USER_NAME_IS_EMPTY_TEXT'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "p-name-is-empty-text",
+       "target": "true",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit-name-is-empty-text",
+         "target": "true",
+         "condition": "subject.name == '' OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "key": "deny-name-is-empty-text",
+     "target": "resourceType == 'PARITY_SUITE_R68TS_BARE_USER_NAME_IS_EMPTY_TEXT_D'",
+     "algorithm": "PERMIT_UNLESS_DENY",
+     "policies": [
+      {
+       "key": "d-name-is-empty-text",
+       "target": "true",
+       "algorithm": "PERMIT_UNLESS_DENY",
+       "rules": [
+        {
+         "key": "deny-name-is-empty-text",
+         "target": "true",
+         "condition": "subject.name == ''",
+         "effect": "DENY"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "key": "or-scopes-contain-profile",
+     "target": "resourceType == 'PARITY_SUITE_R68TS_BARE_USER_SCOPES_CONTAIN_PROFILE'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "p-scopes-contain-profile",
+       "target": "true",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit-scopes-contain-profile",
+         "target": "true",
+         "condition": "subject.scopes CONTAINS 'profile' OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "key": "deny-scopes-contain-profile",
+     "target": "resourceType == 'PARITY_SUITE_R68TS_BARE_USER_SCOPES_CONTAIN_PROFILE_D'",
+     "algorithm": "PERMIT_UNLESS_DENY",
+     "policies": [
+      {
+       "key": "d-scopes-contain-profile",
+       "target": "true",
+       "algorithm": "PERMIT_UNLESS_DENY",
+       "rules": [
+        {
+         "key": "deny-scopes-contain-profile",
+         "target": "true",
+         "condition": "subject.scopes CONTAINS 'profile'",
+         "effect": "DENY"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "name": "token-accepted",
+     "type": "PARITY_SUITE_R68TS_BARE_USER_TOKEN",
+     "resource": {
+      "id": "ts"
+     },
+     "subject": "user:parity-reader@parity-ts-bare",
+     "subjectClaims": {
+      "sub": null,
+      "preferred_username": null,
+      "realm_access": null,
+      "scope": "openid"
+     }
+    },
+    {
+     "name": "id-is-empty-text-a-n",
+     "type": "PARITY_SUITE_R68TS_BARE_USER_ID_IS_EMPTY_TEXT",
+     "resource": {
+      "id": "ts",
+      "a": "n"
+     },
+     "subject": "user:parity-reader@parity-ts-bare",
+     "subjectClaims": {
+      "sub": null,
+      "preferred_username": null,
+      "realm_access": null,
+      "scope": "openid"
+     }
+    },
+    {
+     "name": "id-is-empty-text-a-y",
+     "type": "PARITY_SUITE_R68TS_BARE_USER_ID_IS_EMPTY_TEXT",
+     "resource": {
+      "id": "ts",
+      "a": "y"
+     },
+     "subject": "user:parity-reader@parity-ts-bare",
+     "subjectClaims": {
+      "sub": null,
+      "preferred_username": null,
+      "realm_access": null,
+      "scope": "openid"
+     }
+    },
+    {
+     "name": "id-is-empty-text-deny",
+     "type": "PARITY_SUITE_R68TS_BARE_USER_ID_IS_EMPTY_TEXT_D",
+     "resource": {
+      "id": "ts",
+      "a": "n"
+     },
+     "subject": "user:parity-reader@parity-ts-bare",
+     "subjectClaims": {
+      "sub": null,
+      "preferred_username": null,
+      "realm_access": null,
+      "scope": "openid"
+     }
+    },
+    {
+     "name": "name-is-empty-text-a-n",
+     "type": "PARITY_SUITE_R68TS_BARE_USER_NAME_IS_EMPTY_TEXT",
+     "resource": {
+      "id": "ts",
+      "a": "n"
+     },
+     "subject": "user:parity-reader@parity-ts-bare",
+     "subjectClaims": {
+      "sub": null,
+      "preferred_username": null,
+      "realm_access": null,
+      "scope": "openid"
+     }
+    },
+    {
+     "name": "name-is-empty-text-a-y",
+     "type": "PARITY_SUITE_R68TS_BARE_USER_NAME_IS_EMPTY_TEXT",
+     "resource": {
+      "id": "ts",
+      "a": "y"
+     },
+     "subject": "user:parity-reader@parity-ts-bare",
+     "subjectClaims": {
+      "sub": null,
+      "preferred_username": null,
+      "realm_access": null,
+      "scope": "openid"
+     }
+    },
+    {
+     "name": "name-is-empty-text-deny",
+     "type": "PARITY_SUITE_R68TS_BARE_USER_NAME_IS_EMPTY_TEXT_D",
+     "resource": {
+      "id": "ts",
+      "a": "n"
+     },
+     "subject": "user:parity-reader@parity-ts-bare",
+     "subjectClaims": {
+      "sub": null,
+      "preferred_username": null,
+      "realm_access": null,
+      "scope": "openid"
+     }
+    },
+    {
+     "name": "scopes-contain-profile-a-n",
+     "type": "PARITY_SUITE_R68TS_BARE_USER_SCOPES_CONTAIN_PROFILE",
+     "resource": {
+      "id": "ts",
+      "a": "n"
+     },
+     "subject": "user:parity-reader@parity-ts-bare",
+     "subjectClaims": {
+      "sub": null,
+      "preferred_username": null,
+      "realm_access": null,
+      "scope": "openid"
+     }
+    },
+    {
+     "name": "scopes-contain-profile-a-y",
+     "type": "PARITY_SUITE_R68TS_BARE_USER_SCOPES_CONTAIN_PROFILE",
+     "resource": {
+      "id": "ts",
+      "a": "y"
+     },
+     "subject": "user:parity-reader@parity-ts-bare",
+     "subjectClaims": {
+      "sub": null,
+      "preferred_username": null,
+      "realm_access": null,
+      "scope": "openid"
+     }
+    },
+    {
+     "name": "scopes-contain-profile-deny",
+     "type": "PARITY_SUITE_R68TS_BARE_USER_SCOPES_CONTAIN_PROFILE_D",
+     "resource": {
+      "id": "ts",
+      "a": "n"
+     },
+     "subject": "user:parity-reader@parity-ts-bare",
+     "subjectClaims": {
+      "sub": null,
+      "preferred_username": null,
+      "realm_access": null,
+      "scope": "openid"
+     }
+    }
+   ]
+  },
+  {
+   "id": "r68ts-bare-service",
+   "about": "Subject the service account of that client alone: client_id, and no sub, preferred_username or realm_access.",
+   "resourceType": "PARITY_SUITE_R68TS_BARE_SERVICE",
+   "sets": [
+    {
+     "key": "token",
+     "target": "resourceType == 'PARITY_SUITE_R68TS_BARE_SERVICE_TOKEN'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "anyone",
+       "target": "true",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "token",
+         "target": "true",
+         "condition": "true",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "key": "or-id-is-empty-text",
+     "target": "resourceType == 'PARITY_SUITE_R68TS_BARE_SERVICE_ID_IS_EMPTY_TEXT'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "p-id-is-empty-text",
+       "target": "true",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit-id-is-empty-text",
+         "target": "true",
+         "condition": "subject.id == '' OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "key": "deny-id-is-empty-text",
+     "target": "resourceType == 'PARITY_SUITE_R68TS_BARE_SERVICE_ID_IS_EMPTY_TEXT_D'",
+     "algorithm": "PERMIT_UNLESS_DENY",
+     "policies": [
+      {
+       "key": "d-id-is-empty-text",
+       "target": "true",
+       "algorithm": "PERMIT_UNLESS_DENY",
+       "rules": [
+        {
+         "key": "deny-id-is-empty-text",
+         "target": "true",
+         "condition": "subject.id == ''",
+         "effect": "DENY"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "key": "or-name-is-empty-text",
+     "target": "resourceType == 'PARITY_SUITE_R68TS_BARE_SERVICE_NAME_IS_EMPTY_TEXT'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "p-name-is-empty-text",
+       "target": "true",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit-name-is-empty-text",
+         "target": "true",
+         "condition": "subject.name == '' OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "key": "deny-name-is-empty-text",
+     "target": "resourceType == 'PARITY_SUITE_R68TS_BARE_SERVICE_NAME_IS_EMPTY_TEXT_D'",
+     "algorithm": "PERMIT_UNLESS_DENY",
+     "policies": [
+      {
+       "key": "d-name-is-empty-text",
+       "target": "true",
+       "algorithm": "PERMIT_UNLESS_DENY",
+       "rules": [
+        {
+         "key": "deny-name-is-empty-text",
+         "target": "true",
+         "condition": "subject.name == ''",
+         "effect": "DENY"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "key": "or-scopes-contain-openid",
+     "target": "resourceType == 'PARITY_SUITE_R68TS_BARE_SERVICE_SCOPES_CONTAIN_OPENID'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "p-scopes-contain-openid",
+       "target": "true",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit-scopes-contain-openid",
+         "target": "true",
+         "condition": "subject.scopes CONTAINS 'openid' OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "key": "deny-scopes-contain-openid",
+     "target": "resourceType == 'PARITY_SUITE_R68TS_BARE_SERVICE_SCOPES_CONTAIN_OPENID_D'",
+     "algorithm": "PERMIT_UNLESS_DENY",
+     "policies": [
+      {
+       "key": "d-scopes-contain-openid",
+       "target": "true",
+       "algorithm": "PERMIT_UNLESS_DENY",
+       "rules": [
+        {
+         "key": "deny-scopes-contain-openid",
+         "target": "true",
+         "condition": "subject.scopes CONTAINS 'openid'",
+         "effect": "DENY"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "key": "or-service-account-is-false",
+     "target": "resourceType == 'PARITY_SUITE_R68TS_BARE_SERVICE_SERVICE_ACCOUNT_IS_FALSE'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "p-service-account-is-false",
+       "target": "true",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit-service-account-is-false",
+         "target": "true",
+         "condition": "subject.serviceAccount == 'false' OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "key": "deny-service-account-is-false",
+     "target": "resourceType == 'PARITY_SUITE_R68TS_BARE_SERVICE_SERVICE_ACCOUNT_IS_FALSE_D'",
+     "algorithm": "PERMIT_UNLESS_DENY",
+     "policies": [
+      {
+       "key": "d-service-account-is-false",
+       "target": "true",
+       "algorithm": "PERMIT_UNLESS_DENY",
+       "rules": [
+        {
+         "key": "deny-service-account-is-false",
+         "target": "true",
+         "condition": "subject.serviceAccount == 'false'",
+         "effect": "DENY"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "key": "or-type-is-service",
+     "target": "resourceType == 'PARITY_SUITE_R68TS_BARE_SERVICE_TYPE_IS_SERVICE'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "p-type-is-service",
+       "target": "true",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit-type-is-service",
+         "target": "true",
+         "condition": "subject.type == 'SERVICE' OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "key": "deny-type-is-service",
+     "target": "resourceType == 'PARITY_SUITE_R68TS_BARE_SERVICE_TYPE_IS_SERVICE_D'",
+     "algorithm": "PERMIT_UNLESS_DENY",
+     "policies": [
+      {
+       "key": "d-type-is-service",
+       "target": "true",
+       "algorithm": "PERMIT_UNLESS_DENY",
+       "rules": [
+        {
+         "key": "deny-type-is-service",
+         "target": "true",
+         "condition": "subject.type == 'SERVICE'",
+         "effect": "DENY"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "name": "token-accepted",
+     "type": "PARITY_SUITE_R68TS_BARE_SERVICE_TOKEN",
+     "resource": {
+      "id": "ts"
+     },
+     "subject": "m2m@parity-ts-bare",
+     "subjectClaims": {
+      "sub": null,
+      "preferred_username": null,
+      "realm_access": null,
+      "client_id": "parity-ts-bare"
+     }
+    },
+    {
+     "name": "id-is-empty-text-a-n",
+     "type": "PARITY_SUITE_R68TS_BARE_SERVICE_ID_IS_EMPTY_TEXT",
+     "resource": {
+      "id": "ts",
+      "a": "n"
+     },
+     "subject": "m2m@parity-ts-bare",
+     "subjectClaims": {
+      "sub": null,
+      "preferred_username": null,
+      "realm_access": null,
+      "client_id": "parity-ts-bare"
+     }
+    },
+    {
+     "name": "id-is-empty-text-a-y",
+     "type": "PARITY_SUITE_R68TS_BARE_SERVICE_ID_IS_EMPTY_TEXT",
+     "resource": {
+      "id": "ts",
+      "a": "y"
+     },
+     "subject": "m2m@parity-ts-bare",
+     "subjectClaims": {
+      "sub": null,
+      "preferred_username": null,
+      "realm_access": null,
+      "client_id": "parity-ts-bare"
+     }
+    },
+    {
+     "name": "id-is-empty-text-deny",
+     "type": "PARITY_SUITE_R68TS_BARE_SERVICE_ID_IS_EMPTY_TEXT_D",
+     "resource": {
+      "id": "ts",
+      "a": "n"
+     },
+     "subject": "m2m@parity-ts-bare",
+     "subjectClaims": {
+      "sub": null,
+      "preferred_username": null,
+      "realm_access": null,
+      "client_id": "parity-ts-bare"
+     }
+    },
+    {
+     "name": "name-is-empty-text-a-n",
+     "type": "PARITY_SUITE_R68TS_BARE_SERVICE_NAME_IS_EMPTY_TEXT",
+     "resource": {
+      "id": "ts",
+      "a": "n"
+     },
+     "subject": "m2m@parity-ts-bare",
+     "subjectClaims": {
+      "sub": null,
+      "preferred_username": null,
+      "realm_access": null,
+      "client_id": "parity-ts-bare"
+     }
+    },
+    {
+     "name": "name-is-empty-text-a-y",
+     "type": "PARITY_SUITE_R68TS_BARE_SERVICE_NAME_IS_EMPTY_TEXT",
+     "resource": {
+      "id": "ts",
+      "a": "y"
+     },
+     "subject": "m2m@parity-ts-bare",
+     "subjectClaims": {
+      "sub": null,
+      "preferred_username": null,
+      "realm_access": null,
+      "client_id": "parity-ts-bare"
+     }
+    },
+    {
+     "name": "name-is-empty-text-deny",
+     "type": "PARITY_SUITE_R68TS_BARE_SERVICE_NAME_IS_EMPTY_TEXT_D",
+     "resource": {
+      "id": "ts",
+      "a": "n"
+     },
+     "subject": "m2m@parity-ts-bare",
+     "subjectClaims": {
+      "sub": null,
+      "preferred_username": null,
+      "realm_access": null,
+      "client_id": "parity-ts-bare"
+     }
+    },
+    {
+     "name": "scopes-contain-openid-a-n",
+     "type": "PARITY_SUITE_R68TS_BARE_SERVICE_SCOPES_CONTAIN_OPENID",
+     "resource": {
+      "id": "ts",
+      "a": "n"
+     },
+     "subject": "m2m@parity-ts-bare",
+     "subjectClaims": {
+      "sub": null,
+      "preferred_username": null,
+      "realm_access": null,
+      "client_id": "parity-ts-bare"
+     }
+    },
+    {
+     "name": "scopes-contain-openid-a-y",
+     "type": "PARITY_SUITE_R68TS_BARE_SERVICE_SCOPES_CONTAIN_OPENID",
+     "resource": {
+      "id": "ts",
+      "a": "y"
+     },
+     "subject": "m2m@parity-ts-bare",
+     "subjectClaims": {
+      "sub": null,
+      "preferred_username": null,
+      "realm_access": null,
+      "client_id": "parity-ts-bare"
+     }
+    },
+    {
+     "name": "scopes-contain-openid-deny",
+     "type": "PARITY_SUITE_R68TS_BARE_SERVICE_SCOPES_CONTAIN_OPENID_D",
+     "resource": {
+      "id": "ts",
+      "a": "n"
+     },
+     "subject": "m2m@parity-ts-bare",
+     "subjectClaims": {
+      "sub": null,
+      "preferred_username": null,
+      "realm_access": null,
+      "client_id": "parity-ts-bare"
+     }
+    },
+    {
+     "name": "service-account-is-false-a-n",
+     "type": "PARITY_SUITE_R68TS_BARE_SERVICE_SERVICE_ACCOUNT_IS_FALSE",
+     "resource": {
+      "id": "ts",
+      "a": "n"
+     },
+     "subject": "m2m@parity-ts-bare",
+     "subjectClaims": {
+      "sub": null,
+      "preferred_username": null,
+      "realm_access": null,
+      "client_id": "parity-ts-bare"
+     }
+    },
+    {
+     "name": "service-account-is-false-a-y",
+     "type": "PARITY_SUITE_R68TS_BARE_SERVICE_SERVICE_ACCOUNT_IS_FALSE",
+     "resource": {
+      "id": "ts",
+      "a": "y"
+     },
+     "subject": "m2m@parity-ts-bare",
+     "subjectClaims": {
+      "sub": null,
+      "preferred_username": null,
+      "realm_access": null,
+      "client_id": "parity-ts-bare"
+     }
+    },
+    {
+     "name": "service-account-is-false-deny",
+     "type": "PARITY_SUITE_R68TS_BARE_SERVICE_SERVICE_ACCOUNT_IS_FALSE_D",
+     "resource": {
+      "id": "ts",
+      "a": "n"
+     },
+     "subject": "m2m@parity-ts-bare",
+     "subjectClaims": {
+      "sub": null,
+      "preferred_username": null,
+      "realm_access": null,
+      "client_id": "parity-ts-bare"
+     }
+    },
+    {
+     "name": "type-is-service-a-n",
+     "type": "PARITY_SUITE_R68TS_BARE_SERVICE_TYPE_IS_SERVICE",
+     "resource": {
+      "id": "ts",
+      "a": "n"
+     },
+     "subject": "m2m@parity-ts-bare",
+     "subjectClaims": {
+      "sub": null,
+      "preferred_username": null,
+      "realm_access": null,
+      "client_id": "parity-ts-bare"
+     }
+    },
+    {
+     "name": "type-is-service-a-y",
+     "type": "PARITY_SUITE_R68TS_BARE_SERVICE_TYPE_IS_SERVICE",
+     "resource": {
+      "id": "ts",
+      "a": "y"
+     },
+     "subject": "m2m@parity-ts-bare",
+     "subjectClaims": {
+      "sub": null,
+      "preferred_username": null,
+      "realm_access": null,
+      "client_id": "parity-ts-bare"
+     }
+    },
+    {
+     "name": "type-is-service-deny",
+     "type": "PARITY_SUITE_R68TS_BARE_SERVICE_TYPE_IS_SERVICE_D",
+     "resource": {
+      "id": "ts",
+      "a": "n"
+     },
+     "subject": "m2m@parity-ts-bare",
+     "subjectClaims": {
+      "sub": null,
+      "preferred_username": null,
+      "realm_access": null,
+      "client_id": "parity-ts-bare"
+     }
+    }
+   ]
+  },
+  {
+   "id": "r68ts-many",
+   "about": "Subject a user whose sub and preferred_username are arrays of two strings.",
+   "resourceType": "PARITY_SUITE_R68TS_MANY",
+   "sets": [
+    {
+     "key": "token",
+     "target": "resourceType == 'PARITY_SUITE_R68TS_MANY_TOKEN'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "anyone",
+       "target": "true",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "token",
+         "target": "true",
+         "condition": "true",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "key": "or-id-is-sub-text",
+     "target": "resourceType == 'PARITY_SUITE_R68TS_MANY_ID_IS_SUB_TEXT'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "p-id-is-sub-text",
+       "target": "true",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit-id-is-sub-text",
+         "target": "true",
+         "condition": "subject.id == '[parity-ts-id-a, parity-ts-id-b]' OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "key": "deny-id-is-sub-text",
+     "target": "resourceType == 'PARITY_SUITE_R68TS_MANY_ID_IS_SUB_TEXT_D'",
+     "algorithm": "PERMIT_UNLESS_DENY",
+     "policies": [
+      {
+       "key": "d-id-is-sub-text",
+       "target": "true",
+       "algorithm": "PERMIT_UNLESS_DENY",
+       "rules": [
+        {
+         "key": "deny-id-is-sub-text",
+         "target": "true",
+         "condition": "subject.id == '[parity-ts-id-a, parity-ts-id-b]'",
+         "effect": "DENY"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "key": "or-name-is-preferred-username-text",
+     "target": "resourceType == 'PARITY_SUITE_R68TS_MANY_NAME_IS_PREFERRED_USERNAME_TEXT'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "p-name-is-preferred-username-text",
+       "target": "true",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit-name-is-preferred-username-text",
+         "target": "true",
+         "condition": "subject.name == '[parity-ts-name-a, parity-ts-name-b]' OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "key": "deny-name-is-preferred-username-text",
+     "target": "resourceType == 'PARITY_SUITE_R68TS_MANY_NAME_IS_PREFERRED_USERNAME_TEXT_D'",
+     "algorithm": "PERMIT_UNLESS_DENY",
+     "policies": [
+      {
+       "key": "d-name-is-preferred-username-text",
+       "target": "true",
+       "algorithm": "PERMIT_UNLESS_DENY",
+       "rules": [
+        {
+         "key": "deny-name-is-preferred-username-text",
+         "target": "true",
+         "condition": "subject.name == '[parity-ts-name-a, parity-ts-name-b]'",
+         "effect": "DENY"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "name": "token-accepted",
+     "type": "PARITY_SUITE_R68TS_MANY_TOKEN",
+     "resource": {
+      "id": "ts"
+     },
+     "subject": "user:parity-ts-many@parity-ts-arrays",
+     "subjectClaims": {
+      "sub": [
+       "parity-ts-id-a",
+       "parity-ts-id-b"
+      ],
+      "preferred_username": [
+       "parity-ts-name-a",
+       "parity-ts-name-b"
+      ]
+     }
+    },
+    {
+     "name": "id-is-sub-text-a-n",
+     "type": "PARITY_SUITE_R68TS_MANY_ID_IS_SUB_TEXT",
+     "resource": {
+      "id": "ts",
+      "a": "n"
+     },
+     "subject": "user:parity-ts-many@parity-ts-arrays",
+     "subjectClaims": {
+      "sub": [
+       "parity-ts-id-a",
+       "parity-ts-id-b"
+      ],
+      "preferred_username": [
+       "parity-ts-name-a",
+       "parity-ts-name-b"
+      ]
+     }
+    },
+    {
+     "name": "id-is-sub-text-a-y",
+     "type": "PARITY_SUITE_R68TS_MANY_ID_IS_SUB_TEXT",
+     "resource": {
+      "id": "ts",
+      "a": "y"
+     },
+     "subject": "user:parity-ts-many@parity-ts-arrays",
+     "subjectClaims": {
+      "sub": [
+       "parity-ts-id-a",
+       "parity-ts-id-b"
+      ],
+      "preferred_username": [
+       "parity-ts-name-a",
+       "parity-ts-name-b"
+      ]
+     }
+    },
+    {
+     "name": "id-is-sub-text-deny",
+     "type": "PARITY_SUITE_R68TS_MANY_ID_IS_SUB_TEXT_D",
+     "resource": {
+      "id": "ts",
+      "a": "n"
+     },
+     "subject": "user:parity-ts-many@parity-ts-arrays",
+     "subjectClaims": {
+      "sub": [
+       "parity-ts-id-a",
+       "parity-ts-id-b"
+      ],
+      "preferred_username": [
+       "parity-ts-name-a",
+       "parity-ts-name-b"
+      ]
+     }
+    },
+    {
+     "name": "name-is-preferred-username-text-a-n",
+     "type": "PARITY_SUITE_R68TS_MANY_NAME_IS_PREFERRED_USERNAME_TEXT",
+     "resource": {
+      "id": "ts",
+      "a": "n"
+     },
+     "subject": "user:parity-ts-many@parity-ts-arrays",
+     "subjectClaims": {
+      "sub": [
+       "parity-ts-id-a",
+       "parity-ts-id-b"
+      ],
+      "preferred_username": [
+       "parity-ts-name-a",
+       "parity-ts-name-b"
+      ]
+     }
+    },
+    {
+     "name": "name-is-preferred-username-text-a-y",
+     "type": "PARITY_SUITE_R68TS_MANY_NAME_IS_PREFERRED_USERNAME_TEXT",
+     "resource": {
+      "id": "ts",
+      "a": "y"
+     },
+     "subject": "user:parity-ts-many@parity-ts-arrays",
+     "subjectClaims": {
+      "sub": [
+       "parity-ts-id-a",
+       "parity-ts-id-b"
+      ],
+      "preferred_username": [
+       "parity-ts-name-a",
+       "parity-ts-name-b"
+      ]
+     }
+    },
+    {
+     "name": "name-is-preferred-username-text-deny",
+     "type": "PARITY_SUITE_R68TS_MANY_NAME_IS_PREFERRED_USERNAME_TEXT_D",
+     "resource": {
+      "id": "ts",
+      "a": "n"
+     },
+     "subject": "user:parity-ts-many@parity-ts-arrays",
+     "subjectClaims": {
+      "sub": [
+       "parity-ts-id-a",
+       "parity-ts-id-b"
+      ],
+      "preferred_username": [
+       "parity-ts-name-a",
+       "parity-ts-name-b"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "r68ts-one",
+   "about": "Subject a user whose sub and preferred_username are arrays of one string.",
+   "resourceType": "PARITY_SUITE_R68TS_ONE",
+   "sets": [
+    {
+     "key": "token",
+     "target": "resourceType == 'PARITY_SUITE_R68TS_ONE_TOKEN'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "anyone",
+       "target": "true",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "token",
+         "target": "true",
+         "condition": "true",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "key": "or-id-is-sub-text",
+     "target": "resourceType == 'PARITY_SUITE_R68TS_ONE_ID_IS_SUB_TEXT'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "p-id-is-sub-text",
+       "target": "true",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit-id-is-sub-text",
+         "target": "true",
+         "condition": "subject.id == '[parity-ts-id-one]' OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "key": "deny-id-is-sub-text",
+     "target": "resourceType == 'PARITY_SUITE_R68TS_ONE_ID_IS_SUB_TEXT_D'",
+     "algorithm": "PERMIT_UNLESS_DENY",
+     "policies": [
+      {
+       "key": "d-id-is-sub-text",
+       "target": "true",
+       "algorithm": "PERMIT_UNLESS_DENY",
+       "rules": [
+        {
+         "key": "deny-id-is-sub-text",
+         "target": "true",
+         "condition": "subject.id == '[parity-ts-id-one]'",
+         "effect": "DENY"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "key": "or-name-is-preferred-username-text",
+     "target": "resourceType == 'PARITY_SUITE_R68TS_ONE_NAME_IS_PREFERRED_USERNAME_TEXT'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "p-name-is-preferred-username-text",
+       "target": "true",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit-name-is-preferred-username-text",
+         "target": "true",
+         "condition": "subject.name == '[parity-ts-name-one]' OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "key": "deny-name-is-preferred-username-text",
+     "target": "resourceType == 'PARITY_SUITE_R68TS_ONE_NAME_IS_PREFERRED_USERNAME_TEXT_D'",
+     "algorithm": "PERMIT_UNLESS_DENY",
+     "policies": [
+      {
+       "key": "d-name-is-preferred-username-text",
+       "target": "true",
+       "algorithm": "PERMIT_UNLESS_DENY",
+       "rules": [
+        {
+         "key": "deny-name-is-preferred-username-text",
+         "target": "true",
+         "condition": "subject.name == '[parity-ts-name-one]'",
+         "effect": "DENY"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "name": "token-accepted",
+     "type": "PARITY_SUITE_R68TS_ONE_TOKEN",
+     "resource": {
+      "id": "ts"
+     },
+     "subject": "user:parity-ts-one@parity-ts-arrays",
+     "subjectClaims": {
+      "sub": [
+       "parity-ts-id-one"
+      ],
+      "preferred_username": [
+       "parity-ts-name-one"
+      ]
+     }
+    },
+    {
+     "name": "id-is-sub-text-a-n",
+     "type": "PARITY_SUITE_R68TS_ONE_ID_IS_SUB_TEXT",
+     "resource": {
+      "id": "ts",
+      "a": "n"
+     },
+     "subject": "user:parity-ts-one@parity-ts-arrays",
+     "subjectClaims": {
+      "sub": [
+       "parity-ts-id-one"
+      ],
+      "preferred_username": [
+       "parity-ts-name-one"
+      ]
+     }
+    },
+    {
+     "name": "id-is-sub-text-a-y",
+     "type": "PARITY_SUITE_R68TS_ONE_ID_IS_SUB_TEXT",
+     "resource": {
+      "id": "ts",
+      "a": "y"
+     },
+     "subject": "user:parity-ts-one@parity-ts-arrays",
+     "subjectClaims": {
+      "sub": [
+       "parity-ts-id-one"
+      ],
+      "preferred_username": [
+       "parity-ts-name-one"
+      ]
+     }
+    },
+    {
+     "name": "id-is-sub-text-deny",
+     "type": "PARITY_SUITE_R68TS_ONE_ID_IS_SUB_TEXT_D",
+     "resource": {
+      "id": "ts",
+      "a": "n"
+     },
+     "subject": "user:parity-ts-one@parity-ts-arrays",
+     "subjectClaims": {
+      "sub": [
+       "parity-ts-id-one"
+      ],
+      "preferred_username": [
+       "parity-ts-name-one"
+      ]
+     }
+    },
+    {
+     "name": "name-is-preferred-username-text-a-n",
+     "type": "PARITY_SUITE_R68TS_ONE_NAME_IS_PREFERRED_USERNAME_TEXT",
+     "resource": {
+      "id": "ts",
+      "a": "n"
+     },
+     "subject": "user:parity-ts-one@parity-ts-arrays",
+     "subjectClaims": {
+      "sub": [
+       "parity-ts-id-one"
+      ],
+      "preferred_username": [
+       "parity-ts-name-one"
+      ]
+     }
+    },
+    {
+     "name": "name-is-preferred-username-text-a-y",
+     "type": "PARITY_SUITE_R68TS_ONE_NAME_IS_PREFERRED_USERNAME_TEXT",
+     "resource": {
+      "id": "ts",
+      "a": "y"
+     },
+     "subject": "user:parity-ts-one@parity-ts-arrays",
+     "subjectClaims": {
+      "sub": [
+       "parity-ts-id-one"
+      ],
+      "preferred_username": [
+       "parity-ts-name-one"
+      ]
+     }
+    },
+    {
+     "name": "name-is-preferred-username-text-deny",
+     "type": "PARITY_SUITE_R68TS_ONE_NAME_IS_PREFERRED_USERNAME_TEXT_D",
+     "resource": {
+      "id": "ts",
+      "a": "n"
+     },
+     "subject": "user:parity-ts-one@parity-ts-arrays",
+     "subjectClaims": {
+      "sub": [
+       "parity-ts-id-one"
+      ],
+      "preferred_username": [
+       "parity-ts-name-one"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "r68ts-scalar-roles",
+   "about": "Subject a user whose realm_access.roles is a string.",
+   "resourceType": "PARITY_SUITE_R68TS_SCALAR_ROLES",
+   "sets": [
+    {
+     "key": "token",
+     "target": "resourceType == 'PARITY_SUITE_R68TS_SCALAR_ROLES_TOKEN'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "anyone",
+       "target": "true",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "token",
+         "target": "true",
+         "condition": "true",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "key": "or-roles-contain-reader",
+     "target": "resourceType == 'PARITY_SUITE_R68TS_SCALAR_ROLES_ROLES_CONTAIN_READER'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "p-roles-contain-reader",
+       "target": "true",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit-roles-contain-reader",
+         "target": "true",
+         "condition": "subject.roles CONTAINS 'ROLE_PARITY_READER' OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "key": "deny-roles-contain-reader",
+     "target": "resourceType == 'PARITY_SUITE_R68TS_SCALAR_ROLES_ROLES_CONTAIN_READER_D'",
+     "algorithm": "PERMIT_UNLESS_DENY",
+     "policies": [
+      {
+       "key": "d-roles-contain-reader",
+       "target": "true",
+       "algorithm": "PERMIT_UNLESS_DENY",
+       "rules": [
+        {
+         "key": "deny-roles-contain-reader",
+         "target": "true",
+         "condition": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "effect": "DENY"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "name": "token-accepted",
+     "type": "PARITY_SUITE_R68TS_SCALAR_ROLES_TOKEN",
+     "resource": {
+      "id": "ts"
+     },
+     "subject": "user:parity-ts-one@parity-ts-scalar-roles",
+     "subjectClaims": {
+      "realm_access": {
+       "roles": "ROLE_PARITY_READER"
+      }
+     }
+    },
+    {
+     "name": "roles-contain-reader-a-n",
+     "type": "PARITY_SUITE_R68TS_SCALAR_ROLES_ROLES_CONTAIN_READER",
+     "resource": {
+      "id": "ts",
+      "a": "n"
+     },
+     "subject": "user:parity-ts-one@parity-ts-scalar-roles",
+     "subjectClaims": {
+      "realm_access": {
+       "roles": "ROLE_PARITY_READER"
+      }
+     }
+    },
+    {
+     "name": "roles-contain-reader-a-y",
+     "type": "PARITY_SUITE_R68TS_SCALAR_ROLES_ROLES_CONTAIN_READER",
+     "resource": {
+      "id": "ts",
+      "a": "y"
+     },
+     "subject": "user:parity-ts-one@parity-ts-scalar-roles",
+     "subjectClaims": {
+      "realm_access": {
+       "roles": "ROLE_PARITY_READER"
+      }
+     }
+    },
+    {
+     "name": "roles-contain-reader-deny",
+     "type": "PARITY_SUITE_R68TS_SCALAR_ROLES_ROLES_CONTAIN_READER_D",
+     "resource": {
+      "id": "ts",
+      "a": "n"
+     },
+     "subject": "user:parity-ts-one@parity-ts-scalar-roles",
+     "subjectClaims": {
+      "realm_access": {
+       "roles": "ROLE_PARITY_READER"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "r68ts-control-last",
+   "about": "Control: a DENY rule over a resource attribute that does not hold. True unless the stand answers every check with 400.",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "PERMIT_UNLESS_DENY",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "PERMIT_UNLESS_DENY",
+       "rules": [
+        {
+         "key": "deny",
+         "target": "true",
+         "condition": "resource.c == 'zz'",
+         "effect": "DENY"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "name": "read",
+     "resource": {
+      "id": "r33",
+      "c": "n"
+     }
+    }
+   ]
+  }
+ ]
+}

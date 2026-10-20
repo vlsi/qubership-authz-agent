@@ -290,14 +290,19 @@ type requestSpec struct {
 	Filter    bool              `json:"filter"`
 	// Subject "m2m" sends the M2M token alone; "user:<username>" sends the
 	// token of that user of the parity realm beside the M2M token; empty sends
-	// parity-reader.
+	// parity-reader. "m2m@<client>" and "user:<username>@<client>" take the
+	// token from a client of
+	// testdata/realm-clients/token-subject-clients.json instead (see
+	// Config.TokenSubject): the service account's token alone, or the user's
+	// beside the M2M token.
 	Subject string `json:"subject"`
-	// SubjectClaims holds claim values the token of a "user:" subject must
-	// carry, such as sub and preferred_username. The suite decodes the token and
-	// fails before sending the request when a claim is missing or differs, so a
-	// stand whose realm lacks the user, or gives it other values, records
-	// nothing.
-	SubjectClaims map[string]string `json:"subjectClaims"`
+	// SubjectClaims holds claim values the token of a "user:", "m2m" or "m2m@"
+	// subject must carry, such as sub and preferred_username, in their JSON
+	// form; null requires the claim to be absent. The suite decodes the token
+	// and fails before sending the request when a claim differs, so a stand
+	// whose realm lacks the user or the client, or gives them other claims,
+	// records nothing.
+	SubjectClaims map[string]any `json:"subjectClaims"`
 	// ClassifyBy names a pip-mock route. The request's golden is then recorded
 	// under <name>-when-the-pip-was-read when the route received a call while
 	// the request ran, and under <name>-when-the-pip-was-skipped when it did
@@ -1248,6 +1253,28 @@ func customEntryProblems(kind string, e any) []string {
 	return problems
 }
 
+// subjectProblem returns why a request cannot send the subject s, or "" when
+// it can: s is empty, m2m, user:<username>, or one of those two followed by
+// @<client> with a client of tokenSubjectClients, which for m2m has to have a
+// service account.
+func subjectProblem(s string) string {
+	who, client, at := strings.Cut(s, "@")
+	if at {
+		service, ok := tokenSubjectClients[client]
+		if !ok {
+			return fmt.Sprintf("names the subject %q, whose client is none of "+
+				"testdata/realm-clients/token-subject-clients.json", s)
+		}
+		if who == "m2m" && !service {
+			return fmt.Sprintf("names the subject %q, whose client has no service account", s)
+		}
+	}
+	if s == "" || who == "m2m" || strings.HasPrefix(who, "user:") && who != "user:" {
+		return ""
+	}
+	return fmt.Sprintf("names the subject %q, which is neither m2m nor user:<username>", s)
+}
+
 // requestProblems returns the problems of r, a request of the case c. pinned
 // holds the routes pinned before r is sent: the file's, the case's, and those
 // r and the requests before it pin.
@@ -1256,11 +1283,12 @@ func requestProblems(c caseSpec, r requestSpec, pinned map[string]bool, rt strin
 	report := func(format string, args ...any) {
 		problems = append(problems, fmt.Sprintf("case %s request %s ", c.ID, r.Name)+fmt.Sprintf(format, args...))
 	}
-	if r.Subject != "" && r.Subject != "m2m" && (!strings.HasPrefix(r.Subject, "user:") || r.Subject == "user:") {
-		report("names the subject %q, which is neither m2m nor user:<username>", r.Subject)
+	if problem := subjectProblem(r.Subject); problem != "" {
+		report("%s", problem)
 	}
-	if len(r.SubjectClaims) > 0 && !strings.HasPrefix(r.Subject, "user:") {
-		report("sets subjectClaims without a user: subject")
+	if len(r.SubjectClaims) > 0 && r.Subject != "m2m" && !strings.HasPrefix(r.Subject, "user:") &&
+		!strings.HasPrefix(r.Subject, "m2m@") {
+		report("sets subjectClaims without a user:, m2m or m2m@ subject")
 	}
 	if r.PIPCalls != "" {
 		if !pinned[r.PIPCalls] {

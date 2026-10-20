@@ -97,6 +97,11 @@ type Config struct {
 	// tenant-id claim, for the cases that record what the claim does to a
 	// decision.
 	TenantClaim TenantClaimClients
+	// TokenSubject holds the clients of
+	// testdata/realm-clients/token-subject-clients.json by client id, for the
+	// cases whose token lacks a claim or carries an array in place of a
+	// string; see requestSpec.Subject.
+	TokenSubject map[string]ClientCredentials
 }
 
 // ClientCredentials identify one confidential client of the parity realm.
@@ -149,6 +154,32 @@ func loadTenantClaimClients() TenantClaimClients {
 	}
 }
 
+// tokenSubjectSecret is the secret every client of
+// testdata/realm-clients/token-subject-clients.json declares.
+const tokenSubjectSecret = "ParityTokenSubjectSecret1!@#"
+
+// tokenSubjectClients holds the client ids of
+// testdata/realm-clients/token-subject-clients.json, each with whether the
+// client has a service account. TestTokenSubjectClients_MatchTheRealmFile
+// fails when the file and this table differ.
+var tokenSubjectClients = map[string]bool{
+	"parity-ts-bare":         true,
+	"parity-ts-arrays":       false,
+	"parity-ts-scalar-roles": false,
+}
+
+// loadTokenSubjectClients returns the clients of tokenSubjectClients by client
+// id. PARITY_TOKEN_SUBJECT_SECRET replaces the secret all of them share in the
+// realm file.
+func loadTokenSubjectClients() map[string]ClientCredentials {
+	secret := envOr("PARITY_TOKEN_SUBJECT_SECRET", tokenSubjectSecret)
+	clients := map[string]ClientCredentials{}
+	for id := range tokenSubjectClients {
+		clients[id] = ClientCredentials{ID: id, Secret: secret}
+	}
+	return clients
+}
+
 // LoadConfig builds a Config from the PARITY_* environment variables. Missing
 // values fall back to the authz-agent port-block defaults so a freshly
 // brought-up parity stack needs no extra shell plumbing.
@@ -173,6 +204,7 @@ func LoadConfig() Config {
 		Profile:             profile,
 		Tenants:             loadTenantStand(),
 		TenantClaim:         loadTenantClaimClients(),
+		TokenSubject:        loadTokenSubjectClients(),
 	}
 }
 

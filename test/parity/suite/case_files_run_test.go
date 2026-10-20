@@ -200,8 +200,8 @@ func caseRequests(specs []requestSpec, rt string) []isolatedRequest {
 	for _, r := range specs {
 		req := isolatedRequest{
 			name: r.Name, operation: r.Operation, typ: r.Type, resource: withResourceType(r.Resource, rt),
-			headers: r.Headers, filter: r.Filter, m2mOnly: r.Subject == "m2m", classifyBy: r.ClassifyBy,
-			tenantID: r.TenantID, pipCalls: r.PIPCalls, user: r.user(),
+			headers: r.Headers, filter: r.Filter, m2mOnly: r.Subject == "m2m" || strings.HasPrefix(r.Subject, "m2m@"), classifyBy: r.ClassifyBy,
+			tenantID: r.TenantID, pipCalls: r.PIPCalls, user: r.user(), client: r.client(),
 			userClaims: r.SubjectClaims,
 			userID:     r.UserID, emptyOperation: r.EmptyOperation, omitOperation: r.OmitOperation,
 			pins: r.Pins, readsRoutes: r.ReadsRoutes, pipHeaders: r.PIPHeaders,
@@ -224,10 +224,42 @@ func caseRequests(specs []requestSpec, rt string) []isolatedRequest {
 
 // user returns the username of a "user:" subject, and "" for any other.
 func (r requestSpec) user() string {
-	if name, ok := strings.CutPrefix(r.Subject, "user:"); ok {
+	who, _, _ := strings.Cut(r.Subject, "@")
+	if name, ok := strings.CutPrefix(who, "user:"); ok {
 		return name
 	}
 	return ""
+}
+
+// client returns the client a subject names after "@", and "" for a subject
+// that names none.
+func (r requestSpec) client() string {
+	_, client, _ := strings.Cut(r.Subject, "@")
+	return client
+}
+
+// A subject splits at "@" into the user the runner mints a token for and the
+// client that issues it.
+func TestRequestSpec_SplitsTheSubjectIntoUserAndClient(t *testing.T) {
+	for _, tc := range []struct {
+		subject, user, client string
+	}{
+		{"", "", ""},
+		{"m2m", "", ""},
+		{"user:parity-reader", "parity-reader", ""},
+		{"m2m@parity-ts-bare", "", "parity-ts-bare"},
+		{"user:parity-ts-many@parity-ts-arrays", "parity-ts-many", "parity-ts-arrays"},
+	} {
+		t.Run(tc.subject, func(t *testing.T) {
+			r := requestSpec{Subject: tc.subject}
+			if got := r.user(); got != tc.user {
+				t.Errorf("user() of %q = %q, want %q", tc.subject, got, tc.user)
+			}
+			if got := r.client(); got != tc.client {
+				t.Errorf("client() of %q = %q, want %q", tc.subject, got, tc.client)
+			}
+		})
+	}
 }
 
 // A case's resourceType replaces the resource type derived from the file's

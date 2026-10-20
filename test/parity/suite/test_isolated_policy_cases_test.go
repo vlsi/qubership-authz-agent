@@ -18,6 +18,7 @@ package paritysuite
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"slices"
 	"time"
@@ -96,9 +97,13 @@ type isolatedRequest struct {
 	// user names the parity realm user whose token the request carries in
 	// place of parity-reader's, when not empty; see requestSpec.Subject.
 	user string
-	// userClaims holds the claim values user's token must carry; see
-	// requestSpec.SubjectClaims.
-	userClaims map[string]string
+	// client names the client of Config.TokenSubject that issues the token of
+	// user, or of the service account of an m2mOnly request, when not empty;
+	// see requestSpec.Subject.
+	client string
+	// userClaims holds the claim values the token of user or client must
+	// carry; see requestSpec.SubjectClaims.
+	userClaims map[string]any
 	// userID is the userId query parameter when non-nil; see
 	// requestSpec.UserID.
 	userID *string
@@ -141,23 +146,55 @@ func (r isolatedRequest) callOptions() PerCallOptions {
 }
 
 // requestTokens returns the tokens req is sent with: parity-reader's bundle,
-// the M2M token alone for an m2mOnly request, or the bundle of req.user. The
-// token of req.user must carry req.userClaims, or the test fails before the
+// the M2M token alone for an m2mOnly request, or the bundle of req.user. With
+// req.client, the token of req.user, or of the client's service account for an
+// m2mOnly request, comes from that client. That token, or the M2M token of an
+// m2mOnly request, must carry req.userClaims, or the test fails before the
 // request is sent.
 func (s *ParitySuite) requestTokens(req isolatedRequest) TokenBundle {
-	if req.m2mOnly {
+	if req.m2mOnly && req.client == "" && len(req.userClaims) == 0 {
 		return TokenBundle{M2M: s.mustM2MToken()}
 	}
-	if req.user == "" {
+	if !req.m2mOnly && req.user == "" && req.client == "" {
 		return s.mustTokenBundle(UserProfileReader)
 	}
-	token, err := s.tokens.EndUserTokenFor(req.user)
-	s.Require().NoError(err, "token of the parity realm user %q", req.user)
-	claims := s.decodeJWTClaims(token, req.user)
+	who := req.user
+	if req.m2mOnly {
+		who = "the service account of " + req.client
+		if req.client == "" {
+			who = "the suite's service account"
+		}
+	}
+	token, err := s.subjectToken(req)
+	s.Require().NoError(err, "token of the parity realm user %q", who)
+	claims := s.decodeJWTClaims(token, who)
 	for name, want := range req.userClaims {
-		s.Require().Equal(want, claims[name], "claim %s in the token of %q", name, req.user)
+		s.Require().Equal(want, claims[name], "claim %s in the token of %q", name, who)
+	}
+	if req.m2mOnly {
+		return TokenBundle{M2M: token}
 	}
 	return TokenBundle{M2M: s.mustM2MToken(), EndUser: token}
+}
+
+// subjectToken mints the token of req.user, or of the service account of
+// req.client for an m2mOnly request; req.client, when set, issues it. An
+// m2mOnly request without a client gets the suite's M2M token.
+func (s *ParitySuite) subjectToken(req isolatedRequest) (string, error) {
+	if req.client == "" && req.m2mOnly {
+		return s.tokens.M2MToken()
+	}
+	if req.client == "" {
+		return s.tokens.EndUserTokenFor(req.user)
+	}
+	client, ok := s.cfg.TokenSubject[req.client]
+	if !ok {
+		return "", fmt.Errorf("no client %q in testdata/realm-clients/token-subject-clients.json", req.client)
+	}
+	if req.m2mOnly {
+		return s.tokens.M2MTokenFor(client)
+	}
+	return s.tokens.EndUserTokenVia(client, req.user)
 }
 
 // runIsolatedCases uploads each case alone into isolatedCaseDomain, or into the

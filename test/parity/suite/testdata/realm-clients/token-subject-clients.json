@@ -1,0 +1,97 @@
+[
+ {
+  "clientId": "parity-ts-bare",
+  "enabled": true,
+  "protocol": "openid-connect",
+  "publicClient": false,
+  "serviceAccountsEnabled": true,
+  "standardFlowEnabled": false,
+  "directAccessGrantsEnabled": true,
+  "secret": "ParityTokenSubjectSecret1!@#",
+  "defaultClientScopes": [
+   "web-origins"
+  ],
+  "optionalClientScopes": [],
+  "protocolMappers": []
+ },
+ {
+  "clientId": "parity-ts-arrays",
+  "enabled": true,
+  "protocol": "openid-connect",
+  "publicClient": false,
+  "serviceAccountsEnabled": false,
+  "standardFlowEnabled": false,
+  "directAccessGrantsEnabled": true,
+  "secret": "ParityTokenSubjectSecret1!@#",
+  "defaultClientScopes": [
+   "web-origins",
+   "roles"
+  ],
+  "optionalClientScopes": [],
+  "protocolMappers": [
+   {
+    "name": "parity-ts-sub",
+    "protocol": "openid-connect",
+    "protocolMapper": "oidc-usermodel-attribute-mapper",
+    "consentRequired": false,
+    "config": {
+     "user.attribute": "parityTsId",
+     "claim.name": "sub",
+     "jsonType.label": "String",
+     "multivalued": "true",
+     "id.token.claim": "false",
+     "access.token.claim": "true",
+     "userinfo.token.claim": "false"
+    }
+   },
+   {
+    "name": "parity-ts-preferred-username",
+    "protocol": "openid-connect",
+    "protocolMapper": "oidc-usermodel-attribute-mapper",
+    "consentRequired": false,
+    "config": {
+     "user.attribute": "parityTsName",
+     "claim.name": "preferred_username",
+     "jsonType.label": "String",
+     "multivalued": "true",
+     "id.token.claim": "false",
+     "access.token.claim": "true",
+     "userinfo.token.claim": "false"
+    }
+   }
+  ]
+ },
+ {
+  "clientId": "parity-ts-scalar-roles",
+  "enabled": true,
+  "protocol": "openid-connect",
+  "publicClient": false,
+  "serviceAccountsEnabled": false,
+  "standardFlowEnabled": false,
+  "directAccessGrantsEnabled": true,
+  "secret": "ParityTokenSubjectSecret1!@#",
+  "defaultClientScopes": [
+   "web-origins",
+   "basic",
+   "profile"
+  ],
+  "optionalClientScopes": [],
+  "protocolMappers": [
+   {
+    "name": "parity-ts-realm-access-roles",
+    "protocol": "openid-connect",
+    "protocolMapper": "oidc-usermodel-attribute-mapper",
+    "consentRequired": false,
+    "config": {
+     "user.attribute": "parityTsRole",
+     "claim.name": "realm_access.roles",
+     "jsonType.label": "String",
+     "multivalued": "false",
+     "id.token.claim": "false",
+     "access.token.claim": "true",
+     "userinfo.token.claim": "false"
+    }
+   }
+  ]
+ }
+]

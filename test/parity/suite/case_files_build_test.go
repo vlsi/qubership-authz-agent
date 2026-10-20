@@ -23,6 +23,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"strings"
 	"sync"
 	"testing"
@@ -399,6 +400,64 @@ func TestForwardedHeaders_ClassesTheSubjectOfTheToken(t *testing.T) {
 	got := forwardedHeaders([]PipStubCall{{Path: "/pip", Headers: map[string]string{}}}, "/pip", []string{authorizationSubject}, sent, "default")
 	if diff := cmp.Diff(map[string]any{"authorization:subject": nil}, got); diff != "" {
 		t.Errorf("forwardedHeaders of a call without Authorization mismatch (-want +got):\n%s", diff)
+	}
+}
+
+// A case names its subject as m2m or user:<username>, either one optionally
+// followed by @<client> with a client of
+// testdata/realm-clients/token-subject-clients.json; any
+// other subject is a problem of the file.
+func TestSubjectProblem_TakesOnlyTheSubjectsTheRunnerCanSend(t *testing.T) {
+	for _, tc := range []struct {
+		name, subject string
+		refused       bool
+	}{
+		{"no subject", "", false},
+		{"the M2M token", "m2m", false},
+		{"a realm user", "user:parity-reader", false},
+		{"a service account of a token-subject client", "m2m@parity-ts-bare", false},
+		{"a user through a token-subject client", "user:parity-reader@parity-ts-arrays", false},
+		{"a user without a name", "user:", true},
+		{"a user without a name through a client", "user:@parity-ts-bare", true},
+		{"another kind of subject", "admin", true},
+		{"a client outside token-subject-clients.json", "m2m@parity-end-user", true},
+		{"a user through a client outside token-subject-clients.json", "user:parity-reader@parity-m2m", true},
+		{"a service account of a client that has none", "m2m@parity-ts-arrays", true},
+		{"a service account without a client", "m2m@", true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			problem := subjectProblem(tc.subject)
+			if (problem != "") != tc.refused {
+				t.Errorf("subjectProblem(%q) = %q, want a problem: %v", tc.subject, problem, tc.refused)
+			}
+		})
+	}
+}
+
+// The table of token-subject clients names the clients of the realm file, each
+// with the service account the file gives it and the secret the file declares.
+func TestTokenSubjectClients_MatchTheRealmFile(t *testing.T) {
+	raw, err := os.ReadFile("testdata/realm-clients/token-subject-clients.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var clients []struct {
+		ClientID               string `json:"clientId"`
+		Secret                 string `json:"secret"`
+		ServiceAccountsEnabled bool   `json:"serviceAccountsEnabled"`
+	}
+	if err := json.Unmarshal(raw, &clients); err != nil {
+		t.Fatal(err)
+	}
+	inFile := map[string]bool{}
+	for _, c := range clients {
+		inFile[c.ClientID] = c.ServiceAccountsEnabled
+		if c.Secret != tokenSubjectSecret {
+			t.Errorf("client %s declares the secret %q, want tokenSubjectSecret %q", c.ClientID, c.Secret, tokenSubjectSecret)
+		}
+	}
+	if diff := cmp.Diff(inFile, tokenSubjectClients); diff != "" {
+		t.Errorf("tokenSubjectClients mismatch with the realm file (-file +table):\n%s", diff)
 	}
 }
 

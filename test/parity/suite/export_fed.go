@@ -348,6 +348,9 @@ func newLabelTokens(cfg Config) *labelTokens {
 	} {
 		lt.clients[c.ID] = c
 	}
+	for id, c := range cfg.TokenSubject {
+		lt.clients[id] = c
+	}
 	return lt
 }
 
