@@ -1,6 +1,0 @@
-{
-  "status": 400,
-  "message": {
-    "message": "simplified policy 'roles' or 'serviceAccounts' fields can't be empty simultaneously if allowM2MAccess flag is false"
-  }
-}

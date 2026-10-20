@@ -1,5 +1,5 @@
 {
- "about": "Round 65 (should): the stored form of each field of a PAP write. Each case writes one field in several states (absent, null, empty, padded with whitespace, of another JSON type, the documented default sent explicitly), reads it back after each write (a PIP also through the export of every PIP). Each case runs in a tenant of its own, writes to a domain and an externalId of its own; a control writes and reads back first and last.",
+ "about": "Round 65 (should): the stored form of each field of a PAP write. Each case writes one field in one state (absent, null, empty, padded with whitespace, of another JSON type, the documented default sent explicitly) and reads it back (a PIP also through the export of every PIP). Each case runs in a fresh tenant of its own, writes to a domain and an externalId of its own; a control writes and reads back first and last.",
  "standVersion": true,
  "cases": [
   {
@@ -69,22 +69,10 @@
    "tenant": "parity-p65i-972"
   },
   {
-   "id": "p65f-simplifiedpolicy-component",
-   "about": "the field simplifiedPolicy.component written in 9 states, each read back",
+   "id": "p65f-simplifiedpolicy-component-absent",
+   "about": "the field simplifiedPolicy.component written in the state absent, read back",
    "resourceType": "PARITY_SUITE_P65_FLD_007",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-config-sets",
-     "args": {},
-     "observe": [
-      "read:read-config-sets"
-     ],
-     "markers": [
-      "parity-p65-fld-007",
-      "PARITY_P65_FLD_007"
-     ]
-    },
     {
      "name": "w-absent",
      "op": "write-domain-policies",
@@ -119,7 +107,15 @@
       "parity-p65-fld-007",
       "PARITY_P65_FLD_007"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-007-absent"
+  },
+  {
+   "id": "p65f-simplifiedpolicy-component-empty-string",
+   "about": "the field simplifiedPolicy.component written in the state empty-string, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_007",
+   "steps": [
     {
      "name": "w-empty-string",
      "op": "write-domain-policies",
@@ -155,7 +151,15 @@
       "parity-p65-fld-007",
       "PARITY_P65_FLD_007"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-007-empty-string"
+  },
+  {
+   "id": "p65f-simplifiedpolicy-component-null",
+   "about": "the field simplifiedPolicy.component written in the state null, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_007",
+   "steps": [
     {
      "name": "w-null",
      "op": "write-domain-policies",
@@ -191,7 +195,15 @@
       "parity-p65-fld-007",
       "PARITY_P65_FLD_007"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-007-null"
+  },
+  {
+   "id": "p65f-simplifiedpolicy-component-one-element-list",
+   "about": "the field simplifiedPolicy.component written in the state one-element-list, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_007",
+   "steps": [
     {
      "name": "w-one-element-list",
      "op": "write-domain-policies",
@@ -229,7 +241,15 @@
       "parity-p65-fld-007",
       "PARITY_P65_FLD_007"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-007-one-element-list"
+  },
+  {
+   "id": "p65f-simplifiedpolicy-component-edge-cr",
+   "about": "the field simplifiedPolicy.component written in the state edge-cr, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_007",
+   "steps": [
     {
      "name": "w-edge-cr",
      "op": "write-domain-policies",
@@ -265,7 +285,15 @@
       "parity-p65-fld-007",
       "PARITY_P65_FLD_007"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-007-edge-cr"
+  },
+  {
+   "id": "p65f-simplifiedpolicy-component-edge-ff",
+   "about": "the field simplifiedPolicy.component written in the state edge-ff, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_007",
+   "steps": [
     {
      "name": "w-edge-ff",
      "op": "write-domain-policies",
@@ -301,7 +329,15 @@
       "parity-p65-fld-007",
       "PARITY_P65_FLD_007"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-007-edge-ff"
+  },
+  {
+   "id": "p65f-simplifiedpolicy-component-edge-lf",
+   "about": "the field simplifiedPolicy.component written in the state edge-lf, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_007",
+   "steps": [
     {
      "name": "w-edge-lf",
      "op": "write-domain-policies",
@@ -337,7 +373,15 @@
       "parity-p65-fld-007",
       "PARITY_P65_FLD_007"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-007-edge-lf"
+  },
+  {
+   "id": "p65f-simplifiedpolicy-component-edge-lsep",
+   "about": "the field simplifiedPolicy.component written in the state edge-lsep, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_007",
+   "steps": [
     {
      "name": "w-edge-lsep",
      "op": "write-domain-policies",
@@ -373,7 +417,15 @@
       "parity-p65-fld-007",
       "PARITY_P65_FLD_007"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-007-edge-lsep"
+  },
+  {
+   "id": "p65f-simplifiedpolicy-component-edge-vt",
+   "about": "the field simplifiedPolicy.component written in the state edge-vt, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_007",
+   "steps": [
     {
      "name": "w-edge-vt",
      "op": "write-domain-policies",
@@ -409,39 +461,15 @@
       "parity-p65-fld-007",
       "PARITY_P65_FLD_007"
      ]
-    },
-    {
-     "name": "cleanup-slot",
-     "op": "write-domain-policies",
-     "args": {
-      "domain": "PARITY_P65_FLD_007"
-     },
-     "observe": [
-      "status"
-     ],
-     "onRefusal": "continue",
-     "body": []
     }
    ],
-   "tenant": "parity-p65f-007"
+   "tenant": "parity-p65f-007-edge-vt"
   },
   {
-   "id": "p65f-simplifiedpolicy-sqlpredicate",
-   "about": "the field simplifiedPolicy.sqlPredicate written in 8 states, each read back",
+   "id": "p65f-simplifiedpolicy-sqlpredicate-empty-string",
+   "about": "the field simplifiedPolicy.sqlPredicate written in the state empty-string, read back",
    "resourceType": "PARITY_SUITE_P65_FLD_008",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-config-sets",
-     "args": {},
-     "observe": [
-      "read:read-config-sets"
-     ],
-     "markers": [
-      "parity-p65-fld-008",
-      "PARITY_P65_FLD_008"
-     ]
-    },
     {
      "name": "w-empty-string",
      "op": "write-domain-policies",
@@ -478,7 +506,15 @@
       "parity-p65-fld-008",
       "PARITY_P65_FLD_008"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-008-empty-string"
+  },
+  {
+   "id": "p65f-simplifiedpolicy-sqlpredicate-null",
+   "about": "the field simplifiedPolicy.sqlPredicate written in the state null, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_008",
+   "steps": [
     {
      "name": "w-null",
      "op": "write-domain-policies",
@@ -515,7 +551,15 @@
       "parity-p65-fld-008",
       "PARITY_P65_FLD_008"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-008-null"
+  },
+  {
+   "id": "p65f-simplifiedpolicy-sqlpredicate-other-type",
+   "about": "the field simplifiedPolicy.sqlPredicate written in the state other-type, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_008",
+   "steps": [
     {
      "name": "w-other-type",
      "op": "write-domain-policies",
@@ -552,7 +596,15 @@
       "parity-p65-fld-008",
       "PARITY_P65_FLD_008"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-008-other-type"
+  },
+  {
+   "id": "p65f-simplifiedpolicy-sqlpredicate-one-element-list",
+   "about": "the field simplifiedPolicy.sqlPredicate written in the state one-element-list, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_008",
+   "steps": [
     {
      "name": "w-one-element-list",
      "op": "write-domain-policies",
@@ -591,7 +643,15 @@
       "parity-p65-fld-008",
       "PARITY_P65_FLD_008"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-008-one-element-list"
+  },
+  {
+   "id": "p65f-simplifiedpolicy-sqlpredicate-edge-ff",
+   "about": "the field simplifiedPolicy.sqlPredicate written in the state edge-ff, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_008",
+   "steps": [
     {
      "name": "w-edge-ff",
      "op": "write-domain-policies",
@@ -628,7 +688,15 @@
       "parity-p65-fld-008",
       "PARITY_P65_FLD_008"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-008-edge-ff"
+  },
+  {
+   "id": "p65f-simplifiedpolicy-sqlpredicate-edge-lf",
+   "about": "the field simplifiedPolicy.sqlPredicate written in the state edge-lf, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_008",
+   "steps": [
     {
      "name": "w-edge-lf",
      "op": "write-domain-policies",
@@ -665,7 +733,15 @@
       "parity-p65-fld-008",
       "PARITY_P65_FLD_008"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-008-edge-lf"
+  },
+  {
+   "id": "p65f-simplifiedpolicy-sqlpredicate-edge-lsep",
+   "about": "the field simplifiedPolicy.sqlPredicate written in the state edge-lsep, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_008",
+   "steps": [
     {
      "name": "w-edge-lsep",
      "op": "write-domain-policies",
@@ -702,7 +778,15 @@
       "parity-p65-fld-008",
       "PARITY_P65_FLD_008"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-008-edge-lsep"
+  },
+  {
+   "id": "p65f-simplifiedpolicy-sqlpredicate-edge-vt",
+   "about": "the field simplifiedPolicy.sqlPredicate written in the state edge-vt, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_008",
+   "steps": [
     {
      "name": "w-edge-vt",
      "op": "write-domain-policies",
@@ -739,39 +823,15 @@
       "parity-p65-fld-008",
       "PARITY_P65_FLD_008"
      ]
-    },
-    {
-     "name": "cleanup-slot",
-     "op": "write-domain-policies",
-     "args": {
-      "domain": "PARITY_P65_FLD_008"
-     },
-     "observe": [
-      "status"
-     ],
-     "onRefusal": "continue",
-     "body": []
     }
    ],
-   "tenant": "parity-p65f-008"
+   "tenant": "parity-p65f-008-edge-vt"
   },
   {
-   "id": "p65f-simplifiedpolicy-mongodbpredicate",
-   "about": "the field simplifiedPolicy.mongodbPredicate written in 8 states, each read back",
+   "id": "p65f-simplifiedpolicy-mongodbpredicate-empty-string",
+   "about": "the field simplifiedPolicy.mongodbPredicate written in the state empty-string, read back",
    "resourceType": "PARITY_SUITE_P65_FLD_009",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-config-sets",
-     "args": {},
-     "observe": [
-      "read:read-config-sets"
-     ],
-     "markers": [
-      "parity-p65-fld-009",
-      "PARITY_P65_FLD_009"
-     ]
-    },
     {
      "name": "w-empty-string",
      "op": "write-domain-policies",
@@ -808,7 +868,15 @@
       "parity-p65-fld-009",
       "PARITY_P65_FLD_009"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-009-empty-string"
+  },
+  {
+   "id": "p65f-simplifiedpolicy-mongodbpredicate-null",
+   "about": "the field simplifiedPolicy.mongodbPredicate written in the state null, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_009",
+   "steps": [
     {
      "name": "w-null",
      "op": "write-domain-policies",
@@ -845,7 +913,15 @@
       "parity-p65-fld-009",
       "PARITY_P65_FLD_009"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-009-null"
+  },
+  {
+   "id": "p65f-simplifiedpolicy-mongodbpredicate-other-type",
+   "about": "the field simplifiedPolicy.mongodbPredicate written in the state other-type, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_009",
+   "steps": [
     {
      "name": "w-other-type",
      "op": "write-domain-policies",
@@ -882,7 +958,15 @@
       "parity-p65-fld-009",
       "PARITY_P65_FLD_009"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-009-other-type"
+  },
+  {
+   "id": "p65f-simplifiedpolicy-mongodbpredicate-one-element-list",
+   "about": "the field simplifiedPolicy.mongodbPredicate written in the state one-element-list, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_009",
+   "steps": [
     {
      "name": "w-one-element-list",
      "op": "write-domain-policies",
@@ -921,7 +1005,15 @@
       "parity-p65-fld-009",
       "PARITY_P65_FLD_009"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-009-one-element-list"
+  },
+  {
+   "id": "p65f-simplifiedpolicy-mongodbpredicate-edge-ff",
+   "about": "the field simplifiedPolicy.mongodbPredicate written in the state edge-ff, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_009",
+   "steps": [
     {
      "name": "w-edge-ff",
      "op": "write-domain-policies",
@@ -958,7 +1050,15 @@
       "parity-p65-fld-009",
       "PARITY_P65_FLD_009"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-009-edge-ff"
+  },
+  {
+   "id": "p65f-simplifiedpolicy-mongodbpredicate-edge-lf",
+   "about": "the field simplifiedPolicy.mongodbPredicate written in the state edge-lf, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_009",
+   "steps": [
     {
      "name": "w-edge-lf",
      "op": "write-domain-policies",
@@ -995,7 +1095,15 @@
       "parity-p65-fld-009",
       "PARITY_P65_FLD_009"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-009-edge-lf"
+  },
+  {
+   "id": "p65f-simplifiedpolicy-mongodbpredicate-edge-lsep",
+   "about": "the field simplifiedPolicy.mongodbPredicate written in the state edge-lsep, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_009",
+   "steps": [
     {
      "name": "w-edge-lsep",
      "op": "write-domain-policies",
@@ -1032,7 +1140,15 @@
       "parity-p65-fld-009",
       "PARITY_P65_FLD_009"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-009-edge-lsep"
+  },
+  {
+   "id": "p65f-simplifiedpolicy-mongodbpredicate-edge-vt",
+   "about": "the field simplifiedPolicy.mongodbPredicate written in the state edge-vt, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_009",
+   "steps": [
     {
      "name": "w-edge-vt",
      "op": "write-domain-policies",
@@ -1069,39 +1185,15 @@
       "parity-p65-fld-009",
       "PARITY_P65_FLD_009"
      ]
-    },
-    {
-     "name": "cleanup-slot",
-     "op": "write-domain-policies",
-     "args": {
-      "domain": "PARITY_P65_FLD_009"
-     },
-     "observe": [
-      "status"
-     ],
-     "onRefusal": "continue",
-     "body": []
     }
    ],
-   "tenant": "parity-p65f-009"
+   "tenant": "parity-p65f-009-edge-vt"
   },
   {
-   "id": "p65f-simplifiedpolicy-querydslpredicate",
-   "about": "the field simplifiedPolicy.querydslPredicate written in 8 states, each read back",
+   "id": "p65f-simplifiedpolicy-querydslpredicate-empty-string",
+   "about": "the field simplifiedPolicy.querydslPredicate written in the state empty-string, read back",
    "resourceType": "PARITY_SUITE_P65_FLD_010",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-config-sets",
-     "args": {},
-     "observe": [
-      "read:read-config-sets"
-     ],
-     "markers": [
-      "parity-p65-fld-010",
-      "PARITY_P65_FLD_010"
-     ]
-    },
     {
      "name": "w-empty-string",
      "op": "write-domain-policies",
@@ -1138,7 +1230,15 @@
       "parity-p65-fld-010",
       "PARITY_P65_FLD_010"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-010-empty-string"
+  },
+  {
+   "id": "p65f-simplifiedpolicy-querydslpredicate-null",
+   "about": "the field simplifiedPolicy.querydslPredicate written in the state null, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_010",
+   "steps": [
     {
      "name": "w-null",
      "op": "write-domain-policies",
@@ -1175,7 +1275,15 @@
       "parity-p65-fld-010",
       "PARITY_P65_FLD_010"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-010-null"
+  },
+  {
+   "id": "p65f-simplifiedpolicy-querydslpredicate-other-type",
+   "about": "the field simplifiedPolicy.querydslPredicate written in the state other-type, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_010",
+   "steps": [
     {
      "name": "w-other-type",
      "op": "write-domain-policies",
@@ -1212,7 +1320,15 @@
       "parity-p65-fld-010",
       "PARITY_P65_FLD_010"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-010-other-type"
+  },
+  {
+   "id": "p65f-simplifiedpolicy-querydslpredicate-one-element-list",
+   "about": "the field simplifiedPolicy.querydslPredicate written in the state one-element-list, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_010",
+   "steps": [
     {
      "name": "w-one-element-list",
      "op": "write-domain-policies",
@@ -1251,7 +1367,15 @@
       "parity-p65-fld-010",
       "PARITY_P65_FLD_010"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-010-one-element-list"
+  },
+  {
+   "id": "p65f-simplifiedpolicy-querydslpredicate-edge-ff",
+   "about": "the field simplifiedPolicy.querydslPredicate written in the state edge-ff, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_010",
+   "steps": [
     {
      "name": "w-edge-ff",
      "op": "write-domain-policies",
@@ -1288,7 +1412,15 @@
       "parity-p65-fld-010",
       "PARITY_P65_FLD_010"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-010-edge-ff"
+  },
+  {
+   "id": "p65f-simplifiedpolicy-querydslpredicate-edge-lf",
+   "about": "the field simplifiedPolicy.querydslPredicate written in the state edge-lf, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_010",
+   "steps": [
     {
      "name": "w-edge-lf",
      "op": "write-domain-policies",
@@ -1325,7 +1457,15 @@
       "parity-p65-fld-010",
       "PARITY_P65_FLD_010"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-010-edge-lf"
+  },
+  {
+   "id": "p65f-simplifiedpolicy-querydslpredicate-edge-lsep",
+   "about": "the field simplifiedPolicy.querydslPredicate written in the state edge-lsep, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_010",
+   "steps": [
     {
      "name": "w-edge-lsep",
      "op": "write-domain-policies",
@@ -1362,7 +1502,15 @@
       "parity-p65-fld-010",
       "PARITY_P65_FLD_010"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-010-edge-lsep"
+  },
+  {
+   "id": "p65f-simplifiedpolicy-querydslpredicate-edge-vt",
+   "about": "the field simplifiedPolicy.querydslPredicate written in the state edge-vt, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_010",
+   "steps": [
     {
      "name": "w-edge-vt",
      "op": "write-domain-policies",
@@ -1399,39 +1547,15 @@
       "parity-p65-fld-010",
       "PARITY_P65_FLD_010"
      ]
-    },
-    {
-     "name": "cleanup-slot",
-     "op": "write-domain-policies",
-     "args": {
-      "domain": "PARITY_P65_FLD_010"
-     },
-     "observe": [
-      "status"
-     ],
-     "onRefusal": "continue",
-     "body": []
     }
    ],
-   "tenant": "parity-p65f-010"
+   "tenant": "parity-p65f-010-edge-vt"
   },
   {
-   "id": "p65f-simplifiedpolicy-rsqlpredicate",
-   "about": "the field simplifiedPolicy.rsqlPredicate written in 8 states, each read back",
+   "id": "p65f-simplifiedpolicy-rsqlpredicate-empty-string",
+   "about": "the field simplifiedPolicy.rsqlPredicate written in the state empty-string, read back",
    "resourceType": "PARITY_SUITE_P65_FLD_011",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-config-sets",
-     "args": {},
-     "observe": [
-      "read:read-config-sets"
-     ],
-     "markers": [
-      "parity-p65-fld-011",
-      "PARITY_P65_FLD_011"
-     ]
-    },
     {
      "name": "w-empty-string",
      "op": "write-domain-policies",
@@ -1468,7 +1592,15 @@
       "parity-p65-fld-011",
       "PARITY_P65_FLD_011"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-011-empty-string"
+  },
+  {
+   "id": "p65f-simplifiedpolicy-rsqlpredicate-null",
+   "about": "the field simplifiedPolicy.rsqlPredicate written in the state null, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_011",
+   "steps": [
     {
      "name": "w-null",
      "op": "write-domain-policies",
@@ -1505,7 +1637,15 @@
       "parity-p65-fld-011",
       "PARITY_P65_FLD_011"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-011-null"
+  },
+  {
+   "id": "p65f-simplifiedpolicy-rsqlpredicate-one-element-list",
+   "about": "the field simplifiedPolicy.rsqlPredicate written in the state one-element-list, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_011",
+   "steps": [
     {
      "name": "w-one-element-list",
      "op": "write-domain-policies",
@@ -1544,7 +1684,15 @@
       "parity-p65-fld-011",
       "PARITY_P65_FLD_011"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-011-one-element-list"
+  },
+  {
+   "id": "p65f-simplifiedpolicy-rsqlpredicate-edge-cr",
+   "about": "the field simplifiedPolicy.rsqlPredicate written in the state edge-cr, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_011",
+   "steps": [
     {
      "name": "w-edge-cr",
      "op": "write-domain-policies",
@@ -1581,7 +1729,15 @@
       "parity-p65-fld-011",
       "PARITY_P65_FLD_011"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-011-edge-cr"
+  },
+  {
+   "id": "p65f-simplifiedpolicy-rsqlpredicate-edge-ff",
+   "about": "the field simplifiedPolicy.rsqlPredicate written in the state edge-ff, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_011",
+   "steps": [
     {
      "name": "w-edge-ff",
      "op": "write-domain-policies",
@@ -1618,7 +1774,15 @@
       "parity-p65-fld-011",
       "PARITY_P65_FLD_011"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-011-edge-ff"
+  },
+  {
+   "id": "p65f-simplifiedpolicy-rsqlpredicate-edge-lf",
+   "about": "the field simplifiedPolicy.rsqlPredicate written in the state edge-lf, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_011",
+   "steps": [
     {
      "name": "w-edge-lf",
      "op": "write-domain-policies",
@@ -1655,7 +1819,15 @@
       "parity-p65-fld-011",
       "PARITY_P65_FLD_011"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-011-edge-lf"
+  },
+  {
+   "id": "p65f-simplifiedpolicy-rsqlpredicate-edge-lsep",
+   "about": "the field simplifiedPolicy.rsqlPredicate written in the state edge-lsep, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_011",
+   "steps": [
     {
      "name": "w-edge-lsep",
      "op": "write-domain-policies",
@@ -1692,7 +1864,15 @@
       "parity-p65-fld-011",
       "PARITY_P65_FLD_011"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-011-edge-lsep"
+  },
+  {
+   "id": "p65f-simplifiedpolicy-rsqlpredicate-edge-vt",
+   "about": "the field simplifiedPolicy.rsqlPredicate written in the state edge-vt, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_011",
+   "steps": [
     {
      "name": "w-edge-vt",
      "op": "write-domain-policies",
@@ -1729,47 +1909,15 @@
       "parity-p65-fld-011",
       "PARITY_P65_FLD_011"
      ]
-    },
-    {
-     "name": "cleanup-slot",
-     "op": "write-domain-policies",
-     "args": {
-      "domain": "PARITY_P65_FLD_011"
-     },
-     "observe": [
-      "status"
-     ],
-     "onRefusal": "continue",
-     "body": []
     }
    ],
-   "tenant": "parity-p65f-011"
+   "tenant": "parity-p65f-011-edge-vt"
   },
   {
-   "id": "p65f-set-domain",
-   "about": "the field set.domain written in 8 states, each read back",
+   "id": "p65f-set-domain-empty-string",
+   "about": "the field set.domain written in the state empty-string, read back",
    "resourceType": "PARITY_SUITE_P65_FLD_012",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-config-sets",
-     "args": {},
-     "observe": [
-      "read:read-config-sets"
-     ],
-     "markers": [
-      "parity-p65-fld-012",
-      "PARITY_P65_FLD_012",
-      "parity-p65-fld-012-empty-string",
-      "parity-p65-fld-012-other-type",
-      "parity-p65-fld-012-one-element-list",
-      "parity-p65-fld-012-edge-cr",
-      "parity-p65-fld-012-edge-ff",
-      "parity-p65-fld-012-edge-lf",
-      "parity-p65-fld-012-edge-lsep",
-      "parity-p65-fld-012-edge-vt"
-     ]
-    },
     {
      "name": "w-empty-string",
      "op": "write-external-id-sets",
@@ -1819,16 +1967,17 @@
      "markers": [
       "parity-p65-fld-012",
       "PARITY_P65_FLD_012",
-      "parity-p65-fld-012-empty-string",
-      "parity-p65-fld-012-other-type",
-      "parity-p65-fld-012-one-element-list",
-      "parity-p65-fld-012-edge-cr",
-      "parity-p65-fld-012-edge-ff",
-      "parity-p65-fld-012-edge-lf",
-      "parity-p65-fld-012-edge-lsep",
-      "parity-p65-fld-012-edge-vt"
+      "parity-p65-fld-012-empty-string"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-012-empty-string"
+  },
+  {
+   "id": "p65f-set-domain-other-type",
+   "about": "the field set.domain written in the state other-type, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_012",
+   "steps": [
     {
      "name": "w-other-type",
      "op": "write-external-id-sets",
@@ -1878,16 +2027,17 @@
      "markers": [
       "parity-p65-fld-012",
       "PARITY_P65_FLD_012",
-      "parity-p65-fld-012-empty-string",
-      "parity-p65-fld-012-other-type",
-      "parity-p65-fld-012-one-element-list",
-      "parity-p65-fld-012-edge-cr",
-      "parity-p65-fld-012-edge-ff",
-      "parity-p65-fld-012-edge-lf",
-      "parity-p65-fld-012-edge-lsep",
-      "parity-p65-fld-012-edge-vt"
+      "parity-p65-fld-012-other-type"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-012-other-type"
+  },
+  {
+   "id": "p65f-set-domain-one-element-list",
+   "about": "the field set.domain written in the state one-element-list, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_012",
+   "steps": [
     {
      "name": "w-one-element-list",
      "op": "write-external-id-sets",
@@ -1939,16 +2089,17 @@
      "markers": [
       "parity-p65-fld-012",
       "PARITY_P65_FLD_012",
-      "parity-p65-fld-012-empty-string",
-      "parity-p65-fld-012-other-type",
-      "parity-p65-fld-012-one-element-list",
-      "parity-p65-fld-012-edge-cr",
-      "parity-p65-fld-012-edge-ff",
-      "parity-p65-fld-012-edge-lf",
-      "parity-p65-fld-012-edge-lsep",
-      "parity-p65-fld-012-edge-vt"
+      "parity-p65-fld-012-one-element-list"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-012-one-element-list"
+  },
+  {
+   "id": "p65f-set-domain-edge-cr",
+   "about": "the field set.domain written in the state edge-cr, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_012",
+   "steps": [
     {
      "name": "w-edge-cr",
      "op": "write-external-id-sets",
@@ -1998,16 +2149,17 @@
      "markers": [
       "parity-p65-fld-012",
       "PARITY_P65_FLD_012",
-      "parity-p65-fld-012-empty-string",
-      "parity-p65-fld-012-other-type",
-      "parity-p65-fld-012-one-element-list",
-      "parity-p65-fld-012-edge-cr",
-      "parity-p65-fld-012-edge-ff",
-      "parity-p65-fld-012-edge-lf",
-      "parity-p65-fld-012-edge-lsep",
-      "parity-p65-fld-012-edge-vt"
+      "parity-p65-fld-012-edge-cr"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-012-edge-cr"
+  },
+  {
+   "id": "p65f-set-domain-edge-ff",
+   "about": "the field set.domain written in the state edge-ff, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_012",
+   "steps": [
     {
      "name": "w-edge-ff",
      "op": "write-external-id-sets",
@@ -2057,16 +2209,17 @@
      "markers": [
       "parity-p65-fld-012",
       "PARITY_P65_FLD_012",
-      "parity-p65-fld-012-empty-string",
-      "parity-p65-fld-012-other-type",
-      "parity-p65-fld-012-one-element-list",
-      "parity-p65-fld-012-edge-cr",
-      "parity-p65-fld-012-edge-ff",
-      "parity-p65-fld-012-edge-lf",
-      "parity-p65-fld-012-edge-lsep",
-      "parity-p65-fld-012-edge-vt"
+      "parity-p65-fld-012-edge-ff"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-012-edge-ff"
+  },
+  {
+   "id": "p65f-set-domain-edge-lf",
+   "about": "the field set.domain written in the state edge-lf, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_012",
+   "steps": [
     {
      "name": "w-edge-lf",
      "op": "write-external-id-sets",
@@ -2116,16 +2269,17 @@
      "markers": [
       "parity-p65-fld-012",
       "PARITY_P65_FLD_012",
-      "parity-p65-fld-012-empty-string",
-      "parity-p65-fld-012-other-type",
-      "parity-p65-fld-012-one-element-list",
-      "parity-p65-fld-012-edge-cr",
-      "parity-p65-fld-012-edge-ff",
-      "parity-p65-fld-012-edge-lf",
-      "parity-p65-fld-012-edge-lsep",
-      "parity-p65-fld-012-edge-vt"
+      "parity-p65-fld-012-edge-lf"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-012-edge-lf"
+  },
+  {
+   "id": "p65f-set-domain-edge-lsep",
+   "about": "the field set.domain written in the state edge-lsep, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_012",
+   "steps": [
     {
      "name": "w-edge-lsep",
      "op": "write-external-id-sets",
@@ -2175,16 +2329,17 @@
      "markers": [
       "parity-p65-fld-012",
       "PARITY_P65_FLD_012",
-      "parity-p65-fld-012-empty-string",
-      "parity-p65-fld-012-other-type",
-      "parity-p65-fld-012-one-element-list",
-      "parity-p65-fld-012-edge-cr",
-      "parity-p65-fld-012-edge-ff",
-      "parity-p65-fld-012-edge-lf",
-      "parity-p65-fld-012-edge-lsep",
-      "parity-p65-fld-012-edge-vt"
+      "parity-p65-fld-012-edge-lsep"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-012-edge-lsep"
+  },
+  {
+   "id": "p65f-set-domain-edge-vt",
+   "about": "the field set.domain written in the state edge-vt, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_012",
+   "steps": [
     {
      "name": "w-edge-vt",
      "op": "write-external-id-sets",
@@ -2234,44 +2389,17 @@
      "markers": [
       "parity-p65-fld-012",
       "PARITY_P65_FLD_012",
-      "parity-p65-fld-012-empty-string",
-      "parity-p65-fld-012-other-type",
-      "parity-p65-fld-012-one-element-list",
-      "parity-p65-fld-012-edge-cr",
-      "parity-p65-fld-012-edge-ff",
-      "parity-p65-fld-012-edge-lf",
-      "parity-p65-fld-012-edge-lsep",
       "parity-p65-fld-012-edge-vt"
      ]
     }
    ],
-   "tenant": "parity-p65f-012"
+   "tenant": "parity-p65f-012-edge-vt"
   },
   {
-   "id": "p65f-rule-mongodbpredicate",
-   "about": "the field rule.mongodbPredicate written in 8 states, each read back",
+   "id": "p65f-rule-mongodbpredicate-empty-string",
+   "about": "the field rule.mongodbPredicate written in the state empty-string, read back",
    "resourceType": "PARITY_SUITE_P65_FLD_013",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-config-sets",
-     "args": {},
-     "observe": [
-      "read:read-config-sets"
-     ],
-     "markers": [
-      "parity-p65-fld-013",
-      "PARITY_P65_FLD_013",
-      "parity-p65-fld-013-empty-string",
-      "parity-p65-fld-013-one-element-list",
-      "parity-p65-fld-013-blank-vt",
-      "parity-p65-fld-013-edge-cr",
-      "parity-p65-fld-013-edge-ff",
-      "parity-p65-fld-013-edge-lf",
-      "parity-p65-fld-013-edge-lsep",
-      "parity-p65-fld-013-edge-vt"
-     ]
-    },
     {
      "name": "w-empty-string",
      "op": "write-external-id-sets",
@@ -2321,16 +2449,17 @@
      "markers": [
       "parity-p65-fld-013",
       "PARITY_P65_FLD_013",
-      "parity-p65-fld-013-empty-string",
-      "parity-p65-fld-013-one-element-list",
-      "parity-p65-fld-013-blank-vt",
-      "parity-p65-fld-013-edge-cr",
-      "parity-p65-fld-013-edge-ff",
-      "parity-p65-fld-013-edge-lf",
-      "parity-p65-fld-013-edge-lsep",
-      "parity-p65-fld-013-edge-vt"
+      "parity-p65-fld-013-empty-string"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-013-empty-string"
+  },
+  {
+   "id": "p65f-rule-mongodbpredicate-one-element-list",
+   "about": "the field rule.mongodbPredicate written in the state one-element-list, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_013",
+   "steps": [
     {
      "name": "w-one-element-list",
      "op": "write-external-id-sets",
@@ -2382,16 +2511,17 @@
      "markers": [
       "parity-p65-fld-013",
       "PARITY_P65_FLD_013",
-      "parity-p65-fld-013-empty-string",
-      "parity-p65-fld-013-one-element-list",
-      "parity-p65-fld-013-blank-vt",
-      "parity-p65-fld-013-edge-cr",
-      "parity-p65-fld-013-edge-ff",
-      "parity-p65-fld-013-edge-lf",
-      "parity-p65-fld-013-edge-lsep",
-      "parity-p65-fld-013-edge-vt"
+      "parity-p65-fld-013-one-element-list"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-013-one-element-list"
+  },
+  {
+   "id": "p65f-rule-mongodbpredicate-blank-vt",
+   "about": "the field rule.mongodbPredicate written in the state blank-vt, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_013",
+   "steps": [
     {
      "name": "w-blank-vt",
      "op": "write-external-id-sets",
@@ -2441,16 +2571,17 @@
      "markers": [
       "parity-p65-fld-013",
       "PARITY_P65_FLD_013",
-      "parity-p65-fld-013-empty-string",
-      "parity-p65-fld-013-one-element-list",
-      "parity-p65-fld-013-blank-vt",
-      "parity-p65-fld-013-edge-cr",
-      "parity-p65-fld-013-edge-ff",
-      "parity-p65-fld-013-edge-lf",
-      "parity-p65-fld-013-edge-lsep",
-      "parity-p65-fld-013-edge-vt"
+      "parity-p65-fld-013-blank-vt"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-013-blank-vt"
+  },
+  {
+   "id": "p65f-rule-mongodbpredicate-edge-cr",
+   "about": "the field rule.mongodbPredicate written in the state edge-cr, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_013",
+   "steps": [
     {
      "name": "w-edge-cr",
      "op": "write-external-id-sets",
@@ -2500,16 +2631,17 @@
      "markers": [
       "parity-p65-fld-013",
       "PARITY_P65_FLD_013",
-      "parity-p65-fld-013-empty-string",
-      "parity-p65-fld-013-one-element-list",
-      "parity-p65-fld-013-blank-vt",
-      "parity-p65-fld-013-edge-cr",
-      "parity-p65-fld-013-edge-ff",
-      "parity-p65-fld-013-edge-lf",
-      "parity-p65-fld-013-edge-lsep",
-      "parity-p65-fld-013-edge-vt"
+      "parity-p65-fld-013-edge-cr"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-013-edge-cr"
+  },
+  {
+   "id": "p65f-rule-mongodbpredicate-edge-ff",
+   "about": "the field rule.mongodbPredicate written in the state edge-ff, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_013",
+   "steps": [
     {
      "name": "w-edge-ff",
      "op": "write-external-id-sets",
@@ -2559,16 +2691,17 @@
      "markers": [
       "parity-p65-fld-013",
       "PARITY_P65_FLD_013",
-      "parity-p65-fld-013-empty-string",
-      "parity-p65-fld-013-one-element-list",
-      "parity-p65-fld-013-blank-vt",
-      "parity-p65-fld-013-edge-cr",
-      "parity-p65-fld-013-edge-ff",
-      "parity-p65-fld-013-edge-lf",
-      "parity-p65-fld-013-edge-lsep",
-      "parity-p65-fld-013-edge-vt"
+      "parity-p65-fld-013-edge-ff"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-013-edge-ff"
+  },
+  {
+   "id": "p65f-rule-mongodbpredicate-edge-lf",
+   "about": "the field rule.mongodbPredicate written in the state edge-lf, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_013",
+   "steps": [
     {
      "name": "w-edge-lf",
      "op": "write-external-id-sets",
@@ -2618,16 +2751,17 @@
      "markers": [
       "parity-p65-fld-013",
       "PARITY_P65_FLD_013",
-      "parity-p65-fld-013-empty-string",
-      "parity-p65-fld-013-one-element-list",
-      "parity-p65-fld-013-blank-vt",
-      "parity-p65-fld-013-edge-cr",
-      "parity-p65-fld-013-edge-ff",
-      "parity-p65-fld-013-edge-lf",
-      "parity-p65-fld-013-edge-lsep",
-      "parity-p65-fld-013-edge-vt"
+      "parity-p65-fld-013-edge-lf"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-013-edge-lf"
+  },
+  {
+   "id": "p65f-rule-mongodbpredicate-edge-lsep",
+   "about": "the field rule.mongodbPredicate written in the state edge-lsep, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_013",
+   "steps": [
     {
      "name": "w-edge-lsep",
      "op": "write-external-id-sets",
@@ -2677,16 +2811,17 @@
      "markers": [
       "parity-p65-fld-013",
       "PARITY_P65_FLD_013",
-      "parity-p65-fld-013-empty-string",
-      "parity-p65-fld-013-one-element-list",
-      "parity-p65-fld-013-blank-vt",
-      "parity-p65-fld-013-edge-cr",
-      "parity-p65-fld-013-edge-ff",
-      "parity-p65-fld-013-edge-lf",
-      "parity-p65-fld-013-edge-lsep",
-      "parity-p65-fld-013-edge-vt"
+      "parity-p65-fld-013-edge-lsep"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-013-edge-lsep"
+  },
+  {
+   "id": "p65f-rule-mongodbpredicate-edge-vt",
+   "about": "the field rule.mongodbPredicate written in the state edge-vt, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_013",
+   "steps": [
     {
      "name": "w-edge-vt",
      "op": "write-external-id-sets",
@@ -2736,44 +2871,17 @@
      "markers": [
       "parity-p65-fld-013",
       "PARITY_P65_FLD_013",
-      "parity-p65-fld-013-empty-string",
-      "parity-p65-fld-013-one-element-list",
-      "parity-p65-fld-013-blank-vt",
-      "parity-p65-fld-013-edge-cr",
-      "parity-p65-fld-013-edge-ff",
-      "parity-p65-fld-013-edge-lf",
-      "parity-p65-fld-013-edge-lsep",
       "parity-p65-fld-013-edge-vt"
      ]
     }
    ],
-   "tenant": "parity-p65f-013"
+   "tenant": "parity-p65f-013-edge-vt"
   },
   {
-   "id": "p65f-rule-rsqlpredicate",
-   "about": "the field rule.rsqlPredicate written in 8 states, each read back",
+   "id": "p65f-rule-rsqlpredicate-empty-string",
+   "about": "the field rule.rsqlPredicate written in the state empty-string, read back",
    "resourceType": "PARITY_SUITE_P65_FLD_014",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-config-sets",
-     "args": {},
-     "observe": [
-      "read:read-config-sets"
-     ],
-     "markers": [
-      "parity-p65-fld-014",
-      "PARITY_P65_FLD_014",
-      "parity-p65-fld-014-empty-string",
-      "parity-p65-fld-014-one-element-list",
-      "parity-p65-fld-014-blank-vt",
-      "parity-p65-fld-014-edge-cr",
-      "parity-p65-fld-014-edge-ff",
-      "parity-p65-fld-014-edge-lf",
-      "parity-p65-fld-014-edge-lsep",
-      "parity-p65-fld-014-edge-vt"
-     ]
-    },
     {
      "name": "w-empty-string",
      "op": "write-external-id-sets",
@@ -2823,16 +2931,17 @@
      "markers": [
       "parity-p65-fld-014",
       "PARITY_P65_FLD_014",
-      "parity-p65-fld-014-empty-string",
-      "parity-p65-fld-014-one-element-list",
-      "parity-p65-fld-014-blank-vt",
-      "parity-p65-fld-014-edge-cr",
-      "parity-p65-fld-014-edge-ff",
-      "parity-p65-fld-014-edge-lf",
-      "parity-p65-fld-014-edge-lsep",
-      "parity-p65-fld-014-edge-vt"
+      "parity-p65-fld-014-empty-string"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-014-empty-string"
+  },
+  {
+   "id": "p65f-rule-rsqlpredicate-one-element-list",
+   "about": "the field rule.rsqlPredicate written in the state one-element-list, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_014",
+   "steps": [
     {
      "name": "w-one-element-list",
      "op": "write-external-id-sets",
@@ -2884,16 +2993,17 @@
      "markers": [
       "parity-p65-fld-014",
       "PARITY_P65_FLD_014",
-      "parity-p65-fld-014-empty-string",
-      "parity-p65-fld-014-one-element-list",
-      "parity-p65-fld-014-blank-vt",
-      "parity-p65-fld-014-edge-cr",
-      "parity-p65-fld-014-edge-ff",
-      "parity-p65-fld-014-edge-lf",
-      "parity-p65-fld-014-edge-lsep",
-      "parity-p65-fld-014-edge-vt"
+      "parity-p65-fld-014-one-element-list"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-014-one-element-list"
+  },
+  {
+   "id": "p65f-rule-rsqlpredicate-blank-vt",
+   "about": "the field rule.rsqlPredicate written in the state blank-vt, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_014",
+   "steps": [
     {
      "name": "w-blank-vt",
      "op": "write-external-id-sets",
@@ -2943,16 +3053,17 @@
      "markers": [
       "parity-p65-fld-014",
       "PARITY_P65_FLD_014",
-      "parity-p65-fld-014-empty-string",
-      "parity-p65-fld-014-one-element-list",
-      "parity-p65-fld-014-blank-vt",
-      "parity-p65-fld-014-edge-cr",
-      "parity-p65-fld-014-edge-ff",
-      "parity-p65-fld-014-edge-lf",
-      "parity-p65-fld-014-edge-lsep",
-      "parity-p65-fld-014-edge-vt"
+      "parity-p65-fld-014-blank-vt"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-014-blank-vt"
+  },
+  {
+   "id": "p65f-rule-rsqlpredicate-edge-cr",
+   "about": "the field rule.rsqlPredicate written in the state edge-cr, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_014",
+   "steps": [
     {
      "name": "w-edge-cr",
      "op": "write-external-id-sets",
@@ -3002,16 +3113,17 @@
      "markers": [
       "parity-p65-fld-014",
       "PARITY_P65_FLD_014",
-      "parity-p65-fld-014-empty-string",
-      "parity-p65-fld-014-one-element-list",
-      "parity-p65-fld-014-blank-vt",
-      "parity-p65-fld-014-edge-cr",
-      "parity-p65-fld-014-edge-ff",
-      "parity-p65-fld-014-edge-lf",
-      "parity-p65-fld-014-edge-lsep",
-      "parity-p65-fld-014-edge-vt"
+      "parity-p65-fld-014-edge-cr"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-014-edge-cr"
+  },
+  {
+   "id": "p65f-rule-rsqlpredicate-edge-ff",
+   "about": "the field rule.rsqlPredicate written in the state edge-ff, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_014",
+   "steps": [
     {
      "name": "w-edge-ff",
      "op": "write-external-id-sets",
@@ -3061,16 +3173,17 @@
      "markers": [
       "parity-p65-fld-014",
       "PARITY_P65_FLD_014",
-      "parity-p65-fld-014-empty-string",
-      "parity-p65-fld-014-one-element-list",
-      "parity-p65-fld-014-blank-vt",
-      "parity-p65-fld-014-edge-cr",
-      "parity-p65-fld-014-edge-ff",
-      "parity-p65-fld-014-edge-lf",
-      "parity-p65-fld-014-edge-lsep",
-      "parity-p65-fld-014-edge-vt"
+      "parity-p65-fld-014-edge-ff"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-014-edge-ff"
+  },
+  {
+   "id": "p65f-rule-rsqlpredicate-edge-lf",
+   "about": "the field rule.rsqlPredicate written in the state edge-lf, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_014",
+   "steps": [
     {
      "name": "w-edge-lf",
      "op": "write-external-id-sets",
@@ -3120,16 +3233,17 @@
      "markers": [
       "parity-p65-fld-014",
       "PARITY_P65_FLD_014",
-      "parity-p65-fld-014-empty-string",
-      "parity-p65-fld-014-one-element-list",
-      "parity-p65-fld-014-blank-vt",
-      "parity-p65-fld-014-edge-cr",
-      "parity-p65-fld-014-edge-ff",
-      "parity-p65-fld-014-edge-lf",
-      "parity-p65-fld-014-edge-lsep",
-      "parity-p65-fld-014-edge-vt"
+      "parity-p65-fld-014-edge-lf"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-014-edge-lf"
+  },
+  {
+   "id": "p65f-rule-rsqlpredicate-edge-lsep",
+   "about": "the field rule.rsqlPredicate written in the state edge-lsep, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_014",
+   "steps": [
     {
      "name": "w-edge-lsep",
      "op": "write-external-id-sets",
@@ -3179,16 +3293,17 @@
      "markers": [
       "parity-p65-fld-014",
       "PARITY_P65_FLD_014",
-      "parity-p65-fld-014-empty-string",
-      "parity-p65-fld-014-one-element-list",
-      "parity-p65-fld-014-blank-vt",
-      "parity-p65-fld-014-edge-cr",
-      "parity-p65-fld-014-edge-ff",
-      "parity-p65-fld-014-edge-lf",
-      "parity-p65-fld-014-edge-lsep",
-      "parity-p65-fld-014-edge-vt"
+      "parity-p65-fld-014-edge-lsep"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-014-edge-lsep"
+  },
+  {
+   "id": "p65f-rule-rsqlpredicate-edge-vt",
+   "about": "the field rule.rsqlPredicate written in the state edge-vt, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_014",
+   "steps": [
     {
      "name": "w-edge-vt",
      "op": "write-external-id-sets",
@@ -3238,44 +3353,17 @@
      "markers": [
       "parity-p65-fld-014",
       "PARITY_P65_FLD_014",
-      "parity-p65-fld-014-empty-string",
-      "parity-p65-fld-014-one-element-list",
-      "parity-p65-fld-014-blank-vt",
-      "parity-p65-fld-014-edge-cr",
-      "parity-p65-fld-014-edge-ff",
-      "parity-p65-fld-014-edge-lf",
-      "parity-p65-fld-014-edge-lsep",
       "parity-p65-fld-014-edge-vt"
      ]
     }
    ],
-   "tenant": "parity-p65f-014"
+   "tenant": "parity-p65f-014-edge-vt"
   },
   {
-   "id": "p65f-rule-sqlpredicate",
-   "about": "the field rule.sqlPredicate written in 8 states, each read back",
+   "id": "p65f-rule-sqlpredicate-empty-string",
+   "about": "the field rule.sqlPredicate written in the state empty-string, read back",
    "resourceType": "PARITY_SUITE_P65_FLD_015",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-config-sets",
-     "args": {},
-     "observe": [
-      "read:read-config-sets"
-     ],
-     "markers": [
-      "parity-p65-fld-015",
-      "PARITY_P65_FLD_015",
-      "parity-p65-fld-015-empty-string",
-      "parity-p65-fld-015-one-element-list",
-      "parity-p65-fld-015-blank-vt",
-      "parity-p65-fld-015-edge-cr",
-      "parity-p65-fld-015-edge-ff",
-      "parity-p65-fld-015-edge-lf",
-      "parity-p65-fld-015-edge-lsep",
-      "parity-p65-fld-015-edge-vt"
-     ]
-    },
     {
      "name": "w-empty-string",
      "op": "write-external-id-sets",
@@ -3325,16 +3413,17 @@
      "markers": [
       "parity-p65-fld-015",
       "PARITY_P65_FLD_015",
-      "parity-p65-fld-015-empty-string",
-      "parity-p65-fld-015-one-element-list",
-      "parity-p65-fld-015-blank-vt",
-      "parity-p65-fld-015-edge-cr",
-      "parity-p65-fld-015-edge-ff",
-      "parity-p65-fld-015-edge-lf",
-      "parity-p65-fld-015-edge-lsep",
-      "parity-p65-fld-015-edge-vt"
+      "parity-p65-fld-015-empty-string"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-015-empty-string"
+  },
+  {
+   "id": "p65f-rule-sqlpredicate-one-element-list",
+   "about": "the field rule.sqlPredicate written in the state one-element-list, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_015",
+   "steps": [
     {
      "name": "w-one-element-list",
      "op": "write-external-id-sets",
@@ -3386,16 +3475,17 @@
      "markers": [
       "parity-p65-fld-015",
       "PARITY_P65_FLD_015",
-      "parity-p65-fld-015-empty-string",
-      "parity-p65-fld-015-one-element-list",
-      "parity-p65-fld-015-blank-vt",
-      "parity-p65-fld-015-edge-cr",
-      "parity-p65-fld-015-edge-ff",
-      "parity-p65-fld-015-edge-lf",
-      "parity-p65-fld-015-edge-lsep",
-      "parity-p65-fld-015-edge-vt"
+      "parity-p65-fld-015-one-element-list"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-015-one-element-list"
+  },
+  {
+   "id": "p65f-rule-sqlpredicate-blank-vt",
+   "about": "the field rule.sqlPredicate written in the state blank-vt, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_015",
+   "steps": [
     {
      "name": "w-blank-vt",
      "op": "write-external-id-sets",
@@ -3445,16 +3535,17 @@
      "markers": [
       "parity-p65-fld-015",
       "PARITY_P65_FLD_015",
-      "parity-p65-fld-015-empty-string",
-      "parity-p65-fld-015-one-element-list",
-      "parity-p65-fld-015-blank-vt",
-      "parity-p65-fld-015-edge-cr",
-      "parity-p65-fld-015-edge-ff",
-      "parity-p65-fld-015-edge-lf",
-      "parity-p65-fld-015-edge-lsep",
-      "parity-p65-fld-015-edge-vt"
+      "parity-p65-fld-015-blank-vt"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-015-blank-vt"
+  },
+  {
+   "id": "p65f-rule-sqlpredicate-edge-cr",
+   "about": "the field rule.sqlPredicate written in the state edge-cr, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_015",
+   "steps": [
     {
      "name": "w-edge-cr",
      "op": "write-external-id-sets",
@@ -3504,16 +3595,17 @@
      "markers": [
       "parity-p65-fld-015",
       "PARITY_P65_FLD_015",
-      "parity-p65-fld-015-empty-string",
-      "parity-p65-fld-015-one-element-list",
-      "parity-p65-fld-015-blank-vt",
-      "parity-p65-fld-015-edge-cr",
-      "parity-p65-fld-015-edge-ff",
-      "parity-p65-fld-015-edge-lf",
-      "parity-p65-fld-015-edge-lsep",
-      "parity-p65-fld-015-edge-vt"
+      "parity-p65-fld-015-edge-cr"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-015-edge-cr"
+  },
+  {
+   "id": "p65f-rule-sqlpredicate-edge-ff",
+   "about": "the field rule.sqlPredicate written in the state edge-ff, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_015",
+   "steps": [
     {
      "name": "w-edge-ff",
      "op": "write-external-id-sets",
@@ -3563,16 +3655,17 @@
      "markers": [
       "parity-p65-fld-015",
       "PARITY_P65_FLD_015",
-      "parity-p65-fld-015-empty-string",
-      "parity-p65-fld-015-one-element-list",
-      "parity-p65-fld-015-blank-vt",
-      "parity-p65-fld-015-edge-cr",
-      "parity-p65-fld-015-edge-ff",
-      "parity-p65-fld-015-edge-lf",
-      "parity-p65-fld-015-edge-lsep",
-      "parity-p65-fld-015-edge-vt"
+      "parity-p65-fld-015-edge-ff"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-015-edge-ff"
+  },
+  {
+   "id": "p65f-rule-sqlpredicate-edge-lf",
+   "about": "the field rule.sqlPredicate written in the state edge-lf, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_015",
+   "steps": [
     {
      "name": "w-edge-lf",
      "op": "write-external-id-sets",
@@ -3622,16 +3715,17 @@
      "markers": [
       "parity-p65-fld-015",
       "PARITY_P65_FLD_015",
-      "parity-p65-fld-015-empty-string",
-      "parity-p65-fld-015-one-element-list",
-      "parity-p65-fld-015-blank-vt",
-      "parity-p65-fld-015-edge-cr",
-      "parity-p65-fld-015-edge-ff",
-      "parity-p65-fld-015-edge-lf",
-      "parity-p65-fld-015-edge-lsep",
-      "parity-p65-fld-015-edge-vt"
+      "parity-p65-fld-015-edge-lf"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-015-edge-lf"
+  },
+  {
+   "id": "p65f-rule-sqlpredicate-edge-lsep",
+   "about": "the field rule.sqlPredicate written in the state edge-lsep, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_015",
+   "steps": [
     {
      "name": "w-edge-lsep",
      "op": "write-external-id-sets",
@@ -3681,16 +3775,17 @@
      "markers": [
       "parity-p65-fld-015",
       "PARITY_P65_FLD_015",
-      "parity-p65-fld-015-empty-string",
-      "parity-p65-fld-015-one-element-list",
-      "parity-p65-fld-015-blank-vt",
-      "parity-p65-fld-015-edge-cr",
-      "parity-p65-fld-015-edge-ff",
-      "parity-p65-fld-015-edge-lf",
-      "parity-p65-fld-015-edge-lsep",
-      "parity-p65-fld-015-edge-vt"
+      "parity-p65-fld-015-edge-lsep"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-015-edge-lsep"
+  },
+  {
+   "id": "p65f-rule-sqlpredicate-edge-vt",
+   "about": "the field rule.sqlPredicate written in the state edge-vt, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_015",
+   "steps": [
     {
      "name": "w-edge-vt",
      "op": "write-external-id-sets",
@@ -3740,34 +3835,17 @@
      "markers": [
       "parity-p65-fld-015",
       "PARITY_P65_FLD_015",
-      "parity-p65-fld-015-empty-string",
-      "parity-p65-fld-015-one-element-list",
-      "parity-p65-fld-015-blank-vt",
-      "parity-p65-fld-015-edge-cr",
-      "parity-p65-fld-015-edge-ff",
-      "parity-p65-fld-015-edge-lf",
-      "parity-p65-fld-015-edge-lsep",
       "parity-p65-fld-015-edge-vt"
      ]
     }
    ],
-   "tenant": "parity-p65f-015"
+   "tenant": "parity-p65f-015-edge-vt"
   },
   {
-   "id": "p65f-pip-type",
-   "about": "the field pip.type written in 1 states, each read back",
+   "id": "p65f-pip-type-edge-vt",
+   "about": "the field pip.type written in the state edge-vt, read back",
    "resourceType": "PARITY_SUITE_P65_FLD_016",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-domain-pips",
-     "args": {
-      "domain": "PARITY_P65_FLD_016"
-     },
-     "observe": [
-      "read-raw:read-domain-pips"
-     ]
-    },
     {
      "name": "w-edge-vt",
      "op": "write-domain-pips",
@@ -3809,37 +3887,15 @@
      "markers": [
       "PARITY_P65_FLD_016"
      ]
-    },
-    {
-     "name": "cleanup-slot",
-     "op": "write-domain-pips",
-     "args": {
-      "domain": "PARITY_P65_FLD_016"
-     },
-     "observe": [
-      "status"
-     ],
-     "onRefusal": "continue",
-     "body": []
     }
    ],
-   "tenant": "parity-p65f-016"
+   "tenant": "parity-p65f-016-edge-vt"
   },
   {
-   "id": "p65f-pip-url",
-   "about": "the field pip.url written in 1 states, each read back",
+   "id": "p65f-pip-url-edge-vt",
+   "about": "the field pip.url written in the state edge-vt, read back",
    "resourceType": "PARITY_SUITE_P65_FLD_017",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-domain-pips",
-     "args": {
-      "domain": "PARITY_P65_FLD_017"
-     },
-     "observe": [
-      "read-raw:read-domain-pips"
-     ]
-    },
     {
      "name": "w-edge-vt",
      "op": "write-domain-pips",
@@ -3882,37 +3938,15 @@
      "markers": [
       "PARITY_P65_FLD_017"
      ]
-    },
-    {
-     "name": "cleanup-slot",
-     "op": "write-domain-pips",
-     "args": {
-      "domain": "PARITY_P65_FLD_017"
-     },
-     "observe": [
-      "status"
-     ],
-     "onRefusal": "continue",
-     "body": []
     }
    ],
-   "tenant": "parity-p65f-017"
+   "tenant": "parity-p65f-017-edge-vt"
   },
   {
-   "id": "p65f-pip-jsonpath",
-   "about": "the field pip.jsonPath written in 1 states, each read back",
+   "id": "p65f-pip-jsonpath-edge-vt",
+   "about": "the field pip.jsonPath written in the state edge-vt, read back",
    "resourceType": "PARITY_SUITE_P65_FLD_018",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-domain-pips",
-     "args": {
-      "domain": "PARITY_P65_FLD_018"
-     },
-     "observe": [
-      "read-raw:read-domain-pips"
-     ]
-    },
     {
      "name": "w-edge-vt",
      "op": "write-domain-pips",
@@ -3955,37 +3989,15 @@
      "markers": [
       "PARITY_P65_FLD_018"
      ]
-    },
-    {
-     "name": "cleanup-slot",
-     "op": "write-domain-pips",
-     "args": {
-      "domain": "PARITY_P65_FLD_018"
-     },
-     "observe": [
-      "status"
-     ],
-     "onRefusal": "continue",
-     "body": []
     }
    ],
-   "tenant": "parity-p65f-018"
+   "tenant": "parity-p65f-018-edge-vt"
   },
   {
-   "id": "p65f-pip-httpmethod",
-   "about": "the field pip.httpMethod written in 1 states, each read back",
+   "id": "p65f-pip-httpmethod-edge-vt",
+   "about": "the field pip.httpMethod written in the state edge-vt, read back",
    "resourceType": "PARITY_SUITE_P65_FLD_019",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-domain-pips",
-     "args": {
-      "domain": "PARITY_P65_FLD_019"
-     },
-     "observe": [
-      "read-raw:read-domain-pips"
-     ]
-    },
     {
      "name": "w-edge-vt",
      "op": "write-domain-pips",
@@ -4028,37 +4040,15 @@
      "markers": [
       "PARITY_P65_FLD_019"
      ]
-    },
-    {
-     "name": "cleanup-slot",
-     "op": "write-domain-pips",
-     "args": {
-      "domain": "PARITY_P65_FLD_019"
-     },
-     "observe": [
-      "status"
-     ],
-     "onRefusal": "continue",
-     "body": []
     }
    ],
-   "tenant": "parity-p65f-019"
+   "tenant": "parity-p65f-019-edge-vt"
   },
   {
-   "id": "p65f-pip-resourcetype",
-   "about": "the field pip.resourceType written in 1 states, each read back",
+   "id": "p65f-pip-resourcetype-edge-vt",
+   "about": "the field pip.resourceType written in the state edge-vt, read back",
    "resourceType": "PARITY_SUITE_P65_FLD_020",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-domain-pips",
-     "args": {
-      "domain": "PARITY_P65_FLD_020"
-     },
-     "observe": [
-      "read-raw:read-domain-pips"
-     ]
-    },
     {
      "name": "w-edge-vt",
      "op": "write-domain-pips",
@@ -4098,39 +4088,15 @@
      "markers": [
       "PARITY_P65_FLD_020"
      ]
-    },
-    {
-     "name": "cleanup-slot",
-     "op": "write-domain-pips",
-     "args": {
-      "domain": "PARITY_P65_FLD_020"
-     },
-     "observe": [
-      "status"
-     ],
-     "onRefusal": "continue",
-     "body": []
     }
    ],
-   "tenant": "parity-p65f-020"
+   "tenant": "parity-p65f-020-edge-vt"
   },
   {
-   "id": "p65f-simplifiedpolicy-resourcetype",
-   "about": "the field simplifiedPolicy.resourceType written in 1 states, each read back",
+   "id": "p65f-simplifiedpolicy-resourcetype-edge-vt",
+   "about": "the field simplifiedPolicy.resourceType written in the state edge-vt, read back",
    "resourceType": "PARITY_SUITE_P65_FLD_021",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-config-sets",
-     "args": {},
-     "observe": [
-      "read:read-config-sets"
-     ],
-     "markers": [
-      "parity-p65-fld-021",
-      "PARITY_P65_FLD_021"
-     ]
-    },
     {
      "name": "w-edge-vt",
      "op": "write-domain-policies",
@@ -4166,39 +4132,15 @@
       "parity-p65-fld-021",
       "PARITY_P65_FLD_021"
      ]
-    },
-    {
-     "name": "cleanup-slot",
-     "op": "write-domain-policies",
-     "args": {
-      "domain": "PARITY_P65_FLD_021"
-     },
-     "observe": [
-      "status"
-     ],
-     "onRefusal": "continue",
-     "body": []
     }
    ],
-   "tenant": "parity-p65f-021"
+   "tenant": "parity-p65f-021-edge-vt"
   },
   {
-   "id": "p65f-simplifiedpolicy-operation",
-   "about": "the field simplifiedPolicy.operation written in 1 states, each read back",
+   "id": "p65f-simplifiedpolicy-operation-edge-vt",
+   "about": "the field simplifiedPolicy.operation written in the state edge-vt, read back",
    "resourceType": "PARITY_SUITE_P65_FLD_022",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-config-sets",
-     "args": {},
-     "observe": [
-      "read:read-config-sets"
-     ],
-     "markers": [
-      "parity-p65-fld-022",
-      "PARITY_P65_FLD_022"
-     ]
-    },
     {
      "name": "w-edge-vt",
      "op": "write-domain-policies",
@@ -4234,39 +4176,15 @@
       "parity-p65-fld-022",
       "PARITY_P65_FLD_022"
      ]
-    },
-    {
-     "name": "cleanup-slot",
-     "op": "write-domain-policies",
-     "args": {
-      "domain": "PARITY_P65_FLD_022"
-     },
-     "observe": [
-      "status"
-     ],
-     "onRefusal": "continue",
-     "body": []
     }
    ],
-   "tenant": "parity-p65f-022"
+   "tenant": "parity-p65f-022-edge-vt"
   },
   {
-   "id": "p65f-simplifiedpolicy-id",
-   "about": "the field simplifiedPolicy.id written in 1 states, each read back",
+   "id": "p65f-simplifiedpolicy-id-edge-vt",
+   "about": "the field simplifiedPolicy.id written in the state edge-vt, read back",
    "resourceType": "PARITY_SUITE_P65_FLD_023",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-config-sets",
-     "args": {},
-     "observe": [
-      "read:read-config-sets"
-     ],
-     "markers": [
-      "parity-p65-fld-023",
-      "PARITY_P65_FLD_023"
-     ]
-    },
     {
      "name": "w-edge-vt",
      "op": "write-domain-policies",
@@ -4302,40 +4220,15 @@
       "parity-p65-fld-023",
       "PARITY_P65_FLD_023"
      ]
-    },
-    {
-     "name": "cleanup-slot",
-     "op": "write-domain-policies",
-     "args": {
-      "domain": "PARITY_P65_FLD_023"
-     },
-     "observe": [
-      "status"
-     ],
-     "onRefusal": "continue",
-     "body": []
     }
    ],
-   "tenant": "parity-p65f-023"
+   "tenant": "parity-p65f-023-edge-vt"
   },
   {
-   "id": "p65f-set-policysetid",
-   "about": "the field set.policySetId written in 1 states, each read back",
+   "id": "p65f-set-policysetid-edge-vt",
+   "about": "the field set.policySetId written in the state edge-vt, read back",
    "resourceType": "PARITY_SUITE_P65_FLD_024",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-config-sets",
-     "args": {},
-     "observe": [
-      "read:read-config-sets"
-     ],
-     "markers": [
-      "parity-p65-fld-024",
-      "PARITY_P65_FLD_024",
-      "parity-p65-fld-024-edge-vt"
-     ]
-    },
     {
      "name": "w-edge-vt",
      "op": "write-external-id-sets",
@@ -4388,26 +4281,13 @@
      ]
     }
    ],
-   "tenant": "parity-p65f-024"
+   "tenant": "parity-p65f-024-edge-vt"
   },
   {
-   "id": "p65f-policy-policyid",
-   "about": "the field policy.policyId written in 1 states, each read back",
+   "id": "p65f-policy-policyid-edge-vt",
+   "about": "the field policy.policyId written in the state edge-vt, read back",
    "resourceType": "PARITY_SUITE_P65_FLD_025",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-config-sets",
-     "args": {},
-     "observe": [
-      "read:read-config-sets"
-     ],
-     "markers": [
-      "parity-p65-fld-025",
-      "PARITY_P65_FLD_025",
-      "parity-p65-fld-025-edge-vt"
-     ]
-    },
     {
      "name": "w-edge-vt",
      "op": "write-external-id-sets",
@@ -4460,26 +4340,13 @@
      ]
     }
    ],
-   "tenant": "parity-p65f-025"
+   "tenant": "parity-p65f-025-edge-vt"
   },
   {
-   "id": "p65f-rule-ruleid",
-   "about": "the field rule.ruleId written in 1 states, each read back",
+   "id": "p65f-rule-ruleid-edge-vt",
+   "about": "the field rule.ruleId written in the state edge-vt, read back",
    "resourceType": "PARITY_SUITE_P65_FLD_026",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-config-sets",
-     "args": {},
-     "observe": [
-      "read:read-config-sets"
-     ],
-     "markers": [
-      "parity-p65-fld-026",
-      "PARITY_P65_FLD_026",
-      "parity-p65-fld-026-edge-vt"
-     ]
-    },
     {
      "name": "w-edge-vt",
      "op": "write-external-id-sets",
@@ -4532,7 +4399,7 @@
      ]
     }
    ],
-   "tenant": "parity-p65f-026"
+   "tenant": "parity-p65f-026-edge-vt"
   },
   {
    "id": "p65i-control-fields-should-last",

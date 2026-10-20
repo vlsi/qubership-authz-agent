@@ -1,4 +1,0 @@
-{
-  "status": 400,
-  "message": "Cannot deserialize value of type `\u003credacted\u003e` from String \"\u2028DEFAULT\u2028\": not one of the values accepted for Enum class: [APPLICABLE_FOR_FRONTEND, DEFAULT]"
-}

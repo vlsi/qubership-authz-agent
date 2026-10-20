@@ -1,4 +1,0 @@
-{
-  "status": 400,
-  "message": "Cannot deserialize value of type `\u003credacted\u003e` from String \"\u2028ALLOW\u2028\": not one of the values accepted for Enum class: [ALLOW, NOT_APPLICABLE, DENY, USE_FILTER_CONDITION]"
-}

@@ -1,5 +1,5 @@
 {
- "about": "Round 50 (should): the stored form of each field of a PAP write. Each case writes one field in several states (absent, null, empty, padded with whitespace, of another JSON type, the documented default sent explicitly), reads it back after each write and empties what it wrote. Each case runs in a tenant of its own, writes to a domain and an externalId of its own; a control writes and reads back first and last.",
+ "about": "Round 50 (should): the stored form of each field of a PAP write. Each case writes one field in one state (absent, null, empty, padded with whitespace, of another JSON type, the documented default sent explicitly) and reads it back. Each case runs in a fresh tenant of its own, writes to a domain and an externalId of its own; a control writes and reads back first and last.",
  "standVersion": true,
  "cases": [
   {
@@ -69,20 +69,10 @@
    "tenant": "parity-p50i-972"
   },
   {
-   "id": "p50f-pip-piptype",
-   "about": "the field pip.pipType written in 8 states, each read back",
+   "id": "p50f-pip-piptype-absent",
+   "about": "the field pip.pipType written in the state absent, read back",
    "resourceType": "PARITY_SUITE_P50_FLD_024",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-domain-pips",
-     "args": {
-      "domain": "PARITY_P50_FLD_024"
-     },
-     "observe": [
-      "read-raw:read-domain-pips"
-     ]
-    },
     {
      "name": "w-absent",
      "op": "write-domain-pips",
@@ -112,7 +102,15 @@
      "observe": [
       "read-raw:read-domain-pips"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-024-absent"
+  },
+  {
+   "id": "p50f-pip-piptype-default-explicit",
+   "about": "the field pip.pipType written in the state default-explicit, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_024",
+   "steps": [
     {
      "name": "w-default-explicit",
      "op": "write-domain-pips",
@@ -143,7 +141,15 @@
      "observe": [
       "read-raw:read-domain-pips"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-024-default-explicit"
+  },
+  {
+   "id": "p50f-pip-piptype-edge-space",
+   "about": "the field pip.pipType written in the state edge-space, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_024",
+   "steps": [
     {
      "name": "w-edge-space",
      "op": "write-domain-pips",
@@ -174,7 +180,15 @@
      "observe": [
       "read-raw:read-domain-pips"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-024-edge-space"
+  },
+  {
+   "id": "p50f-pip-piptype-empty-string",
+   "about": "the field pip.pipType written in the state empty-string, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_024",
+   "steps": [
     {
      "name": "w-empty-string",
      "op": "write-domain-pips",
@@ -205,7 +219,15 @@
      "observe": [
       "read-raw:read-domain-pips"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-024-empty-string"
+  },
+  {
+   "id": "p50f-pip-piptype-null",
+   "about": "the field pip.pipType written in the state null, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_024",
+   "steps": [
     {
      "name": "w-null",
      "op": "write-domain-pips",
@@ -247,7 +269,15 @@
      "markers": [
       "PARITY_P50_FLD_024"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-024-null"
+  },
+  {
+   "id": "p50f-pip-piptype-other-type",
+   "about": "the field pip.pipType written in the state other-type, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_024",
+   "steps": [
     {
      "name": "w-other-type",
      "op": "write-domain-pips",
@@ -278,7 +308,15 @@
      "observe": [
       "read-raw:read-domain-pips"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-024-other-type"
+  },
+  {
+   "id": "p50f-pip-piptype-blank-space",
+   "about": "the field pip.pipType written in the state blank-space, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_024",
+   "steps": [
     {
      "name": "w-blank-space",
      "op": "write-domain-pips",
@@ -309,7 +347,15 @@
      "observe": [
       "read-raw:read-domain-pips"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-024-blank-space"
+  },
+  {
+   "id": "p50f-pip-piptype-edge-nbsp",
+   "about": "the field pip.pipType written in the state edge-nbsp, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_024",
+   "steps": [
     {
      "name": "w-edge-nbsp",
      "op": "write-domain-pips",
@@ -340,47 +386,15 @@
      "observe": [
       "read-raw:read-domain-pips"
      ]
-    },
-    {
-     "name": "cleanup-slot",
-     "op": "write-domain-pips",
-     "args": {
-      "domain": "PARITY_P50_FLD_024"
-     },
-     "observe": [
-      "status"
-     ],
-     "onRefusal": "continue",
-     "body": []
     }
    ],
-   "tenant": "parity-p50f-024"
+   "tenant": "parity-p50f-024-edge-nbsp"
   },
   {
-   "id": "p50f-policy-policyid",
-   "about": "the field policy.policyId written in 8 states, each read back",
+   "id": "p50f-policy-policyid-absent",
+   "about": "the field policy.policyId written in the state absent, read back",
    "resourceType": "PARITY_SUITE_P50_FLD_034",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-config-sets",
-     "args": {},
-     "observe": [
-      "read:read-config-sets"
-     ],
-     "markers": [
-      "parity-p50-fld-034",
-      "PARITY_P50_FLD_034",
-      "parity-p50-fld-034-absent",
-      "parity-p50-fld-034-edge-space",
-      "parity-p50-fld-034-empty-string",
-      "parity-p50-fld-034-null",
-      "parity-p50-fld-034-other-type",
-      "parity-p50-fld-034-blank-space",
-      "parity-p50-fld-034-edge-nbsp",
-      "parity-p50-fld-034-edge-tab"
-     ]
-    },
     {
      "name": "w-absent",
      "op": "write-external-id-sets",
@@ -428,16 +442,17 @@
      "markers": [
       "parity-p50-fld-034",
       "PARITY_P50_FLD_034",
-      "parity-p50-fld-034-absent",
-      "parity-p50-fld-034-edge-space",
-      "parity-p50-fld-034-empty-string",
-      "parity-p50-fld-034-null",
-      "parity-p50-fld-034-other-type",
-      "parity-p50-fld-034-blank-space",
-      "parity-p50-fld-034-edge-nbsp",
-      "parity-p50-fld-034-edge-tab"
+      "parity-p50-fld-034-absent"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-034-absent"
+  },
+  {
+   "id": "p50f-policy-policyid-edge-space",
+   "about": "the field policy.policyId written in the state edge-space, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_034",
+   "steps": [
     {
      "name": "w-edge-space",
      "op": "write-external-id-sets",
@@ -486,16 +501,17 @@
      "markers": [
       "parity-p50-fld-034",
       "PARITY_P50_FLD_034",
-      "parity-p50-fld-034-absent",
-      "parity-p50-fld-034-edge-space",
-      "parity-p50-fld-034-empty-string",
-      "parity-p50-fld-034-null",
-      "parity-p50-fld-034-other-type",
-      "parity-p50-fld-034-blank-space",
-      "parity-p50-fld-034-edge-nbsp",
-      "parity-p50-fld-034-edge-tab"
+      "parity-p50-fld-034-edge-space"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-034-edge-space"
+  },
+  {
+   "id": "p50f-policy-policyid-empty-string",
+   "about": "the field policy.policyId written in the state empty-string, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_034",
+   "steps": [
     {
      "name": "w-empty-string",
      "op": "write-external-id-sets",
@@ -544,16 +560,17 @@
      "markers": [
       "parity-p50-fld-034",
       "PARITY_P50_FLD_034",
-      "parity-p50-fld-034-absent",
-      "parity-p50-fld-034-edge-space",
-      "parity-p50-fld-034-empty-string",
-      "parity-p50-fld-034-null",
-      "parity-p50-fld-034-other-type",
-      "parity-p50-fld-034-blank-space",
-      "parity-p50-fld-034-edge-nbsp",
-      "parity-p50-fld-034-edge-tab"
+      "parity-p50-fld-034-empty-string"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-034-empty-string"
+  },
+  {
+   "id": "p50f-policy-policyid-null",
+   "about": "the field policy.policyId written in the state null, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_034",
+   "steps": [
     {
      "name": "w-null",
      "op": "write-external-id-sets",
@@ -602,16 +619,17 @@
      "markers": [
       "parity-p50-fld-034",
       "PARITY_P50_FLD_034",
-      "parity-p50-fld-034-absent",
-      "parity-p50-fld-034-edge-space",
-      "parity-p50-fld-034-empty-string",
-      "parity-p50-fld-034-null",
-      "parity-p50-fld-034-other-type",
-      "parity-p50-fld-034-blank-space",
-      "parity-p50-fld-034-edge-nbsp",
-      "parity-p50-fld-034-edge-tab"
+      "parity-p50-fld-034-null"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-034-null"
+  },
+  {
+   "id": "p50f-policy-policyid-other-type",
+   "about": "the field policy.policyId written in the state other-type, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_034",
+   "steps": [
     {
      "name": "w-other-type",
      "op": "write-external-id-sets",
@@ -660,16 +678,17 @@
      "markers": [
       "parity-p50-fld-034",
       "PARITY_P50_FLD_034",
-      "parity-p50-fld-034-absent",
-      "parity-p50-fld-034-edge-space",
-      "parity-p50-fld-034-empty-string",
-      "parity-p50-fld-034-null",
-      "parity-p50-fld-034-other-type",
-      "parity-p50-fld-034-blank-space",
-      "parity-p50-fld-034-edge-nbsp",
-      "parity-p50-fld-034-edge-tab"
+      "parity-p50-fld-034-other-type"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-034-other-type"
+  },
+  {
+   "id": "p50f-policy-policyid-blank-space",
+   "about": "the field policy.policyId written in the state blank-space, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_034",
+   "steps": [
     {
      "name": "w-blank-space",
      "op": "write-external-id-sets",
@@ -718,16 +737,17 @@
      "markers": [
       "parity-p50-fld-034",
       "PARITY_P50_FLD_034",
-      "parity-p50-fld-034-absent",
-      "parity-p50-fld-034-edge-space",
-      "parity-p50-fld-034-empty-string",
-      "parity-p50-fld-034-null",
-      "parity-p50-fld-034-other-type",
-      "parity-p50-fld-034-blank-space",
-      "parity-p50-fld-034-edge-nbsp",
-      "parity-p50-fld-034-edge-tab"
+      "parity-p50-fld-034-blank-space"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-034-blank-space"
+  },
+  {
+   "id": "p50f-policy-policyid-edge-nbsp",
+   "about": "the field policy.policyId written in the state edge-nbsp, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_034",
+   "steps": [
     {
      "name": "w-edge-nbsp",
      "op": "write-external-id-sets",
@@ -776,16 +796,17 @@
      "markers": [
       "parity-p50-fld-034",
       "PARITY_P50_FLD_034",
-      "parity-p50-fld-034-absent",
-      "parity-p50-fld-034-edge-space",
-      "parity-p50-fld-034-empty-string",
-      "parity-p50-fld-034-null",
-      "parity-p50-fld-034-other-type",
-      "parity-p50-fld-034-blank-space",
-      "parity-p50-fld-034-edge-nbsp",
-      "parity-p50-fld-034-edge-tab"
+      "parity-p50-fld-034-edge-nbsp"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-034-edge-nbsp"
+  },
+  {
+   "id": "p50f-policy-policyid-edge-tab",
+   "about": "the field policy.policyId written in the state edge-tab, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_034",
+   "steps": [
     {
      "name": "w-edge-tab",
      "op": "write-external-id-sets",
@@ -834,44 +855,17 @@
      "markers": [
       "parity-p50-fld-034",
       "PARITY_P50_FLD_034",
-      "parity-p50-fld-034-absent",
-      "parity-p50-fld-034-edge-space",
-      "parity-p50-fld-034-empty-string",
-      "parity-p50-fld-034-null",
-      "parity-p50-fld-034-other-type",
-      "parity-p50-fld-034-blank-space",
-      "parity-p50-fld-034-edge-nbsp",
       "parity-p50-fld-034-edge-tab"
      ]
     }
    ],
-   "tenant": "parity-p50f-034"
+   "tenant": "parity-p50f-034-edge-tab"
   },
   {
-   "id": "p50f-rule-ruleid",
-   "about": "the field rule.ruleId written in 8 states, each read back",
+   "id": "p50f-rule-ruleid-absent",
+   "about": "the field rule.ruleId written in the state absent, read back",
    "resourceType": "PARITY_SUITE_P50_FLD_035",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-config-sets",
-     "args": {},
-     "observe": [
-      "read:read-config-sets"
-     ],
-     "markers": [
-      "parity-p50-fld-035",
-      "PARITY_P50_FLD_035",
-      "parity-p50-fld-035-absent",
-      "parity-p50-fld-035-edge-space",
-      "parity-p50-fld-035-empty-string",
-      "parity-p50-fld-035-null",
-      "parity-p50-fld-035-other-type",
-      "parity-p50-fld-035-blank-space",
-      "parity-p50-fld-035-edge-nbsp",
-      "parity-p50-fld-035-edge-tab"
-     ]
-    },
     {
      "name": "w-absent",
      "op": "write-external-id-sets",
@@ -919,16 +913,17 @@
      "markers": [
       "parity-p50-fld-035",
       "PARITY_P50_FLD_035",
-      "parity-p50-fld-035-absent",
-      "parity-p50-fld-035-edge-space",
-      "parity-p50-fld-035-empty-string",
-      "parity-p50-fld-035-null",
-      "parity-p50-fld-035-other-type",
-      "parity-p50-fld-035-blank-space",
-      "parity-p50-fld-035-edge-nbsp",
-      "parity-p50-fld-035-edge-tab"
+      "parity-p50-fld-035-absent"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-035-absent"
+  },
+  {
+   "id": "p50f-rule-ruleid-edge-space",
+   "about": "the field rule.ruleId written in the state edge-space, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_035",
+   "steps": [
     {
      "name": "w-edge-space",
      "op": "write-external-id-sets",
@@ -977,16 +972,17 @@
      "markers": [
       "parity-p50-fld-035",
       "PARITY_P50_FLD_035",
-      "parity-p50-fld-035-absent",
-      "parity-p50-fld-035-edge-space",
-      "parity-p50-fld-035-empty-string",
-      "parity-p50-fld-035-null",
-      "parity-p50-fld-035-other-type",
-      "parity-p50-fld-035-blank-space",
-      "parity-p50-fld-035-edge-nbsp",
-      "parity-p50-fld-035-edge-tab"
+      "parity-p50-fld-035-edge-space"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-035-edge-space"
+  },
+  {
+   "id": "p50f-rule-ruleid-empty-string",
+   "about": "the field rule.ruleId written in the state empty-string, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_035",
+   "steps": [
     {
      "name": "w-empty-string",
      "op": "write-external-id-sets",
@@ -1035,16 +1031,17 @@
      "markers": [
       "parity-p50-fld-035",
       "PARITY_P50_FLD_035",
-      "parity-p50-fld-035-absent",
-      "parity-p50-fld-035-edge-space",
-      "parity-p50-fld-035-empty-string",
-      "parity-p50-fld-035-null",
-      "parity-p50-fld-035-other-type",
-      "parity-p50-fld-035-blank-space",
-      "parity-p50-fld-035-edge-nbsp",
-      "parity-p50-fld-035-edge-tab"
+      "parity-p50-fld-035-empty-string"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-035-empty-string"
+  },
+  {
+   "id": "p50f-rule-ruleid-null",
+   "about": "the field rule.ruleId written in the state null, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_035",
+   "steps": [
     {
      "name": "w-null",
      "op": "write-external-id-sets",
@@ -1093,16 +1090,17 @@
      "markers": [
       "parity-p50-fld-035",
       "PARITY_P50_FLD_035",
-      "parity-p50-fld-035-absent",
-      "parity-p50-fld-035-edge-space",
-      "parity-p50-fld-035-empty-string",
-      "parity-p50-fld-035-null",
-      "parity-p50-fld-035-other-type",
-      "parity-p50-fld-035-blank-space",
-      "parity-p50-fld-035-edge-nbsp",
-      "parity-p50-fld-035-edge-tab"
+      "parity-p50-fld-035-null"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-035-null"
+  },
+  {
+   "id": "p50f-rule-ruleid-other-type",
+   "about": "the field rule.ruleId written in the state other-type, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_035",
+   "steps": [
     {
      "name": "w-other-type",
      "op": "write-external-id-sets",
@@ -1151,16 +1149,17 @@
      "markers": [
       "parity-p50-fld-035",
       "PARITY_P50_FLD_035",
-      "parity-p50-fld-035-absent",
-      "parity-p50-fld-035-edge-space",
-      "parity-p50-fld-035-empty-string",
-      "parity-p50-fld-035-null",
-      "parity-p50-fld-035-other-type",
-      "parity-p50-fld-035-blank-space",
-      "parity-p50-fld-035-edge-nbsp",
-      "parity-p50-fld-035-edge-tab"
+      "parity-p50-fld-035-other-type"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-035-other-type"
+  },
+  {
+   "id": "p50f-rule-ruleid-blank-space",
+   "about": "the field rule.ruleId written in the state blank-space, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_035",
+   "steps": [
     {
      "name": "w-blank-space",
      "op": "write-external-id-sets",
@@ -1209,16 +1208,17 @@
      "markers": [
       "parity-p50-fld-035",
       "PARITY_P50_FLD_035",
-      "parity-p50-fld-035-absent",
-      "parity-p50-fld-035-edge-space",
-      "parity-p50-fld-035-empty-string",
-      "parity-p50-fld-035-null",
-      "parity-p50-fld-035-other-type",
-      "parity-p50-fld-035-blank-space",
-      "parity-p50-fld-035-edge-nbsp",
-      "parity-p50-fld-035-edge-tab"
+      "parity-p50-fld-035-blank-space"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-035-blank-space"
+  },
+  {
+   "id": "p50f-rule-ruleid-edge-nbsp",
+   "about": "the field rule.ruleId written in the state edge-nbsp, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_035",
+   "steps": [
     {
      "name": "w-edge-nbsp",
      "op": "write-external-id-sets",
@@ -1267,16 +1267,17 @@
      "markers": [
       "parity-p50-fld-035",
       "PARITY_P50_FLD_035",
-      "parity-p50-fld-035-absent",
-      "parity-p50-fld-035-edge-space",
-      "parity-p50-fld-035-empty-string",
-      "parity-p50-fld-035-null",
-      "parity-p50-fld-035-other-type",
-      "parity-p50-fld-035-blank-space",
-      "parity-p50-fld-035-edge-nbsp",
-      "parity-p50-fld-035-edge-tab"
+      "parity-p50-fld-035-edge-nbsp"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-035-edge-nbsp"
+  },
+  {
+   "id": "p50f-rule-ruleid-edge-tab",
+   "about": "the field rule.ruleId written in the state edge-tab, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_035",
+   "steps": [
     {
      "name": "w-edge-tab",
      "op": "write-external-id-sets",
@@ -1325,36 +1326,17 @@
      "markers": [
       "parity-p50-fld-035",
       "PARITY_P50_FLD_035",
-      "parity-p50-fld-035-absent",
-      "parity-p50-fld-035-edge-space",
-      "parity-p50-fld-035-empty-string",
-      "parity-p50-fld-035-null",
-      "parity-p50-fld-035-other-type",
-      "parity-p50-fld-035-blank-space",
-      "parity-p50-fld-035-edge-nbsp",
       "parity-p50-fld-035-edge-tab"
      ]
     }
    ],
-   "tenant": "parity-p50f-035"
+   "tenant": "parity-p50f-035-edge-tab"
   },
   {
-   "id": "p50f-cust-set-status",
-   "about": "the field cust.set.status written in 8 states, each read back",
+   "id": "p50f-cust-set-status-absent",
+   "about": "the field cust.set.status written in the state absent, read back",
    "resourceType": "PARITY_SUITE_P50_FLD_036",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-config-sets",
-     "args": {},
-     "observe": [
-      "read:read-config-sets"
-     ],
-     "markers": [
-      "parity-p50-fld-036",
-      "PARITY_P50_FLD_036"
-     ]
-    },
     {
      "name": "w-set",
      "op": "write-external-id-sets",
@@ -1420,6 +1402,52 @@
       "parity-p50-fld-036",
       "PARITY_P50_FLD_036"
      ]
+    }
+   ],
+   "tenant": "parity-p50f-036-absent"
+  },
+  {
+   "id": "p50f-cust-set-status-edge-space",
+   "about": "the field cust.set.status written in the state edge-space, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_036",
+   "steps": [
+    {
+     "name": "w-set",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p50-fld-036"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "4a616a48-34ed-c09f-41b6-766109233c09",
+       "name": "p50f-cust-set-status s",
+       "status": "ACTIVE",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P50_FLD_036'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "76fd4410-d681-b871-88da-f2eb924cf402",
+         "name": "p50f-cust-set-status s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "c4979a2c-c7d3-9aeb-2bd3-9ea0439c48df",
+           "name": "p50f-cust-set-status s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ]
+      }
+     ]
     },
     {
      "name": "w-edge-space",
@@ -1448,6 +1476,52 @@
      "markers": [
       "parity-p50-fld-036",
       "PARITY_P50_FLD_036"
+     ]
+    }
+   ],
+   "tenant": "parity-p50f-036-edge-space"
+  },
+  {
+   "id": "p50f-cust-set-status-empty-string",
+   "about": "the field cust.set.status written in the state empty-string, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_036",
+   "steps": [
+    {
+     "name": "w-set",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p50-fld-036"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "4a616a48-34ed-c09f-41b6-766109233c09",
+       "name": "p50f-cust-set-status s",
+       "status": "ACTIVE",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P50_FLD_036'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "76fd4410-d681-b871-88da-f2eb924cf402",
+         "name": "p50f-cust-set-status s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "c4979a2c-c7d3-9aeb-2bd3-9ea0439c48df",
+           "name": "p50f-cust-set-status s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ]
+      }
      ]
     },
     {
@@ -1478,6 +1552,52 @@
       "parity-p50-fld-036",
       "PARITY_P50_FLD_036"
      ]
+    }
+   ],
+   "tenant": "parity-p50f-036-empty-string"
+  },
+  {
+   "id": "p50f-cust-set-status-null",
+   "about": "the field cust.set.status written in the state null, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_036",
+   "steps": [
+    {
+     "name": "w-set",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p50-fld-036"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "4a616a48-34ed-c09f-41b6-766109233c09",
+       "name": "p50f-cust-set-status s",
+       "status": "ACTIVE",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P50_FLD_036'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "76fd4410-d681-b871-88da-f2eb924cf402",
+         "name": "p50f-cust-set-status s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "c4979a2c-c7d3-9aeb-2bd3-9ea0439c48df",
+           "name": "p50f-cust-set-status s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ]
+      }
+     ]
     },
     {
      "name": "w-null",
@@ -1506,6 +1626,52 @@
      "markers": [
       "parity-p50-fld-036",
       "PARITY_P50_FLD_036"
+     ]
+    }
+   ],
+   "tenant": "parity-p50f-036-null"
+  },
+  {
+   "id": "p50f-cust-set-status-other-type",
+   "about": "the field cust.set.status written in the state other-type, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_036",
+   "steps": [
+    {
+     "name": "w-set",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p50-fld-036"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "4a616a48-34ed-c09f-41b6-766109233c09",
+       "name": "p50f-cust-set-status s",
+       "status": "ACTIVE",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P50_FLD_036'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "76fd4410-d681-b871-88da-f2eb924cf402",
+         "name": "p50f-cust-set-status s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "c4979a2c-c7d3-9aeb-2bd3-9ea0439c48df",
+           "name": "p50f-cust-set-status s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ]
+      }
      ]
     },
     {
@@ -1536,6 +1702,52 @@
       "parity-p50-fld-036",
       "PARITY_P50_FLD_036"
      ]
+    }
+   ],
+   "tenant": "parity-p50f-036-other-type"
+  },
+  {
+   "id": "p50f-cust-set-status-blank-space",
+   "about": "the field cust.set.status written in the state blank-space, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_036",
+   "steps": [
+    {
+     "name": "w-set",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p50-fld-036"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "4a616a48-34ed-c09f-41b6-766109233c09",
+       "name": "p50f-cust-set-status s",
+       "status": "ACTIVE",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P50_FLD_036'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "76fd4410-d681-b871-88da-f2eb924cf402",
+         "name": "p50f-cust-set-status s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "c4979a2c-c7d3-9aeb-2bd3-9ea0439c48df",
+           "name": "p50f-cust-set-status s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ]
+      }
+     ]
     },
     {
      "name": "w-blank-space",
@@ -1564,6 +1776,52 @@
      "markers": [
       "parity-p50-fld-036",
       "PARITY_P50_FLD_036"
+     ]
+    }
+   ],
+   "tenant": "parity-p50f-036-blank-space"
+  },
+  {
+   "id": "p50f-cust-set-status-edge-nbsp",
+   "about": "the field cust.set.status written in the state edge-nbsp, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_036",
+   "steps": [
+    {
+     "name": "w-set",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p50-fld-036"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "4a616a48-34ed-c09f-41b6-766109233c09",
+       "name": "p50f-cust-set-status s",
+       "status": "ACTIVE",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P50_FLD_036'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "76fd4410-d681-b871-88da-f2eb924cf402",
+         "name": "p50f-cust-set-status s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "c4979a2c-c7d3-9aeb-2bd3-9ea0439c48df",
+           "name": "p50f-cust-set-status s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ]
+      }
      ]
     },
     {
@@ -1594,6 +1852,52 @@
       "parity-p50-fld-036",
       "PARITY_P50_FLD_036"
      ]
+    }
+   ],
+   "tenant": "parity-p50f-036-edge-nbsp"
+  },
+  {
+   "id": "p50f-cust-set-status-edge-tab",
+   "about": "the field cust.set.status written in the state edge-tab, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_036",
+   "steps": [
+    {
+     "name": "w-set",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p50-fld-036"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "4a616a48-34ed-c09f-41b6-766109233c09",
+       "name": "p50f-cust-set-status s",
+       "status": "ACTIVE",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P50_FLD_036'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "76fd4410-d681-b871-88da-f2eb924cf402",
+         "name": "p50f-cust-set-status s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "c4979a2c-c7d3-9aeb-2bd3-9ea0439c48df",
+           "name": "p50f-cust-set-status s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ]
+      }
+     ]
     },
     {
      "name": "w-edge-tab",
@@ -1623,52 +1927,15 @@
       "parity-p50-fld-036",
       "PARITY_P50_FLD_036"
      ]
-    },
-    {
-     "name": "cleanup-entry",
-     "op": "delete-set-customization",
-     "args": {
-      "id": "4a616a48-34ed-c09f-41b6-766109233c09",
-      "level": "CUSTOMER",
-      "recursive": "true"
-     },
-     "observe": [
-      "status"
-     ],
-     "onRefusal": "continue"
-    },
-    {
-     "name": "cleanup",
-     "op": "write-external-id-sets",
-     "args": {
-      "externalId": "parity-p50-fld-036"
-     },
-     "observe": [
-      "status"
-     ],
-     "onRefusal": "continue",
-     "body": []
     }
    ],
-   "tenant": "parity-p50f-036"
+   "tenant": "parity-p50f-036-edge-tab"
   },
   {
-   "id": "p50f-cust-policy-status",
-   "about": "the field cust.policy.status written in 8 states, each read back",
+   "id": "p50f-cust-policy-status-absent",
+   "about": "the field cust.policy.status written in the state absent, read back",
    "resourceType": "PARITY_SUITE_P50_FLD_037",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-config-sets",
-     "args": {},
-     "observe": [
-      "read:read-config-sets"
-     ],
-     "markers": [
-      "parity-p50-fld-037",
-      "PARITY_P50_FLD_037"
-     ]
-    },
     {
      "name": "w-set",
      "op": "write-external-id-sets",
@@ -1739,6 +2006,52 @@
       "parity-p50-fld-037",
       "PARITY_P50_FLD_037"
      ]
+    }
+   ],
+   "tenant": "parity-p50f-037-absent"
+  },
+  {
+   "id": "p50f-cust-policy-status-edge-space",
+   "about": "the field cust.policy.status written in the state edge-space, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_037",
+   "steps": [
+    {
+     "name": "w-set",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p50-fld-037"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "4614438c-e5df-3386-a4ab-95f574dd757e",
+       "name": "p50f-cust-policy-status s",
+       "status": "ACTIVE",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P50_FLD_037'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "dc9330e5-d5a3-5c68-13bd-cfe6cbf24373",
+         "name": "p50f-cust-policy-status s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "0c75f31b-8f8e-5e72-1a13-35517642a9d3",
+           "name": "p50f-cust-policy-status s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ]
+      }
+     ]
     },
     {
      "name": "w-edge-space",
@@ -1772,6 +2085,52 @@
      "markers": [
       "parity-p50-fld-037",
       "PARITY_P50_FLD_037"
+     ]
+    }
+   ],
+   "tenant": "parity-p50f-037-edge-space"
+  },
+  {
+   "id": "p50f-cust-policy-status-empty-string",
+   "about": "the field cust.policy.status written in the state empty-string, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_037",
+   "steps": [
+    {
+     "name": "w-set",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p50-fld-037"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "4614438c-e5df-3386-a4ab-95f574dd757e",
+       "name": "p50f-cust-policy-status s",
+       "status": "ACTIVE",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P50_FLD_037'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "dc9330e5-d5a3-5c68-13bd-cfe6cbf24373",
+         "name": "p50f-cust-policy-status s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "0c75f31b-8f8e-5e72-1a13-35517642a9d3",
+           "name": "p50f-cust-policy-status s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ]
+      }
      ]
     },
     {
@@ -1807,6 +2166,52 @@
       "parity-p50-fld-037",
       "PARITY_P50_FLD_037"
      ]
+    }
+   ],
+   "tenant": "parity-p50f-037-empty-string"
+  },
+  {
+   "id": "p50f-cust-policy-status-null",
+   "about": "the field cust.policy.status written in the state null, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_037",
+   "steps": [
+    {
+     "name": "w-set",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p50-fld-037"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "4614438c-e5df-3386-a4ab-95f574dd757e",
+       "name": "p50f-cust-policy-status s",
+       "status": "ACTIVE",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P50_FLD_037'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "dc9330e5-d5a3-5c68-13bd-cfe6cbf24373",
+         "name": "p50f-cust-policy-status s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "0c75f31b-8f8e-5e72-1a13-35517642a9d3",
+           "name": "p50f-cust-policy-status s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ]
+      }
+     ]
     },
     {
      "name": "w-null",
@@ -1840,6 +2245,52 @@
      "markers": [
       "parity-p50-fld-037",
       "PARITY_P50_FLD_037"
+     ]
+    }
+   ],
+   "tenant": "parity-p50f-037-null"
+  },
+  {
+   "id": "p50f-cust-policy-status-other-type",
+   "about": "the field cust.policy.status written in the state other-type, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_037",
+   "steps": [
+    {
+     "name": "w-set",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p50-fld-037"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "4614438c-e5df-3386-a4ab-95f574dd757e",
+       "name": "p50f-cust-policy-status s",
+       "status": "ACTIVE",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P50_FLD_037'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "dc9330e5-d5a3-5c68-13bd-cfe6cbf24373",
+         "name": "p50f-cust-policy-status s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "0c75f31b-8f8e-5e72-1a13-35517642a9d3",
+           "name": "p50f-cust-policy-status s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ]
+      }
      ]
     },
     {
@@ -1875,6 +2326,52 @@
       "parity-p50-fld-037",
       "PARITY_P50_FLD_037"
      ]
+    }
+   ],
+   "tenant": "parity-p50f-037-other-type"
+  },
+  {
+   "id": "p50f-cust-policy-status-blank-space",
+   "about": "the field cust.policy.status written in the state blank-space, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_037",
+   "steps": [
+    {
+     "name": "w-set",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p50-fld-037"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "4614438c-e5df-3386-a4ab-95f574dd757e",
+       "name": "p50f-cust-policy-status s",
+       "status": "ACTIVE",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P50_FLD_037'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "dc9330e5-d5a3-5c68-13bd-cfe6cbf24373",
+         "name": "p50f-cust-policy-status s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "0c75f31b-8f8e-5e72-1a13-35517642a9d3",
+           "name": "p50f-cust-policy-status s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ]
+      }
+     ]
     },
     {
      "name": "w-blank-space",
@@ -1908,6 +2405,52 @@
      "markers": [
       "parity-p50-fld-037",
       "PARITY_P50_FLD_037"
+     ]
+    }
+   ],
+   "tenant": "parity-p50f-037-blank-space"
+  },
+  {
+   "id": "p50f-cust-policy-status-edge-nbsp",
+   "about": "the field cust.policy.status written in the state edge-nbsp, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_037",
+   "steps": [
+    {
+     "name": "w-set",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p50-fld-037"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "4614438c-e5df-3386-a4ab-95f574dd757e",
+       "name": "p50f-cust-policy-status s",
+       "status": "ACTIVE",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P50_FLD_037'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "dc9330e5-d5a3-5c68-13bd-cfe6cbf24373",
+         "name": "p50f-cust-policy-status s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "0c75f31b-8f8e-5e72-1a13-35517642a9d3",
+           "name": "p50f-cust-policy-status s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ]
+      }
      ]
     },
     {
@@ -1943,6 +2486,52 @@
       "parity-p50-fld-037",
       "PARITY_P50_FLD_037"
      ]
+    }
+   ],
+   "tenant": "parity-p50f-037-edge-nbsp"
+  },
+  {
+   "id": "p50f-cust-policy-status-edge-tab",
+   "about": "the field cust.policy.status written in the state edge-tab, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_037",
+   "steps": [
+    {
+     "name": "w-set",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p50-fld-037"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "4614438c-e5df-3386-a4ab-95f574dd757e",
+       "name": "p50f-cust-policy-status s",
+       "status": "ACTIVE",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P50_FLD_037'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "dc9330e5-d5a3-5c68-13bd-cfe6cbf24373",
+         "name": "p50f-cust-policy-status s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "0c75f31b-8f8e-5e72-1a13-35517642a9d3",
+           "name": "p50f-cust-policy-status s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ]
+      }
+     ]
     },
     {
      "name": "w-edge-tab",
@@ -1977,52 +2566,15 @@
       "parity-p50-fld-037",
       "PARITY_P50_FLD_037"
      ]
-    },
-    {
-     "name": "cleanup-entry",
-     "op": "delete-set-customization",
-     "args": {
-      "id": "4614438c-e5df-3386-a4ab-95f574dd757e",
-      "level": "CUSTOMER",
-      "recursive": "true"
-     },
-     "observe": [
-      "status"
-     ],
-     "onRefusal": "continue"
-    },
-    {
-     "name": "cleanup",
-     "op": "write-external-id-sets",
-     "args": {
-      "externalId": "parity-p50-fld-037"
-     },
-     "observe": [
-      "status"
-     ],
-     "onRefusal": "continue",
-     "body": []
     }
    ],
-   "tenant": "parity-p50f-037"
+   "tenant": "parity-p50f-037-edge-tab"
   },
   {
-   "id": "p50f-cust-rule-status",
-   "about": "the field cust.rule.status written in 8 states, each read back",
+   "id": "p50f-cust-rule-status-absent",
+   "about": "the field cust.rule.status written in the state absent, read back",
    "resourceType": "PARITY_SUITE_P50_FLD_038",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-config-sets",
-     "args": {},
-     "observe": [
-      "read:read-config-sets"
-     ],
-     "markers": [
-      "parity-p50-fld-038",
-      "PARITY_P50_FLD_038"
-     ]
-    },
     {
      "name": "w-set",
      "op": "write-external-id-sets",
@@ -2098,6 +2650,52 @@
       "parity-p50-fld-038",
       "PARITY_P50_FLD_038"
      ]
+    }
+   ],
+   "tenant": "parity-p50f-038-absent"
+  },
+  {
+   "id": "p50f-cust-rule-status-edge-space",
+   "about": "the field cust.rule.status written in the state edge-space, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_038",
+   "steps": [
+    {
+     "name": "w-set",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p50-fld-038"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "59e4c81d-b714-f6ef-2fba-b42cc08dedda",
+       "name": "p50f-cust-rule-status s",
+       "status": "ACTIVE",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P50_FLD_038'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "722bcb29-6e82-d7d5-99a0-53c7c95ac087",
+         "name": "p50f-cust-rule-status s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "0777eff7-3768-1598-ee59-0f24ee569cf3",
+           "name": "p50f-cust-rule-status s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ]
+      }
+     ]
     },
     {
      "name": "w-edge-space",
@@ -2136,6 +2734,52 @@
      "markers": [
       "parity-p50-fld-038",
       "PARITY_P50_FLD_038"
+     ]
+    }
+   ],
+   "tenant": "parity-p50f-038-edge-space"
+  },
+  {
+   "id": "p50f-cust-rule-status-empty-string",
+   "about": "the field cust.rule.status written in the state empty-string, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_038",
+   "steps": [
+    {
+     "name": "w-set",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p50-fld-038"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "59e4c81d-b714-f6ef-2fba-b42cc08dedda",
+       "name": "p50f-cust-rule-status s",
+       "status": "ACTIVE",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P50_FLD_038'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "722bcb29-6e82-d7d5-99a0-53c7c95ac087",
+         "name": "p50f-cust-rule-status s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "0777eff7-3768-1598-ee59-0f24ee569cf3",
+           "name": "p50f-cust-rule-status s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ]
+      }
      ]
     },
     {
@@ -2176,6 +2820,52 @@
       "parity-p50-fld-038",
       "PARITY_P50_FLD_038"
      ]
+    }
+   ],
+   "tenant": "parity-p50f-038-empty-string"
+  },
+  {
+   "id": "p50f-cust-rule-status-null",
+   "about": "the field cust.rule.status written in the state null, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_038",
+   "steps": [
+    {
+     "name": "w-set",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p50-fld-038"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "59e4c81d-b714-f6ef-2fba-b42cc08dedda",
+       "name": "p50f-cust-rule-status s",
+       "status": "ACTIVE",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P50_FLD_038'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "722bcb29-6e82-d7d5-99a0-53c7c95ac087",
+         "name": "p50f-cust-rule-status s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "0777eff7-3768-1598-ee59-0f24ee569cf3",
+           "name": "p50f-cust-rule-status s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ]
+      }
+     ]
     },
     {
      "name": "w-null",
@@ -2214,6 +2904,52 @@
      "markers": [
       "parity-p50-fld-038",
       "PARITY_P50_FLD_038"
+     ]
+    }
+   ],
+   "tenant": "parity-p50f-038-null"
+  },
+  {
+   "id": "p50f-cust-rule-status-other-type",
+   "about": "the field cust.rule.status written in the state other-type, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_038",
+   "steps": [
+    {
+     "name": "w-set",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p50-fld-038"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "59e4c81d-b714-f6ef-2fba-b42cc08dedda",
+       "name": "p50f-cust-rule-status s",
+       "status": "ACTIVE",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P50_FLD_038'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "722bcb29-6e82-d7d5-99a0-53c7c95ac087",
+         "name": "p50f-cust-rule-status s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "0777eff7-3768-1598-ee59-0f24ee569cf3",
+           "name": "p50f-cust-rule-status s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ]
+      }
      ]
     },
     {
@@ -2254,6 +2990,52 @@
       "parity-p50-fld-038",
       "PARITY_P50_FLD_038"
      ]
+    }
+   ],
+   "tenant": "parity-p50f-038-other-type"
+  },
+  {
+   "id": "p50f-cust-rule-status-blank-space",
+   "about": "the field cust.rule.status written in the state blank-space, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_038",
+   "steps": [
+    {
+     "name": "w-set",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p50-fld-038"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "59e4c81d-b714-f6ef-2fba-b42cc08dedda",
+       "name": "p50f-cust-rule-status s",
+       "status": "ACTIVE",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P50_FLD_038'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "722bcb29-6e82-d7d5-99a0-53c7c95ac087",
+         "name": "p50f-cust-rule-status s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "0777eff7-3768-1598-ee59-0f24ee569cf3",
+           "name": "p50f-cust-rule-status s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ]
+      }
+     ]
     },
     {
      "name": "w-blank-space",
@@ -2292,6 +3074,52 @@
      "markers": [
       "parity-p50-fld-038",
       "PARITY_P50_FLD_038"
+     ]
+    }
+   ],
+   "tenant": "parity-p50f-038-blank-space"
+  },
+  {
+   "id": "p50f-cust-rule-status-edge-nbsp",
+   "about": "the field cust.rule.status written in the state edge-nbsp, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_038",
+   "steps": [
+    {
+     "name": "w-set",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p50-fld-038"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "59e4c81d-b714-f6ef-2fba-b42cc08dedda",
+       "name": "p50f-cust-rule-status s",
+       "status": "ACTIVE",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P50_FLD_038'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "722bcb29-6e82-d7d5-99a0-53c7c95ac087",
+         "name": "p50f-cust-rule-status s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "0777eff7-3768-1598-ee59-0f24ee569cf3",
+           "name": "p50f-cust-rule-status s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ]
+      }
      ]
     },
     {
@@ -2332,6 +3160,52 @@
       "parity-p50-fld-038",
       "PARITY_P50_FLD_038"
      ]
+    }
+   ],
+   "tenant": "parity-p50f-038-edge-nbsp"
+  },
+  {
+   "id": "p50f-cust-rule-status-edge-tab",
+   "about": "the field cust.rule.status written in the state edge-tab, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_038",
+   "steps": [
+    {
+     "name": "w-set",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p50-fld-038"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "59e4c81d-b714-f6ef-2fba-b42cc08dedda",
+       "name": "p50f-cust-rule-status s",
+       "status": "ACTIVE",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P50_FLD_038'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "722bcb29-6e82-d7d5-99a0-53c7c95ac087",
+         "name": "p50f-cust-rule-status s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "0777eff7-3768-1598-ee59-0f24ee569cf3",
+           "name": "p50f-cust-rule-status s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ]
+      }
+     ]
     },
     {
      "name": "w-edge-tab",
@@ -2371,51 +3245,15 @@
       "parity-p50-fld-038",
       "PARITY_P50_FLD_038"
      ]
-    },
-    {
-     "name": "cleanup-entry",
-     "op": "delete-set-customization",
-     "args": {
-      "id": "59e4c81d-b714-f6ef-2fba-b42cc08dedda",
-      "level": "CUSTOMER",
-      "recursive": "true"
-     },
-     "observe": [
-      "status"
-     ],
-     "onRefusal": "continue"
-    },
-    {
-     "name": "cleanup",
-     "op": "write-external-id-sets",
-     "args": {
-      "externalId": "parity-p50-fld-038"
-     },
-     "observe": [
-      "status"
-     ],
-     "onRefusal": "continue",
-     "body": []
     }
    ],
-   "tenant": "parity-p50f-038"
+   "tenant": "parity-p50f-038-edge-tab"
   },
   {
-   "id": "p50f-cust-pip-status",
-   "about": "the field cust.pip.status written in 8 states, each read back",
+   "id": "p50f-cust-pip-status-absent",
+   "about": "the field cust.pip.status written in the state absent, read back",
    "resourceType": "PARITY_SUITE_P50_FLD_039",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-config-pips",
-     "args": {},
-     "observe": [
-      "read:read-config-pips"
-     ],
-     "markers": [
-      "PARITY_P50_FLD_039"
-     ]
-    },
     {
      "name": "w-pip",
      "op": "write-domain-pips",
@@ -2463,6 +3301,35 @@
      "markers": [
       "PARITY_P50_FLD_039"
      ]
+    }
+   ],
+   "tenant": "parity-p50f-039-absent"
+  },
+  {
+   "id": "p50f-cust-pip-status-edge-space",
+   "about": "the field cust.pip.status written in the state edge-space, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_039",
+   "steps": [
+    {
+     "name": "w-pip",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_P50_FLD_039"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "name": "subject.parityP50F039A",
+       "pipType": "HEADER",
+       "header": "x-parity-p50f-039-a",
+       "defaultValue": "none",
+       "type": "REGULAR",
+       "cacheable": false
+      }
+     ]
     },
     {
      "name": "w-edge-space",
@@ -2490,6 +3357,35 @@
      ],
      "markers": [
       "PARITY_P50_FLD_039"
+     ]
+    }
+   ],
+   "tenant": "parity-p50f-039-edge-space"
+  },
+  {
+   "id": "p50f-cust-pip-status-empty-string",
+   "about": "the field cust.pip.status written in the state empty-string, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_039",
+   "steps": [
+    {
+     "name": "w-pip",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_P50_FLD_039"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "name": "subject.parityP50F039A",
+       "pipType": "HEADER",
+       "header": "x-parity-p50f-039-a",
+       "defaultValue": "none",
+       "type": "REGULAR",
+       "cacheable": false
+      }
      ]
     },
     {
@@ -2519,6 +3415,35 @@
      "markers": [
       "PARITY_P50_FLD_039"
      ]
+    }
+   ],
+   "tenant": "parity-p50f-039-empty-string"
+  },
+  {
+   "id": "p50f-cust-pip-status-null",
+   "about": "the field cust.pip.status written in the state null, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_039",
+   "steps": [
+    {
+     "name": "w-pip",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_P50_FLD_039"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "name": "subject.parityP50F039A",
+       "pipType": "HEADER",
+       "header": "x-parity-p50f-039-a",
+       "defaultValue": "none",
+       "type": "REGULAR",
+       "cacheable": false
+      }
+     ]
     },
     {
      "name": "w-null",
@@ -2546,6 +3471,35 @@
      ],
      "markers": [
       "PARITY_P50_FLD_039"
+     ]
+    }
+   ],
+   "tenant": "parity-p50f-039-null"
+  },
+  {
+   "id": "p50f-cust-pip-status-other-type",
+   "about": "the field cust.pip.status written in the state other-type, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_039",
+   "steps": [
+    {
+     "name": "w-pip",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_P50_FLD_039"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "name": "subject.parityP50F039A",
+       "pipType": "HEADER",
+       "header": "x-parity-p50f-039-a",
+       "defaultValue": "none",
+       "type": "REGULAR",
+       "cacheable": false
+      }
      ]
     },
     {
@@ -2575,6 +3529,35 @@
      "markers": [
       "PARITY_P50_FLD_039"
      ]
+    }
+   ],
+   "tenant": "parity-p50f-039-other-type"
+  },
+  {
+   "id": "p50f-cust-pip-status-blank-space",
+   "about": "the field cust.pip.status written in the state blank-space, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_039",
+   "steps": [
+    {
+     "name": "w-pip",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_P50_FLD_039"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "name": "subject.parityP50F039A",
+       "pipType": "HEADER",
+       "header": "x-parity-p50f-039-a",
+       "defaultValue": "none",
+       "type": "REGULAR",
+       "cacheable": false
+      }
+     ]
     },
     {
      "name": "w-blank-space",
@@ -2602,6 +3585,35 @@
      ],
      "markers": [
       "PARITY_P50_FLD_039"
+     ]
+    }
+   ],
+   "tenant": "parity-p50f-039-blank-space"
+  },
+  {
+   "id": "p50f-cust-pip-status-edge-nbsp",
+   "about": "the field cust.pip.status written in the state edge-nbsp, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_039",
+   "steps": [
+    {
+     "name": "w-pip",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_P50_FLD_039"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "name": "subject.parityP50F039A",
+       "pipType": "HEADER",
+       "header": "x-parity-p50f-039-a",
+       "defaultValue": "none",
+       "type": "REGULAR",
+       "cacheable": false
+      }
      ]
     },
     {
@@ -2631,6 +3643,35 @@
      "markers": [
       "PARITY_P50_FLD_039"
      ]
+    }
+   ],
+   "tenant": "parity-p50f-039-edge-nbsp"
+  },
+  {
+   "id": "p50f-cust-pip-status-edge-tab",
+   "about": "the field cust.pip.status written in the state edge-tab, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_039",
+   "steps": [
+    {
+     "name": "w-pip",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_P50_FLD_039"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "name": "subject.parityP50F039A",
+       "pipType": "HEADER",
+       "header": "x-parity-p50f-039-a",
+       "defaultValue": "none",
+       "type": "REGULAR",
+       "cacheable": false
+      }
+     ]
     },
     {
      "name": "w-edge-tab",
@@ -2659,49 +3700,15 @@
      "markers": [
       "PARITY_P50_FLD_039"
      ]
-    },
-    {
-     "name": "cleanup-entry",
-     "op": "delete-pip-customization",
-     "args": {
-      "name": "subject.parityP50F039A",
-      "level": "CUSTOMER"
-     },
-     "observe": [
-      "status"
-     ],
-     "onRefusal": "continue"
-    },
-    {
-     "name": "cleanup",
-     "op": "write-domain-pips",
-     "args": {
-      "domain": "PARITY_P50_FLD_039"
-     },
-     "observe": [
-      "status"
-     ],
-     "onRefusal": "continue",
-     "body": []
     }
    ],
-   "tenant": "parity-p50f-039"
+   "tenant": "parity-p50f-039-edge-tab"
   },
   {
-   "id": "p50f-pip-name",
-   "about": "the field pip.name written in 8 states, each read back",
+   "id": "p50f-pip-name-absent",
+   "about": "the field pip.name written in the state absent, read back",
    "resourceType": "PARITY_SUITE_P50_FLD_040",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-domain-pips",
-     "args": {
-      "domain": "PARITY_P50_FLD_040"
-     },
-     "observe": [
-      "read-raw:read-domain-pips"
-     ]
-    },
     {
      "name": "w-absent",
      "op": "write-domain-pips",
@@ -2731,7 +3738,15 @@
      "observe": [
       "read-raw:read-domain-pips"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-040-absent"
+  },
+  {
+   "id": "p50f-pip-name-edge-space",
+   "about": "the field pip.name written in the state edge-space, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_040",
+   "steps": [
     {
      "name": "w-edge-space",
      "op": "write-domain-pips",
@@ -2762,7 +3777,15 @@
      "observe": [
       "read-raw:read-domain-pips"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-040-edge-space"
+  },
+  {
+   "id": "p50f-pip-name-null",
+   "about": "the field pip.name written in the state null, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_040",
+   "steps": [
     {
      "name": "w-null",
      "op": "write-domain-pips",
@@ -2804,7 +3827,15 @@
      "markers": [
       "PARITY_P50_FLD_040"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-040-null"
+  },
+  {
+   "id": "p50f-pip-name-other-type",
+   "about": "the field pip.name written in the state other-type, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_040",
+   "steps": [
     {
      "name": "w-other-type",
      "op": "write-domain-pips",
@@ -2835,7 +3866,15 @@
      "observe": [
       "read-raw:read-domain-pips"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-040-other-type"
+  },
+  {
+   "id": "p50f-pip-name-blank-space",
+   "about": "the field pip.name written in the state blank-space, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_040",
+   "steps": [
     {
      "name": "w-blank-space",
      "op": "write-domain-pips",
@@ -2866,7 +3905,15 @@
      "observe": [
       "read-raw:read-domain-pips"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-040-blank-space"
+  },
+  {
+   "id": "p50f-pip-name-edge-nbsp",
+   "about": "the field pip.name written in the state edge-nbsp, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_040",
+   "steps": [
     {
      "name": "w-edge-nbsp",
      "op": "write-domain-pips",
@@ -2897,7 +3944,15 @@
      "observe": [
       "read-raw:read-domain-pips"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-040-edge-nbsp"
+  },
+  {
+   "id": "p50f-pip-name-edge-tab",
+   "about": "the field pip.name written in the state edge-tab, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_040",
+   "steps": [
     {
      "name": "w-edge-tab",
      "op": "write-domain-pips",
@@ -2928,7 +3983,15 @@
      "observe": [
       "read-raw:read-domain-pips"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-040-edge-tab"
+  },
+  {
+   "id": "p50f-pip-name-one-element-list",
+   "about": "the field pip.name written in the state one-element-list, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_040",
+   "steps": [
     {
      "name": "w-one-element-list",
      "op": "write-domain-pips",
@@ -2961,47 +4024,15 @@
      "observe": [
       "read-raw:read-domain-pips"
      ]
-    },
-    {
-     "name": "cleanup-slot",
-     "op": "write-domain-pips",
-     "args": {
-      "domain": "PARITY_P50_FLD_040"
-     },
-     "observe": [
-      "status"
-     ],
-     "onRefusal": "continue",
-     "body": []
     }
    ],
-   "tenant": "parity-p50f-040"
+   "tenant": "parity-p50f-040-one-element-list"
   },
   {
-   "id": "p50f-set-tenantid",
-   "about": "the field set.tenantId written in 8 states, each read back",
+   "id": "p50f-set-tenantid-edge-space",
+   "about": "the field set.tenantId written in the state edge-space, read back",
    "resourceType": "PARITY_SUITE_P50_FLD_049",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-config-sets",
-     "args": {},
-     "observe": [
-      "read:read-config-sets"
-     ],
-     "markers": [
-      "parity-p50-fld-049",
-      "PARITY_P50_FLD_049",
-      "parity-p50-fld-049-edge-space",
-      "parity-p50-fld-049-empty-string",
-      "parity-p50-fld-049-null",
-      "parity-p50-fld-049-other-type",
-      "parity-p50-fld-049-blank-space",
-      "parity-p50-fld-049-edge-nbsp",
-      "parity-p50-fld-049-edge-tab",
-      "parity-p50-fld-049-one-element-list"
-     ]
-    },
     {
      "name": "w-edge-space",
      "op": "write-external-id-sets",
@@ -3051,16 +4082,17 @@
      "markers": [
       "parity-p50-fld-049",
       "PARITY_P50_FLD_049",
-      "parity-p50-fld-049-edge-space",
-      "parity-p50-fld-049-empty-string",
-      "parity-p50-fld-049-null",
-      "parity-p50-fld-049-other-type",
-      "parity-p50-fld-049-blank-space",
-      "parity-p50-fld-049-edge-nbsp",
-      "parity-p50-fld-049-edge-tab",
-      "parity-p50-fld-049-one-element-list"
+      "parity-p50-fld-049-edge-space"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-049-edge-space"
+  },
+  {
+   "id": "p50f-set-tenantid-empty-string",
+   "about": "the field set.tenantId written in the state empty-string, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_049",
+   "steps": [
     {
      "name": "w-empty-string",
      "op": "write-external-id-sets",
@@ -3110,16 +4142,17 @@
      "markers": [
       "parity-p50-fld-049",
       "PARITY_P50_FLD_049",
-      "parity-p50-fld-049-edge-space",
-      "parity-p50-fld-049-empty-string",
-      "parity-p50-fld-049-null",
-      "parity-p50-fld-049-other-type",
-      "parity-p50-fld-049-blank-space",
-      "parity-p50-fld-049-edge-nbsp",
-      "parity-p50-fld-049-edge-tab",
-      "parity-p50-fld-049-one-element-list"
+      "parity-p50-fld-049-empty-string"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-049-empty-string"
+  },
+  {
+   "id": "p50f-set-tenantid-null",
+   "about": "the field set.tenantId written in the state null, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_049",
+   "steps": [
     {
      "name": "w-null",
      "op": "write-external-id-sets",
@@ -3169,16 +4202,17 @@
      "markers": [
       "parity-p50-fld-049",
       "PARITY_P50_FLD_049",
-      "parity-p50-fld-049-edge-space",
-      "parity-p50-fld-049-empty-string",
-      "parity-p50-fld-049-null",
-      "parity-p50-fld-049-other-type",
-      "parity-p50-fld-049-blank-space",
-      "parity-p50-fld-049-edge-nbsp",
-      "parity-p50-fld-049-edge-tab",
-      "parity-p50-fld-049-one-element-list"
+      "parity-p50-fld-049-null"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-049-null"
+  },
+  {
+   "id": "p50f-set-tenantid-other-type",
+   "about": "the field set.tenantId written in the state other-type, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_049",
+   "steps": [
     {
      "name": "w-other-type",
      "op": "write-external-id-sets",
@@ -3228,16 +4262,17 @@
      "markers": [
       "parity-p50-fld-049",
       "PARITY_P50_FLD_049",
-      "parity-p50-fld-049-edge-space",
-      "parity-p50-fld-049-empty-string",
-      "parity-p50-fld-049-null",
-      "parity-p50-fld-049-other-type",
-      "parity-p50-fld-049-blank-space",
-      "parity-p50-fld-049-edge-nbsp",
-      "parity-p50-fld-049-edge-tab",
-      "parity-p50-fld-049-one-element-list"
+      "parity-p50-fld-049-other-type"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-049-other-type"
+  },
+  {
+   "id": "p50f-set-tenantid-blank-space",
+   "about": "the field set.tenantId written in the state blank-space, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_049",
+   "steps": [
     {
      "name": "w-blank-space",
      "op": "write-external-id-sets",
@@ -3287,16 +4322,17 @@
      "markers": [
       "parity-p50-fld-049",
       "PARITY_P50_FLD_049",
-      "parity-p50-fld-049-edge-space",
-      "parity-p50-fld-049-empty-string",
-      "parity-p50-fld-049-null",
-      "parity-p50-fld-049-other-type",
-      "parity-p50-fld-049-blank-space",
-      "parity-p50-fld-049-edge-nbsp",
-      "parity-p50-fld-049-edge-tab",
-      "parity-p50-fld-049-one-element-list"
+      "parity-p50-fld-049-blank-space"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-049-blank-space"
+  },
+  {
+   "id": "p50f-set-tenantid-edge-nbsp",
+   "about": "the field set.tenantId written in the state edge-nbsp, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_049",
+   "steps": [
     {
      "name": "w-edge-nbsp",
      "op": "write-external-id-sets",
@@ -3346,16 +4382,17 @@
      "markers": [
       "parity-p50-fld-049",
       "PARITY_P50_FLD_049",
-      "parity-p50-fld-049-edge-space",
-      "parity-p50-fld-049-empty-string",
-      "parity-p50-fld-049-null",
-      "parity-p50-fld-049-other-type",
-      "parity-p50-fld-049-blank-space",
-      "parity-p50-fld-049-edge-nbsp",
-      "parity-p50-fld-049-edge-tab",
-      "parity-p50-fld-049-one-element-list"
+      "parity-p50-fld-049-edge-nbsp"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-049-edge-nbsp"
+  },
+  {
+   "id": "p50f-set-tenantid-edge-tab",
+   "about": "the field set.tenantId written in the state edge-tab, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_049",
+   "steps": [
     {
      "name": "w-edge-tab",
      "op": "write-external-id-sets",
@@ -3405,16 +4442,17 @@
      "markers": [
       "parity-p50-fld-049",
       "PARITY_P50_FLD_049",
-      "parity-p50-fld-049-edge-space",
-      "parity-p50-fld-049-empty-string",
-      "parity-p50-fld-049-null",
-      "parity-p50-fld-049-other-type",
-      "parity-p50-fld-049-blank-space",
-      "parity-p50-fld-049-edge-nbsp",
-      "parity-p50-fld-049-edge-tab",
-      "parity-p50-fld-049-one-element-list"
+      "parity-p50-fld-049-edge-tab"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-049-edge-tab"
+  },
+  {
+   "id": "p50f-set-tenantid-one-element-list",
+   "about": "the field set.tenantId written in the state one-element-list, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_049",
+   "steps": [
     {
      "name": "w-one-element-list",
      "op": "write-external-id-sets",
@@ -3466,44 +4504,17 @@
      "markers": [
       "parity-p50-fld-049",
       "PARITY_P50_FLD_049",
-      "parity-p50-fld-049-edge-space",
-      "parity-p50-fld-049-empty-string",
-      "parity-p50-fld-049-null",
-      "parity-p50-fld-049-other-type",
-      "parity-p50-fld-049-blank-space",
-      "parity-p50-fld-049-edge-nbsp",
-      "parity-p50-fld-049-edge-tab",
       "parity-p50-fld-049-one-element-list"
      ]
     }
    ],
-   "tenant": "parity-p50f-049"
+   "tenant": "parity-p50f-049-one-element-list"
   },
   {
-   "id": "p50f-set-externalid",
-   "about": "the field set.externalId written in 8 states, each read back",
+   "id": "p50f-set-externalid-edge-space",
+   "about": "the field set.externalId written in the state edge-space, read back",
    "resourceType": "PARITY_SUITE_P50_FLD_050",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-config-sets",
-     "args": {},
-     "observe": [
-      "read:read-config-sets"
-     ],
-     "markers": [
-      "parity-p50-fld-050",
-      "PARITY_P50_FLD_050",
-      "parity-p50-fld-050-edge-space",
-      "parity-p50-fld-050-empty-string",
-      "parity-p50-fld-050-null",
-      "parity-p50-fld-050-other-type",
-      "parity-p50-fld-050-blank-space",
-      "parity-p50-fld-050-edge-nbsp",
-      "parity-p50-fld-050-edge-tab",
-      "parity-p50-fld-050-one-element-list"
-     ]
-    },
     {
      "name": "w-edge-space",
      "op": "write-external-id-sets",
@@ -3553,16 +4564,17 @@
      "markers": [
       "parity-p50-fld-050",
       "PARITY_P50_FLD_050",
-      "parity-p50-fld-050-edge-space",
-      "parity-p50-fld-050-empty-string",
-      "parity-p50-fld-050-null",
-      "parity-p50-fld-050-other-type",
-      "parity-p50-fld-050-blank-space",
-      "parity-p50-fld-050-edge-nbsp",
-      "parity-p50-fld-050-edge-tab",
-      "parity-p50-fld-050-one-element-list"
+      "parity-p50-fld-050-edge-space"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-050-edge-space"
+  },
+  {
+   "id": "p50f-set-externalid-empty-string",
+   "about": "the field set.externalId written in the state empty-string, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_050",
+   "steps": [
     {
      "name": "w-empty-string",
      "op": "write-external-id-sets",
@@ -3612,16 +4624,17 @@
      "markers": [
       "parity-p50-fld-050",
       "PARITY_P50_FLD_050",
-      "parity-p50-fld-050-edge-space",
-      "parity-p50-fld-050-empty-string",
-      "parity-p50-fld-050-null",
-      "parity-p50-fld-050-other-type",
-      "parity-p50-fld-050-blank-space",
-      "parity-p50-fld-050-edge-nbsp",
-      "parity-p50-fld-050-edge-tab",
-      "parity-p50-fld-050-one-element-list"
+      "parity-p50-fld-050-empty-string"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-050-empty-string"
+  },
+  {
+   "id": "p50f-set-externalid-null",
+   "about": "the field set.externalId written in the state null, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_050",
+   "steps": [
     {
      "name": "w-null",
      "op": "write-external-id-sets",
@@ -3671,16 +4684,17 @@
      "markers": [
       "parity-p50-fld-050",
       "PARITY_P50_FLD_050",
-      "parity-p50-fld-050-edge-space",
-      "parity-p50-fld-050-empty-string",
-      "parity-p50-fld-050-null",
-      "parity-p50-fld-050-other-type",
-      "parity-p50-fld-050-blank-space",
-      "parity-p50-fld-050-edge-nbsp",
-      "parity-p50-fld-050-edge-tab",
-      "parity-p50-fld-050-one-element-list"
+      "parity-p50-fld-050-null"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-050-null"
+  },
+  {
+   "id": "p50f-set-externalid-other-type",
+   "about": "the field set.externalId written in the state other-type, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_050",
+   "steps": [
     {
      "name": "w-other-type",
      "op": "write-external-id-sets",
@@ -3730,16 +4744,17 @@
      "markers": [
       "parity-p50-fld-050",
       "PARITY_P50_FLD_050",
-      "parity-p50-fld-050-edge-space",
-      "parity-p50-fld-050-empty-string",
-      "parity-p50-fld-050-null",
-      "parity-p50-fld-050-other-type",
-      "parity-p50-fld-050-blank-space",
-      "parity-p50-fld-050-edge-nbsp",
-      "parity-p50-fld-050-edge-tab",
-      "parity-p50-fld-050-one-element-list"
+      "parity-p50-fld-050-other-type"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-050-other-type"
+  },
+  {
+   "id": "p50f-set-externalid-blank-space",
+   "about": "the field set.externalId written in the state blank-space, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_050",
+   "steps": [
     {
      "name": "w-blank-space",
      "op": "write-external-id-sets",
@@ -3789,16 +4804,17 @@
      "markers": [
       "parity-p50-fld-050",
       "PARITY_P50_FLD_050",
-      "parity-p50-fld-050-edge-space",
-      "parity-p50-fld-050-empty-string",
-      "parity-p50-fld-050-null",
-      "parity-p50-fld-050-other-type",
-      "parity-p50-fld-050-blank-space",
-      "parity-p50-fld-050-edge-nbsp",
-      "parity-p50-fld-050-edge-tab",
-      "parity-p50-fld-050-one-element-list"
+      "parity-p50-fld-050-blank-space"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-050-blank-space"
+  },
+  {
+   "id": "p50f-set-externalid-edge-nbsp",
+   "about": "the field set.externalId written in the state edge-nbsp, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_050",
+   "steps": [
     {
      "name": "w-edge-nbsp",
      "op": "write-external-id-sets",
@@ -3848,16 +4864,17 @@
      "markers": [
       "parity-p50-fld-050",
       "PARITY_P50_FLD_050",
-      "parity-p50-fld-050-edge-space",
-      "parity-p50-fld-050-empty-string",
-      "parity-p50-fld-050-null",
-      "parity-p50-fld-050-other-type",
-      "parity-p50-fld-050-blank-space",
-      "parity-p50-fld-050-edge-nbsp",
-      "parity-p50-fld-050-edge-tab",
-      "parity-p50-fld-050-one-element-list"
+      "parity-p50-fld-050-edge-nbsp"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-050-edge-nbsp"
+  },
+  {
+   "id": "p50f-set-externalid-edge-tab",
+   "about": "the field set.externalId written in the state edge-tab, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_050",
+   "steps": [
     {
      "name": "w-edge-tab",
      "op": "write-external-id-sets",
@@ -3907,16 +4924,17 @@
      "markers": [
       "parity-p50-fld-050",
       "PARITY_P50_FLD_050",
-      "parity-p50-fld-050-edge-space",
-      "parity-p50-fld-050-empty-string",
-      "parity-p50-fld-050-null",
-      "parity-p50-fld-050-other-type",
-      "parity-p50-fld-050-blank-space",
-      "parity-p50-fld-050-edge-nbsp",
-      "parity-p50-fld-050-edge-tab",
-      "parity-p50-fld-050-one-element-list"
+      "parity-p50-fld-050-edge-tab"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-050-edge-tab"
+  },
+  {
+   "id": "p50f-set-externalid-one-element-list",
+   "about": "the field set.externalId written in the state one-element-list, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_050",
+   "steps": [
     {
      "name": "w-one-element-list",
      "op": "write-external-id-sets",
@@ -3968,44 +4986,17 @@
      "markers": [
       "parity-p50-fld-050",
       "PARITY_P50_FLD_050",
-      "parity-p50-fld-050-edge-space",
-      "parity-p50-fld-050-empty-string",
-      "parity-p50-fld-050-null",
-      "parity-p50-fld-050-other-type",
-      "parity-p50-fld-050-blank-space",
-      "parity-p50-fld-050-edge-nbsp",
-      "parity-p50-fld-050-edge-tab",
       "parity-p50-fld-050-one-element-list"
      ]
     }
    ],
-   "tenant": "parity-p50f-050"
+   "tenant": "parity-p50f-050-one-element-list"
   },
   {
-   "id": "p50f-policy-tenantid",
-   "about": "the field policy.tenantId written in 8 states, each read back",
+   "id": "p50f-policy-tenantid-edge-space",
+   "about": "the field policy.tenantId written in the state edge-space, read back",
    "resourceType": "PARITY_SUITE_P50_FLD_052",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-config-sets",
-     "args": {},
-     "observe": [
-      "read:read-config-sets"
-     ],
-     "markers": [
-      "parity-p50-fld-052",
-      "PARITY_P50_FLD_052",
-      "parity-p50-fld-052-edge-space",
-      "parity-p50-fld-052-empty-string",
-      "parity-p50-fld-052-null",
-      "parity-p50-fld-052-other-type",
-      "parity-p50-fld-052-blank-space",
-      "parity-p50-fld-052-edge-nbsp",
-      "parity-p50-fld-052-edge-tab",
-      "parity-p50-fld-052-one-element-list"
-     ]
-    },
     {
      "name": "w-edge-space",
      "op": "write-external-id-sets",
@@ -4055,16 +5046,17 @@
      "markers": [
       "parity-p50-fld-052",
       "PARITY_P50_FLD_052",
-      "parity-p50-fld-052-edge-space",
-      "parity-p50-fld-052-empty-string",
-      "parity-p50-fld-052-null",
-      "parity-p50-fld-052-other-type",
-      "parity-p50-fld-052-blank-space",
-      "parity-p50-fld-052-edge-nbsp",
-      "parity-p50-fld-052-edge-tab",
-      "parity-p50-fld-052-one-element-list"
+      "parity-p50-fld-052-edge-space"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-052-edge-space"
+  },
+  {
+   "id": "p50f-policy-tenantid-empty-string",
+   "about": "the field policy.tenantId written in the state empty-string, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_052",
+   "steps": [
     {
      "name": "w-empty-string",
      "op": "write-external-id-sets",
@@ -4114,16 +5106,17 @@
      "markers": [
       "parity-p50-fld-052",
       "PARITY_P50_FLD_052",
-      "parity-p50-fld-052-edge-space",
-      "parity-p50-fld-052-empty-string",
-      "parity-p50-fld-052-null",
-      "parity-p50-fld-052-other-type",
-      "parity-p50-fld-052-blank-space",
-      "parity-p50-fld-052-edge-nbsp",
-      "parity-p50-fld-052-edge-tab",
-      "parity-p50-fld-052-one-element-list"
+      "parity-p50-fld-052-empty-string"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-052-empty-string"
+  },
+  {
+   "id": "p50f-policy-tenantid-null",
+   "about": "the field policy.tenantId written in the state null, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_052",
+   "steps": [
     {
      "name": "w-null",
      "op": "write-external-id-sets",
@@ -4173,16 +5166,17 @@
      "markers": [
       "parity-p50-fld-052",
       "PARITY_P50_FLD_052",
-      "parity-p50-fld-052-edge-space",
-      "parity-p50-fld-052-empty-string",
-      "parity-p50-fld-052-null",
-      "parity-p50-fld-052-other-type",
-      "parity-p50-fld-052-blank-space",
-      "parity-p50-fld-052-edge-nbsp",
-      "parity-p50-fld-052-edge-tab",
-      "parity-p50-fld-052-one-element-list"
+      "parity-p50-fld-052-null"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-052-null"
+  },
+  {
+   "id": "p50f-policy-tenantid-other-type",
+   "about": "the field policy.tenantId written in the state other-type, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_052",
+   "steps": [
     {
      "name": "w-other-type",
      "op": "write-external-id-sets",
@@ -4232,16 +5226,17 @@
      "markers": [
       "parity-p50-fld-052",
       "PARITY_P50_FLD_052",
-      "parity-p50-fld-052-edge-space",
-      "parity-p50-fld-052-empty-string",
-      "parity-p50-fld-052-null",
-      "parity-p50-fld-052-other-type",
-      "parity-p50-fld-052-blank-space",
-      "parity-p50-fld-052-edge-nbsp",
-      "parity-p50-fld-052-edge-tab",
-      "parity-p50-fld-052-one-element-list"
+      "parity-p50-fld-052-other-type"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-052-other-type"
+  },
+  {
+   "id": "p50f-policy-tenantid-blank-space",
+   "about": "the field policy.tenantId written in the state blank-space, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_052",
+   "steps": [
     {
      "name": "w-blank-space",
      "op": "write-external-id-sets",
@@ -4291,16 +5286,17 @@
      "markers": [
       "parity-p50-fld-052",
       "PARITY_P50_FLD_052",
-      "parity-p50-fld-052-edge-space",
-      "parity-p50-fld-052-empty-string",
-      "parity-p50-fld-052-null",
-      "parity-p50-fld-052-other-type",
-      "parity-p50-fld-052-blank-space",
-      "parity-p50-fld-052-edge-nbsp",
-      "parity-p50-fld-052-edge-tab",
-      "parity-p50-fld-052-one-element-list"
+      "parity-p50-fld-052-blank-space"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-052-blank-space"
+  },
+  {
+   "id": "p50f-policy-tenantid-edge-nbsp",
+   "about": "the field policy.tenantId written in the state edge-nbsp, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_052",
+   "steps": [
     {
      "name": "w-edge-nbsp",
      "op": "write-external-id-sets",
@@ -4350,16 +5346,17 @@
      "markers": [
       "parity-p50-fld-052",
       "PARITY_P50_FLD_052",
-      "parity-p50-fld-052-edge-space",
-      "parity-p50-fld-052-empty-string",
-      "parity-p50-fld-052-null",
-      "parity-p50-fld-052-other-type",
-      "parity-p50-fld-052-blank-space",
-      "parity-p50-fld-052-edge-nbsp",
-      "parity-p50-fld-052-edge-tab",
-      "parity-p50-fld-052-one-element-list"
+      "parity-p50-fld-052-edge-nbsp"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-052-edge-nbsp"
+  },
+  {
+   "id": "p50f-policy-tenantid-edge-tab",
+   "about": "the field policy.tenantId written in the state edge-tab, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_052",
+   "steps": [
     {
      "name": "w-edge-tab",
      "op": "write-external-id-sets",
@@ -4409,16 +5406,17 @@
      "markers": [
       "parity-p50-fld-052",
       "PARITY_P50_FLD_052",
-      "parity-p50-fld-052-edge-space",
-      "parity-p50-fld-052-empty-string",
-      "parity-p50-fld-052-null",
-      "parity-p50-fld-052-other-type",
-      "parity-p50-fld-052-blank-space",
-      "parity-p50-fld-052-edge-nbsp",
-      "parity-p50-fld-052-edge-tab",
-      "parity-p50-fld-052-one-element-list"
+      "parity-p50-fld-052-edge-tab"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-052-edge-tab"
+  },
+  {
+   "id": "p50f-policy-tenantid-one-element-list",
+   "about": "the field policy.tenantId written in the state one-element-list, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_052",
+   "steps": [
     {
      "name": "w-one-element-list",
      "op": "write-external-id-sets",
@@ -4470,44 +5468,17 @@
      "markers": [
       "parity-p50-fld-052",
       "PARITY_P50_FLD_052",
-      "parity-p50-fld-052-edge-space",
-      "parity-p50-fld-052-empty-string",
-      "parity-p50-fld-052-null",
-      "parity-p50-fld-052-other-type",
-      "parity-p50-fld-052-blank-space",
-      "parity-p50-fld-052-edge-nbsp",
-      "parity-p50-fld-052-edge-tab",
       "parity-p50-fld-052-one-element-list"
      ]
     }
    ],
-   "tenant": "parity-p50f-052"
+   "tenant": "parity-p50f-052-one-element-list"
   },
   {
-   "id": "p50f-rule-effect",
-   "about": "the field rule.effect written in 8 states, each read back",
+   "id": "p50f-rule-effect-absent",
+   "about": "the field rule.effect written in the state absent, read back",
    "resourceType": "PARITY_SUITE_P50_FLD_053",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-config-sets",
-     "args": {},
-     "observe": [
-      "read:read-config-sets"
-     ],
-     "markers": [
-      "parity-p50-fld-053",
-      "PARITY_P50_FLD_053",
-      "parity-p50-fld-053-absent",
-      "parity-p50-fld-053-edge-space",
-      "parity-p50-fld-053-null",
-      "parity-p50-fld-053-other-type",
-      "parity-p50-fld-053-blank-space",
-      "parity-p50-fld-053-edge-nbsp",
-      "parity-p50-fld-053-edge-tab",
-      "parity-p50-fld-053-one-element-list"
-     ]
-    },
     {
      "name": "w-absent",
      "op": "write-external-id-sets",
@@ -4555,16 +5526,17 @@
      "markers": [
       "parity-p50-fld-053",
       "PARITY_P50_FLD_053",
-      "parity-p50-fld-053-absent",
-      "parity-p50-fld-053-edge-space",
-      "parity-p50-fld-053-null",
-      "parity-p50-fld-053-other-type",
-      "parity-p50-fld-053-blank-space",
-      "parity-p50-fld-053-edge-nbsp",
-      "parity-p50-fld-053-edge-tab",
-      "parity-p50-fld-053-one-element-list"
+      "parity-p50-fld-053-absent"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-053-absent"
+  },
+  {
+   "id": "p50f-rule-effect-edge-space",
+   "about": "the field rule.effect written in the state edge-space, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_053",
+   "steps": [
     {
      "name": "w-edge-space",
      "op": "write-external-id-sets",
@@ -4613,16 +5585,17 @@
      "markers": [
       "parity-p50-fld-053",
       "PARITY_P50_FLD_053",
-      "parity-p50-fld-053-absent",
-      "parity-p50-fld-053-edge-space",
-      "parity-p50-fld-053-null",
-      "parity-p50-fld-053-other-type",
-      "parity-p50-fld-053-blank-space",
-      "parity-p50-fld-053-edge-nbsp",
-      "parity-p50-fld-053-edge-tab",
-      "parity-p50-fld-053-one-element-list"
+      "parity-p50-fld-053-edge-space"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-053-edge-space"
+  },
+  {
+   "id": "p50f-rule-effect-null",
+   "about": "the field rule.effect written in the state null, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_053",
+   "steps": [
     {
      "name": "w-null",
      "op": "write-external-id-sets",
@@ -4671,16 +5644,17 @@
      "markers": [
       "parity-p50-fld-053",
       "PARITY_P50_FLD_053",
-      "parity-p50-fld-053-absent",
-      "parity-p50-fld-053-edge-space",
-      "parity-p50-fld-053-null",
-      "parity-p50-fld-053-other-type",
-      "parity-p50-fld-053-blank-space",
-      "parity-p50-fld-053-edge-nbsp",
-      "parity-p50-fld-053-edge-tab",
-      "parity-p50-fld-053-one-element-list"
+      "parity-p50-fld-053-null"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-053-null"
+  },
+  {
+   "id": "p50f-rule-effect-other-type",
+   "about": "the field rule.effect written in the state other-type, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_053",
+   "steps": [
     {
      "name": "w-other-type",
      "op": "write-external-id-sets",
@@ -4729,16 +5703,17 @@
      "markers": [
       "parity-p50-fld-053",
       "PARITY_P50_FLD_053",
-      "parity-p50-fld-053-absent",
-      "parity-p50-fld-053-edge-space",
-      "parity-p50-fld-053-null",
-      "parity-p50-fld-053-other-type",
-      "parity-p50-fld-053-blank-space",
-      "parity-p50-fld-053-edge-nbsp",
-      "parity-p50-fld-053-edge-tab",
-      "parity-p50-fld-053-one-element-list"
+      "parity-p50-fld-053-other-type"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-053-other-type"
+  },
+  {
+   "id": "p50f-rule-effect-blank-space",
+   "about": "the field rule.effect written in the state blank-space, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_053",
+   "steps": [
     {
      "name": "w-blank-space",
      "op": "write-external-id-sets",
@@ -4787,16 +5762,17 @@
      "markers": [
       "parity-p50-fld-053",
       "PARITY_P50_FLD_053",
-      "parity-p50-fld-053-absent",
-      "parity-p50-fld-053-edge-space",
-      "parity-p50-fld-053-null",
-      "parity-p50-fld-053-other-type",
-      "parity-p50-fld-053-blank-space",
-      "parity-p50-fld-053-edge-nbsp",
-      "parity-p50-fld-053-edge-tab",
-      "parity-p50-fld-053-one-element-list"
+      "parity-p50-fld-053-blank-space"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-053-blank-space"
+  },
+  {
+   "id": "p50f-rule-effect-edge-nbsp",
+   "about": "the field rule.effect written in the state edge-nbsp, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_053",
+   "steps": [
     {
      "name": "w-edge-nbsp",
      "op": "write-external-id-sets",
@@ -4845,16 +5821,17 @@
      "markers": [
       "parity-p50-fld-053",
       "PARITY_P50_FLD_053",
-      "parity-p50-fld-053-absent",
-      "parity-p50-fld-053-edge-space",
-      "parity-p50-fld-053-null",
-      "parity-p50-fld-053-other-type",
-      "parity-p50-fld-053-blank-space",
-      "parity-p50-fld-053-edge-nbsp",
-      "parity-p50-fld-053-edge-tab",
-      "parity-p50-fld-053-one-element-list"
+      "parity-p50-fld-053-edge-nbsp"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-053-edge-nbsp"
+  },
+  {
+   "id": "p50f-rule-effect-edge-tab",
+   "about": "the field rule.effect written in the state edge-tab, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_053",
+   "steps": [
     {
      "name": "w-edge-tab",
      "op": "write-external-id-sets",
@@ -4903,16 +5880,17 @@
      "markers": [
       "parity-p50-fld-053",
       "PARITY_P50_FLD_053",
-      "parity-p50-fld-053-absent",
-      "parity-p50-fld-053-edge-space",
-      "parity-p50-fld-053-null",
-      "parity-p50-fld-053-other-type",
-      "parity-p50-fld-053-blank-space",
-      "parity-p50-fld-053-edge-nbsp",
-      "parity-p50-fld-053-edge-tab",
-      "parity-p50-fld-053-one-element-list"
+      "parity-p50-fld-053-edge-tab"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-053-edge-tab"
+  },
+  {
+   "id": "p50f-rule-effect-one-element-list",
+   "about": "the field rule.effect written in the state one-element-list, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_053",
+   "steps": [
     {
      "name": "w-one-element-list",
      "op": "write-external-id-sets",
@@ -4963,44 +5941,17 @@
      "markers": [
       "parity-p50-fld-053",
       "PARITY_P50_FLD_053",
-      "parity-p50-fld-053-absent",
-      "parity-p50-fld-053-edge-space",
-      "parity-p50-fld-053-null",
-      "parity-p50-fld-053-other-type",
-      "parity-p50-fld-053-blank-space",
-      "parity-p50-fld-053-edge-nbsp",
-      "parity-p50-fld-053-edge-tab",
       "parity-p50-fld-053-one-element-list"
      ]
     }
    ],
-   "tenant": "parity-p50f-053"
+   "tenant": "parity-p50f-053-one-element-list"
   },
   {
-   "id": "p50f-rule-tenantid",
-   "about": "the field rule.tenantId written in 8 states, each read back",
+   "id": "p50f-rule-tenantid-edge-space",
+   "about": "the field rule.tenantId written in the state edge-space, read back",
    "resourceType": "PARITY_SUITE_P50_FLD_055",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-config-sets",
-     "args": {},
-     "observe": [
-      "read:read-config-sets"
-     ],
-     "markers": [
-      "parity-p50-fld-055",
-      "PARITY_P50_FLD_055",
-      "parity-p50-fld-055-edge-space",
-      "parity-p50-fld-055-empty-string",
-      "parity-p50-fld-055-null",
-      "parity-p50-fld-055-other-type",
-      "parity-p50-fld-055-blank-space",
-      "parity-p50-fld-055-edge-nbsp",
-      "parity-p50-fld-055-edge-tab",
-      "parity-p50-fld-055-one-element-list"
-     ]
-    },
     {
      "name": "w-edge-space",
      "op": "write-external-id-sets",
@@ -5050,16 +6001,17 @@
      "markers": [
       "parity-p50-fld-055",
       "PARITY_P50_FLD_055",
-      "parity-p50-fld-055-edge-space",
-      "parity-p50-fld-055-empty-string",
-      "parity-p50-fld-055-null",
-      "parity-p50-fld-055-other-type",
-      "parity-p50-fld-055-blank-space",
-      "parity-p50-fld-055-edge-nbsp",
-      "parity-p50-fld-055-edge-tab",
-      "parity-p50-fld-055-one-element-list"
+      "parity-p50-fld-055-edge-space"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-055-edge-space"
+  },
+  {
+   "id": "p50f-rule-tenantid-empty-string",
+   "about": "the field rule.tenantId written in the state empty-string, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_055",
+   "steps": [
     {
      "name": "w-empty-string",
      "op": "write-external-id-sets",
@@ -5109,16 +6061,17 @@
      "markers": [
       "parity-p50-fld-055",
       "PARITY_P50_FLD_055",
-      "parity-p50-fld-055-edge-space",
-      "parity-p50-fld-055-empty-string",
-      "parity-p50-fld-055-null",
-      "parity-p50-fld-055-other-type",
-      "parity-p50-fld-055-blank-space",
-      "parity-p50-fld-055-edge-nbsp",
-      "parity-p50-fld-055-edge-tab",
-      "parity-p50-fld-055-one-element-list"
+      "parity-p50-fld-055-empty-string"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-055-empty-string"
+  },
+  {
+   "id": "p50f-rule-tenantid-null",
+   "about": "the field rule.tenantId written in the state null, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_055",
+   "steps": [
     {
      "name": "w-null",
      "op": "write-external-id-sets",
@@ -5168,16 +6121,17 @@
      "markers": [
       "parity-p50-fld-055",
       "PARITY_P50_FLD_055",
-      "parity-p50-fld-055-edge-space",
-      "parity-p50-fld-055-empty-string",
-      "parity-p50-fld-055-null",
-      "parity-p50-fld-055-other-type",
-      "parity-p50-fld-055-blank-space",
-      "parity-p50-fld-055-edge-nbsp",
-      "parity-p50-fld-055-edge-tab",
-      "parity-p50-fld-055-one-element-list"
+      "parity-p50-fld-055-null"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-055-null"
+  },
+  {
+   "id": "p50f-rule-tenantid-other-type",
+   "about": "the field rule.tenantId written in the state other-type, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_055",
+   "steps": [
     {
      "name": "w-other-type",
      "op": "write-external-id-sets",
@@ -5227,16 +6181,17 @@
      "markers": [
       "parity-p50-fld-055",
       "PARITY_P50_FLD_055",
-      "parity-p50-fld-055-edge-space",
-      "parity-p50-fld-055-empty-string",
-      "parity-p50-fld-055-null",
-      "parity-p50-fld-055-other-type",
-      "parity-p50-fld-055-blank-space",
-      "parity-p50-fld-055-edge-nbsp",
-      "parity-p50-fld-055-edge-tab",
-      "parity-p50-fld-055-one-element-list"
+      "parity-p50-fld-055-other-type"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-055-other-type"
+  },
+  {
+   "id": "p50f-rule-tenantid-blank-space",
+   "about": "the field rule.tenantId written in the state blank-space, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_055",
+   "steps": [
     {
      "name": "w-blank-space",
      "op": "write-external-id-sets",
@@ -5286,16 +6241,17 @@
      "markers": [
       "parity-p50-fld-055",
       "PARITY_P50_FLD_055",
-      "parity-p50-fld-055-edge-space",
-      "parity-p50-fld-055-empty-string",
-      "parity-p50-fld-055-null",
-      "parity-p50-fld-055-other-type",
-      "parity-p50-fld-055-blank-space",
-      "parity-p50-fld-055-edge-nbsp",
-      "parity-p50-fld-055-edge-tab",
-      "parity-p50-fld-055-one-element-list"
+      "parity-p50-fld-055-blank-space"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-055-blank-space"
+  },
+  {
+   "id": "p50f-rule-tenantid-edge-nbsp",
+   "about": "the field rule.tenantId written in the state edge-nbsp, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_055",
+   "steps": [
     {
      "name": "w-edge-nbsp",
      "op": "write-external-id-sets",
@@ -5345,16 +6301,17 @@
      "markers": [
       "parity-p50-fld-055",
       "PARITY_P50_FLD_055",
-      "parity-p50-fld-055-edge-space",
-      "parity-p50-fld-055-empty-string",
-      "parity-p50-fld-055-null",
-      "parity-p50-fld-055-other-type",
-      "parity-p50-fld-055-blank-space",
-      "parity-p50-fld-055-edge-nbsp",
-      "parity-p50-fld-055-edge-tab",
-      "parity-p50-fld-055-one-element-list"
+      "parity-p50-fld-055-edge-nbsp"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-055-edge-nbsp"
+  },
+  {
+   "id": "p50f-rule-tenantid-edge-tab",
+   "about": "the field rule.tenantId written in the state edge-tab, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_055",
+   "steps": [
     {
      "name": "w-edge-tab",
      "op": "write-external-id-sets",
@@ -5404,16 +6361,17 @@
      "markers": [
       "parity-p50-fld-055",
       "PARITY_P50_FLD_055",
-      "parity-p50-fld-055-edge-space",
-      "parity-p50-fld-055-empty-string",
-      "parity-p50-fld-055-null",
-      "parity-p50-fld-055-other-type",
-      "parity-p50-fld-055-blank-space",
-      "parity-p50-fld-055-edge-nbsp",
-      "parity-p50-fld-055-edge-tab",
-      "parity-p50-fld-055-one-element-list"
+      "parity-p50-fld-055-edge-tab"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p50f-055-edge-tab"
+  },
+  {
+   "id": "p50f-rule-tenantid-one-element-list",
+   "about": "the field rule.tenantId written in the state one-element-list, read back",
+   "resourceType": "PARITY_SUITE_P50_FLD_055",
+   "steps": [
     {
      "name": "w-one-element-list",
      "op": "write-external-id-sets",
@@ -5465,18 +6423,11 @@
      "markers": [
       "parity-p50-fld-055",
       "PARITY_P50_FLD_055",
-      "parity-p50-fld-055-edge-space",
-      "parity-p50-fld-055-empty-string",
-      "parity-p50-fld-055-null",
-      "parity-p50-fld-055-other-type",
-      "parity-p50-fld-055-blank-space",
-      "parity-p50-fld-055-edge-nbsp",
-      "parity-p50-fld-055-edge-tab",
       "parity-p50-fld-055-one-element-list"
      ]
     }
    ],
-   "tenant": "parity-p50f-055"
+   "tenant": "parity-p50f-055-one-element-list"
   },
   {
    "id": "p50i-control-fields-should-last",

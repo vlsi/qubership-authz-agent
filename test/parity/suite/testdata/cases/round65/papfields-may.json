@@ -1,5 +1,5 @@
 {
- "about": "Round 65 (may): the stored form of each field of a PAP write. Each case writes one field in several states (absent, null, empty, padded with whitespace, of another JSON type, the documented default sent explicitly), reads it back after each write (a PIP also through the export of every PIP). Each case runs in a tenant of its own, writes to a domain and an externalId of its own; a control writes and reads back first and last.",
+ "about": "Round 65 (may): the stored form of each field of a PAP write. Each case writes one field in one state (absent, null, empty, padded with whitespace, of another JSON type, the documented default sent explicitly) and reads it back (a PIP also through the export of every PIP). Each case runs in a fresh tenant of its own, writes to a domain and an externalId of its own; a control writes and reads back first and last.",
  "standVersion": true,
  "cases": [
   {
@@ -69,34 +69,10 @@
    "tenant": "parity-p65i-973"
   },
   {
-   "id": "p65f-set-name",
-   "about": "the field set.name written in 12 states, each read back",
+   "id": "p65f-set-name-absent",
+   "about": "the field set.name written in the state absent, read back",
    "resourceType": "PARITY_SUITE_P65_FLD_027",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-config-sets",
-     "args": {},
-     "observe": [
-      "read:read-config-sets"
-     ],
-     "markers": [
-      "parity-p65-fld-027",
-      "PARITY_P65_FLD_027",
-      "parity-p65-fld-027-absent",
-      "parity-p65-fld-027-empty-string",
-      "parity-p65-fld-027-one-element-list",
-      "parity-p65-fld-027-blank-lf",
-      "parity-p65-fld-027-blank-lsep",
-      "parity-p65-fld-027-blank-nbsp",
-      "parity-p65-fld-027-blank-tab",
-      "parity-p65-fld-027-blank-vt",
-      "parity-p65-fld-027-edge-cr",
-      "parity-p65-fld-027-edge-ff",
-      "parity-p65-fld-027-edge-lf",
-      "parity-p65-fld-027-edge-lsep"
-     ]
-    },
     {
      "name": "w-absent",
      "op": "write-external-id-sets",
@@ -144,20 +120,17 @@
      "markers": [
       "parity-p65-fld-027",
       "PARITY_P65_FLD_027",
-      "parity-p65-fld-027-absent",
-      "parity-p65-fld-027-empty-string",
-      "parity-p65-fld-027-one-element-list",
-      "parity-p65-fld-027-blank-lf",
-      "parity-p65-fld-027-blank-lsep",
-      "parity-p65-fld-027-blank-nbsp",
-      "parity-p65-fld-027-blank-tab",
-      "parity-p65-fld-027-blank-vt",
-      "parity-p65-fld-027-edge-cr",
-      "parity-p65-fld-027-edge-ff",
-      "parity-p65-fld-027-edge-lf",
-      "parity-p65-fld-027-edge-lsep"
+      "parity-p65-fld-027-absent"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-027-absent"
+  },
+  {
+   "id": "p65f-set-name-empty-string",
+   "about": "the field set.name written in the state empty-string, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_027",
+   "steps": [
     {
      "name": "w-empty-string",
      "op": "write-external-id-sets",
@@ -206,20 +179,17 @@
      "markers": [
       "parity-p65-fld-027",
       "PARITY_P65_FLD_027",
-      "parity-p65-fld-027-absent",
-      "parity-p65-fld-027-empty-string",
-      "parity-p65-fld-027-one-element-list",
-      "parity-p65-fld-027-blank-lf",
-      "parity-p65-fld-027-blank-lsep",
-      "parity-p65-fld-027-blank-nbsp",
-      "parity-p65-fld-027-blank-tab",
-      "parity-p65-fld-027-blank-vt",
-      "parity-p65-fld-027-edge-cr",
-      "parity-p65-fld-027-edge-ff",
-      "parity-p65-fld-027-edge-lf",
-      "parity-p65-fld-027-edge-lsep"
+      "parity-p65-fld-027-empty-string"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-027-empty-string"
+  },
+  {
+   "id": "p65f-set-name-one-element-list",
+   "about": "the field set.name written in the state one-element-list, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_027",
+   "steps": [
     {
      "name": "w-one-element-list",
      "op": "write-external-id-sets",
@@ -270,20 +240,17 @@
      "markers": [
       "parity-p65-fld-027",
       "PARITY_P65_FLD_027",
-      "parity-p65-fld-027-absent",
-      "parity-p65-fld-027-empty-string",
-      "parity-p65-fld-027-one-element-list",
-      "parity-p65-fld-027-blank-lf",
-      "parity-p65-fld-027-blank-lsep",
-      "parity-p65-fld-027-blank-nbsp",
-      "parity-p65-fld-027-blank-tab",
-      "parity-p65-fld-027-blank-vt",
-      "parity-p65-fld-027-edge-cr",
-      "parity-p65-fld-027-edge-ff",
-      "parity-p65-fld-027-edge-lf",
-      "parity-p65-fld-027-edge-lsep"
+      "parity-p65-fld-027-one-element-list"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-027-one-element-list"
+  },
+  {
+   "id": "p65f-set-name-blank-lf",
+   "about": "the field set.name written in the state blank-lf, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_027",
+   "steps": [
     {
      "name": "w-blank-lf",
      "op": "write-external-id-sets",
@@ -332,20 +299,17 @@
      "markers": [
       "parity-p65-fld-027",
       "PARITY_P65_FLD_027",
-      "parity-p65-fld-027-absent",
-      "parity-p65-fld-027-empty-string",
-      "parity-p65-fld-027-one-element-list",
-      "parity-p65-fld-027-blank-lf",
-      "parity-p65-fld-027-blank-lsep",
-      "parity-p65-fld-027-blank-nbsp",
-      "parity-p65-fld-027-blank-tab",
-      "parity-p65-fld-027-blank-vt",
-      "parity-p65-fld-027-edge-cr",
-      "parity-p65-fld-027-edge-ff",
-      "parity-p65-fld-027-edge-lf",
-      "parity-p65-fld-027-edge-lsep"
+      "parity-p65-fld-027-blank-lf"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-027-blank-lf"
+  },
+  {
+   "id": "p65f-set-name-blank-lsep",
+   "about": "the field set.name written in the state blank-lsep, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_027",
+   "steps": [
     {
      "name": "w-blank-lsep",
      "op": "write-external-id-sets",
@@ -394,20 +358,17 @@
      "markers": [
       "parity-p65-fld-027",
       "PARITY_P65_FLD_027",
-      "parity-p65-fld-027-absent",
-      "parity-p65-fld-027-empty-string",
-      "parity-p65-fld-027-one-element-list",
-      "parity-p65-fld-027-blank-lf",
-      "parity-p65-fld-027-blank-lsep",
-      "parity-p65-fld-027-blank-nbsp",
-      "parity-p65-fld-027-blank-tab",
-      "parity-p65-fld-027-blank-vt",
-      "parity-p65-fld-027-edge-cr",
-      "parity-p65-fld-027-edge-ff",
-      "parity-p65-fld-027-edge-lf",
-      "parity-p65-fld-027-edge-lsep"
+      "parity-p65-fld-027-blank-lsep"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-027-blank-lsep"
+  },
+  {
+   "id": "p65f-set-name-blank-nbsp",
+   "about": "the field set.name written in the state blank-nbsp, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_027",
+   "steps": [
     {
      "name": "w-blank-nbsp",
      "op": "write-external-id-sets",
@@ -456,20 +417,17 @@
      "markers": [
       "parity-p65-fld-027",
       "PARITY_P65_FLD_027",
-      "parity-p65-fld-027-absent",
-      "parity-p65-fld-027-empty-string",
-      "parity-p65-fld-027-one-element-list",
-      "parity-p65-fld-027-blank-lf",
-      "parity-p65-fld-027-blank-lsep",
-      "parity-p65-fld-027-blank-nbsp",
-      "parity-p65-fld-027-blank-tab",
-      "parity-p65-fld-027-blank-vt",
-      "parity-p65-fld-027-edge-cr",
-      "parity-p65-fld-027-edge-ff",
-      "parity-p65-fld-027-edge-lf",
-      "parity-p65-fld-027-edge-lsep"
+      "parity-p65-fld-027-blank-nbsp"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-027-blank-nbsp"
+  },
+  {
+   "id": "p65f-set-name-blank-tab",
+   "about": "the field set.name written in the state blank-tab, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_027",
+   "steps": [
     {
      "name": "w-blank-tab",
      "op": "write-external-id-sets",
@@ -518,20 +476,17 @@
      "markers": [
       "parity-p65-fld-027",
       "PARITY_P65_FLD_027",
-      "parity-p65-fld-027-absent",
-      "parity-p65-fld-027-empty-string",
-      "parity-p65-fld-027-one-element-list",
-      "parity-p65-fld-027-blank-lf",
-      "parity-p65-fld-027-blank-lsep",
-      "parity-p65-fld-027-blank-nbsp",
-      "parity-p65-fld-027-blank-tab",
-      "parity-p65-fld-027-blank-vt",
-      "parity-p65-fld-027-edge-cr",
-      "parity-p65-fld-027-edge-ff",
-      "parity-p65-fld-027-edge-lf",
-      "parity-p65-fld-027-edge-lsep"
+      "parity-p65-fld-027-blank-tab"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-027-blank-tab"
+  },
+  {
+   "id": "p65f-set-name-blank-vt",
+   "about": "the field set.name written in the state blank-vt, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_027",
+   "steps": [
     {
      "name": "w-blank-vt",
      "op": "write-external-id-sets",
@@ -580,20 +535,17 @@
      "markers": [
       "parity-p65-fld-027",
       "PARITY_P65_FLD_027",
-      "parity-p65-fld-027-absent",
-      "parity-p65-fld-027-empty-string",
-      "parity-p65-fld-027-one-element-list",
-      "parity-p65-fld-027-blank-lf",
-      "parity-p65-fld-027-blank-lsep",
-      "parity-p65-fld-027-blank-nbsp",
-      "parity-p65-fld-027-blank-tab",
-      "parity-p65-fld-027-blank-vt",
-      "parity-p65-fld-027-edge-cr",
-      "parity-p65-fld-027-edge-ff",
-      "parity-p65-fld-027-edge-lf",
-      "parity-p65-fld-027-edge-lsep"
+      "parity-p65-fld-027-blank-vt"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-027-blank-vt"
+  },
+  {
+   "id": "p65f-set-name-edge-cr",
+   "about": "the field set.name written in the state edge-cr, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_027",
+   "steps": [
     {
      "name": "w-edge-cr",
      "op": "write-external-id-sets",
@@ -642,20 +594,17 @@
      "markers": [
       "parity-p65-fld-027",
       "PARITY_P65_FLD_027",
-      "parity-p65-fld-027-absent",
-      "parity-p65-fld-027-empty-string",
-      "parity-p65-fld-027-one-element-list",
-      "parity-p65-fld-027-blank-lf",
-      "parity-p65-fld-027-blank-lsep",
-      "parity-p65-fld-027-blank-nbsp",
-      "parity-p65-fld-027-blank-tab",
-      "parity-p65-fld-027-blank-vt",
-      "parity-p65-fld-027-edge-cr",
-      "parity-p65-fld-027-edge-ff",
-      "parity-p65-fld-027-edge-lf",
-      "parity-p65-fld-027-edge-lsep"
+      "parity-p65-fld-027-edge-cr"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-027-edge-cr"
+  },
+  {
+   "id": "p65f-set-name-edge-ff",
+   "about": "the field set.name written in the state edge-ff, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_027",
+   "steps": [
     {
      "name": "w-edge-ff",
      "op": "write-external-id-sets",
@@ -704,20 +653,17 @@
      "markers": [
       "parity-p65-fld-027",
       "PARITY_P65_FLD_027",
-      "parity-p65-fld-027-absent",
-      "parity-p65-fld-027-empty-string",
-      "parity-p65-fld-027-one-element-list",
-      "parity-p65-fld-027-blank-lf",
-      "parity-p65-fld-027-blank-lsep",
-      "parity-p65-fld-027-blank-nbsp",
-      "parity-p65-fld-027-blank-tab",
-      "parity-p65-fld-027-blank-vt",
-      "parity-p65-fld-027-edge-cr",
-      "parity-p65-fld-027-edge-ff",
-      "parity-p65-fld-027-edge-lf",
-      "parity-p65-fld-027-edge-lsep"
+      "parity-p65-fld-027-edge-ff"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-027-edge-ff"
+  },
+  {
+   "id": "p65f-set-name-edge-lf",
+   "about": "the field set.name written in the state edge-lf, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_027",
+   "steps": [
     {
      "name": "w-edge-lf",
      "op": "write-external-id-sets",
@@ -766,20 +712,17 @@
      "markers": [
       "parity-p65-fld-027",
       "PARITY_P65_FLD_027",
-      "parity-p65-fld-027-absent",
-      "parity-p65-fld-027-empty-string",
-      "parity-p65-fld-027-one-element-list",
-      "parity-p65-fld-027-blank-lf",
-      "parity-p65-fld-027-blank-lsep",
-      "parity-p65-fld-027-blank-nbsp",
-      "parity-p65-fld-027-blank-tab",
-      "parity-p65-fld-027-blank-vt",
-      "parity-p65-fld-027-edge-cr",
-      "parity-p65-fld-027-edge-ff",
-      "parity-p65-fld-027-edge-lf",
-      "parity-p65-fld-027-edge-lsep"
+      "parity-p65-fld-027-edge-lf"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-027-edge-lf"
+  },
+  {
+   "id": "p65f-set-name-edge-lsep",
+   "about": "the field set.name written in the state edge-lsep, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_027",
+   "steps": [
     {
      "name": "w-edge-lsep",
      "op": "write-external-id-sets",
@@ -828,52 +771,17 @@
      "markers": [
       "parity-p65-fld-027",
       "PARITY_P65_FLD_027",
-      "parity-p65-fld-027-absent",
-      "parity-p65-fld-027-empty-string",
-      "parity-p65-fld-027-one-element-list",
-      "parity-p65-fld-027-blank-lf",
-      "parity-p65-fld-027-blank-lsep",
-      "parity-p65-fld-027-blank-nbsp",
-      "parity-p65-fld-027-blank-tab",
-      "parity-p65-fld-027-blank-vt",
-      "parity-p65-fld-027-edge-cr",
-      "parity-p65-fld-027-edge-ff",
-      "parity-p65-fld-027-edge-lf",
       "parity-p65-fld-027-edge-lsep"
      ]
     }
    ],
-   "tenant": "parity-p65f-027"
+   "tenant": "parity-p65f-027-edge-lsep"
   },
   {
-   "id": "p65f-policy-name",
-   "about": "the field policy.name written in 12 states, each read back",
+   "id": "p65f-policy-name-absent",
+   "about": "the field policy.name written in the state absent, read back",
    "resourceType": "PARITY_SUITE_P65_FLD_028",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-config-sets",
-     "args": {},
-     "observe": [
-      "read:read-config-sets"
-     ],
-     "markers": [
-      "parity-p65-fld-028",
-      "PARITY_P65_FLD_028",
-      "parity-p65-fld-028-absent",
-      "parity-p65-fld-028-empty-string",
-      "parity-p65-fld-028-one-element-list",
-      "parity-p65-fld-028-blank-lf",
-      "parity-p65-fld-028-blank-lsep",
-      "parity-p65-fld-028-blank-nbsp",
-      "parity-p65-fld-028-blank-tab",
-      "parity-p65-fld-028-blank-vt",
-      "parity-p65-fld-028-edge-cr",
-      "parity-p65-fld-028-edge-ff",
-      "parity-p65-fld-028-edge-lf",
-      "parity-p65-fld-028-edge-lsep"
-     ]
-    },
     {
      "name": "w-absent",
      "op": "write-external-id-sets",
@@ -921,20 +829,17 @@
      "markers": [
       "parity-p65-fld-028",
       "PARITY_P65_FLD_028",
-      "parity-p65-fld-028-absent",
-      "parity-p65-fld-028-empty-string",
-      "parity-p65-fld-028-one-element-list",
-      "parity-p65-fld-028-blank-lf",
-      "parity-p65-fld-028-blank-lsep",
-      "parity-p65-fld-028-blank-nbsp",
-      "parity-p65-fld-028-blank-tab",
-      "parity-p65-fld-028-blank-vt",
-      "parity-p65-fld-028-edge-cr",
-      "parity-p65-fld-028-edge-ff",
-      "parity-p65-fld-028-edge-lf",
-      "parity-p65-fld-028-edge-lsep"
+      "parity-p65-fld-028-absent"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-028-absent"
+  },
+  {
+   "id": "p65f-policy-name-empty-string",
+   "about": "the field policy.name written in the state empty-string, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_028",
+   "steps": [
     {
      "name": "w-empty-string",
      "op": "write-external-id-sets",
@@ -983,20 +888,17 @@
      "markers": [
       "parity-p65-fld-028",
       "PARITY_P65_FLD_028",
-      "parity-p65-fld-028-absent",
-      "parity-p65-fld-028-empty-string",
-      "parity-p65-fld-028-one-element-list",
-      "parity-p65-fld-028-blank-lf",
-      "parity-p65-fld-028-blank-lsep",
-      "parity-p65-fld-028-blank-nbsp",
-      "parity-p65-fld-028-blank-tab",
-      "parity-p65-fld-028-blank-vt",
-      "parity-p65-fld-028-edge-cr",
-      "parity-p65-fld-028-edge-ff",
-      "parity-p65-fld-028-edge-lf",
-      "parity-p65-fld-028-edge-lsep"
+      "parity-p65-fld-028-empty-string"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-028-empty-string"
+  },
+  {
+   "id": "p65f-policy-name-one-element-list",
+   "about": "the field policy.name written in the state one-element-list, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_028",
+   "steps": [
     {
      "name": "w-one-element-list",
      "op": "write-external-id-sets",
@@ -1047,20 +949,17 @@
      "markers": [
       "parity-p65-fld-028",
       "PARITY_P65_FLD_028",
-      "parity-p65-fld-028-absent",
-      "parity-p65-fld-028-empty-string",
-      "parity-p65-fld-028-one-element-list",
-      "parity-p65-fld-028-blank-lf",
-      "parity-p65-fld-028-blank-lsep",
-      "parity-p65-fld-028-blank-nbsp",
-      "parity-p65-fld-028-blank-tab",
-      "parity-p65-fld-028-blank-vt",
-      "parity-p65-fld-028-edge-cr",
-      "parity-p65-fld-028-edge-ff",
-      "parity-p65-fld-028-edge-lf",
-      "parity-p65-fld-028-edge-lsep"
+      "parity-p65-fld-028-one-element-list"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-028-one-element-list"
+  },
+  {
+   "id": "p65f-policy-name-blank-lf",
+   "about": "the field policy.name written in the state blank-lf, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_028",
+   "steps": [
     {
      "name": "w-blank-lf",
      "op": "write-external-id-sets",
@@ -1109,20 +1008,17 @@
      "markers": [
       "parity-p65-fld-028",
       "PARITY_P65_FLD_028",
-      "parity-p65-fld-028-absent",
-      "parity-p65-fld-028-empty-string",
-      "parity-p65-fld-028-one-element-list",
-      "parity-p65-fld-028-blank-lf",
-      "parity-p65-fld-028-blank-lsep",
-      "parity-p65-fld-028-blank-nbsp",
-      "parity-p65-fld-028-blank-tab",
-      "parity-p65-fld-028-blank-vt",
-      "parity-p65-fld-028-edge-cr",
-      "parity-p65-fld-028-edge-ff",
-      "parity-p65-fld-028-edge-lf",
-      "parity-p65-fld-028-edge-lsep"
+      "parity-p65-fld-028-blank-lf"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-028-blank-lf"
+  },
+  {
+   "id": "p65f-policy-name-blank-lsep",
+   "about": "the field policy.name written in the state blank-lsep, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_028",
+   "steps": [
     {
      "name": "w-blank-lsep",
      "op": "write-external-id-sets",
@@ -1171,20 +1067,17 @@
      "markers": [
       "parity-p65-fld-028",
       "PARITY_P65_FLD_028",
-      "parity-p65-fld-028-absent",
-      "parity-p65-fld-028-empty-string",
-      "parity-p65-fld-028-one-element-list",
-      "parity-p65-fld-028-blank-lf",
-      "parity-p65-fld-028-blank-lsep",
-      "parity-p65-fld-028-blank-nbsp",
-      "parity-p65-fld-028-blank-tab",
-      "parity-p65-fld-028-blank-vt",
-      "parity-p65-fld-028-edge-cr",
-      "parity-p65-fld-028-edge-ff",
-      "parity-p65-fld-028-edge-lf",
-      "parity-p65-fld-028-edge-lsep"
+      "parity-p65-fld-028-blank-lsep"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-028-blank-lsep"
+  },
+  {
+   "id": "p65f-policy-name-blank-nbsp",
+   "about": "the field policy.name written in the state blank-nbsp, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_028",
+   "steps": [
     {
      "name": "w-blank-nbsp",
      "op": "write-external-id-sets",
@@ -1233,20 +1126,17 @@
      "markers": [
       "parity-p65-fld-028",
       "PARITY_P65_FLD_028",
-      "parity-p65-fld-028-absent",
-      "parity-p65-fld-028-empty-string",
-      "parity-p65-fld-028-one-element-list",
-      "parity-p65-fld-028-blank-lf",
-      "parity-p65-fld-028-blank-lsep",
-      "parity-p65-fld-028-blank-nbsp",
-      "parity-p65-fld-028-blank-tab",
-      "parity-p65-fld-028-blank-vt",
-      "parity-p65-fld-028-edge-cr",
-      "parity-p65-fld-028-edge-ff",
-      "parity-p65-fld-028-edge-lf",
-      "parity-p65-fld-028-edge-lsep"
+      "parity-p65-fld-028-blank-nbsp"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-028-blank-nbsp"
+  },
+  {
+   "id": "p65f-policy-name-blank-tab",
+   "about": "the field policy.name written in the state blank-tab, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_028",
+   "steps": [
     {
      "name": "w-blank-tab",
      "op": "write-external-id-sets",
@@ -1295,20 +1185,17 @@
      "markers": [
       "parity-p65-fld-028",
       "PARITY_P65_FLD_028",
-      "parity-p65-fld-028-absent",
-      "parity-p65-fld-028-empty-string",
-      "parity-p65-fld-028-one-element-list",
-      "parity-p65-fld-028-blank-lf",
-      "parity-p65-fld-028-blank-lsep",
-      "parity-p65-fld-028-blank-nbsp",
-      "parity-p65-fld-028-blank-tab",
-      "parity-p65-fld-028-blank-vt",
-      "parity-p65-fld-028-edge-cr",
-      "parity-p65-fld-028-edge-ff",
-      "parity-p65-fld-028-edge-lf",
-      "parity-p65-fld-028-edge-lsep"
+      "parity-p65-fld-028-blank-tab"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-028-blank-tab"
+  },
+  {
+   "id": "p65f-policy-name-blank-vt",
+   "about": "the field policy.name written in the state blank-vt, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_028",
+   "steps": [
     {
      "name": "w-blank-vt",
      "op": "write-external-id-sets",
@@ -1357,20 +1244,17 @@
      "markers": [
       "parity-p65-fld-028",
       "PARITY_P65_FLD_028",
-      "parity-p65-fld-028-absent",
-      "parity-p65-fld-028-empty-string",
-      "parity-p65-fld-028-one-element-list",
-      "parity-p65-fld-028-blank-lf",
-      "parity-p65-fld-028-blank-lsep",
-      "parity-p65-fld-028-blank-nbsp",
-      "parity-p65-fld-028-blank-tab",
-      "parity-p65-fld-028-blank-vt",
-      "parity-p65-fld-028-edge-cr",
-      "parity-p65-fld-028-edge-ff",
-      "parity-p65-fld-028-edge-lf",
-      "parity-p65-fld-028-edge-lsep"
+      "parity-p65-fld-028-blank-vt"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-028-blank-vt"
+  },
+  {
+   "id": "p65f-policy-name-edge-cr",
+   "about": "the field policy.name written in the state edge-cr, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_028",
+   "steps": [
     {
      "name": "w-edge-cr",
      "op": "write-external-id-sets",
@@ -1419,20 +1303,17 @@
      "markers": [
       "parity-p65-fld-028",
       "PARITY_P65_FLD_028",
-      "parity-p65-fld-028-absent",
-      "parity-p65-fld-028-empty-string",
-      "parity-p65-fld-028-one-element-list",
-      "parity-p65-fld-028-blank-lf",
-      "parity-p65-fld-028-blank-lsep",
-      "parity-p65-fld-028-blank-nbsp",
-      "parity-p65-fld-028-blank-tab",
-      "parity-p65-fld-028-blank-vt",
-      "parity-p65-fld-028-edge-cr",
-      "parity-p65-fld-028-edge-ff",
-      "parity-p65-fld-028-edge-lf",
-      "parity-p65-fld-028-edge-lsep"
+      "parity-p65-fld-028-edge-cr"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-028-edge-cr"
+  },
+  {
+   "id": "p65f-policy-name-edge-ff",
+   "about": "the field policy.name written in the state edge-ff, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_028",
+   "steps": [
     {
      "name": "w-edge-ff",
      "op": "write-external-id-sets",
@@ -1481,20 +1362,17 @@
      "markers": [
       "parity-p65-fld-028",
       "PARITY_P65_FLD_028",
-      "parity-p65-fld-028-absent",
-      "parity-p65-fld-028-empty-string",
-      "parity-p65-fld-028-one-element-list",
-      "parity-p65-fld-028-blank-lf",
-      "parity-p65-fld-028-blank-lsep",
-      "parity-p65-fld-028-blank-nbsp",
-      "parity-p65-fld-028-blank-tab",
-      "parity-p65-fld-028-blank-vt",
-      "parity-p65-fld-028-edge-cr",
-      "parity-p65-fld-028-edge-ff",
-      "parity-p65-fld-028-edge-lf",
-      "parity-p65-fld-028-edge-lsep"
+      "parity-p65-fld-028-edge-ff"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-028-edge-ff"
+  },
+  {
+   "id": "p65f-policy-name-edge-lf",
+   "about": "the field policy.name written in the state edge-lf, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_028",
+   "steps": [
     {
      "name": "w-edge-lf",
      "op": "write-external-id-sets",
@@ -1543,20 +1421,17 @@
      "markers": [
       "parity-p65-fld-028",
       "PARITY_P65_FLD_028",
-      "parity-p65-fld-028-absent",
-      "parity-p65-fld-028-empty-string",
-      "parity-p65-fld-028-one-element-list",
-      "parity-p65-fld-028-blank-lf",
-      "parity-p65-fld-028-blank-lsep",
-      "parity-p65-fld-028-blank-nbsp",
-      "parity-p65-fld-028-blank-tab",
-      "parity-p65-fld-028-blank-vt",
-      "parity-p65-fld-028-edge-cr",
-      "parity-p65-fld-028-edge-ff",
-      "parity-p65-fld-028-edge-lf",
-      "parity-p65-fld-028-edge-lsep"
+      "parity-p65-fld-028-edge-lf"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-028-edge-lf"
+  },
+  {
+   "id": "p65f-policy-name-edge-lsep",
+   "about": "the field policy.name written in the state edge-lsep, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_028",
+   "steps": [
     {
      "name": "w-edge-lsep",
      "op": "write-external-id-sets",
@@ -1605,52 +1480,17 @@
      "markers": [
       "parity-p65-fld-028",
       "PARITY_P65_FLD_028",
-      "parity-p65-fld-028-absent",
-      "parity-p65-fld-028-empty-string",
-      "parity-p65-fld-028-one-element-list",
-      "parity-p65-fld-028-blank-lf",
-      "parity-p65-fld-028-blank-lsep",
-      "parity-p65-fld-028-blank-nbsp",
-      "parity-p65-fld-028-blank-tab",
-      "parity-p65-fld-028-blank-vt",
-      "parity-p65-fld-028-edge-cr",
-      "parity-p65-fld-028-edge-ff",
-      "parity-p65-fld-028-edge-lf",
       "parity-p65-fld-028-edge-lsep"
      ]
     }
    ],
-   "tenant": "parity-p65f-028"
+   "tenant": "parity-p65f-028-edge-lsep"
   },
   {
-   "id": "p65f-rule-name",
-   "about": "the field rule.name written in 12 states, each read back",
+   "id": "p65f-rule-name-absent",
+   "about": "the field rule.name written in the state absent, read back",
    "resourceType": "PARITY_SUITE_P65_FLD_029",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-config-sets",
-     "args": {},
-     "observe": [
-      "read:read-config-sets"
-     ],
-     "markers": [
-      "parity-p65-fld-029",
-      "PARITY_P65_FLD_029",
-      "parity-p65-fld-029-absent",
-      "parity-p65-fld-029-empty-string",
-      "parity-p65-fld-029-one-element-list",
-      "parity-p65-fld-029-blank-lf",
-      "parity-p65-fld-029-blank-lsep",
-      "parity-p65-fld-029-blank-nbsp",
-      "parity-p65-fld-029-blank-tab",
-      "parity-p65-fld-029-blank-vt",
-      "parity-p65-fld-029-edge-cr",
-      "parity-p65-fld-029-edge-ff",
-      "parity-p65-fld-029-edge-lf",
-      "parity-p65-fld-029-edge-lsep"
-     ]
-    },
     {
      "name": "w-absent",
      "op": "write-external-id-sets",
@@ -1698,20 +1538,17 @@
      "markers": [
       "parity-p65-fld-029",
       "PARITY_P65_FLD_029",
-      "parity-p65-fld-029-absent",
-      "parity-p65-fld-029-empty-string",
-      "parity-p65-fld-029-one-element-list",
-      "parity-p65-fld-029-blank-lf",
-      "parity-p65-fld-029-blank-lsep",
-      "parity-p65-fld-029-blank-nbsp",
-      "parity-p65-fld-029-blank-tab",
-      "parity-p65-fld-029-blank-vt",
-      "parity-p65-fld-029-edge-cr",
-      "parity-p65-fld-029-edge-ff",
-      "parity-p65-fld-029-edge-lf",
-      "parity-p65-fld-029-edge-lsep"
+      "parity-p65-fld-029-absent"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-029-absent"
+  },
+  {
+   "id": "p65f-rule-name-empty-string",
+   "about": "the field rule.name written in the state empty-string, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_029",
+   "steps": [
     {
      "name": "w-empty-string",
      "op": "write-external-id-sets",
@@ -1760,20 +1597,17 @@
      "markers": [
       "parity-p65-fld-029",
       "PARITY_P65_FLD_029",
-      "parity-p65-fld-029-absent",
-      "parity-p65-fld-029-empty-string",
-      "parity-p65-fld-029-one-element-list",
-      "parity-p65-fld-029-blank-lf",
-      "parity-p65-fld-029-blank-lsep",
-      "parity-p65-fld-029-blank-nbsp",
-      "parity-p65-fld-029-blank-tab",
-      "parity-p65-fld-029-blank-vt",
-      "parity-p65-fld-029-edge-cr",
-      "parity-p65-fld-029-edge-ff",
-      "parity-p65-fld-029-edge-lf",
-      "parity-p65-fld-029-edge-lsep"
+      "parity-p65-fld-029-empty-string"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-029-empty-string"
+  },
+  {
+   "id": "p65f-rule-name-one-element-list",
+   "about": "the field rule.name written in the state one-element-list, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_029",
+   "steps": [
     {
      "name": "w-one-element-list",
      "op": "write-external-id-sets",
@@ -1824,20 +1658,17 @@
      "markers": [
       "parity-p65-fld-029",
       "PARITY_P65_FLD_029",
-      "parity-p65-fld-029-absent",
-      "parity-p65-fld-029-empty-string",
-      "parity-p65-fld-029-one-element-list",
-      "parity-p65-fld-029-blank-lf",
-      "parity-p65-fld-029-blank-lsep",
-      "parity-p65-fld-029-blank-nbsp",
-      "parity-p65-fld-029-blank-tab",
-      "parity-p65-fld-029-blank-vt",
-      "parity-p65-fld-029-edge-cr",
-      "parity-p65-fld-029-edge-ff",
-      "parity-p65-fld-029-edge-lf",
-      "parity-p65-fld-029-edge-lsep"
+      "parity-p65-fld-029-one-element-list"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-029-one-element-list"
+  },
+  {
+   "id": "p65f-rule-name-blank-lf",
+   "about": "the field rule.name written in the state blank-lf, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_029",
+   "steps": [
     {
      "name": "w-blank-lf",
      "op": "write-external-id-sets",
@@ -1886,20 +1717,17 @@
      "markers": [
       "parity-p65-fld-029",
       "PARITY_P65_FLD_029",
-      "parity-p65-fld-029-absent",
-      "parity-p65-fld-029-empty-string",
-      "parity-p65-fld-029-one-element-list",
-      "parity-p65-fld-029-blank-lf",
-      "parity-p65-fld-029-blank-lsep",
-      "parity-p65-fld-029-blank-nbsp",
-      "parity-p65-fld-029-blank-tab",
-      "parity-p65-fld-029-blank-vt",
-      "parity-p65-fld-029-edge-cr",
-      "parity-p65-fld-029-edge-ff",
-      "parity-p65-fld-029-edge-lf",
-      "parity-p65-fld-029-edge-lsep"
+      "parity-p65-fld-029-blank-lf"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-029-blank-lf"
+  },
+  {
+   "id": "p65f-rule-name-blank-lsep",
+   "about": "the field rule.name written in the state blank-lsep, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_029",
+   "steps": [
     {
      "name": "w-blank-lsep",
      "op": "write-external-id-sets",
@@ -1948,20 +1776,17 @@
      "markers": [
       "parity-p65-fld-029",
       "PARITY_P65_FLD_029",
-      "parity-p65-fld-029-absent",
-      "parity-p65-fld-029-empty-string",
-      "parity-p65-fld-029-one-element-list",
-      "parity-p65-fld-029-blank-lf",
-      "parity-p65-fld-029-blank-lsep",
-      "parity-p65-fld-029-blank-nbsp",
-      "parity-p65-fld-029-blank-tab",
-      "parity-p65-fld-029-blank-vt",
-      "parity-p65-fld-029-edge-cr",
-      "parity-p65-fld-029-edge-ff",
-      "parity-p65-fld-029-edge-lf",
-      "parity-p65-fld-029-edge-lsep"
+      "parity-p65-fld-029-blank-lsep"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-029-blank-lsep"
+  },
+  {
+   "id": "p65f-rule-name-blank-nbsp",
+   "about": "the field rule.name written in the state blank-nbsp, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_029",
+   "steps": [
     {
      "name": "w-blank-nbsp",
      "op": "write-external-id-sets",
@@ -2010,20 +1835,17 @@
      "markers": [
       "parity-p65-fld-029",
       "PARITY_P65_FLD_029",
-      "parity-p65-fld-029-absent",
-      "parity-p65-fld-029-empty-string",
-      "parity-p65-fld-029-one-element-list",
-      "parity-p65-fld-029-blank-lf",
-      "parity-p65-fld-029-blank-lsep",
-      "parity-p65-fld-029-blank-nbsp",
-      "parity-p65-fld-029-blank-tab",
-      "parity-p65-fld-029-blank-vt",
-      "parity-p65-fld-029-edge-cr",
-      "parity-p65-fld-029-edge-ff",
-      "parity-p65-fld-029-edge-lf",
-      "parity-p65-fld-029-edge-lsep"
+      "parity-p65-fld-029-blank-nbsp"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-029-blank-nbsp"
+  },
+  {
+   "id": "p65f-rule-name-blank-tab",
+   "about": "the field rule.name written in the state blank-tab, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_029",
+   "steps": [
     {
      "name": "w-blank-tab",
      "op": "write-external-id-sets",
@@ -2072,20 +1894,17 @@
      "markers": [
       "parity-p65-fld-029",
       "PARITY_P65_FLD_029",
-      "parity-p65-fld-029-absent",
-      "parity-p65-fld-029-empty-string",
-      "parity-p65-fld-029-one-element-list",
-      "parity-p65-fld-029-blank-lf",
-      "parity-p65-fld-029-blank-lsep",
-      "parity-p65-fld-029-blank-nbsp",
-      "parity-p65-fld-029-blank-tab",
-      "parity-p65-fld-029-blank-vt",
-      "parity-p65-fld-029-edge-cr",
-      "parity-p65-fld-029-edge-ff",
-      "parity-p65-fld-029-edge-lf",
-      "parity-p65-fld-029-edge-lsep"
+      "parity-p65-fld-029-blank-tab"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-029-blank-tab"
+  },
+  {
+   "id": "p65f-rule-name-blank-vt",
+   "about": "the field rule.name written in the state blank-vt, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_029",
+   "steps": [
     {
      "name": "w-blank-vt",
      "op": "write-external-id-sets",
@@ -2134,20 +1953,17 @@
      "markers": [
       "parity-p65-fld-029",
       "PARITY_P65_FLD_029",
-      "parity-p65-fld-029-absent",
-      "parity-p65-fld-029-empty-string",
-      "parity-p65-fld-029-one-element-list",
-      "parity-p65-fld-029-blank-lf",
-      "parity-p65-fld-029-blank-lsep",
-      "parity-p65-fld-029-blank-nbsp",
-      "parity-p65-fld-029-blank-tab",
-      "parity-p65-fld-029-blank-vt",
-      "parity-p65-fld-029-edge-cr",
-      "parity-p65-fld-029-edge-ff",
-      "parity-p65-fld-029-edge-lf",
-      "parity-p65-fld-029-edge-lsep"
+      "parity-p65-fld-029-blank-vt"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-029-blank-vt"
+  },
+  {
+   "id": "p65f-rule-name-edge-cr",
+   "about": "the field rule.name written in the state edge-cr, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_029",
+   "steps": [
     {
      "name": "w-edge-cr",
      "op": "write-external-id-sets",
@@ -2196,20 +2012,17 @@
      "markers": [
       "parity-p65-fld-029",
       "PARITY_P65_FLD_029",
-      "parity-p65-fld-029-absent",
-      "parity-p65-fld-029-empty-string",
-      "parity-p65-fld-029-one-element-list",
-      "parity-p65-fld-029-blank-lf",
-      "parity-p65-fld-029-blank-lsep",
-      "parity-p65-fld-029-blank-nbsp",
-      "parity-p65-fld-029-blank-tab",
-      "parity-p65-fld-029-blank-vt",
-      "parity-p65-fld-029-edge-cr",
-      "parity-p65-fld-029-edge-ff",
-      "parity-p65-fld-029-edge-lf",
-      "parity-p65-fld-029-edge-lsep"
+      "parity-p65-fld-029-edge-cr"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-029-edge-cr"
+  },
+  {
+   "id": "p65f-rule-name-edge-ff",
+   "about": "the field rule.name written in the state edge-ff, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_029",
+   "steps": [
     {
      "name": "w-edge-ff",
      "op": "write-external-id-sets",
@@ -2258,20 +2071,17 @@
      "markers": [
       "parity-p65-fld-029",
       "PARITY_P65_FLD_029",
-      "parity-p65-fld-029-absent",
-      "parity-p65-fld-029-empty-string",
-      "parity-p65-fld-029-one-element-list",
-      "parity-p65-fld-029-blank-lf",
-      "parity-p65-fld-029-blank-lsep",
-      "parity-p65-fld-029-blank-nbsp",
-      "parity-p65-fld-029-blank-tab",
-      "parity-p65-fld-029-blank-vt",
-      "parity-p65-fld-029-edge-cr",
-      "parity-p65-fld-029-edge-ff",
-      "parity-p65-fld-029-edge-lf",
-      "parity-p65-fld-029-edge-lsep"
+      "parity-p65-fld-029-edge-ff"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-029-edge-ff"
+  },
+  {
+   "id": "p65f-rule-name-edge-lf",
+   "about": "the field rule.name written in the state edge-lf, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_029",
+   "steps": [
     {
      "name": "w-edge-lf",
      "op": "write-external-id-sets",
@@ -2320,20 +2130,17 @@
      "markers": [
       "parity-p65-fld-029",
       "PARITY_P65_FLD_029",
-      "parity-p65-fld-029-absent",
-      "parity-p65-fld-029-empty-string",
-      "parity-p65-fld-029-one-element-list",
-      "parity-p65-fld-029-blank-lf",
-      "parity-p65-fld-029-blank-lsep",
-      "parity-p65-fld-029-blank-nbsp",
-      "parity-p65-fld-029-blank-tab",
-      "parity-p65-fld-029-blank-vt",
-      "parity-p65-fld-029-edge-cr",
-      "parity-p65-fld-029-edge-ff",
-      "parity-p65-fld-029-edge-lf",
-      "parity-p65-fld-029-edge-lsep"
+      "parity-p65-fld-029-edge-lf"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-029-edge-lf"
+  },
+  {
+   "id": "p65f-rule-name-edge-lsep",
+   "about": "the field rule.name written in the state edge-lsep, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_029",
+   "steps": [
     {
      "name": "w-edge-lsep",
      "op": "write-external-id-sets",
@@ -2382,52 +2189,17 @@
      "markers": [
       "parity-p65-fld-029",
       "PARITY_P65_FLD_029",
-      "parity-p65-fld-029-absent",
-      "parity-p65-fld-029-empty-string",
-      "parity-p65-fld-029-one-element-list",
-      "parity-p65-fld-029-blank-lf",
-      "parity-p65-fld-029-blank-lsep",
-      "parity-p65-fld-029-blank-nbsp",
-      "parity-p65-fld-029-blank-tab",
-      "parity-p65-fld-029-blank-vt",
-      "parity-p65-fld-029-edge-cr",
-      "parity-p65-fld-029-edge-ff",
-      "parity-p65-fld-029-edge-lf",
       "parity-p65-fld-029-edge-lsep"
      ]
     }
    ],
-   "tenant": "parity-p65f-029"
+   "tenant": "parity-p65f-029-edge-lsep"
   },
   {
-   "id": "p65f-rule-uitarget",
-   "about": "the field rule.uiTarget written in 12 states, each read back",
+   "id": "p65f-rule-uitarget-empty-string",
+   "about": "the field rule.uiTarget written in the state empty-string, read back",
    "resourceType": "PARITY_SUITE_P65_FLD_030",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-config-sets",
-     "args": {},
-     "observe": [
-      "read:read-config-sets"
-     ],
-     "markers": [
-      "parity-p65-fld-030",
-      "PARITY_P65_FLD_030",
-      "parity-p65-fld-030-empty-string",
-      "parity-p65-fld-030-other-type",
-      "parity-p65-fld-030-one-element-list",
-      "parity-p65-fld-030-blank-lsep",
-      "parity-p65-fld-030-blank-nbsp",
-      "parity-p65-fld-030-blank-tab",
-      "parity-p65-fld-030-blank-vt",
-      "parity-p65-fld-030-edge-cr",
-      "parity-p65-fld-030-edge-ff",
-      "parity-p65-fld-030-edge-lf",
-      "parity-p65-fld-030-edge-lsep",
-      "parity-p65-fld-030-edge-vt"
-     ]
-    },
     {
      "name": "w-empty-string",
      "op": "write-external-id-sets",
@@ -2477,20 +2249,17 @@
      "markers": [
       "parity-p65-fld-030",
       "PARITY_P65_FLD_030",
-      "parity-p65-fld-030-empty-string",
-      "parity-p65-fld-030-other-type",
-      "parity-p65-fld-030-one-element-list",
-      "parity-p65-fld-030-blank-lsep",
-      "parity-p65-fld-030-blank-nbsp",
-      "parity-p65-fld-030-blank-tab",
-      "parity-p65-fld-030-blank-vt",
-      "parity-p65-fld-030-edge-cr",
-      "parity-p65-fld-030-edge-ff",
-      "parity-p65-fld-030-edge-lf",
-      "parity-p65-fld-030-edge-lsep",
-      "parity-p65-fld-030-edge-vt"
+      "parity-p65-fld-030-empty-string"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-030-empty-string"
+  },
+  {
+   "id": "p65f-rule-uitarget-other-type",
+   "about": "the field rule.uiTarget written in the state other-type, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_030",
+   "steps": [
     {
      "name": "w-other-type",
      "op": "write-external-id-sets",
@@ -2540,20 +2309,17 @@
      "markers": [
       "parity-p65-fld-030",
       "PARITY_P65_FLD_030",
-      "parity-p65-fld-030-empty-string",
-      "parity-p65-fld-030-other-type",
-      "parity-p65-fld-030-one-element-list",
-      "parity-p65-fld-030-blank-lsep",
-      "parity-p65-fld-030-blank-nbsp",
-      "parity-p65-fld-030-blank-tab",
-      "parity-p65-fld-030-blank-vt",
-      "parity-p65-fld-030-edge-cr",
-      "parity-p65-fld-030-edge-ff",
-      "parity-p65-fld-030-edge-lf",
-      "parity-p65-fld-030-edge-lsep",
-      "parity-p65-fld-030-edge-vt"
+      "parity-p65-fld-030-other-type"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-030-other-type"
+  },
+  {
+   "id": "p65f-rule-uitarget-one-element-list",
+   "about": "the field rule.uiTarget written in the state one-element-list, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_030",
+   "steps": [
     {
      "name": "w-one-element-list",
      "op": "write-external-id-sets",
@@ -2605,20 +2371,17 @@
      "markers": [
       "parity-p65-fld-030",
       "PARITY_P65_FLD_030",
-      "parity-p65-fld-030-empty-string",
-      "parity-p65-fld-030-other-type",
-      "parity-p65-fld-030-one-element-list",
-      "parity-p65-fld-030-blank-lsep",
-      "parity-p65-fld-030-blank-nbsp",
-      "parity-p65-fld-030-blank-tab",
-      "parity-p65-fld-030-blank-vt",
-      "parity-p65-fld-030-edge-cr",
-      "parity-p65-fld-030-edge-ff",
-      "parity-p65-fld-030-edge-lf",
-      "parity-p65-fld-030-edge-lsep",
-      "parity-p65-fld-030-edge-vt"
+      "parity-p65-fld-030-one-element-list"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-030-one-element-list"
+  },
+  {
+   "id": "p65f-rule-uitarget-blank-lsep",
+   "about": "the field rule.uiTarget written in the state blank-lsep, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_030",
+   "steps": [
     {
      "name": "w-blank-lsep",
      "op": "write-external-id-sets",
@@ -2668,20 +2431,17 @@
      "markers": [
       "parity-p65-fld-030",
       "PARITY_P65_FLD_030",
-      "parity-p65-fld-030-empty-string",
-      "parity-p65-fld-030-other-type",
-      "parity-p65-fld-030-one-element-list",
-      "parity-p65-fld-030-blank-lsep",
-      "parity-p65-fld-030-blank-nbsp",
-      "parity-p65-fld-030-blank-tab",
-      "parity-p65-fld-030-blank-vt",
-      "parity-p65-fld-030-edge-cr",
-      "parity-p65-fld-030-edge-ff",
-      "parity-p65-fld-030-edge-lf",
-      "parity-p65-fld-030-edge-lsep",
-      "parity-p65-fld-030-edge-vt"
+      "parity-p65-fld-030-blank-lsep"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-030-blank-lsep"
+  },
+  {
+   "id": "p65f-rule-uitarget-blank-nbsp",
+   "about": "the field rule.uiTarget written in the state blank-nbsp, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_030",
+   "steps": [
     {
      "name": "w-blank-nbsp",
      "op": "write-external-id-sets",
@@ -2731,20 +2491,17 @@
      "markers": [
       "parity-p65-fld-030",
       "PARITY_P65_FLD_030",
-      "parity-p65-fld-030-empty-string",
-      "parity-p65-fld-030-other-type",
-      "parity-p65-fld-030-one-element-list",
-      "parity-p65-fld-030-blank-lsep",
-      "parity-p65-fld-030-blank-nbsp",
-      "parity-p65-fld-030-blank-tab",
-      "parity-p65-fld-030-blank-vt",
-      "parity-p65-fld-030-edge-cr",
-      "parity-p65-fld-030-edge-ff",
-      "parity-p65-fld-030-edge-lf",
-      "parity-p65-fld-030-edge-lsep",
-      "parity-p65-fld-030-edge-vt"
+      "parity-p65-fld-030-blank-nbsp"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-030-blank-nbsp"
+  },
+  {
+   "id": "p65f-rule-uitarget-blank-tab",
+   "about": "the field rule.uiTarget written in the state blank-tab, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_030",
+   "steps": [
     {
      "name": "w-blank-tab",
      "op": "write-external-id-sets",
@@ -2794,20 +2551,17 @@
      "markers": [
       "parity-p65-fld-030",
       "PARITY_P65_FLD_030",
-      "parity-p65-fld-030-empty-string",
-      "parity-p65-fld-030-other-type",
-      "parity-p65-fld-030-one-element-list",
-      "parity-p65-fld-030-blank-lsep",
-      "parity-p65-fld-030-blank-nbsp",
-      "parity-p65-fld-030-blank-tab",
-      "parity-p65-fld-030-blank-vt",
-      "parity-p65-fld-030-edge-cr",
-      "parity-p65-fld-030-edge-ff",
-      "parity-p65-fld-030-edge-lf",
-      "parity-p65-fld-030-edge-lsep",
-      "parity-p65-fld-030-edge-vt"
+      "parity-p65-fld-030-blank-tab"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-030-blank-tab"
+  },
+  {
+   "id": "p65f-rule-uitarget-blank-vt",
+   "about": "the field rule.uiTarget written in the state blank-vt, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_030",
+   "steps": [
     {
      "name": "w-blank-vt",
      "op": "write-external-id-sets",
@@ -2857,20 +2611,17 @@
      "markers": [
       "parity-p65-fld-030",
       "PARITY_P65_FLD_030",
-      "parity-p65-fld-030-empty-string",
-      "parity-p65-fld-030-other-type",
-      "parity-p65-fld-030-one-element-list",
-      "parity-p65-fld-030-blank-lsep",
-      "parity-p65-fld-030-blank-nbsp",
-      "parity-p65-fld-030-blank-tab",
-      "parity-p65-fld-030-blank-vt",
-      "parity-p65-fld-030-edge-cr",
-      "parity-p65-fld-030-edge-ff",
-      "parity-p65-fld-030-edge-lf",
-      "parity-p65-fld-030-edge-lsep",
-      "parity-p65-fld-030-edge-vt"
+      "parity-p65-fld-030-blank-vt"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-030-blank-vt"
+  },
+  {
+   "id": "p65f-rule-uitarget-edge-cr",
+   "about": "the field rule.uiTarget written in the state edge-cr, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_030",
+   "steps": [
     {
      "name": "w-edge-cr",
      "op": "write-external-id-sets",
@@ -2920,20 +2671,17 @@
      "markers": [
       "parity-p65-fld-030",
       "PARITY_P65_FLD_030",
-      "parity-p65-fld-030-empty-string",
-      "parity-p65-fld-030-other-type",
-      "parity-p65-fld-030-one-element-list",
-      "parity-p65-fld-030-blank-lsep",
-      "parity-p65-fld-030-blank-nbsp",
-      "parity-p65-fld-030-blank-tab",
-      "parity-p65-fld-030-blank-vt",
-      "parity-p65-fld-030-edge-cr",
-      "parity-p65-fld-030-edge-ff",
-      "parity-p65-fld-030-edge-lf",
-      "parity-p65-fld-030-edge-lsep",
-      "parity-p65-fld-030-edge-vt"
+      "parity-p65-fld-030-edge-cr"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-030-edge-cr"
+  },
+  {
+   "id": "p65f-rule-uitarget-edge-ff",
+   "about": "the field rule.uiTarget written in the state edge-ff, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_030",
+   "steps": [
     {
      "name": "w-edge-ff",
      "op": "write-external-id-sets",
@@ -2983,20 +2731,17 @@
      "markers": [
       "parity-p65-fld-030",
       "PARITY_P65_FLD_030",
-      "parity-p65-fld-030-empty-string",
-      "parity-p65-fld-030-other-type",
-      "parity-p65-fld-030-one-element-list",
-      "parity-p65-fld-030-blank-lsep",
-      "parity-p65-fld-030-blank-nbsp",
-      "parity-p65-fld-030-blank-tab",
-      "parity-p65-fld-030-blank-vt",
-      "parity-p65-fld-030-edge-cr",
-      "parity-p65-fld-030-edge-ff",
-      "parity-p65-fld-030-edge-lf",
-      "parity-p65-fld-030-edge-lsep",
-      "parity-p65-fld-030-edge-vt"
+      "parity-p65-fld-030-edge-ff"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-030-edge-ff"
+  },
+  {
+   "id": "p65f-rule-uitarget-edge-lf",
+   "about": "the field rule.uiTarget written in the state edge-lf, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_030",
+   "steps": [
     {
      "name": "w-edge-lf",
      "op": "write-external-id-sets",
@@ -3046,20 +2791,17 @@
      "markers": [
       "parity-p65-fld-030",
       "PARITY_P65_FLD_030",
-      "parity-p65-fld-030-empty-string",
-      "parity-p65-fld-030-other-type",
-      "parity-p65-fld-030-one-element-list",
-      "parity-p65-fld-030-blank-lsep",
-      "parity-p65-fld-030-blank-nbsp",
-      "parity-p65-fld-030-blank-tab",
-      "parity-p65-fld-030-blank-vt",
-      "parity-p65-fld-030-edge-cr",
-      "parity-p65-fld-030-edge-ff",
-      "parity-p65-fld-030-edge-lf",
-      "parity-p65-fld-030-edge-lsep",
-      "parity-p65-fld-030-edge-vt"
+      "parity-p65-fld-030-edge-lf"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-030-edge-lf"
+  },
+  {
+   "id": "p65f-rule-uitarget-edge-lsep",
+   "about": "the field rule.uiTarget written in the state edge-lsep, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_030",
+   "steps": [
     {
      "name": "w-edge-lsep",
      "op": "write-external-id-sets",
@@ -3109,20 +2851,17 @@
      "markers": [
       "parity-p65-fld-030",
       "PARITY_P65_FLD_030",
-      "parity-p65-fld-030-empty-string",
-      "parity-p65-fld-030-other-type",
-      "parity-p65-fld-030-one-element-list",
-      "parity-p65-fld-030-blank-lsep",
-      "parity-p65-fld-030-blank-nbsp",
-      "parity-p65-fld-030-blank-tab",
-      "parity-p65-fld-030-blank-vt",
-      "parity-p65-fld-030-edge-cr",
-      "parity-p65-fld-030-edge-ff",
-      "parity-p65-fld-030-edge-lf",
-      "parity-p65-fld-030-edge-lsep",
-      "parity-p65-fld-030-edge-vt"
+      "parity-p65-fld-030-edge-lsep"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-030-edge-lsep"
+  },
+  {
+   "id": "p65f-rule-uitarget-edge-vt",
+   "about": "the field rule.uiTarget written in the state edge-vt, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_030",
+   "steps": [
     {
      "name": "w-edge-vt",
      "op": "write-external-id-sets",
@@ -3172,52 +2911,17 @@
      "markers": [
       "parity-p65-fld-030",
       "PARITY_P65_FLD_030",
-      "parity-p65-fld-030-empty-string",
-      "parity-p65-fld-030-other-type",
-      "parity-p65-fld-030-one-element-list",
-      "parity-p65-fld-030-blank-lsep",
-      "parity-p65-fld-030-blank-nbsp",
-      "parity-p65-fld-030-blank-tab",
-      "parity-p65-fld-030-blank-vt",
-      "parity-p65-fld-030-edge-cr",
-      "parity-p65-fld-030-edge-ff",
-      "parity-p65-fld-030-edge-lf",
-      "parity-p65-fld-030-edge-lsep",
       "parity-p65-fld-030-edge-vt"
      ]
     }
    ],
-   "tenant": "parity-p65f-030"
+   "tenant": "parity-p65f-030-edge-vt"
   },
   {
-   "id": "p65f-rule-uicondition",
-   "about": "the field rule.uiCondition written in 12 states, each read back",
+   "id": "p65f-rule-uicondition-empty-string",
+   "about": "the field rule.uiCondition written in the state empty-string, read back",
    "resourceType": "PARITY_SUITE_P65_FLD_031",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-config-sets",
-     "args": {},
-     "observe": [
-      "read:read-config-sets"
-     ],
-     "markers": [
-      "parity-p65-fld-031",
-      "PARITY_P65_FLD_031",
-      "parity-p65-fld-031-empty-string",
-      "parity-p65-fld-031-other-type",
-      "parity-p65-fld-031-one-element-list",
-      "parity-p65-fld-031-blank-lsep",
-      "parity-p65-fld-031-blank-nbsp",
-      "parity-p65-fld-031-blank-tab",
-      "parity-p65-fld-031-blank-vt",
-      "parity-p65-fld-031-edge-cr",
-      "parity-p65-fld-031-edge-ff",
-      "parity-p65-fld-031-edge-lf",
-      "parity-p65-fld-031-edge-lsep",
-      "parity-p65-fld-031-edge-vt"
-     ]
-    },
     {
      "name": "w-empty-string",
      "op": "write-external-id-sets",
@@ -3267,20 +2971,17 @@
      "markers": [
       "parity-p65-fld-031",
       "PARITY_P65_FLD_031",
-      "parity-p65-fld-031-empty-string",
-      "parity-p65-fld-031-other-type",
-      "parity-p65-fld-031-one-element-list",
-      "parity-p65-fld-031-blank-lsep",
-      "parity-p65-fld-031-blank-nbsp",
-      "parity-p65-fld-031-blank-tab",
-      "parity-p65-fld-031-blank-vt",
-      "parity-p65-fld-031-edge-cr",
-      "parity-p65-fld-031-edge-ff",
-      "parity-p65-fld-031-edge-lf",
-      "parity-p65-fld-031-edge-lsep",
-      "parity-p65-fld-031-edge-vt"
+      "parity-p65-fld-031-empty-string"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-031-empty-string"
+  },
+  {
+   "id": "p65f-rule-uicondition-other-type",
+   "about": "the field rule.uiCondition written in the state other-type, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_031",
+   "steps": [
     {
      "name": "w-other-type",
      "op": "write-external-id-sets",
@@ -3330,20 +3031,17 @@
      "markers": [
       "parity-p65-fld-031",
       "PARITY_P65_FLD_031",
-      "parity-p65-fld-031-empty-string",
-      "parity-p65-fld-031-other-type",
-      "parity-p65-fld-031-one-element-list",
-      "parity-p65-fld-031-blank-lsep",
-      "parity-p65-fld-031-blank-nbsp",
-      "parity-p65-fld-031-blank-tab",
-      "parity-p65-fld-031-blank-vt",
-      "parity-p65-fld-031-edge-cr",
-      "parity-p65-fld-031-edge-ff",
-      "parity-p65-fld-031-edge-lf",
-      "parity-p65-fld-031-edge-lsep",
-      "parity-p65-fld-031-edge-vt"
+      "parity-p65-fld-031-other-type"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-031-other-type"
+  },
+  {
+   "id": "p65f-rule-uicondition-one-element-list",
+   "about": "the field rule.uiCondition written in the state one-element-list, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_031",
+   "steps": [
     {
      "name": "w-one-element-list",
      "op": "write-external-id-sets",
@@ -3395,20 +3093,17 @@
      "markers": [
       "parity-p65-fld-031",
       "PARITY_P65_FLD_031",
-      "parity-p65-fld-031-empty-string",
-      "parity-p65-fld-031-other-type",
-      "parity-p65-fld-031-one-element-list",
-      "parity-p65-fld-031-blank-lsep",
-      "parity-p65-fld-031-blank-nbsp",
-      "parity-p65-fld-031-blank-tab",
-      "parity-p65-fld-031-blank-vt",
-      "parity-p65-fld-031-edge-cr",
-      "parity-p65-fld-031-edge-ff",
-      "parity-p65-fld-031-edge-lf",
-      "parity-p65-fld-031-edge-lsep",
-      "parity-p65-fld-031-edge-vt"
+      "parity-p65-fld-031-one-element-list"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-031-one-element-list"
+  },
+  {
+   "id": "p65f-rule-uicondition-blank-lsep",
+   "about": "the field rule.uiCondition written in the state blank-lsep, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_031",
+   "steps": [
     {
      "name": "w-blank-lsep",
      "op": "write-external-id-sets",
@@ -3458,20 +3153,17 @@
      "markers": [
       "parity-p65-fld-031",
       "PARITY_P65_FLD_031",
-      "parity-p65-fld-031-empty-string",
-      "parity-p65-fld-031-other-type",
-      "parity-p65-fld-031-one-element-list",
-      "parity-p65-fld-031-blank-lsep",
-      "parity-p65-fld-031-blank-nbsp",
-      "parity-p65-fld-031-blank-tab",
-      "parity-p65-fld-031-blank-vt",
-      "parity-p65-fld-031-edge-cr",
-      "parity-p65-fld-031-edge-ff",
-      "parity-p65-fld-031-edge-lf",
-      "parity-p65-fld-031-edge-lsep",
-      "parity-p65-fld-031-edge-vt"
+      "parity-p65-fld-031-blank-lsep"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-031-blank-lsep"
+  },
+  {
+   "id": "p65f-rule-uicondition-blank-nbsp",
+   "about": "the field rule.uiCondition written in the state blank-nbsp, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_031",
+   "steps": [
     {
      "name": "w-blank-nbsp",
      "op": "write-external-id-sets",
@@ -3521,20 +3213,17 @@
      "markers": [
       "parity-p65-fld-031",
       "PARITY_P65_FLD_031",
-      "parity-p65-fld-031-empty-string",
-      "parity-p65-fld-031-other-type",
-      "parity-p65-fld-031-one-element-list",
-      "parity-p65-fld-031-blank-lsep",
-      "parity-p65-fld-031-blank-nbsp",
-      "parity-p65-fld-031-blank-tab",
-      "parity-p65-fld-031-blank-vt",
-      "parity-p65-fld-031-edge-cr",
-      "parity-p65-fld-031-edge-ff",
-      "parity-p65-fld-031-edge-lf",
-      "parity-p65-fld-031-edge-lsep",
-      "parity-p65-fld-031-edge-vt"
+      "parity-p65-fld-031-blank-nbsp"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-031-blank-nbsp"
+  },
+  {
+   "id": "p65f-rule-uicondition-blank-tab",
+   "about": "the field rule.uiCondition written in the state blank-tab, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_031",
+   "steps": [
     {
      "name": "w-blank-tab",
      "op": "write-external-id-sets",
@@ -3584,20 +3273,17 @@
      "markers": [
       "parity-p65-fld-031",
       "PARITY_P65_FLD_031",
-      "parity-p65-fld-031-empty-string",
-      "parity-p65-fld-031-other-type",
-      "parity-p65-fld-031-one-element-list",
-      "parity-p65-fld-031-blank-lsep",
-      "parity-p65-fld-031-blank-nbsp",
-      "parity-p65-fld-031-blank-tab",
-      "parity-p65-fld-031-blank-vt",
-      "parity-p65-fld-031-edge-cr",
-      "parity-p65-fld-031-edge-ff",
-      "parity-p65-fld-031-edge-lf",
-      "parity-p65-fld-031-edge-lsep",
-      "parity-p65-fld-031-edge-vt"
+      "parity-p65-fld-031-blank-tab"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-031-blank-tab"
+  },
+  {
+   "id": "p65f-rule-uicondition-blank-vt",
+   "about": "the field rule.uiCondition written in the state blank-vt, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_031",
+   "steps": [
     {
      "name": "w-blank-vt",
      "op": "write-external-id-sets",
@@ -3647,20 +3333,17 @@
      "markers": [
       "parity-p65-fld-031",
       "PARITY_P65_FLD_031",
-      "parity-p65-fld-031-empty-string",
-      "parity-p65-fld-031-other-type",
-      "parity-p65-fld-031-one-element-list",
-      "parity-p65-fld-031-blank-lsep",
-      "parity-p65-fld-031-blank-nbsp",
-      "parity-p65-fld-031-blank-tab",
-      "parity-p65-fld-031-blank-vt",
-      "parity-p65-fld-031-edge-cr",
-      "parity-p65-fld-031-edge-ff",
-      "parity-p65-fld-031-edge-lf",
-      "parity-p65-fld-031-edge-lsep",
-      "parity-p65-fld-031-edge-vt"
+      "parity-p65-fld-031-blank-vt"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-031-blank-vt"
+  },
+  {
+   "id": "p65f-rule-uicondition-edge-cr",
+   "about": "the field rule.uiCondition written in the state edge-cr, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_031",
+   "steps": [
     {
      "name": "w-edge-cr",
      "op": "write-external-id-sets",
@@ -3710,20 +3393,17 @@
      "markers": [
       "parity-p65-fld-031",
       "PARITY_P65_FLD_031",
-      "parity-p65-fld-031-empty-string",
-      "parity-p65-fld-031-other-type",
-      "parity-p65-fld-031-one-element-list",
-      "parity-p65-fld-031-blank-lsep",
-      "parity-p65-fld-031-blank-nbsp",
-      "parity-p65-fld-031-blank-tab",
-      "parity-p65-fld-031-blank-vt",
-      "parity-p65-fld-031-edge-cr",
-      "parity-p65-fld-031-edge-ff",
-      "parity-p65-fld-031-edge-lf",
-      "parity-p65-fld-031-edge-lsep",
-      "parity-p65-fld-031-edge-vt"
+      "parity-p65-fld-031-edge-cr"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-031-edge-cr"
+  },
+  {
+   "id": "p65f-rule-uicondition-edge-ff",
+   "about": "the field rule.uiCondition written in the state edge-ff, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_031",
+   "steps": [
     {
      "name": "w-edge-ff",
      "op": "write-external-id-sets",
@@ -3773,20 +3453,17 @@
      "markers": [
       "parity-p65-fld-031",
       "PARITY_P65_FLD_031",
-      "parity-p65-fld-031-empty-string",
-      "parity-p65-fld-031-other-type",
-      "parity-p65-fld-031-one-element-list",
-      "parity-p65-fld-031-blank-lsep",
-      "parity-p65-fld-031-blank-nbsp",
-      "parity-p65-fld-031-blank-tab",
-      "parity-p65-fld-031-blank-vt",
-      "parity-p65-fld-031-edge-cr",
-      "parity-p65-fld-031-edge-ff",
-      "parity-p65-fld-031-edge-lf",
-      "parity-p65-fld-031-edge-lsep",
-      "parity-p65-fld-031-edge-vt"
+      "parity-p65-fld-031-edge-ff"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-031-edge-ff"
+  },
+  {
+   "id": "p65f-rule-uicondition-edge-lf",
+   "about": "the field rule.uiCondition written in the state edge-lf, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_031",
+   "steps": [
     {
      "name": "w-edge-lf",
      "op": "write-external-id-sets",
@@ -3836,20 +3513,17 @@
      "markers": [
       "parity-p65-fld-031",
       "PARITY_P65_FLD_031",
-      "parity-p65-fld-031-empty-string",
-      "parity-p65-fld-031-other-type",
-      "parity-p65-fld-031-one-element-list",
-      "parity-p65-fld-031-blank-lsep",
-      "parity-p65-fld-031-blank-nbsp",
-      "parity-p65-fld-031-blank-tab",
-      "parity-p65-fld-031-blank-vt",
-      "parity-p65-fld-031-edge-cr",
-      "parity-p65-fld-031-edge-ff",
-      "parity-p65-fld-031-edge-lf",
-      "parity-p65-fld-031-edge-lsep",
-      "parity-p65-fld-031-edge-vt"
+      "parity-p65-fld-031-edge-lf"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-031-edge-lf"
+  },
+  {
+   "id": "p65f-rule-uicondition-edge-lsep",
+   "about": "the field rule.uiCondition written in the state edge-lsep, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_031",
+   "steps": [
     {
      "name": "w-edge-lsep",
      "op": "write-external-id-sets",
@@ -3899,20 +3573,17 @@
      "markers": [
       "parity-p65-fld-031",
       "PARITY_P65_FLD_031",
-      "parity-p65-fld-031-empty-string",
-      "parity-p65-fld-031-other-type",
-      "parity-p65-fld-031-one-element-list",
-      "parity-p65-fld-031-blank-lsep",
-      "parity-p65-fld-031-blank-nbsp",
-      "parity-p65-fld-031-blank-tab",
-      "parity-p65-fld-031-blank-vt",
-      "parity-p65-fld-031-edge-cr",
-      "parity-p65-fld-031-edge-ff",
-      "parity-p65-fld-031-edge-lf",
-      "parity-p65-fld-031-edge-lsep",
-      "parity-p65-fld-031-edge-vt"
+      "parity-p65-fld-031-edge-lsep"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-031-edge-lsep"
+  },
+  {
+   "id": "p65f-rule-uicondition-edge-vt",
+   "about": "the field rule.uiCondition written in the state edge-vt, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_031",
+   "steps": [
     {
      "name": "w-edge-vt",
      "op": "write-external-id-sets",
@@ -3962,40 +3633,17 @@
      "markers": [
       "parity-p65-fld-031",
       "PARITY_P65_FLD_031",
-      "parity-p65-fld-031-empty-string",
-      "parity-p65-fld-031-other-type",
-      "parity-p65-fld-031-one-element-list",
-      "parity-p65-fld-031-blank-lsep",
-      "parity-p65-fld-031-blank-nbsp",
-      "parity-p65-fld-031-blank-tab",
-      "parity-p65-fld-031-blank-vt",
-      "parity-p65-fld-031-edge-cr",
-      "parity-p65-fld-031-edge-ff",
-      "parity-p65-fld-031-edge-lf",
-      "parity-p65-fld-031-edge-lsep",
       "parity-p65-fld-031-edge-vt"
      ]
     }
    ],
-   "tenant": "parity-p65f-031"
+   "tenant": "parity-p65f-031-edge-vt"
   },
   {
-   "id": "p65f-simplifiedpolicy-reason",
-   "about": "the field simplifiedPolicy.reason written in 12 states, each read back",
+   "id": "p65f-simplifiedpolicy-reason-empty-string",
+   "about": "the field simplifiedPolicy.reason written in the state empty-string, read back",
    "resourceType": "PARITY_SUITE_P65_FLD_032",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-config-sets",
-     "args": {},
-     "observe": [
-      "read:read-config-sets"
-     ],
-     "markers": [
-      "parity-p65-fld-032",
-      "PARITY_P65_FLD_032"
-     ]
-    },
     {
      "name": "w-empty-string",
      "op": "write-domain-policies",
@@ -4031,7 +3679,15 @@
       "parity-p65-fld-032",
       "PARITY_P65_FLD_032"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-032-empty-string"
+  },
+  {
+   "id": "p65f-simplifiedpolicy-reason-one-element-list",
+   "about": "the field simplifiedPolicy.reason written in the state one-element-list, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_032",
+   "steps": [
     {
      "name": "w-one-element-list",
      "op": "write-domain-policies",
@@ -4069,7 +3725,15 @@
       "parity-p65-fld-032",
       "PARITY_P65_FLD_032"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-032-one-element-list"
+  },
+  {
+   "id": "p65f-simplifiedpolicy-reason-blank-ff",
+   "about": "the field simplifiedPolicy.reason written in the state blank-ff, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_032",
+   "steps": [
     {
      "name": "w-blank-ff",
      "op": "write-domain-policies",
@@ -4105,7 +3769,15 @@
       "parity-p65-fld-032",
       "PARITY_P65_FLD_032"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-032-blank-ff"
+  },
+  {
+   "id": "p65f-simplifiedpolicy-reason-blank-lf",
+   "about": "the field simplifiedPolicy.reason written in the state blank-lf, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_032",
+   "steps": [
     {
      "name": "w-blank-lf",
      "op": "write-domain-policies",
@@ -4141,7 +3813,15 @@
       "parity-p65-fld-032",
       "PARITY_P65_FLD_032"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-032-blank-lf"
+  },
+  {
+   "id": "p65f-simplifiedpolicy-reason-blank-lsep",
+   "about": "the field simplifiedPolicy.reason written in the state blank-lsep, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_032",
+   "steps": [
     {
      "name": "w-blank-lsep",
      "op": "write-domain-policies",
@@ -4177,7 +3857,15 @@
       "parity-p65-fld-032",
       "PARITY_P65_FLD_032"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-032-blank-lsep"
+  },
+  {
+   "id": "p65f-simplifiedpolicy-reason-blank-nbsp",
+   "about": "the field simplifiedPolicy.reason written in the state blank-nbsp, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_032",
+   "steps": [
     {
      "name": "w-blank-nbsp",
      "op": "write-domain-policies",
@@ -4213,7 +3901,15 @@
       "parity-p65-fld-032",
       "PARITY_P65_FLD_032"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-032-blank-nbsp"
+  },
+  {
+   "id": "p65f-simplifiedpolicy-reason-blank-tab",
+   "about": "the field simplifiedPolicy.reason written in the state blank-tab, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_032",
+   "steps": [
     {
      "name": "w-blank-tab",
      "op": "write-domain-policies",
@@ -4249,7 +3945,15 @@
       "parity-p65-fld-032",
       "PARITY_P65_FLD_032"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-032-blank-tab"
+  },
+  {
+   "id": "p65f-simplifiedpolicy-reason-blank-vt",
+   "about": "the field simplifiedPolicy.reason written in the state blank-vt, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_032",
+   "steps": [
     {
      "name": "w-blank-vt",
      "op": "write-domain-policies",
@@ -4285,7 +3989,15 @@
       "parity-p65-fld-032",
       "PARITY_P65_FLD_032"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-032-blank-vt"
+  },
+  {
+   "id": "p65f-simplifiedpolicy-reason-edge-cr",
+   "about": "the field simplifiedPolicy.reason written in the state edge-cr, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_032",
+   "steps": [
     {
      "name": "w-edge-cr",
      "op": "write-domain-policies",
@@ -4321,7 +4033,15 @@
       "parity-p65-fld-032",
       "PARITY_P65_FLD_032"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-032-edge-cr"
+  },
+  {
+   "id": "p65f-simplifiedpolicy-reason-edge-ff",
+   "about": "the field simplifiedPolicy.reason written in the state edge-ff, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_032",
+   "steps": [
     {
      "name": "w-edge-ff",
      "op": "write-domain-policies",
@@ -4357,7 +4077,15 @@
       "parity-p65-fld-032",
       "PARITY_P65_FLD_032"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-032-edge-ff"
+  },
+  {
+   "id": "p65f-simplifiedpolicy-reason-edge-lf",
+   "about": "the field simplifiedPolicy.reason written in the state edge-lf, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_032",
+   "steps": [
     {
      "name": "w-edge-lf",
      "op": "write-domain-policies",
@@ -4393,7 +4121,15 @@
       "parity-p65-fld-032",
       "PARITY_P65_FLD_032"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-032-edge-lf"
+  },
+  {
+   "id": "p65f-simplifiedpolicy-reason-edge-lsep",
+   "about": "the field simplifiedPolicy.reason written in the state edge-lsep, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_032",
+   "steps": [
     {
      "name": "w-edge-lsep",
      "op": "write-domain-policies",
@@ -4429,51 +4165,15 @@
       "parity-p65-fld-032",
       "PARITY_P65_FLD_032"
      ]
-    },
-    {
-     "name": "cleanup-slot",
-     "op": "write-domain-policies",
-     "args": {
-      "domain": "PARITY_P65_FLD_032"
-     },
-     "observe": [
-      "status"
-     ],
-     "onRefusal": "continue",
-     "body": []
     }
    ],
-   "tenant": "parity-p65f-032"
+   "tenant": "parity-p65f-032-edge-lsep"
   },
   {
-   "id": "p65f-policy-description",
-   "about": "the field policy.description written in 12 states, each read back",
+   "id": "p65f-policy-description-empty-string",
+   "about": "the field policy.description written in the state empty-string, read back",
    "resourceType": "PARITY_SUITE_P65_FLD_033",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-config-sets",
-     "args": {},
-     "observe": [
-      "read:read-config-sets"
-     ],
-     "markers": [
-      "parity-p65-fld-033",
-      "PARITY_P65_FLD_033",
-      "parity-p65-fld-033-empty-string",
-      "parity-p65-fld-033-one-element-list",
-      "parity-p65-fld-033-blank-lf",
-      "parity-p65-fld-033-blank-lsep",
-      "parity-p65-fld-033-blank-nbsp",
-      "parity-p65-fld-033-blank-tab",
-      "parity-p65-fld-033-blank-vt",
-      "parity-p65-fld-033-edge-cr",
-      "parity-p65-fld-033-edge-ff",
-      "parity-p65-fld-033-edge-lf",
-      "parity-p65-fld-033-edge-lsep",
-      "parity-p65-fld-033-edge-vt"
-     ]
-    },
     {
      "name": "w-empty-string",
      "op": "write-external-id-sets",
@@ -4523,20 +4223,17 @@
      "markers": [
       "parity-p65-fld-033",
       "PARITY_P65_FLD_033",
-      "parity-p65-fld-033-empty-string",
-      "parity-p65-fld-033-one-element-list",
-      "parity-p65-fld-033-blank-lf",
-      "parity-p65-fld-033-blank-lsep",
-      "parity-p65-fld-033-blank-nbsp",
-      "parity-p65-fld-033-blank-tab",
-      "parity-p65-fld-033-blank-vt",
-      "parity-p65-fld-033-edge-cr",
-      "parity-p65-fld-033-edge-ff",
-      "parity-p65-fld-033-edge-lf",
-      "parity-p65-fld-033-edge-lsep",
-      "parity-p65-fld-033-edge-vt"
+      "parity-p65-fld-033-empty-string"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-033-empty-string"
+  },
+  {
+   "id": "p65f-policy-description-one-element-list",
+   "about": "the field policy.description written in the state one-element-list, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_033",
+   "steps": [
     {
      "name": "w-one-element-list",
      "op": "write-external-id-sets",
@@ -4588,20 +4285,17 @@
      "markers": [
       "parity-p65-fld-033",
       "PARITY_P65_FLD_033",
-      "parity-p65-fld-033-empty-string",
-      "parity-p65-fld-033-one-element-list",
-      "parity-p65-fld-033-blank-lf",
-      "parity-p65-fld-033-blank-lsep",
-      "parity-p65-fld-033-blank-nbsp",
-      "parity-p65-fld-033-blank-tab",
-      "parity-p65-fld-033-blank-vt",
-      "parity-p65-fld-033-edge-cr",
-      "parity-p65-fld-033-edge-ff",
-      "parity-p65-fld-033-edge-lf",
-      "parity-p65-fld-033-edge-lsep",
-      "parity-p65-fld-033-edge-vt"
+      "parity-p65-fld-033-one-element-list"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-033-one-element-list"
+  },
+  {
+   "id": "p65f-policy-description-blank-lf",
+   "about": "the field policy.description written in the state blank-lf, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_033",
+   "steps": [
     {
      "name": "w-blank-lf",
      "op": "write-external-id-sets",
@@ -4651,20 +4345,17 @@
      "markers": [
       "parity-p65-fld-033",
       "PARITY_P65_FLD_033",
-      "parity-p65-fld-033-empty-string",
-      "parity-p65-fld-033-one-element-list",
-      "parity-p65-fld-033-blank-lf",
-      "parity-p65-fld-033-blank-lsep",
-      "parity-p65-fld-033-blank-nbsp",
-      "parity-p65-fld-033-blank-tab",
-      "parity-p65-fld-033-blank-vt",
-      "parity-p65-fld-033-edge-cr",
-      "parity-p65-fld-033-edge-ff",
-      "parity-p65-fld-033-edge-lf",
-      "parity-p65-fld-033-edge-lsep",
-      "parity-p65-fld-033-edge-vt"
+      "parity-p65-fld-033-blank-lf"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-033-blank-lf"
+  },
+  {
+   "id": "p65f-policy-description-blank-lsep",
+   "about": "the field policy.description written in the state blank-lsep, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_033",
+   "steps": [
     {
      "name": "w-blank-lsep",
      "op": "write-external-id-sets",
@@ -4714,20 +4405,17 @@
      "markers": [
       "parity-p65-fld-033",
       "PARITY_P65_FLD_033",
-      "parity-p65-fld-033-empty-string",
-      "parity-p65-fld-033-one-element-list",
-      "parity-p65-fld-033-blank-lf",
-      "parity-p65-fld-033-blank-lsep",
-      "parity-p65-fld-033-blank-nbsp",
-      "parity-p65-fld-033-blank-tab",
-      "parity-p65-fld-033-blank-vt",
-      "parity-p65-fld-033-edge-cr",
-      "parity-p65-fld-033-edge-ff",
-      "parity-p65-fld-033-edge-lf",
-      "parity-p65-fld-033-edge-lsep",
-      "parity-p65-fld-033-edge-vt"
+      "parity-p65-fld-033-blank-lsep"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-033-blank-lsep"
+  },
+  {
+   "id": "p65f-policy-description-blank-nbsp",
+   "about": "the field policy.description written in the state blank-nbsp, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_033",
+   "steps": [
     {
      "name": "w-blank-nbsp",
      "op": "write-external-id-sets",
@@ -4777,20 +4465,17 @@
      "markers": [
       "parity-p65-fld-033",
       "PARITY_P65_FLD_033",
-      "parity-p65-fld-033-empty-string",
-      "parity-p65-fld-033-one-element-list",
-      "parity-p65-fld-033-blank-lf",
-      "parity-p65-fld-033-blank-lsep",
-      "parity-p65-fld-033-blank-nbsp",
-      "parity-p65-fld-033-blank-tab",
-      "parity-p65-fld-033-blank-vt",
-      "parity-p65-fld-033-edge-cr",
-      "parity-p65-fld-033-edge-ff",
-      "parity-p65-fld-033-edge-lf",
-      "parity-p65-fld-033-edge-lsep",
-      "parity-p65-fld-033-edge-vt"
+      "parity-p65-fld-033-blank-nbsp"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-033-blank-nbsp"
+  },
+  {
+   "id": "p65f-policy-description-blank-tab",
+   "about": "the field policy.description written in the state blank-tab, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_033",
+   "steps": [
     {
      "name": "w-blank-tab",
      "op": "write-external-id-sets",
@@ -4840,20 +4525,17 @@
      "markers": [
       "parity-p65-fld-033",
       "PARITY_P65_FLD_033",
-      "parity-p65-fld-033-empty-string",
-      "parity-p65-fld-033-one-element-list",
-      "parity-p65-fld-033-blank-lf",
-      "parity-p65-fld-033-blank-lsep",
-      "parity-p65-fld-033-blank-nbsp",
-      "parity-p65-fld-033-blank-tab",
-      "parity-p65-fld-033-blank-vt",
-      "parity-p65-fld-033-edge-cr",
-      "parity-p65-fld-033-edge-ff",
-      "parity-p65-fld-033-edge-lf",
-      "parity-p65-fld-033-edge-lsep",
-      "parity-p65-fld-033-edge-vt"
+      "parity-p65-fld-033-blank-tab"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-033-blank-tab"
+  },
+  {
+   "id": "p65f-policy-description-blank-vt",
+   "about": "the field policy.description written in the state blank-vt, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_033",
+   "steps": [
     {
      "name": "w-blank-vt",
      "op": "write-external-id-sets",
@@ -4903,20 +4585,17 @@
      "markers": [
       "parity-p65-fld-033",
       "PARITY_P65_FLD_033",
-      "parity-p65-fld-033-empty-string",
-      "parity-p65-fld-033-one-element-list",
-      "parity-p65-fld-033-blank-lf",
-      "parity-p65-fld-033-blank-lsep",
-      "parity-p65-fld-033-blank-nbsp",
-      "parity-p65-fld-033-blank-tab",
-      "parity-p65-fld-033-blank-vt",
-      "parity-p65-fld-033-edge-cr",
-      "parity-p65-fld-033-edge-ff",
-      "parity-p65-fld-033-edge-lf",
-      "parity-p65-fld-033-edge-lsep",
-      "parity-p65-fld-033-edge-vt"
+      "parity-p65-fld-033-blank-vt"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-033-blank-vt"
+  },
+  {
+   "id": "p65f-policy-description-edge-cr",
+   "about": "the field policy.description written in the state edge-cr, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_033",
+   "steps": [
     {
      "name": "w-edge-cr",
      "op": "write-external-id-sets",
@@ -4966,20 +4645,17 @@
      "markers": [
       "parity-p65-fld-033",
       "PARITY_P65_FLD_033",
-      "parity-p65-fld-033-empty-string",
-      "parity-p65-fld-033-one-element-list",
-      "parity-p65-fld-033-blank-lf",
-      "parity-p65-fld-033-blank-lsep",
-      "parity-p65-fld-033-blank-nbsp",
-      "parity-p65-fld-033-blank-tab",
-      "parity-p65-fld-033-blank-vt",
-      "parity-p65-fld-033-edge-cr",
-      "parity-p65-fld-033-edge-ff",
-      "parity-p65-fld-033-edge-lf",
-      "parity-p65-fld-033-edge-lsep",
-      "parity-p65-fld-033-edge-vt"
+      "parity-p65-fld-033-edge-cr"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-033-edge-cr"
+  },
+  {
+   "id": "p65f-policy-description-edge-ff",
+   "about": "the field policy.description written in the state edge-ff, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_033",
+   "steps": [
     {
      "name": "w-edge-ff",
      "op": "write-external-id-sets",
@@ -5029,20 +4705,17 @@
      "markers": [
       "parity-p65-fld-033",
       "PARITY_P65_FLD_033",
-      "parity-p65-fld-033-empty-string",
-      "parity-p65-fld-033-one-element-list",
-      "parity-p65-fld-033-blank-lf",
-      "parity-p65-fld-033-blank-lsep",
-      "parity-p65-fld-033-blank-nbsp",
-      "parity-p65-fld-033-blank-tab",
-      "parity-p65-fld-033-blank-vt",
-      "parity-p65-fld-033-edge-cr",
-      "parity-p65-fld-033-edge-ff",
-      "parity-p65-fld-033-edge-lf",
-      "parity-p65-fld-033-edge-lsep",
-      "parity-p65-fld-033-edge-vt"
+      "parity-p65-fld-033-edge-ff"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-033-edge-ff"
+  },
+  {
+   "id": "p65f-policy-description-edge-lf",
+   "about": "the field policy.description written in the state edge-lf, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_033",
+   "steps": [
     {
      "name": "w-edge-lf",
      "op": "write-external-id-sets",
@@ -5092,20 +4765,17 @@
      "markers": [
       "parity-p65-fld-033",
       "PARITY_P65_FLD_033",
-      "parity-p65-fld-033-empty-string",
-      "parity-p65-fld-033-one-element-list",
-      "parity-p65-fld-033-blank-lf",
-      "parity-p65-fld-033-blank-lsep",
-      "parity-p65-fld-033-blank-nbsp",
-      "parity-p65-fld-033-blank-tab",
-      "parity-p65-fld-033-blank-vt",
-      "parity-p65-fld-033-edge-cr",
-      "parity-p65-fld-033-edge-ff",
-      "parity-p65-fld-033-edge-lf",
-      "parity-p65-fld-033-edge-lsep",
-      "parity-p65-fld-033-edge-vt"
+      "parity-p65-fld-033-edge-lf"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-033-edge-lf"
+  },
+  {
+   "id": "p65f-policy-description-edge-lsep",
+   "about": "the field policy.description written in the state edge-lsep, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_033",
+   "steps": [
     {
      "name": "w-edge-lsep",
      "op": "write-external-id-sets",
@@ -5155,20 +4825,17 @@
      "markers": [
       "parity-p65-fld-033",
       "PARITY_P65_FLD_033",
-      "parity-p65-fld-033-empty-string",
-      "parity-p65-fld-033-one-element-list",
-      "parity-p65-fld-033-blank-lf",
-      "parity-p65-fld-033-blank-lsep",
-      "parity-p65-fld-033-blank-nbsp",
-      "parity-p65-fld-033-blank-tab",
-      "parity-p65-fld-033-blank-vt",
-      "parity-p65-fld-033-edge-cr",
-      "parity-p65-fld-033-edge-ff",
-      "parity-p65-fld-033-edge-lf",
-      "parity-p65-fld-033-edge-lsep",
-      "parity-p65-fld-033-edge-vt"
+      "parity-p65-fld-033-edge-lsep"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-033-edge-lsep"
+  },
+  {
+   "id": "p65f-policy-description-edge-vt",
+   "about": "the field policy.description written in the state edge-vt, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_033",
+   "steps": [
     {
      "name": "w-edge-vt",
      "op": "write-external-id-sets",
@@ -5218,52 +4885,17 @@
      "markers": [
       "parity-p65-fld-033",
       "PARITY_P65_FLD_033",
-      "parity-p65-fld-033-empty-string",
-      "parity-p65-fld-033-one-element-list",
-      "parity-p65-fld-033-blank-lf",
-      "parity-p65-fld-033-blank-lsep",
-      "parity-p65-fld-033-blank-nbsp",
-      "parity-p65-fld-033-blank-tab",
-      "parity-p65-fld-033-blank-vt",
-      "parity-p65-fld-033-edge-cr",
-      "parity-p65-fld-033-edge-ff",
-      "parity-p65-fld-033-edge-lf",
-      "parity-p65-fld-033-edge-lsep",
       "parity-p65-fld-033-edge-vt"
      ]
     }
    ],
-   "tenant": "parity-p65f-033"
+   "tenant": "parity-p65f-033-edge-vt"
   },
   {
-   "id": "p65f-rule-description",
-   "about": "the field rule.description written in 12 states, each read back",
+   "id": "p65f-rule-description-empty-string",
+   "about": "the field rule.description written in the state empty-string, read back",
    "resourceType": "PARITY_SUITE_P65_FLD_034",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-config-sets",
-     "args": {},
-     "observe": [
-      "read:read-config-sets"
-     ],
-     "markers": [
-      "parity-p65-fld-034",
-      "PARITY_P65_FLD_034",
-      "parity-p65-fld-034-empty-string",
-      "parity-p65-fld-034-one-element-list",
-      "parity-p65-fld-034-blank-lf",
-      "parity-p65-fld-034-blank-lsep",
-      "parity-p65-fld-034-blank-nbsp",
-      "parity-p65-fld-034-blank-tab",
-      "parity-p65-fld-034-blank-vt",
-      "parity-p65-fld-034-edge-cr",
-      "parity-p65-fld-034-edge-ff",
-      "parity-p65-fld-034-edge-lf",
-      "parity-p65-fld-034-edge-lsep",
-      "parity-p65-fld-034-edge-vt"
-     ]
-    },
     {
      "name": "w-empty-string",
      "op": "write-external-id-sets",
@@ -5313,20 +4945,17 @@
      "markers": [
       "parity-p65-fld-034",
       "PARITY_P65_FLD_034",
-      "parity-p65-fld-034-empty-string",
-      "parity-p65-fld-034-one-element-list",
-      "parity-p65-fld-034-blank-lf",
-      "parity-p65-fld-034-blank-lsep",
-      "parity-p65-fld-034-blank-nbsp",
-      "parity-p65-fld-034-blank-tab",
-      "parity-p65-fld-034-blank-vt",
-      "parity-p65-fld-034-edge-cr",
-      "parity-p65-fld-034-edge-ff",
-      "parity-p65-fld-034-edge-lf",
-      "parity-p65-fld-034-edge-lsep",
-      "parity-p65-fld-034-edge-vt"
+      "parity-p65-fld-034-empty-string"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-034-empty-string"
+  },
+  {
+   "id": "p65f-rule-description-one-element-list",
+   "about": "the field rule.description written in the state one-element-list, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_034",
+   "steps": [
     {
      "name": "w-one-element-list",
      "op": "write-external-id-sets",
@@ -5378,20 +5007,17 @@
      "markers": [
       "parity-p65-fld-034",
       "PARITY_P65_FLD_034",
-      "parity-p65-fld-034-empty-string",
-      "parity-p65-fld-034-one-element-list",
-      "parity-p65-fld-034-blank-lf",
-      "parity-p65-fld-034-blank-lsep",
-      "parity-p65-fld-034-blank-nbsp",
-      "parity-p65-fld-034-blank-tab",
-      "parity-p65-fld-034-blank-vt",
-      "parity-p65-fld-034-edge-cr",
-      "parity-p65-fld-034-edge-ff",
-      "parity-p65-fld-034-edge-lf",
-      "parity-p65-fld-034-edge-lsep",
-      "parity-p65-fld-034-edge-vt"
+      "parity-p65-fld-034-one-element-list"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-034-one-element-list"
+  },
+  {
+   "id": "p65f-rule-description-blank-lf",
+   "about": "the field rule.description written in the state blank-lf, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_034",
+   "steps": [
     {
      "name": "w-blank-lf",
      "op": "write-external-id-sets",
@@ -5441,20 +5067,17 @@
      "markers": [
       "parity-p65-fld-034",
       "PARITY_P65_FLD_034",
-      "parity-p65-fld-034-empty-string",
-      "parity-p65-fld-034-one-element-list",
-      "parity-p65-fld-034-blank-lf",
-      "parity-p65-fld-034-blank-lsep",
-      "parity-p65-fld-034-blank-nbsp",
-      "parity-p65-fld-034-blank-tab",
-      "parity-p65-fld-034-blank-vt",
-      "parity-p65-fld-034-edge-cr",
-      "parity-p65-fld-034-edge-ff",
-      "parity-p65-fld-034-edge-lf",
-      "parity-p65-fld-034-edge-lsep",
-      "parity-p65-fld-034-edge-vt"
+      "parity-p65-fld-034-blank-lf"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-034-blank-lf"
+  },
+  {
+   "id": "p65f-rule-description-blank-lsep",
+   "about": "the field rule.description written in the state blank-lsep, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_034",
+   "steps": [
     {
      "name": "w-blank-lsep",
      "op": "write-external-id-sets",
@@ -5504,20 +5127,17 @@
      "markers": [
       "parity-p65-fld-034",
       "PARITY_P65_FLD_034",
-      "parity-p65-fld-034-empty-string",
-      "parity-p65-fld-034-one-element-list",
-      "parity-p65-fld-034-blank-lf",
-      "parity-p65-fld-034-blank-lsep",
-      "parity-p65-fld-034-blank-nbsp",
-      "parity-p65-fld-034-blank-tab",
-      "parity-p65-fld-034-blank-vt",
-      "parity-p65-fld-034-edge-cr",
-      "parity-p65-fld-034-edge-ff",
-      "parity-p65-fld-034-edge-lf",
-      "parity-p65-fld-034-edge-lsep",
-      "parity-p65-fld-034-edge-vt"
+      "parity-p65-fld-034-blank-lsep"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-034-blank-lsep"
+  },
+  {
+   "id": "p65f-rule-description-blank-nbsp",
+   "about": "the field rule.description written in the state blank-nbsp, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_034",
+   "steps": [
     {
      "name": "w-blank-nbsp",
      "op": "write-external-id-sets",
@@ -5567,20 +5187,17 @@
      "markers": [
       "parity-p65-fld-034",
       "PARITY_P65_FLD_034",
-      "parity-p65-fld-034-empty-string",
-      "parity-p65-fld-034-one-element-list",
-      "parity-p65-fld-034-blank-lf",
-      "parity-p65-fld-034-blank-lsep",
-      "parity-p65-fld-034-blank-nbsp",
-      "parity-p65-fld-034-blank-tab",
-      "parity-p65-fld-034-blank-vt",
-      "parity-p65-fld-034-edge-cr",
-      "parity-p65-fld-034-edge-ff",
-      "parity-p65-fld-034-edge-lf",
-      "parity-p65-fld-034-edge-lsep",
-      "parity-p65-fld-034-edge-vt"
+      "parity-p65-fld-034-blank-nbsp"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-034-blank-nbsp"
+  },
+  {
+   "id": "p65f-rule-description-blank-tab",
+   "about": "the field rule.description written in the state blank-tab, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_034",
+   "steps": [
     {
      "name": "w-blank-tab",
      "op": "write-external-id-sets",
@@ -5630,20 +5247,17 @@
      "markers": [
       "parity-p65-fld-034",
       "PARITY_P65_FLD_034",
-      "parity-p65-fld-034-empty-string",
-      "parity-p65-fld-034-one-element-list",
-      "parity-p65-fld-034-blank-lf",
-      "parity-p65-fld-034-blank-lsep",
-      "parity-p65-fld-034-blank-nbsp",
-      "parity-p65-fld-034-blank-tab",
-      "parity-p65-fld-034-blank-vt",
-      "parity-p65-fld-034-edge-cr",
-      "parity-p65-fld-034-edge-ff",
-      "parity-p65-fld-034-edge-lf",
-      "parity-p65-fld-034-edge-lsep",
-      "parity-p65-fld-034-edge-vt"
+      "parity-p65-fld-034-blank-tab"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-034-blank-tab"
+  },
+  {
+   "id": "p65f-rule-description-blank-vt",
+   "about": "the field rule.description written in the state blank-vt, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_034",
+   "steps": [
     {
      "name": "w-blank-vt",
      "op": "write-external-id-sets",
@@ -5693,20 +5307,17 @@
      "markers": [
       "parity-p65-fld-034",
       "PARITY_P65_FLD_034",
-      "parity-p65-fld-034-empty-string",
-      "parity-p65-fld-034-one-element-list",
-      "parity-p65-fld-034-blank-lf",
-      "parity-p65-fld-034-blank-lsep",
-      "parity-p65-fld-034-blank-nbsp",
-      "parity-p65-fld-034-blank-tab",
-      "parity-p65-fld-034-blank-vt",
-      "parity-p65-fld-034-edge-cr",
-      "parity-p65-fld-034-edge-ff",
-      "parity-p65-fld-034-edge-lf",
-      "parity-p65-fld-034-edge-lsep",
-      "parity-p65-fld-034-edge-vt"
+      "parity-p65-fld-034-blank-vt"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-034-blank-vt"
+  },
+  {
+   "id": "p65f-rule-description-edge-cr",
+   "about": "the field rule.description written in the state edge-cr, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_034",
+   "steps": [
     {
      "name": "w-edge-cr",
      "op": "write-external-id-sets",
@@ -5756,20 +5367,17 @@
      "markers": [
       "parity-p65-fld-034",
       "PARITY_P65_FLD_034",
-      "parity-p65-fld-034-empty-string",
-      "parity-p65-fld-034-one-element-list",
-      "parity-p65-fld-034-blank-lf",
-      "parity-p65-fld-034-blank-lsep",
-      "parity-p65-fld-034-blank-nbsp",
-      "parity-p65-fld-034-blank-tab",
-      "parity-p65-fld-034-blank-vt",
-      "parity-p65-fld-034-edge-cr",
-      "parity-p65-fld-034-edge-ff",
-      "parity-p65-fld-034-edge-lf",
-      "parity-p65-fld-034-edge-lsep",
-      "parity-p65-fld-034-edge-vt"
+      "parity-p65-fld-034-edge-cr"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-034-edge-cr"
+  },
+  {
+   "id": "p65f-rule-description-edge-ff",
+   "about": "the field rule.description written in the state edge-ff, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_034",
+   "steps": [
     {
      "name": "w-edge-ff",
      "op": "write-external-id-sets",
@@ -5819,20 +5427,17 @@
      "markers": [
       "parity-p65-fld-034",
       "PARITY_P65_FLD_034",
-      "parity-p65-fld-034-empty-string",
-      "parity-p65-fld-034-one-element-list",
-      "parity-p65-fld-034-blank-lf",
-      "parity-p65-fld-034-blank-lsep",
-      "parity-p65-fld-034-blank-nbsp",
-      "parity-p65-fld-034-blank-tab",
-      "parity-p65-fld-034-blank-vt",
-      "parity-p65-fld-034-edge-cr",
-      "parity-p65-fld-034-edge-ff",
-      "parity-p65-fld-034-edge-lf",
-      "parity-p65-fld-034-edge-lsep",
-      "parity-p65-fld-034-edge-vt"
+      "parity-p65-fld-034-edge-ff"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-034-edge-ff"
+  },
+  {
+   "id": "p65f-rule-description-edge-lf",
+   "about": "the field rule.description written in the state edge-lf, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_034",
+   "steps": [
     {
      "name": "w-edge-lf",
      "op": "write-external-id-sets",
@@ -5882,20 +5487,17 @@
      "markers": [
       "parity-p65-fld-034",
       "PARITY_P65_FLD_034",
-      "parity-p65-fld-034-empty-string",
-      "parity-p65-fld-034-one-element-list",
-      "parity-p65-fld-034-blank-lf",
-      "parity-p65-fld-034-blank-lsep",
-      "parity-p65-fld-034-blank-nbsp",
-      "parity-p65-fld-034-blank-tab",
-      "parity-p65-fld-034-blank-vt",
-      "parity-p65-fld-034-edge-cr",
-      "parity-p65-fld-034-edge-ff",
-      "parity-p65-fld-034-edge-lf",
-      "parity-p65-fld-034-edge-lsep",
-      "parity-p65-fld-034-edge-vt"
+      "parity-p65-fld-034-edge-lf"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-034-edge-lf"
+  },
+  {
+   "id": "p65f-rule-description-edge-lsep",
+   "about": "the field rule.description written in the state edge-lsep, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_034",
+   "steps": [
     {
      "name": "w-edge-lsep",
      "op": "write-external-id-sets",
@@ -5945,20 +5547,17 @@
      "markers": [
       "parity-p65-fld-034",
       "PARITY_P65_FLD_034",
-      "parity-p65-fld-034-empty-string",
-      "parity-p65-fld-034-one-element-list",
-      "parity-p65-fld-034-blank-lf",
-      "parity-p65-fld-034-blank-lsep",
-      "parity-p65-fld-034-blank-nbsp",
-      "parity-p65-fld-034-blank-tab",
-      "parity-p65-fld-034-blank-vt",
-      "parity-p65-fld-034-edge-cr",
-      "parity-p65-fld-034-edge-ff",
-      "parity-p65-fld-034-edge-lf",
-      "parity-p65-fld-034-edge-lsep",
-      "parity-p65-fld-034-edge-vt"
+      "parity-p65-fld-034-edge-lsep"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-034-edge-lsep"
+  },
+  {
+   "id": "p65f-rule-description-edge-vt",
+   "about": "the field rule.description written in the state edge-vt, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_034",
+   "steps": [
     {
      "name": "w-edge-vt",
      "op": "write-external-id-sets",
@@ -6008,51 +5607,17 @@
      "markers": [
       "parity-p65-fld-034",
       "PARITY_P65_FLD_034",
-      "parity-p65-fld-034-empty-string",
-      "parity-p65-fld-034-one-element-list",
-      "parity-p65-fld-034-blank-lf",
-      "parity-p65-fld-034-blank-lsep",
-      "parity-p65-fld-034-blank-nbsp",
-      "parity-p65-fld-034-blank-tab",
-      "parity-p65-fld-034-blank-vt",
-      "parity-p65-fld-034-edge-cr",
-      "parity-p65-fld-034-edge-ff",
-      "parity-p65-fld-034-edge-lf",
-      "parity-p65-fld-034-edge-lsep",
       "parity-p65-fld-034-edge-vt"
      ]
     }
    ],
-   "tenant": "parity-p65f-034"
+   "tenant": "parity-p65f-034-edge-vt"
   },
   {
-   "id": "p65f-set-description",
-   "about": "the field set.description written in 11 states, each read back",
+   "id": "p65f-set-description-empty-string",
+   "about": "the field set.description written in the state empty-string, read back",
    "resourceType": "PARITY_SUITE_P65_FLD_035",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-config-sets",
-     "args": {},
-     "observe": [
-      "read:read-config-sets"
-     ],
-     "markers": [
-      "parity-p65-fld-035",
-      "PARITY_P65_FLD_035",
-      "parity-p65-fld-035-empty-string",
-      "parity-p65-fld-035-blank-lf",
-      "parity-p65-fld-035-blank-lsep",
-      "parity-p65-fld-035-blank-nbsp",
-      "parity-p65-fld-035-blank-tab",
-      "parity-p65-fld-035-blank-vt",
-      "parity-p65-fld-035-edge-cr",
-      "parity-p65-fld-035-edge-ff",
-      "parity-p65-fld-035-edge-lf",
-      "parity-p65-fld-035-edge-lsep",
-      "parity-p65-fld-035-edge-vt"
-     ]
-    },
     {
      "name": "w-empty-string",
      "op": "write-external-id-sets",
@@ -6102,19 +5667,17 @@
      "markers": [
       "parity-p65-fld-035",
       "PARITY_P65_FLD_035",
-      "parity-p65-fld-035-empty-string",
-      "parity-p65-fld-035-blank-lf",
-      "parity-p65-fld-035-blank-lsep",
-      "parity-p65-fld-035-blank-nbsp",
-      "parity-p65-fld-035-blank-tab",
-      "parity-p65-fld-035-blank-vt",
-      "parity-p65-fld-035-edge-cr",
-      "parity-p65-fld-035-edge-ff",
-      "parity-p65-fld-035-edge-lf",
-      "parity-p65-fld-035-edge-lsep",
-      "parity-p65-fld-035-edge-vt"
+      "parity-p65-fld-035-empty-string"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-035-empty-string"
+  },
+  {
+   "id": "p65f-set-description-blank-lf",
+   "about": "the field set.description written in the state blank-lf, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_035",
+   "steps": [
     {
      "name": "w-blank-lf",
      "op": "write-external-id-sets",
@@ -6164,19 +5727,17 @@
      "markers": [
       "parity-p65-fld-035",
       "PARITY_P65_FLD_035",
-      "parity-p65-fld-035-empty-string",
-      "parity-p65-fld-035-blank-lf",
-      "parity-p65-fld-035-blank-lsep",
-      "parity-p65-fld-035-blank-nbsp",
-      "parity-p65-fld-035-blank-tab",
-      "parity-p65-fld-035-blank-vt",
-      "parity-p65-fld-035-edge-cr",
-      "parity-p65-fld-035-edge-ff",
-      "parity-p65-fld-035-edge-lf",
-      "parity-p65-fld-035-edge-lsep",
-      "parity-p65-fld-035-edge-vt"
+      "parity-p65-fld-035-blank-lf"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-035-blank-lf"
+  },
+  {
+   "id": "p65f-set-description-blank-lsep",
+   "about": "the field set.description written in the state blank-lsep, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_035",
+   "steps": [
     {
      "name": "w-blank-lsep",
      "op": "write-external-id-sets",
@@ -6226,19 +5787,17 @@
      "markers": [
       "parity-p65-fld-035",
       "PARITY_P65_FLD_035",
-      "parity-p65-fld-035-empty-string",
-      "parity-p65-fld-035-blank-lf",
-      "parity-p65-fld-035-blank-lsep",
-      "parity-p65-fld-035-blank-nbsp",
-      "parity-p65-fld-035-blank-tab",
-      "parity-p65-fld-035-blank-vt",
-      "parity-p65-fld-035-edge-cr",
-      "parity-p65-fld-035-edge-ff",
-      "parity-p65-fld-035-edge-lf",
-      "parity-p65-fld-035-edge-lsep",
-      "parity-p65-fld-035-edge-vt"
+      "parity-p65-fld-035-blank-lsep"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-035-blank-lsep"
+  },
+  {
+   "id": "p65f-set-description-blank-nbsp",
+   "about": "the field set.description written in the state blank-nbsp, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_035",
+   "steps": [
     {
      "name": "w-blank-nbsp",
      "op": "write-external-id-sets",
@@ -6288,19 +5847,17 @@
      "markers": [
       "parity-p65-fld-035",
       "PARITY_P65_FLD_035",
-      "parity-p65-fld-035-empty-string",
-      "parity-p65-fld-035-blank-lf",
-      "parity-p65-fld-035-blank-lsep",
-      "parity-p65-fld-035-blank-nbsp",
-      "parity-p65-fld-035-blank-tab",
-      "parity-p65-fld-035-blank-vt",
-      "parity-p65-fld-035-edge-cr",
-      "parity-p65-fld-035-edge-ff",
-      "parity-p65-fld-035-edge-lf",
-      "parity-p65-fld-035-edge-lsep",
-      "parity-p65-fld-035-edge-vt"
+      "parity-p65-fld-035-blank-nbsp"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-035-blank-nbsp"
+  },
+  {
+   "id": "p65f-set-description-blank-tab",
+   "about": "the field set.description written in the state blank-tab, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_035",
+   "steps": [
     {
      "name": "w-blank-tab",
      "op": "write-external-id-sets",
@@ -6350,19 +5907,17 @@
      "markers": [
       "parity-p65-fld-035",
       "PARITY_P65_FLD_035",
-      "parity-p65-fld-035-empty-string",
-      "parity-p65-fld-035-blank-lf",
-      "parity-p65-fld-035-blank-lsep",
-      "parity-p65-fld-035-blank-nbsp",
-      "parity-p65-fld-035-blank-tab",
-      "parity-p65-fld-035-blank-vt",
-      "parity-p65-fld-035-edge-cr",
-      "parity-p65-fld-035-edge-ff",
-      "parity-p65-fld-035-edge-lf",
-      "parity-p65-fld-035-edge-lsep",
-      "parity-p65-fld-035-edge-vt"
+      "parity-p65-fld-035-blank-tab"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-035-blank-tab"
+  },
+  {
+   "id": "p65f-set-description-blank-vt",
+   "about": "the field set.description written in the state blank-vt, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_035",
+   "steps": [
     {
      "name": "w-blank-vt",
      "op": "write-external-id-sets",
@@ -6412,19 +5967,17 @@
      "markers": [
       "parity-p65-fld-035",
       "PARITY_P65_FLD_035",
-      "parity-p65-fld-035-empty-string",
-      "parity-p65-fld-035-blank-lf",
-      "parity-p65-fld-035-blank-lsep",
-      "parity-p65-fld-035-blank-nbsp",
-      "parity-p65-fld-035-blank-tab",
-      "parity-p65-fld-035-blank-vt",
-      "parity-p65-fld-035-edge-cr",
-      "parity-p65-fld-035-edge-ff",
-      "parity-p65-fld-035-edge-lf",
-      "parity-p65-fld-035-edge-lsep",
-      "parity-p65-fld-035-edge-vt"
+      "parity-p65-fld-035-blank-vt"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-035-blank-vt"
+  },
+  {
+   "id": "p65f-set-description-edge-cr",
+   "about": "the field set.description written in the state edge-cr, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_035",
+   "steps": [
     {
      "name": "w-edge-cr",
      "op": "write-external-id-sets",
@@ -6474,19 +6027,17 @@
      "markers": [
       "parity-p65-fld-035",
       "PARITY_P65_FLD_035",
-      "parity-p65-fld-035-empty-string",
-      "parity-p65-fld-035-blank-lf",
-      "parity-p65-fld-035-blank-lsep",
-      "parity-p65-fld-035-blank-nbsp",
-      "parity-p65-fld-035-blank-tab",
-      "parity-p65-fld-035-blank-vt",
-      "parity-p65-fld-035-edge-cr",
-      "parity-p65-fld-035-edge-ff",
-      "parity-p65-fld-035-edge-lf",
-      "parity-p65-fld-035-edge-lsep",
-      "parity-p65-fld-035-edge-vt"
+      "parity-p65-fld-035-edge-cr"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-035-edge-cr"
+  },
+  {
+   "id": "p65f-set-description-edge-ff",
+   "about": "the field set.description written in the state edge-ff, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_035",
+   "steps": [
     {
      "name": "w-edge-ff",
      "op": "write-external-id-sets",
@@ -6536,19 +6087,17 @@
      "markers": [
       "parity-p65-fld-035",
       "PARITY_P65_FLD_035",
-      "parity-p65-fld-035-empty-string",
-      "parity-p65-fld-035-blank-lf",
-      "parity-p65-fld-035-blank-lsep",
-      "parity-p65-fld-035-blank-nbsp",
-      "parity-p65-fld-035-blank-tab",
-      "parity-p65-fld-035-blank-vt",
-      "parity-p65-fld-035-edge-cr",
-      "parity-p65-fld-035-edge-ff",
-      "parity-p65-fld-035-edge-lf",
-      "parity-p65-fld-035-edge-lsep",
-      "parity-p65-fld-035-edge-vt"
+      "parity-p65-fld-035-edge-ff"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-035-edge-ff"
+  },
+  {
+   "id": "p65f-set-description-edge-lf",
+   "about": "the field set.description written in the state edge-lf, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_035",
+   "steps": [
     {
      "name": "w-edge-lf",
      "op": "write-external-id-sets",
@@ -6598,19 +6147,17 @@
      "markers": [
       "parity-p65-fld-035",
       "PARITY_P65_FLD_035",
-      "parity-p65-fld-035-empty-string",
-      "parity-p65-fld-035-blank-lf",
-      "parity-p65-fld-035-blank-lsep",
-      "parity-p65-fld-035-blank-nbsp",
-      "parity-p65-fld-035-blank-tab",
-      "parity-p65-fld-035-blank-vt",
-      "parity-p65-fld-035-edge-cr",
-      "parity-p65-fld-035-edge-ff",
-      "parity-p65-fld-035-edge-lf",
-      "parity-p65-fld-035-edge-lsep",
-      "parity-p65-fld-035-edge-vt"
+      "parity-p65-fld-035-edge-lf"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-035-edge-lf"
+  },
+  {
+   "id": "p65f-set-description-edge-lsep",
+   "about": "the field set.description written in the state edge-lsep, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_035",
+   "steps": [
     {
      "name": "w-edge-lsep",
      "op": "write-external-id-sets",
@@ -6660,19 +6207,17 @@
      "markers": [
       "parity-p65-fld-035",
       "PARITY_P65_FLD_035",
-      "parity-p65-fld-035-empty-string",
-      "parity-p65-fld-035-blank-lf",
-      "parity-p65-fld-035-blank-lsep",
-      "parity-p65-fld-035-blank-nbsp",
-      "parity-p65-fld-035-blank-tab",
-      "parity-p65-fld-035-blank-vt",
-      "parity-p65-fld-035-edge-cr",
-      "parity-p65-fld-035-edge-ff",
-      "parity-p65-fld-035-edge-lf",
-      "parity-p65-fld-035-edge-lsep",
-      "parity-p65-fld-035-edge-vt"
+      "parity-p65-fld-035-edge-lsep"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-035-edge-lsep"
+  },
+  {
+   "id": "p65f-set-description-edge-vt",
+   "about": "the field set.description written in the state edge-vt, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_035",
+   "steps": [
     {
      "name": "w-edge-vt",
      "op": "write-external-id-sets",
@@ -6722,37 +6267,17 @@
      "markers": [
       "parity-p65-fld-035",
       "PARITY_P65_FLD_035",
-      "parity-p65-fld-035-empty-string",
-      "parity-p65-fld-035-blank-lf",
-      "parity-p65-fld-035-blank-lsep",
-      "parity-p65-fld-035-blank-nbsp",
-      "parity-p65-fld-035-blank-tab",
-      "parity-p65-fld-035-blank-vt",
-      "parity-p65-fld-035-edge-cr",
-      "parity-p65-fld-035-edge-ff",
-      "parity-p65-fld-035-edge-lf",
-      "parity-p65-fld-035-edge-lsep",
       "parity-p65-fld-035-edge-vt"
      ]
     }
    ],
-   "tenant": "parity-p65f-035"
+   "tenant": "parity-p65f-035-edge-vt"
   },
   {
-   "id": "p65f-pip-description",
-   "about": "the field pip.description written in 12 states, each read back",
+   "id": "p65f-pip-description-blank-cr",
+   "about": "the field pip.description written in the state blank-cr, read back",
    "resourceType": "PARITY_SUITE_P65_FLD_036",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-domain-pips",
-     "args": {
-      "domain": "PARITY_P65_FLD_036"
-     },
-     "observe": [
-      "read-raw:read-domain-pips"
-     ]
-    },
     {
      "name": "w-blank-cr",
      "op": "write-domain-pips",
@@ -6795,7 +6320,15 @@
      "markers": [
       "PARITY_P65_FLD_036"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-036-blank-cr"
+  },
+  {
+   "id": "p65f-pip-description-blank-ff",
+   "about": "the field pip.description written in the state blank-ff, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_036",
+   "steps": [
     {
      "name": "w-blank-ff",
      "op": "write-domain-pips",
@@ -6838,7 +6371,15 @@
      "markers": [
       "PARITY_P65_FLD_036"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-036-blank-ff"
+  },
+  {
+   "id": "p65f-pip-description-blank-lf",
+   "about": "the field pip.description written in the state blank-lf, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_036",
+   "steps": [
     {
      "name": "w-blank-lf",
      "op": "write-domain-pips",
@@ -6881,7 +6422,15 @@
      "markers": [
       "PARITY_P65_FLD_036"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-036-blank-lf"
+  },
+  {
+   "id": "p65f-pip-description-blank-lsep",
+   "about": "the field pip.description written in the state blank-lsep, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_036",
+   "steps": [
     {
      "name": "w-blank-lsep",
      "op": "write-domain-pips",
@@ -6924,7 +6473,15 @@
      "markers": [
       "PARITY_P65_FLD_036"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-036-blank-lsep"
+  },
+  {
+   "id": "p65f-pip-description-blank-nbsp",
+   "about": "the field pip.description written in the state blank-nbsp, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_036",
+   "steps": [
     {
      "name": "w-blank-nbsp",
      "op": "write-domain-pips",
@@ -6967,7 +6524,15 @@
      "markers": [
       "PARITY_P65_FLD_036"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-036-blank-nbsp"
+  },
+  {
+   "id": "p65f-pip-description-blank-tab",
+   "about": "the field pip.description written in the state blank-tab, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_036",
+   "steps": [
     {
      "name": "w-blank-tab",
      "op": "write-domain-pips",
@@ -7010,7 +6575,15 @@
      "markers": [
       "PARITY_P65_FLD_036"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-036-blank-tab"
+  },
+  {
+   "id": "p65f-pip-description-blank-vt",
+   "about": "the field pip.description written in the state blank-vt, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_036",
+   "steps": [
     {
      "name": "w-blank-vt",
      "op": "write-domain-pips",
@@ -7053,7 +6626,15 @@
      "markers": [
       "PARITY_P65_FLD_036"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-036-blank-vt"
+  },
+  {
+   "id": "p65f-pip-description-edge-cr",
+   "about": "the field pip.description written in the state edge-cr, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_036",
+   "steps": [
     {
      "name": "w-edge-cr",
      "op": "write-domain-pips",
@@ -7096,7 +6677,15 @@
      "markers": [
       "PARITY_P65_FLD_036"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-036-edge-cr"
+  },
+  {
+   "id": "p65f-pip-description-edge-ff",
+   "about": "the field pip.description written in the state edge-ff, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_036",
+   "steps": [
     {
      "name": "w-edge-ff",
      "op": "write-domain-pips",
@@ -7139,7 +6728,15 @@
      "markers": [
       "PARITY_P65_FLD_036"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-036-edge-ff"
+  },
+  {
+   "id": "p65f-pip-description-edge-lf",
+   "about": "the field pip.description written in the state edge-lf, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_036",
+   "steps": [
     {
      "name": "w-edge-lf",
      "op": "write-domain-pips",
@@ -7182,7 +6779,15 @@
      "markers": [
       "PARITY_P65_FLD_036"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-036-edge-lf"
+  },
+  {
+   "id": "p65f-pip-description-edge-lsep",
+   "about": "the field pip.description written in the state edge-lsep, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_036",
+   "steps": [
     {
      "name": "w-edge-lsep",
      "op": "write-domain-pips",
@@ -7225,7 +6830,15 @@
      "markers": [
       "PARITY_P65_FLD_036"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-036-edge-lsep"
+  },
+  {
+   "id": "p65f-pip-description-edge-vt",
+   "about": "the field pip.description written in the state edge-vt, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_036",
+   "steps": [
     {
      "name": "w-edge-vt",
      "op": "write-domain-pips",
@@ -7268,37 +6881,15 @@
      "markers": [
       "PARITY_P65_FLD_036"
      ]
-    },
-    {
-     "name": "cleanup-slot",
-     "op": "write-domain-pips",
-     "args": {
-      "domain": "PARITY_P65_FLD_036"
-     },
-     "observe": [
-      "status"
-     ],
-     "onRefusal": "continue",
-     "body": []
     }
    ],
-   "tenant": "parity-p65f-036"
+   "tenant": "parity-p65f-036-edge-vt"
   },
   {
-   "id": "p65f-pip-beanname",
-   "about": "the field pip.beanName written in 12 states, each read back",
+   "id": "p65f-pip-beanname-blank-cr",
+   "about": "the field pip.beanName written in the state blank-cr, read back",
    "resourceType": "PARITY_SUITE_P65_FLD_037",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-domain-pips",
-     "args": {
-      "domain": "PARITY_P65_FLD_037"
-     },
-     "observe": [
-      "read-raw:read-domain-pips"
-     ]
-    },
     {
      "name": "w-blank-cr",
      "op": "write-domain-pips",
@@ -7342,7 +6933,15 @@
      "markers": [
       "PARITY_P65_FLD_037"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-037-blank-cr"
+  },
+  {
+   "id": "p65f-pip-beanname-blank-ff",
+   "about": "the field pip.beanName written in the state blank-ff, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_037",
+   "steps": [
     {
      "name": "w-blank-ff",
      "op": "write-domain-pips",
@@ -7386,7 +6985,15 @@
      "markers": [
       "PARITY_P65_FLD_037"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-037-blank-ff"
+  },
+  {
+   "id": "p65f-pip-beanname-blank-lf",
+   "about": "the field pip.beanName written in the state blank-lf, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_037",
+   "steps": [
     {
      "name": "w-blank-lf",
      "op": "write-domain-pips",
@@ -7430,7 +7037,15 @@
      "markers": [
       "PARITY_P65_FLD_037"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-037-blank-lf"
+  },
+  {
+   "id": "p65f-pip-beanname-blank-lsep",
+   "about": "the field pip.beanName written in the state blank-lsep, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_037",
+   "steps": [
     {
      "name": "w-blank-lsep",
      "op": "write-domain-pips",
@@ -7474,7 +7089,15 @@
      "markers": [
       "PARITY_P65_FLD_037"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-037-blank-lsep"
+  },
+  {
+   "id": "p65f-pip-beanname-blank-nbsp",
+   "about": "the field pip.beanName written in the state blank-nbsp, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_037",
+   "steps": [
     {
      "name": "w-blank-nbsp",
      "op": "write-domain-pips",
@@ -7518,7 +7141,15 @@
      "markers": [
       "PARITY_P65_FLD_037"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-037-blank-nbsp"
+  },
+  {
+   "id": "p65f-pip-beanname-blank-tab",
+   "about": "the field pip.beanName written in the state blank-tab, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_037",
+   "steps": [
     {
      "name": "w-blank-tab",
      "op": "write-domain-pips",
@@ -7562,7 +7193,15 @@
      "markers": [
       "PARITY_P65_FLD_037"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-037-blank-tab"
+  },
+  {
+   "id": "p65f-pip-beanname-blank-vt",
+   "about": "the field pip.beanName written in the state blank-vt, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_037",
+   "steps": [
     {
      "name": "w-blank-vt",
      "op": "write-domain-pips",
@@ -7606,7 +7245,15 @@
      "markers": [
       "PARITY_P65_FLD_037"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-037-blank-vt"
+  },
+  {
+   "id": "p65f-pip-beanname-edge-cr",
+   "about": "the field pip.beanName written in the state edge-cr, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_037",
+   "steps": [
     {
      "name": "w-edge-cr",
      "op": "write-domain-pips",
@@ -7650,7 +7297,15 @@
      "markers": [
       "PARITY_P65_FLD_037"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-037-edge-cr"
+  },
+  {
+   "id": "p65f-pip-beanname-edge-ff",
+   "about": "the field pip.beanName written in the state edge-ff, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_037",
+   "steps": [
     {
      "name": "w-edge-ff",
      "op": "write-domain-pips",
@@ -7694,7 +7349,15 @@
      "markers": [
       "PARITY_P65_FLD_037"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-037-edge-ff"
+  },
+  {
+   "id": "p65f-pip-beanname-edge-lf",
+   "about": "the field pip.beanName written in the state edge-lf, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_037",
+   "steps": [
     {
      "name": "w-edge-lf",
      "op": "write-domain-pips",
@@ -7738,7 +7401,15 @@
      "markers": [
       "PARITY_P65_FLD_037"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-037-edge-lf"
+  },
+  {
+   "id": "p65f-pip-beanname-edge-lsep",
+   "about": "the field pip.beanName written in the state edge-lsep, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_037",
+   "steps": [
     {
      "name": "w-edge-lsep",
      "op": "write-domain-pips",
@@ -7782,7 +7453,15 @@
      "markers": [
       "PARITY_P65_FLD_037"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-037-edge-lsep"
+  },
+  {
+   "id": "p65f-pip-beanname-edge-vt",
+   "about": "the field pip.beanName written in the state edge-vt, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_037",
+   "steps": [
     {
      "name": "w-edge-vt",
      "op": "write-domain-pips",
@@ -7826,43 +7505,15 @@
      "markers": [
       "PARITY_P65_FLD_037"
      ]
-    },
-    {
-     "name": "cleanup-slot",
-     "op": "write-domain-pips",
-     "args": {
-      "domain": "PARITY_P65_FLD_037"
-     },
-     "observe": [
-      "status"
-     ],
-     "onRefusal": "continue",
-     "body": []
     }
    ],
-   "tenant": "parity-p65f-037"
+   "tenant": "parity-p65f-037-edge-vt"
   },
   {
-   "id": "p65f-set-deprecated",
-   "about": "the field set.deprecated written in 4 states, each read back",
+   "id": "p65f-set-deprecated-empty-string",
+   "about": "the field set.deprecated written in the state empty-string, read back",
    "resourceType": "PARITY_SUITE_P65_FLD_038",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-config-sets",
-     "args": {},
-     "observe": [
-      "read:read-config-sets"
-     ],
-     "markers": [
-      "parity-p65-fld-038",
-      "PARITY_P65_FLD_038",
-      "parity-p65-fld-038-empty-string",
-      "parity-p65-fld-038-other-type",
-      "parity-p65-fld-038-one-element-list",
-      "parity-p65-fld-038-blank-vt"
-     ]
-    },
     {
      "name": "w-empty-string",
      "op": "write-external-id-sets",
@@ -7912,12 +7563,17 @@
      "markers": [
       "parity-p65-fld-038",
       "PARITY_P65_FLD_038",
-      "parity-p65-fld-038-empty-string",
-      "parity-p65-fld-038-other-type",
-      "parity-p65-fld-038-one-element-list",
-      "parity-p65-fld-038-blank-vt"
+      "parity-p65-fld-038-empty-string"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-038-empty-string"
+  },
+  {
+   "id": "p65f-set-deprecated-other-type",
+   "about": "the field set.deprecated written in the state other-type, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_038",
+   "steps": [
     {
      "name": "w-other-type",
      "op": "write-external-id-sets",
@@ -7967,12 +7623,17 @@
      "markers": [
       "parity-p65-fld-038",
       "PARITY_P65_FLD_038",
-      "parity-p65-fld-038-empty-string",
-      "parity-p65-fld-038-other-type",
-      "parity-p65-fld-038-one-element-list",
-      "parity-p65-fld-038-blank-vt"
+      "parity-p65-fld-038-other-type"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-038-other-type"
+  },
+  {
+   "id": "p65f-set-deprecated-one-element-list",
+   "about": "the field set.deprecated written in the state one-element-list, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_038",
+   "steps": [
     {
      "name": "w-one-element-list",
      "op": "write-external-id-sets",
@@ -8024,12 +7685,17 @@
      "markers": [
       "parity-p65-fld-038",
       "PARITY_P65_FLD_038",
-      "parity-p65-fld-038-empty-string",
-      "parity-p65-fld-038-other-type",
-      "parity-p65-fld-038-one-element-list",
-      "parity-p65-fld-038-blank-vt"
+      "parity-p65-fld-038-one-element-list"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-038-one-element-list"
+  },
+  {
+   "id": "p65f-set-deprecated-blank-vt",
+   "about": "the field set.deprecated written in the state blank-vt, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_038",
+   "steps": [
     {
      "name": "w-blank-vt",
      "op": "write-external-id-sets",
@@ -8079,36 +7745,17 @@
      "markers": [
       "parity-p65-fld-038",
       "PARITY_P65_FLD_038",
-      "parity-p65-fld-038-empty-string",
-      "parity-p65-fld-038-other-type",
-      "parity-p65-fld-038-one-element-list",
       "parity-p65-fld-038-blank-vt"
      ]
     }
    ],
-   "tenant": "parity-p65f-038"
+   "tenant": "parity-p65f-038-blank-vt"
   },
   {
-   "id": "p65f-policy-deprecated",
-   "about": "the field policy.deprecated written in 4 states, each read back",
+   "id": "p65f-policy-deprecated-empty-string",
+   "about": "the field policy.deprecated written in the state empty-string, read back",
    "resourceType": "PARITY_SUITE_P65_FLD_039",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-config-sets",
-     "args": {},
-     "observe": [
-      "read:read-config-sets"
-     ],
-     "markers": [
-      "parity-p65-fld-039",
-      "PARITY_P65_FLD_039",
-      "parity-p65-fld-039-empty-string",
-      "parity-p65-fld-039-other-type",
-      "parity-p65-fld-039-one-element-list",
-      "parity-p65-fld-039-blank-vt"
-     ]
-    },
     {
      "name": "w-empty-string",
      "op": "write-external-id-sets",
@@ -8158,12 +7805,17 @@
      "markers": [
       "parity-p65-fld-039",
       "PARITY_P65_FLD_039",
-      "parity-p65-fld-039-empty-string",
-      "parity-p65-fld-039-other-type",
-      "parity-p65-fld-039-one-element-list",
-      "parity-p65-fld-039-blank-vt"
+      "parity-p65-fld-039-empty-string"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-039-empty-string"
+  },
+  {
+   "id": "p65f-policy-deprecated-other-type",
+   "about": "the field policy.deprecated written in the state other-type, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_039",
+   "steps": [
     {
      "name": "w-other-type",
      "op": "write-external-id-sets",
@@ -8213,12 +7865,17 @@
      "markers": [
       "parity-p65-fld-039",
       "PARITY_P65_FLD_039",
-      "parity-p65-fld-039-empty-string",
-      "parity-p65-fld-039-other-type",
-      "parity-p65-fld-039-one-element-list",
-      "parity-p65-fld-039-blank-vt"
+      "parity-p65-fld-039-other-type"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-039-other-type"
+  },
+  {
+   "id": "p65f-policy-deprecated-one-element-list",
+   "about": "the field policy.deprecated written in the state one-element-list, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_039",
+   "steps": [
     {
      "name": "w-one-element-list",
      "op": "write-external-id-sets",
@@ -8270,12 +7927,17 @@
      "markers": [
       "parity-p65-fld-039",
       "PARITY_P65_FLD_039",
-      "parity-p65-fld-039-empty-string",
-      "parity-p65-fld-039-other-type",
-      "parity-p65-fld-039-one-element-list",
-      "parity-p65-fld-039-blank-vt"
+      "parity-p65-fld-039-one-element-list"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-039-one-element-list"
+  },
+  {
+   "id": "p65f-policy-deprecated-blank-vt",
+   "about": "the field policy.deprecated written in the state blank-vt, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_039",
+   "steps": [
     {
      "name": "w-blank-vt",
      "op": "write-external-id-sets",
@@ -8325,36 +7987,17 @@
      "markers": [
       "parity-p65-fld-039",
       "PARITY_P65_FLD_039",
-      "parity-p65-fld-039-empty-string",
-      "parity-p65-fld-039-other-type",
-      "parity-p65-fld-039-one-element-list",
       "parity-p65-fld-039-blank-vt"
      ]
     }
    ],
-   "tenant": "parity-p65f-039"
+   "tenant": "parity-p65f-039-blank-vt"
   },
   {
-   "id": "p65f-rule-deprecated",
-   "about": "the field rule.deprecated written in 4 states, each read back",
+   "id": "p65f-rule-deprecated-empty-string",
+   "about": "the field rule.deprecated written in the state empty-string, read back",
    "resourceType": "PARITY_SUITE_P65_FLD_040",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-config-sets",
-     "args": {},
-     "observe": [
-      "read:read-config-sets"
-     ],
-     "markers": [
-      "parity-p65-fld-040",
-      "PARITY_P65_FLD_040",
-      "parity-p65-fld-040-empty-string",
-      "parity-p65-fld-040-other-type",
-      "parity-p65-fld-040-one-element-list",
-      "parity-p65-fld-040-blank-vt"
-     ]
-    },
     {
      "name": "w-empty-string",
      "op": "write-external-id-sets",
@@ -8404,12 +8047,17 @@
      "markers": [
       "parity-p65-fld-040",
       "PARITY_P65_FLD_040",
-      "parity-p65-fld-040-empty-string",
-      "parity-p65-fld-040-other-type",
-      "parity-p65-fld-040-one-element-list",
-      "parity-p65-fld-040-blank-vt"
+      "parity-p65-fld-040-empty-string"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-040-empty-string"
+  },
+  {
+   "id": "p65f-rule-deprecated-other-type",
+   "about": "the field rule.deprecated written in the state other-type, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_040",
+   "steps": [
     {
      "name": "w-other-type",
      "op": "write-external-id-sets",
@@ -8459,12 +8107,17 @@
      "markers": [
       "parity-p65-fld-040",
       "PARITY_P65_FLD_040",
-      "parity-p65-fld-040-empty-string",
-      "parity-p65-fld-040-other-type",
-      "parity-p65-fld-040-one-element-list",
-      "parity-p65-fld-040-blank-vt"
+      "parity-p65-fld-040-other-type"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-040-other-type"
+  },
+  {
+   "id": "p65f-rule-deprecated-one-element-list",
+   "about": "the field rule.deprecated written in the state one-element-list, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_040",
+   "steps": [
     {
      "name": "w-one-element-list",
      "op": "write-external-id-sets",
@@ -8516,12 +8169,17 @@
      "markers": [
       "parity-p65-fld-040",
       "PARITY_P65_FLD_040",
-      "parity-p65-fld-040-empty-string",
-      "parity-p65-fld-040-other-type",
-      "parity-p65-fld-040-one-element-list",
-      "parity-p65-fld-040-blank-vt"
+      "parity-p65-fld-040-one-element-list"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-040-one-element-list"
+  },
+  {
+   "id": "p65f-rule-deprecated-blank-vt",
+   "about": "the field rule.deprecated written in the state blank-vt, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_040",
+   "steps": [
     {
      "name": "w-blank-vt",
      "op": "write-external-id-sets",
@@ -8571,30 +8229,17 @@
      "markers": [
       "parity-p65-fld-040",
       "PARITY_P65_FLD_040",
-      "parity-p65-fld-040-empty-string",
-      "parity-p65-fld-040-other-type",
-      "parity-p65-fld-040-one-element-list",
       "parity-p65-fld-040-blank-vt"
      ]
     }
    ],
-   "tenant": "parity-p65f-040"
+   "tenant": "parity-p65f-040-blank-vt"
   },
   {
-   "id": "p65f-pip-deprecated",
-   "about": "the field pip.deprecated written in 4 states, each read back",
+   "id": "p65f-pip-deprecated-blank-lsep",
+   "about": "the field pip.deprecated written in the state blank-lsep, read back",
    "resourceType": "PARITY_SUITE_P65_FLD_041",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-domain-pips",
-     "args": {
-      "domain": "PARITY_P65_FLD_041"
-     },
-     "observe": [
-      "read-raw:read-domain-pips"
-     ]
-    },
     {
      "name": "w-blank-lsep",
      "op": "write-domain-pips",
@@ -8637,7 +8282,15 @@
      "markers": [
       "PARITY_P65_FLD_041"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-041-blank-lsep"
+  },
+  {
+   "id": "p65f-pip-deprecated-blank-nbsp",
+   "about": "the field pip.deprecated written in the state blank-nbsp, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_041",
+   "steps": [
     {
      "name": "w-blank-nbsp",
      "op": "write-domain-pips",
@@ -8680,7 +8333,15 @@
      "markers": [
       "PARITY_P65_FLD_041"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-041-blank-nbsp"
+  },
+  {
+   "id": "p65f-pip-deprecated-blank-tab",
+   "about": "the field pip.deprecated written in the state blank-tab, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_041",
+   "steps": [
     {
      "name": "w-blank-tab",
      "op": "write-domain-pips",
@@ -8723,7 +8384,15 @@
      "markers": [
       "PARITY_P65_FLD_041"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-041-blank-tab"
+  },
+  {
+   "id": "p65f-pip-deprecated-blank-vt",
+   "about": "the field pip.deprecated written in the state blank-vt, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_041",
+   "steps": [
     {
      "name": "w-blank-vt",
      "op": "write-domain-pips",
@@ -8766,21 +8435,9 @@
      "markers": [
       "PARITY_P65_FLD_041"
      ]
-    },
-    {
-     "name": "cleanup-slot",
-     "op": "write-domain-pips",
-     "args": {
-      "domain": "PARITY_P65_FLD_041"
-     },
-     "observe": [
-      "status"
-     ],
-     "onRefusal": "continue",
-     "body": []
     }
    ],
-   "tenant": "parity-p65f-041"
+   "tenant": "parity-p65f-041-blank-vt"
   },
   {
    "id": "p65i-control-fields-may-last",

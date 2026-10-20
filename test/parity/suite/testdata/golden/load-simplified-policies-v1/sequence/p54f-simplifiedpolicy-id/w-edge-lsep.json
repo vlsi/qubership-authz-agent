@@ -1,6 +1,0 @@
-{
-  "status": 400,
-  "message": {
-    "message": "UUID string too large"
-  }
-}

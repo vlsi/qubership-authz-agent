@@ -1,6 +1,0 @@
-{
-  "status": 400,
-  "message": {
-    "message": "simplified policy 'resourceType' field can't be null"
-  }
-}

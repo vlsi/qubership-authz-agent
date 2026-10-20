@@ -1,5 +1,5 @@
 {
- "about": "Round 65 (must): the stored form of each field of a PAP write. Each case writes one field in several states (absent, null, empty, padded with whitespace, of another JSON type, the documented default sent explicitly), reads it back after each write (a PIP also through the export of every PIP). Each case runs in a tenant of its own, writes to a domain and an externalId of its own; a control writes and reads back first and last.",
+ "about": "Round 65 (must): the stored form of each field of a PAP write. Each case writes one field in one state (absent, null, empty, padded with whitespace, of another JSON type, the documented default sent explicitly) and reads it back (a PIP also through the export of every PIP). Each case runs in a fresh tenant of its own, writes to a domain and an externalId of its own; a control writes and reads back first and last.",
  "standVersion": true,
  "cases": [
   {
@@ -69,20 +69,10 @@
    "tenant": "parity-p65i-971"
   },
   {
-   "id": "p65f-pip-piptype",
-   "about": "the field pip.pipType written in 2 states, each read back",
+   "id": "p65f-pip-piptype-edge-lsep",
+   "about": "the field pip.pipType written in the state edge-lsep, read back",
    "resourceType": "PARITY_SUITE_P65_FLD_001",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-domain-pips",
-     "args": {
-      "domain": "PARITY_P65_FLD_001"
-     },
-     "observe": [
-      "read-raw:read-domain-pips"
-     ]
-    },
     {
      "name": "w-edge-lsep",
      "op": "write-domain-pips",
@@ -124,7 +114,15 @@
      "markers": [
       "PARITY_P65_FLD_001"
      ]
-    },
+    }
+   ],
+   "tenant": "parity-p65f-001-edge-lsep"
+  },
+  {
+   "id": "p65f-pip-piptype-edge-vt",
+   "about": "the field pip.pipType written in the state edge-vt, read back",
+   "resourceType": "PARITY_SUITE_P65_FLD_001",
+   "steps": [
     {
      "name": "w-edge-vt",
      "op": "write-domain-pips",
@@ -166,40 +164,15 @@
      "markers": [
       "PARITY_P65_FLD_001"
      ]
-    },
-    {
-     "name": "cleanup-slot",
-     "op": "write-domain-pips",
-     "args": {
-      "domain": "PARITY_P65_FLD_001"
-     },
-     "observe": [
-      "status"
-     ],
-     "onRefusal": "continue",
-     "body": []
     }
    ],
-   "tenant": "parity-p65f-001"
+   "tenant": "parity-p65f-001-edge-vt"
   },
   {
-   "id": "p65f-set-status",
-   "about": "the field set.status written in 1 states, each read back",
+   "id": "p65f-set-status-edge-vt",
+   "about": "the field set.status written in the state edge-vt, read back",
    "resourceType": "PARITY_SUITE_P65_FLD_002",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-config-sets",
-     "args": {},
-     "observe": [
-      "read:read-config-sets"
-     ],
-     "markers": [
-      "parity-p65-fld-002",
-      "PARITY_P65_FLD_002",
-      "parity-p65-fld-002-edge-vt"
-     ]
-    },
     {
      "name": "w-edge-vt",
      "op": "write-external-id-sets",
@@ -252,25 +225,13 @@
      ]
     }
    ],
-   "tenant": "parity-p65f-002"
+   "tenant": "parity-p65f-002-edge-vt"
   },
   {
-   "id": "p65f-cust-set-status",
-   "about": "the field cust.set.status written in 1 states, each read back",
+   "id": "p65f-cust-set-status-edge-vt",
+   "about": "the field cust.set.status written in the state edge-vt, read back",
    "resourceType": "PARITY_SUITE_P65_FLD_003",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-config-sets",
-     "args": {},
-     "observe": [
-      "read:read-config-sets"
-     ],
-     "markers": [
-      "parity-p65-fld-003",
-      "PARITY_P65_FLD_003"
-     ]
-    },
     {
      "name": "w-set",
      "op": "write-external-id-sets",
@@ -337,40 +298,15 @@
       "parity-p65-fld-003",
       "PARITY_P65_FLD_003"
      ]
-    },
-    {
-     "name": "cleanup-entry",
-     "op": "delete-set-customization",
-     "args": {
-      "id": "60d8e8a5-0cdb-255f-fbf4-9da14a0d0244",
-      "level": "CUSTOMER",
-      "recursive": "true"
-     },
-     "observe": [
-      "status"
-     ],
-     "onRefusal": "continue"
     }
    ],
-   "tenant": "parity-p65f-003"
+   "tenant": "parity-p65f-003-edge-vt"
   },
   {
-   "id": "p65f-cust-policy-status",
-   "about": "the field cust.policy.status written in 1 states, each read back",
+   "id": "p65f-cust-policy-status-edge-vt",
+   "about": "the field cust.policy.status written in the state edge-vt, read back",
    "resourceType": "PARITY_SUITE_P65_FLD_004",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-config-sets",
-     "args": {},
-     "observe": [
-      "read:read-config-sets"
-     ],
-     "markers": [
-      "parity-p65-fld-004",
-      "PARITY_P65_FLD_004"
-     ]
-    },
     {
      "name": "w-set",
      "op": "write-external-id-sets",
@@ -442,40 +378,15 @@
       "parity-p65-fld-004",
       "PARITY_P65_FLD_004"
      ]
-    },
-    {
-     "name": "cleanup-entry",
-     "op": "delete-set-customization",
-     "args": {
-      "id": "8dbb7d4d-1363-c3c7-a60e-198794fc71c8",
-      "level": "CUSTOMER",
-      "recursive": "true"
-     },
-     "observe": [
-      "status"
-     ],
-     "onRefusal": "continue"
     }
    ],
-   "tenant": "parity-p65f-004"
+   "tenant": "parity-p65f-004-edge-vt"
   },
   {
-   "id": "p65f-cust-rule-status",
-   "about": "the field cust.rule.status written in 1 states, each read back",
+   "id": "p65f-cust-rule-status-edge-vt",
+   "about": "the field cust.rule.status written in the state edge-vt, read back",
    "resourceType": "PARITY_SUITE_P65_FLD_005",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-config-sets",
-     "args": {},
-     "observe": [
-      "read:read-config-sets"
-     ],
-     "markers": [
-      "parity-p65-fld-005",
-      "PARITY_P65_FLD_005"
-     ]
-    },
     {
      "name": "w-set",
      "op": "write-external-id-sets",
@@ -552,39 +463,15 @@
       "parity-p65-fld-005",
       "PARITY_P65_FLD_005"
      ]
-    },
-    {
-     "name": "cleanup-entry",
-     "op": "delete-set-customization",
-     "args": {
-      "id": "652874a9-5fd4-27e7-1e65-936186155b31",
-      "level": "CUSTOMER",
-      "recursive": "true"
-     },
-     "observe": [
-      "status"
-     ],
-     "onRefusal": "continue"
     }
    ],
-   "tenant": "parity-p65f-005"
+   "tenant": "parity-p65f-005-edge-vt"
   },
   {
-   "id": "p65f-cust-pip-status",
-   "about": "the field cust.pip.status written in 1 states, each read back",
+   "id": "p65f-cust-pip-status-edge-vt",
+   "about": "the field cust.pip.status written in the state edge-vt, read back",
    "resourceType": "PARITY_SUITE_P65_FLD_006",
    "steps": [
-    {
-     "name": "before",
-     "op": "read-config-pips",
-     "args": {},
-     "observe": [
-      "read:read-config-pips"
-     ],
-     "markers": [
-      "PARITY_P65_FLD_006"
-     ]
-    },
     {
      "name": "w-pip",
      "op": "write-domain-pips",
@@ -633,33 +520,9 @@
      "markers": [
       "PARITY_P65_FLD_006"
      ]
-    },
-    {
-     "name": "cleanup-entry",
-     "op": "delete-pip-customization",
-     "args": {
-      "name": "subject.parityP65F006A",
-      "level": "CUSTOMER"
-     },
-     "observe": [
-      "status"
-     ],
-     "onRefusal": "continue"
-    },
-    {
-     "name": "cleanup",
-     "op": "write-domain-pips",
-     "args": {
-      "domain": "PARITY_P65_FLD_006"
-     },
-     "observe": [
-      "status"
-     ],
-     "onRefusal": "continue",
-     "body": []
     }
    ],
-   "tenant": "parity-p65f-006"
+   "tenant": "parity-p65f-006-edge-vt"
   },
   {
    "id": "p65i-control-fields-must-last",

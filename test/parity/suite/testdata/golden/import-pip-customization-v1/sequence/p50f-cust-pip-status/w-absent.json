@@ -1,6 +1,0 @@
-{
-  "status": 400,
-  "message": {
-    "message": "PIP 'subject.parityP50F039A' must have either a URL or bean name"
-  }
-}
