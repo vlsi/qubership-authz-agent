@@ -1,5 +1,5 @@
 {
- "about": "Round 56: whether check/filter groups the predicates of simplified policies per component, per policy (one per operation), or joins them flat. The case runs in a tenant of its own.",
+ "about": "Round 56: whether check/filter groups the predicates of simplified policies per component, per policy (one per operation), or joins them flat. The case runs in a tenant of its own. Every step that decides is followed by both raw reads of the v3 export, policySets and pips. They were added after the round was recorded, so that the export-fed profile can compare most decisions with legacy.",
  "standVersion": true,
  "cases": [
   {
@@ -53,6 +53,22 @@
         "id": "p56"
        }
       }
+     ]
+    },
+    {
+     "name": "upload-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "upload-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     }
    ]
@@ -151,6 +167,22 @@
        }
       }
      ]
+    },
+    {
+     "name": "upload-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "upload-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
     }
    ]
   },
@@ -205,6 +237,22 @@
         "id": "p56"
        }
       }
+     ]
+    },
+    {
+     "name": "upload-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "upload-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     }
    ]

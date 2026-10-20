@@ -1,5 +1,5 @@
 {
- "about": "Round 48 (should): what a PAP write keeps and answers where no recorded answer shows it yet. Each case runs in a tenant of its own, reads the state it starts from first and empties what it wrote last; a control writes and reads back first and last.",
+ "about": "Round 48 (should): what a PAP write keeps and answers where no recorded answer shows it yet. Each case runs in a tenant of its own, reads the state it starts from first and empties what it wrote last; a control writes and reads back first and last. Every step that decides is followed by both raw reads of the v3 export, policySets and pips. They were added after the round was recorded, so that the export-fed profile can compare most decisions with legacy.",
  "standVersion": true,
  "cases": [
   {
@@ -248,6 +248,22 @@
      ]
     },
     {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w2",
      "op": "customize-sets",
      "args": {
@@ -286,6 +302,22 @@
      ]
     },
     {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w3",
      "op": "delete-set-customization",
      "args": {
@@ -305,6 +337,22 @@
        "type": "PARITY_SUITE_P48_STATE_004",
        "operation": "READ"
       }
+     ]
+    },
+    {
+     "name": "w3-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w3-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {

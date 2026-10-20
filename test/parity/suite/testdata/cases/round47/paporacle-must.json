@@ -1,5 +1,5 @@
 {
- "about": "Round 47 (must): PAP writes already answered, replayed as sequence cases that also record the error body, a read-back through the v3 export, a raw read-back of the case's own state, and a decision probe. Each case runs in a tenant of its own. A control replays an accepted write first and last.",
+ "about": "Round 47 (must): PAP writes already answered, replayed as sequence cases that also record the error body, a read-back through the v3 export, a raw read-back of the case's own state, and a decision probe. Each case runs in a tenant of its own. A control replays an accepted write first and last. Every step that decides is followed by both raw reads of the v3 export, policySets and pips. They were added after the round was recorded, so that the export-fed profile can compare most decisions with legacy.",
  "resourceTypePrefix": "PARITY_SUITE_R47_",
  "standVersion": true,
  "cases": [
@@ -82,6 +82,14 @@
        "operation": "READ",
        "name": "probe"
       }
+     ]
+    },
+    {
+     "name": "write-3-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     }
    ]
@@ -610,6 +618,14 @@
        "operation": "READ",
        "name": "probe"
       }
+     ]
+    },
+    {
+     "name": "write-1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     }
    ]
@@ -1795,6 +1811,22 @@
        "name": "probe"
       }
      ]
+    },
+    {
+     "name": "write-3-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "write-3-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
     }
    ]
   },
@@ -1873,6 +1905,14 @@
        "operation": "READ",
        "name": "probe"
       }
+     ]
+    },
+    {
+     "name": "write-3-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     }
    ]
@@ -2042,6 +2082,14 @@
        "name": "probe"
       }
      ]
+    },
+    {
+     "name": "write-3-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
     }
    ]
   },
@@ -2131,6 +2179,22 @@
        },
        "name": "probe"
       }
+     ]
+    },
+    {
+     "name": "write-3-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "write-3-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     }
    ]
@@ -2386,6 +2450,22 @@
        },
        "name": "probe"
       }
+     ]
+    },
+    {
+     "name": "write-3-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "write-3-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     }
    ]
@@ -2859,6 +2939,14 @@
        "name": "probe"
       }
      ]
+    },
+    {
+     "name": "write-3-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
     }
    ]
   },
@@ -2938,6 +3026,14 @@
        },
        "name": "probe"
       }
+     ]
+    },
+    {
+     "name": "write-3-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     }
    ]
@@ -3609,6 +3705,14 @@
        "name": "probe"
       }
      ]
+    },
+    {
+     "name": "write-1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
     }
    ]
   },
@@ -3677,6 +3781,14 @@
        "subject": "m2m",
        "name": "probe"
       }
+     ]
+    },
+    {
+     "name": "write-1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     }
    ]
@@ -3764,6 +3876,14 @@
        "name": "probe"
       }
      ]
+    },
+    {
+     "name": "write-1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
     }
    ]
   },
@@ -3836,6 +3956,14 @@
        "name": "probe"
       }
      ]
+    },
+    {
+     "name": "write-1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
     }
    ]
   },
@@ -3905,6 +4033,14 @@
        "name": "probe"
       }
      ]
+    },
+    {
+     "name": "write-1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
     }
    ]
   },
@@ -3973,6 +4109,14 @@
        },
        "name": "probe"
       }
+     ]
+    },
+    {
+     "name": "write-1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     }
    ]
@@ -4201,6 +4345,14 @@
        "name": "probe"
       }
      ]
+    },
+    {
+     "name": "write-1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
     }
    ]
   },
@@ -4268,6 +4420,14 @@
        "operation": "READ",
        "name": "probe"
       }
+     ]
+    },
+    {
+     "name": "write-1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     }
    ]
@@ -4465,6 +4625,14 @@
        "name": "probe"
       }
      ]
+    },
+    {
+     "name": "write-1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
     }
    ]
   },
@@ -4596,6 +4764,14 @@
        "operation": "READ",
        "name": "probe"
       }
+     ]
+    },
+    {
+     "name": "write-1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     }
    ]
@@ -4890,6 +5066,14 @@
        "operation": "READ",
        "name": "probe"
       }
+     ]
+    },
+    {
+     "name": "write-3-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     }
    ]
@@ -5246,6 +5430,14 @@
        },
        "name": "probe"
       }
+     ]
+    },
+    {
+     "name": "write-3-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     }
    ]
@@ -5615,6 +5807,14 @@
        "name": "probe"
       }
      ]
+    },
+    {
+     "name": "write-3-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
     }
    ]
   },
@@ -5760,6 +5960,14 @@
        "operation": "READ",
        "name": "probe"
       }
+     ]
+    },
+    {
+     "name": "write-3-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     }
    ]
@@ -6118,6 +6326,14 @@
        "operation": "READ",
        "name": "probe"
       }
+     ]
+    },
+    {
+     "name": "write-3-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     }
    ]

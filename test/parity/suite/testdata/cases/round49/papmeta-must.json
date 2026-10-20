@@ -1,5 +1,5 @@
 {
- "about": "Round 49 (must): metamorphic relations over PAP operations. Each pair is two sequences, or two points of one, whose reads and decisions must agree: a write repeated, undone, read and written back, exported and imported again, reordered, split, or sent through another endpoint of the same operation. Each case runs in a tenant of its own; a step that writes the same names in a second tenant says so. Each case writes to a domain, an externalId and a role of its own and empties what it wrote; a control uploads, reads and decides first and last.",
+ "about": "Round 49 (must): metamorphic relations over PAP operations. Each pair is two sequences, or two points of one, whose reads and decisions must agree: a write repeated, undone, read and written back, exported and imported again, reordered, split, or sent through another endpoint of the same operation. Each case runs in a tenant of its own; a step that writes the same names in a second tenant says so. Each case writes to a domain, an externalId and a role of its own and empties what it wrote; a control uploads, reads and decides first and last. Every step that decides is followed by both raw reads of the v3 export, policySets and pips. They were added after the round was recorded, so that the export-fed profile can compare most decisions with legacy.",
  "standVersion": true,
  "cases": [
   {
@@ -71,6 +71,22 @@
        "operation": "READ",
        "name": "p-d0"
       }
+     ]
+    },
+    {
+     "name": "p-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -213,6 +229,22 @@
      ]
     },
     {
+     "name": "p1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "clear",
      "op": "delete-set",
      "args": {
@@ -308,6 +340,22 @@
        "operation": "UPDATE",
        "name": "p2-d1"
       }
+     ]
+    },
+    {
+     "name": "p2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -461,6 +509,22 @@
      ]
     },
     {
+     "name": "p1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "clear",
      "op": "delete-set",
      "args": {
@@ -539,6 +603,22 @@
        "operation": "READ",
        "name": "p2-d0"
       }
+     ]
+    },
+    {
+     "name": "p2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -704,6 +784,22 @@
      ]
     },
     {
+     "name": "p1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "clear",
      "op": "delete-set",
      "args": {
@@ -799,6 +895,22 @@
        "operation": "UPDATE",
        "name": "p2-d1"
       }
+     ]
+    },
+    {
+     "name": "p2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -908,6 +1020,22 @@
      ]
     },
     {
+     "name": "p1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "clear",
      "op": "delete-set",
      "args": {
@@ -986,6 +1114,22 @@
        "operation": "READ",
        "name": "p2-d0"
       }
+     ]
+    },
+    {
+     "name": "p2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -1252,6 +1396,22 @@
      ]
     },
     {
+     "name": "p1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "clear",
      "op": "delete-set",
      "args": {
@@ -1437,6 +1597,22 @@
        "operation": "READ",
        "name": "p2-d0"
       }
+     ]
+    },
+    {
+     "name": "p2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -1695,6 +1871,22 @@
      ]
     },
     {
+     "name": "before-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "before-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w1",
      "op": "change-set-status",
      "args": {
@@ -1741,6 +1933,22 @@
      ]
     },
     {
+     "name": "p1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w2",
      "op": "change-set-status",
      "args": {
@@ -1784,6 +1992,22 @@
        "operation": "UPDATE",
        "name": "p2-d1"
       }
+     ]
+    },
+    {
+     "name": "p2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -1905,6 +2129,22 @@
      ]
     },
     {
+     "name": "before-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "before-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w1",
      "op": "customize-pips",
      "args": {
@@ -1968,6 +2208,22 @@
      ]
     },
     {
+     "name": "p1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w2",
      "op": "customize-pips",
      "args": {
@@ -2028,6 +2284,22 @@
        "operation": "READ",
        "name": "p2-d0"
       }
+     ]
+    },
+    {
+     "name": "p2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -2141,6 +2413,22 @@
      ]
     },
     {
+     "name": "before-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "before-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w1",
      "op": "customize-sets",
      "args": {
@@ -2199,6 +2487,22 @@
      ]
     },
     {
+     "name": "p1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w2",
      "op": "customize-sets",
      "args": {
@@ -2254,6 +2558,22 @@
        "operation": "READ",
        "name": "p2-d0"
       }
+     ]
+    },
+    {
+     "name": "p2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -2414,6 +2734,22 @@
      ]
     },
     {
+     "name": "before-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "before-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w1",
      "op": "delete-pip-customization",
      "args": {
@@ -2463,6 +2799,22 @@
      ]
     },
     {
+     "name": "p1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w2",
      "op": "delete-pip-customization",
      "args": {
@@ -2509,6 +2861,22 @@
        "operation": "READ",
        "name": "p2-d0"
       }
+     ]
+    },
+    {
+     "name": "p2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -2652,6 +3020,22 @@
      ]
     },
     {
+     "name": "before-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "before-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w1",
      "op": "delete-set-customization",
      "args": {
@@ -2693,6 +3077,22 @@
      ]
     },
     {
+     "name": "p1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w2",
      "op": "delete-set-customization",
      "args": {
@@ -2731,6 +3131,22 @@
        "operation": "READ",
        "name": "p2-d0"
       }
+     ]
+    },
+    {
+     "name": "p2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -2874,6 +3290,22 @@
      ]
     },
     {
+     "name": "before-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "before-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w1",
      "op": "delete-set",
      "args": {
@@ -2919,6 +3351,22 @@
      ]
     },
     {
+     "name": "p1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w2",
      "op": "delete-set",
      "args": {
@@ -2961,6 +3409,22 @@
        "operation": "UPDATE",
        "name": "p2-d1"
       }
+     ]
+    },
+    {
+     "name": "p2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -3077,6 +3541,22 @@
      ]
     },
     {
+     "name": "before-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "before-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w1",
      "op": "import-pips",
      "args": {},
@@ -3134,6 +3614,22 @@
      ]
     },
     {
+     "name": "p1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w2",
      "op": "import-pips",
      "args": {},
@@ -3188,6 +3684,22 @@
        "operation": "READ",
        "name": "p2-d0"
       }
+     ]
+    },
+    {
+     "name": "p2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -3251,6 +3763,22 @@
      ]
     },
     {
+     "name": "before-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "before-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w1",
      "op": "import-sets",
      "args": {},
@@ -3316,6 +3844,22 @@
      ]
     },
     {
+     "name": "p1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w2",
      "op": "import-sets",
      "args": {},
@@ -3378,6 +3922,22 @@
        "operation": "READ",
        "name": "p2-d0"
       }
+     ]
+    },
+    {
+     "name": "p2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -3459,6 +4019,22 @@
      ]
     },
     {
+     "name": "before-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "before-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w1",
      "op": "write-domain-pips",
      "args": {
@@ -3565,6 +4141,22 @@
        "operation": "READ",
        "name": "p1-d0"
       }
+     ]
+    },
+    {
+     "name": "p1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -3677,6 +4269,22 @@
      ]
     },
     {
+     "name": "p2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "cleanup-p0",
      "op": "write-domain-policies",
      "args": {
@@ -3736,6 +4344,22 @@
      ]
     },
     {
+     "name": "before-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "before-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w1",
      "op": "write-domain-policies",
      "args": {
@@ -3794,6 +4418,22 @@
      ]
     },
     {
+     "name": "p1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w2",
      "op": "write-domain-policies",
      "args": {
@@ -3849,6 +4489,22 @@
        "operation": "READ",
        "name": "p2-d0"
       }
+     ]
+    },
+    {
+     "name": "p2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -3900,6 +4556,22 @@
      ]
     },
     {
+     "name": "before-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "before-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w1",
      "op": "write-external-id-sets",
      "args": {
@@ -4111,6 +4783,22 @@
      ]
     },
     {
+     "name": "p1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w2",
      "op": "write-external-id-sets",
      "args": {
@@ -4319,6 +5007,22 @@
        "operation": "READ",
        "name": "p2-d0"
       }
+     ]
+    },
+    {
+     "name": "p2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -4563,6 +5267,22 @@
      ]
     },
     {
+     "name": "p1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "setup-1",
      "op": "write-external-id-sets",
      "args": {
@@ -4669,6 +5389,22 @@
        "operation": "UPDATE",
        "name": "p2-d1"
       }
+     ]
+    },
+    {
+     "name": "p2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -4838,6 +5574,22 @@
      ]
     },
     {
+     "name": "p1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "t-setup-0",
      "op": "write-domain-pips",
      "args": {
@@ -4994,6 +5746,22 @@
      ]
     },
     {
+     "name": "p2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "cleanup-c0",
      "op": "delete-pip-customization",
      "args": {
@@ -5134,6 +5902,22 @@
      ]
     },
     {
+     "name": "p1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "setup-1",
      "op": "write-external-id-sets",
      "args": {
@@ -5227,6 +6011,22 @@
        "operation": "READ",
        "name": "p2-d0"
       }
+     ]
+    },
+    {
+     "name": "p2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -5434,6 +6234,22 @@
      ]
     },
     {
+     "name": "p1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "x",
      "op": "delete-pip-customization",
      "args": {
@@ -5480,6 +6296,22 @@
        "operation": "READ",
        "name": "p2-d0"
       }
+     ]
+    },
+    {
+     "name": "p2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -5636,6 +6468,22 @@
      ]
     },
     {
+     "name": "p1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "setup-1",
      "op": "write-external-id-sets",
      "args": {
@@ -5742,6 +6590,22 @@
        "operation": "READ",
        "name": "p2-d0"
       }
+     ]
+    },
+    {
+     "name": "p2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -5931,6 +6795,22 @@
      ]
     },
     {
+     "name": "p1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "setup-1",
      "op": "write-external-id-sets",
      "args": {
@@ -6036,6 +6916,22 @@
        "operation": "UPDATE",
        "name": "p2-d1"
       }
+     ]
+    },
+    {
+     "name": "p2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -6194,6 +7090,22 @@
      ]
     },
     {
+     "name": "p1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "setup-1",
      "op": "write-domain-pips",
      "args": {
@@ -6294,6 +7206,22 @@
        "operation": "READ",
        "name": "p2-d0"
       }
+     ]
+    },
+    {
+     "name": "p2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -6418,6 +7346,22 @@
      ]
     },
     {
+     "name": "p1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "x",
      "op": "import-sets",
      "args": {},
@@ -6480,6 +7424,22 @@
        "operation": "READ",
        "name": "p2-d0"
       }
+     ]
+    },
+    {
+     "name": "p2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -6661,6 +7621,22 @@
      ]
     },
     {
+     "name": "p1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "setup-1",
      "op": "write-domain-pips",
      "args": {
@@ -6762,6 +7738,22 @@
        "operation": "READ",
        "name": "p2-d0"
       }
+     ]
+    },
+    {
+     "name": "p2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -6872,6 +7864,22 @@
      ]
     },
     {
+     "name": "p1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "x",
      "op": "write-domain-policies",
      "args": {
@@ -6920,6 +7928,22 @@
        "operation": "READ",
        "name": "p2-d0"
       }
+     ]
+    },
+    {
+     "name": "p2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -7021,6 +8045,22 @@
      ]
     },
     {
+     "name": "p1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "x",
      "op": "write-external-id-sets",
      "args": {
@@ -7084,6 +8124,22 @@
        "operation": "READ",
        "name": "p2-d0"
       }
+     ]
+    },
+    {
+     "name": "p2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -7236,6 +8292,22 @@
      ]
     },
     {
+     "name": "p0-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p0-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w1",
      "op": "change-set-status",
      "args": {
@@ -7282,6 +8354,22 @@
      ]
     },
     {
+     "name": "p1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "inverse",
      "op": "change-set-status",
      "args": {
@@ -7325,6 +8413,22 @@
        "operation": "UPDATE",
        "name": "p2-d1"
       }
+     ]
+    },
+    {
+     "name": "p2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -7472,6 +8576,22 @@
      ]
     },
     {
+     "name": "p0-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p0-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w1",
      "op": "delete-pip-customization",
      "args": {
@@ -7518,6 +8638,22 @@
        "operation": "READ",
        "name": "p1-d0"
       }
+     ]
+    },
+    {
+     "name": "p1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -7581,6 +8717,22 @@
        "operation": "READ",
        "name": "p2-d0"
       }
+     ]
+    },
+    {
+     "name": "p2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -7724,6 +8876,22 @@
      ]
     },
     {
+     "name": "p0-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p0-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w1",
      "op": "delete-set-customization",
      "args": {
@@ -7762,6 +8930,22 @@
        "operation": "READ",
        "name": "p1-d0"
       }
+     ]
+    },
+    {
+     "name": "p1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -7820,6 +9004,22 @@
        "operation": "READ",
        "name": "p2-d0"
       }
+     ]
+    },
+    {
+     "name": "p2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -7963,6 +9163,22 @@
      ]
     },
     {
+     "name": "p0-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p0-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w1",
      "op": "delete-set",
      "args": {
@@ -8005,6 +9221,22 @@
        "operation": "UPDATE",
        "name": "p1-d1"
       }
+     ]
+    },
+    {
+     "name": "p1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -8102,6 +9334,22 @@
        "operation": "UPDATE",
        "name": "p2-d1"
       }
+     ]
+    },
+    {
+     "name": "p2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -8218,6 +9466,22 @@
      ]
     },
     {
+     "name": "p0-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p0-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w1",
      "op": "import-pips",
      "args": {},
@@ -8272,6 +9536,22 @@
        "operation": "READ",
        "name": "p1-d0"
       }
+     ]
+    },
+    {
+     "name": "p1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -8332,6 +9612,22 @@
      ]
     },
     {
+     "name": "p2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "cleanup-p0",
      "op": "write-domain-policies",
      "args": {
@@ -8389,6 +9685,22 @@
        "operation": "READ",
        "name": "p0-d0"
       }
+     ]
+    },
+    {
+     "name": "p0-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p0-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -8457,6 +9769,22 @@
      ]
     },
     {
+     "name": "p1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "inverse",
      "op": "delete-set",
      "args": {
@@ -8493,6 +9821,22 @@
        "operation": "READ",
        "name": "p2-d0"
       }
+     ]
+    },
+    {
+     "name": "p2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -8571,6 +9915,22 @@
        "operation": "READ",
        "name": "p0-d0"
       }
+     ]
+    },
+    {
+     "name": "p0-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p0-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -8683,6 +10043,22 @@
      ]
     },
     {
+     "name": "p1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "inverse",
      "op": "write-domain-pips",
      "args": {
@@ -8729,6 +10105,22 @@
        "operation": "READ",
        "name": "p2-d0"
       }
+     ]
+    },
+    {
+     "name": "p2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -8791,6 +10183,22 @@
      ]
     },
     {
+     "name": "p0-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p0-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w1",
      "op": "write-domain-policies",
      "args": {
@@ -8849,6 +10257,22 @@
      ]
     },
     {
+     "name": "p1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "inverse",
      "op": "write-domain-policies",
      "args": {
@@ -8885,6 +10309,22 @@
        "operation": "READ",
        "name": "p2-d0"
       }
+     ]
+    },
+    {
+     "name": "p2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -8933,6 +10373,22 @@
        "operation": "READ",
        "name": "p0-d0"
       }
+     ]
+    },
+    {
+     "name": "p0-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p0-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -9002,6 +10458,22 @@
      ]
     },
     {
+     "name": "p1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "inverse",
      "op": "delete-set",
      "args": {
@@ -9038,6 +10510,22 @@
        "operation": "READ",
        "name": "p2-d0"
       }
+     ]
+    },
+    {
+     "name": "p2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -9265,6 +10753,22 @@
      ]
     },
     {
+     "name": "p1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w2",
      "op": "customize-pips",
      "args": {
@@ -9327,6 +10831,22 @@
        "operation": "READ",
        "name": "p2-d0"
       }
+     ]
+    },
+    {
+     "name": "p2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -9470,6 +10990,22 @@
      ]
     },
     {
+     "name": "p1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w2",
      "op": "customize-sets",
      "args": {
@@ -9538,6 +11074,22 @@
        "operation": "READ",
        "name": "p2-d0"
       }
+     ]
+    },
+    {
+     "name": "p2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -9649,6 +11201,22 @@
      ]
     },
     {
+     "name": "p1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w2",
      "op": "import-sets",
      "args": {},
@@ -9716,6 +11284,22 @@
        "operation": "READ",
        "name": "p2-d0"
       }
+     ]
+    },
+    {
+     "name": "p2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -9869,6 +11453,22 @@
      ]
     },
     {
+     "name": "p1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w2",
      "op": "write-domain-pips",
      "args": {
@@ -9981,6 +11581,22 @@
        "operation": "READ",
        "name": "p2-d0"
       }
+     ]
+    },
+    {
+     "name": "p2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -10227,6 +11843,22 @@
      ]
     },
     {
+     "name": "p1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w2",
      "op": "write-external-id-sets",
      "args": {
@@ -10392,6 +12024,22 @@
        "operation": "READ",
        "name": "p2-d0"
       }
+     ]
+    },
+    {
+     "name": "p2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -10561,6 +12209,22 @@
      ]
     },
     {
+     "name": "p-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "cleanup-c0",
      "op": "delete-pip-customization",
      "args": {
@@ -10716,6 +12380,22 @@
        "operation": "READ",
        "name": "p-d0"
       }
+     ]
+    },
+    {
+     "name": "p-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -11132,6 +12812,22 @@
      ]
     },
     {
+     "name": "p-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "cleanup-0-s",
      "op": "delete-set",
      "args": {
@@ -11390,6 +13086,22 @@
        "operation": "UPDATE",
        "name": "p-d3"
       }
+     ]
+    },
+    {
+     "name": "p-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -11661,6 +13373,22 @@
        "operation": "READ",
        "name": "p-d1"
       }
+     ]
+    },
+    {
+     "name": "p-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -11963,6 +13691,22 @@
      ]
     },
     {
+     "name": "p-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "cleanup-c0",
      "op": "delete-pip-customization",
      "args": {
@@ -12226,6 +13970,22 @@
      ]
     },
     {
+     "name": "p-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "cleanup-c0",
      "op": "delete-set-customization",
      "args": {
@@ -12484,6 +14244,22 @@
        "operation": "READ",
        "name": "p-d1"
       }
+     ]
+    },
+    {
+     "name": "p-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -12805,6 +14581,22 @@
        "operation": "READ",
        "name": "p-d1"
       }
+     ]
+    },
+    {
+     "name": "p-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -13131,6 +14923,22 @@
      ]
     },
     {
+     "name": "p-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "cleanup-c0",
      "op": "delete-pip-customization",
      "args": {
@@ -13417,6 +15225,22 @@
        "operation": "READ",
        "name": "p-d1"
       }
+     ]
+    },
+    {
+     "name": "p-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -13707,6 +15531,22 @@
      ]
     },
     {
+     "name": "p-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "cleanup-c0",
      "op": "delete-set-customization",
      "args": {
@@ -13992,6 +15832,22 @@
      ]
     },
     {
+     "name": "p-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "cleanup-0-s",
      "op": "delete-set",
      "args": {
@@ -14251,6 +16107,22 @@
      ]
     },
     {
+     "name": "p-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "cleanup-0-s",
      "op": "delete-set",
      "args": {
@@ -14497,6 +16369,22 @@
        "operation": "READ",
        "name": "p-d1"
       }
+     ]
+    },
+    {
+     "name": "p-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -14753,6 +16641,22 @@
      ]
     },
     {
+     "name": "p-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "cleanup-p0",
      "op": "write-domain-policies",
      "args": {
@@ -14927,6 +16831,22 @@
        "operation": "READ",
        "name": "p-d1"
       }
+     ]
+    },
+    {
+     "name": "p-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -15122,6 +17042,22 @@
        "operation": "READ",
        "name": "p-d1"
       }
+     ]
+    },
+    {
+     "name": "p-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -15398,6 +17334,22 @@
      ]
     },
     {
+     "name": "p-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "cleanup-p0",
      "op": "write-domain-policies",
      "args": {
@@ -15653,6 +17605,22 @@
      ]
     },
     {
+     "name": "p-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "cleanup-p0",
      "op": "write-domain-policies",
      "args": {
@@ -15802,6 +17770,22 @@
      ]
     },
     {
+     "name": "p-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "cleanup-0",
      "op": "write-domain-policies",
      "args": {
@@ -15924,6 +17908,22 @@
        "operation": "READ",
        "name": "p-d1"
       }
+     ]
+    },
+    {
+     "name": "p-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -16079,6 +18079,22 @@
        "operation": "READ",
        "name": "p-d1"
       }
+     ]
+    },
+    {
+     "name": "p-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -16254,6 +18270,22 @@
        "operation": "READ",
        "name": "p-d1"
       }
+     ]
+    },
+    {
+     "name": "p-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -16660,6 +18692,22 @@
      ]
     },
     {
+     "name": "p-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "cleanup-c0",
      "op": "delete-pip-customization",
      "args": {
@@ -16959,6 +19007,22 @@
      ]
     },
     {
+     "name": "p-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "cleanup-c0",
      "op": "delete-pip-customization",
      "args": {
@@ -17206,6 +19270,22 @@
        "operation": "READ",
        "name": "p-d1"
       }
+     ]
+    },
+    {
+     "name": "p-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -17467,6 +19547,22 @@
        "operation": "READ",
        "name": "p-d1"
       }
+     ]
+    },
+    {
+     "name": "p-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -17734,6 +19830,22 @@
      ]
     },
     {
+     "name": "p-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "cleanup-p0",
      "op": "write-domain-policies",
      "args": {
@@ -17987,6 +20099,22 @@
      ]
     },
     {
+     "name": "p-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "cleanup-p0",
      "op": "write-domain-policies",
      "args": {
@@ -18150,6 +20278,22 @@
        "operation": "READ",
        "name": "p-d1"
       }
+     ]
+    },
+    {
+     "name": "p-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -18348,6 +20492,22 @@
      ]
     },
     {
+     "name": "p-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "cleanup-d0",
      "op": "delete-set",
      "args": {
@@ -18536,6 +20696,22 @@
      ]
     },
     {
+     "name": "p1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "clear-c",
      "op": "delete-pip-customization",
      "args": {
@@ -18657,6 +20833,22 @@
        "operation": "READ",
        "name": "p2-d0"
       }
+     ]
+    },
+    {
+     "name": "p2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -18800,6 +20992,22 @@
      ]
     },
     {
+     "name": "p1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "clear-c",
      "op": "delete-set-customization",
      "args": {
@@ -18890,6 +21098,22 @@
        "operation": "READ",
        "name": "p2-d0"
       }
+     ]
+    },
+    {
+     "name": "p2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -19073,6 +21297,22 @@
      ]
     },
     {
+     "name": "p1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "clear-p",
      "op": "write-domain-policies",
      "args": {
@@ -19182,6 +21422,22 @@
        "operation": "READ",
        "name": "p2-d0"
       }
+     ]
+    },
+    {
+     "name": "p2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -19332,6 +21588,22 @@
      ]
     },
     {
+     "name": "p1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "clear-p",
      "op": "write-domain-policies",
      "args": {
@@ -19436,6 +21708,22 @@
        "operation": "READ",
        "name": "p2-d0"
       }
+     ]
+    },
+    {
+     "name": "p2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -19580,6 +21868,22 @@
      ]
     },
     {
+     "name": "p1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "clear",
      "op": "write-domain-pips",
      "args": {
@@ -19697,6 +22001,22 @@
      ]
     },
     {
+     "name": "p2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "cleanup-p0",
      "op": "write-domain-policies",
      "args": {
@@ -19787,6 +22107,22 @@
      ]
     },
     {
+     "name": "p1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "clear",
      "op": "write-domain-policies",
      "args": {
@@ -19870,6 +22206,22 @@
        "operation": "READ",
        "name": "p2-d0"
       }
+     ]
+    },
+    {
+     "name": "p2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -20007,6 +22359,22 @@
      ]
     },
     {
+     "name": "p1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w2",
      "op": "import-pips",
      "args": {},
@@ -20062,6 +22430,22 @@
        "operation": "READ",
        "name": "p2-d0"
       }
+     ]
+    },
+    {
+     "name": "p2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -20160,6 +22544,22 @@
        "operation": "READ",
        "name": "p-d0"
       }
+     ]
+    },
+    {
+     "name": "p-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "p-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {

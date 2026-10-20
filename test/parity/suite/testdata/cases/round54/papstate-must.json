@@ -1,5 +1,5 @@
 {
- "about": "Round 54 (must): what a PAP write keeps and answers where no recorded answer shows it yet. Each case runs in a tenant of its own, reads the state it starts from first and empties what it wrote last; a control writes and reads back first and last.",
+ "about": "Round 54 (must): what a PAP write keeps and answers where no recorded answer shows it yet. Each case runs in a tenant of its own, reads the state it starts from first and empties what it wrote last; a control writes and reads back first and last. Every step that decides is followed by both raw reads of the v3 export, policySets and pips. They were added after the round was recorded, so that the export-fed profile can compare most decisions with legacy.",
  "standVersion": true,
  "cases": [
   {
@@ -113,6 +113,22 @@
      ]
     },
     {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w2",
      "op": "write-domain-pips",
      "args": {
@@ -137,6 +153,22 @@
        "type": "PARITY_SUITE_P54_STATE_039",
        "operation": "READ"
       }
+     ]
+    },
+    {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -260,6 +292,22 @@
      ]
     },
     {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w2",
      "op": "write-domain-policies",
      "args": {
@@ -287,6 +335,22 @@
        "type": "PARITY_SUITE_P54_STATE_041",
        "operation": "READ"
       }
+     ]
+    },
+    {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -428,6 +492,22 @@
      ]
     },
     {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w2",
      "op": "write-external-id-sets",
      "args": {
@@ -469,6 +549,22 @@
        "type": "PARITY_SUITE_P54_STATE_043",
        "operation": "READ"
       }
+     ]
+    },
+    {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -591,6 +687,22 @@
      ]
     },
     {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w2",
      "op": "write-domain-pips",
      "args": {
@@ -618,6 +730,22 @@
        "type": "PARITY_SUITE_P54_STATE_040",
        "operation": "READ"
       }
+     ]
+    },
+    {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -727,6 +855,22 @@
      ]
     },
     {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w2",
      "op": "write-domain-policies",
      "args": {
@@ -757,6 +901,22 @@
        "type": "PARITY_SUITE_P54_STATE_042",
        "operation": "READ"
       }
+     ]
+    },
+    {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {

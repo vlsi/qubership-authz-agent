@@ -1,5 +1,5 @@
 {
- "about": "Round 59 (must): PAP sequences on which the specification and two second models, written apart from it, answer differently: each case is the shortest sequence with the smallest bodies found that keeps one such difference, in a tenant of its own. A replay of a case round 45 answered comes first and last.",
+ "about": "Round 59 (must): PAP sequences on which the specification and two second models, written apart from it, answer differently: each case is the shortest sequence with the smallest bodies found that keeps one such difference, in a tenant of its own. A replay of a case round 45 answered comes first and last. Every step that decides, except in the controls, is followed by both raw reads of the v3 export, policySets and pips. They were added after the round was recorded, so that the export-fed profile can compare most decisions with legacy; the controls run in the default tenant and read nothing more.",
  "standVersion": true,
  "cases": [
   {
@@ -147,6 +147,22 @@
        "operation": "READ",
        "type": "PARITY_SUITE_D2P59_28430C0245"
       }
+     ]
+    },
+    {
+     "name": "target-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "target-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     }
    ],

@@ -1,5 +1,5 @@
 {
- "about": "Round 51 (must): which object an identity names in the PAP. Each case writes two objects of one identity (in one write, in two writes, through two operations, in two spellings) and reads back and decides what was kept; its twin writes the same with distinct identities. Each case runs in a tenant of its own, writes to a domain and an externalId of its own and empties them last; a control writes and reads back first and last.",
+ "about": "Round 51 (must): which object an identity names in the PAP. Each case writes two objects of one identity (in one write, in two writes, through two operations, in two spellings) and reads back and decides what was kept; its twin writes the same with distinct identities. Each case runs in a tenant of its own, writes to a domain and an externalId of its own and empties them last; a control writes and reads back first and last. Every step that decides is followed by both raw reads of the v3 export, policySets and pips. They were added after the round was recorded, so that the export-fed profile can compare most decisions with legacy.",
  "standVersion": true,
  "cases": [
   {
@@ -198,6 +198,22 @@
      ]
     },
     {
+     "name": "decide-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "decide-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "decide-there",
      "op": "read-config-sets",
      "args": {},
@@ -216,6 +232,24 @@
        "type": "PARITY_SUITE_P51_ID_077",
        "operation": "UPDATE"
       }
+     ],
+     "tenant": "parity-p51i-077-t"
+    },
+    {
+     "name": "decide-there-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ],
+     "tenant": "parity-p51i-077-t"
+    },
+    {
+     "name": "decide-there-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ],
      "tenant": "parity-p51i-077-t"
     },
@@ -401,6 +435,22 @@
      ]
     },
     {
+     "name": "decide-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "decide-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "decide-there",
      "op": "read-config-sets",
      "args": {},
@@ -419,6 +469,24 @@
        "type": "PARITY_SUITE_P51_ID_078",
        "operation": "UPDATE"
       }
+     ],
+     "tenant": "parity-p51i-078-t"
+    },
+    {
+     "name": "decide-there-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ],
+     "tenant": "parity-p51i-078-t"
+    },
+    {
+     "name": "decide-there-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ],
      "tenant": "parity-p51i-078-t"
     },
@@ -604,6 +672,22 @@
      ]
     },
     {
+     "name": "decide-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "decide-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "decide-there",
      "op": "read-config-sets",
      "args": {},
@@ -622,6 +706,24 @@
        "type": "PARITY_SUITE_P51_ID_079",
        "operation": "UPDATE"
       }
+     ],
+     "tenant": "parity-p51i-079-t"
+    },
+    {
+     "name": "decide-there-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ],
+     "tenant": "parity-p51i-079-t"
+    },
+    {
+     "name": "decide-there-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ],
      "tenant": "parity-p51i-079-t"
     },

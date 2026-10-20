@@ -1,5 +1,5 @@
 {
- "about": "Round 50 (must): which object an identity names in the PAP. Each case writes two objects of one identity (in one write, in two writes, through two operations, in two spellings) and reads back and decides what was kept; its twin writes the same with distinct identities. Each case runs in a tenant of its own, writes to a domain and an externalId of its own and empties them last; a control writes and reads back first and last.",
+ "about": "Round 50 (must): which object an identity names in the PAP. Each case writes two objects of one identity (in one write, in two writes, through two operations, in two spellings) and reads back and decides what was kept; its twin writes the same with distinct identities. Each case runs in a tenant of its own, writes to a domain and an externalId of its own and empties them last; a control writes and reads back first and last. Every step that decides is followed by both raw reads of the v3 export, policySets and pips. They were added after the round was recorded, so that the export-fed profile can compare most decisions with legacy.",
  "standVersion": true,
  "cases": [
   {
@@ -135,6 +135,22 @@
      ]
     },
     {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "after",
      "op": "read-config-sets",
      "args": {},
@@ -228,6 +244,22 @@
      ]
     },
     {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "after",
      "op": "read-config-sets",
      "args": {},
@@ -318,6 +350,22 @@
        "type": "PARITY_SUITE_P50_ID_003",
        "operation": "UPDATE"
       }
+     ]
+    },
+    {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -442,6 +490,22 @@
      ]
     },
     {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "after",
      "op": "read-config-sets",
      "args": {},
@@ -560,6 +624,22 @@
        "type": "PARITY_SUITE_P50_ID_011",
        "operation": "UPDATE"
       }
+     ]
+    },
+    {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -684,6 +764,22 @@
      ]
     },
     {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "after",
      "op": "read-config-sets",
      "args": {},
@@ -781,6 +877,22 @@
      ]
     },
     {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w2",
      "op": "write-external-id-sets",
      "args": {
@@ -833,6 +945,22 @@
      ]
     },
     {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w3",
      "op": "customize-sets",
      "args": {
@@ -874,6 +1002,22 @@
        "type": "PARITY_SUITE_P50_ID_028",
        "operation": "UPDATE"
       }
+     ]
+    },
+    {
+     "name": "w3-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w3-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -987,6 +1131,22 @@
      ]
     },
     {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w2",
      "op": "write-external-id-sets",
      "args": {
@@ -1039,6 +1199,22 @@
      ]
     },
     {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w3",
      "op": "customize-sets",
      "args": {
@@ -1080,6 +1256,22 @@
        "type": "PARITY_SUITE_P50_ID_029",
        "operation": "UPDATE"
       }
+     ]
+    },
+    {
+     "name": "w3-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w3-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -1217,6 +1409,22 @@
      ]
     },
     {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "after",
      "op": "read-config-sets",
      "args": {},
@@ -1335,6 +1543,22 @@
        "type": "PARITY_SUITE_P50_ID_021",
        "operation": "UPDATE"
       }
+     ]
+    },
+    {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -1459,6 +1683,22 @@
      ]
     },
     {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "after",
      "op": "read-config-sets",
      "args": {},
@@ -1561,6 +1801,22 @@
      ]
     },
     {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w2",
      "op": "customize-sets",
      "args": {
@@ -1625,6 +1881,22 @@
        "type": "PARITY_SUITE_P50_ID_025",
        "operation": "CREATE"
       }
+     ]
+    },
+    {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -1756,6 +2028,22 @@
      ]
     },
     {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w2",
      "op": "customize-sets",
      "args": {
@@ -1820,6 +2108,22 @@
        "type": "PARITY_SUITE_P50_ID_026",
        "operation": "CREATE"
       }
+     ]
+    },
+    {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -1939,6 +2243,22 @@
      ]
     },
     {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w2",
      "op": "customize-sets",
      "args": {
@@ -2003,6 +2323,22 @@
        "type": "PARITY_SUITE_P50_ID_027",
        "operation": "CREATE"
       }
+     ]
+    },
+    {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -2154,6 +2490,22 @@
      ]
     },
     {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w3",
      "op": "customize-pips",
      "args": {
@@ -2215,6 +2567,22 @@
         "x-parity-p50i-045-c": "c"
        }
       }
+     ]
+    },
+    {
+     "name": "w3-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w3-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -2377,6 +2745,22 @@
      ]
     },
     {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w3",
      "op": "customize-pips",
      "args": {
@@ -2438,6 +2822,22 @@
         "x-parity-p50i-046-c": "c"
        }
       }
+     ]
+    },
+    {
+     "name": "w3-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w3-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -2549,6 +2949,22 @@
      ]
     },
     {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "cleanup",
      "op": "write-external-id-sets",
      "args": {
@@ -2630,6 +3046,22 @@
        "type": "PARITY_SUITE_P50_ID_016",
        "operation": "UPDATE"
       }
+     ]
+    },
+    {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -2717,6 +3149,22 @@
      ]
     },
     {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "cleanup",
      "op": "write-external-id-sets",
      "args": {
@@ -2801,6 +3249,22 @@
      ]
     },
     {
+     "name": "w-sets-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w-sets-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w-policies",
      "op": "write-domain-policies",
      "args": {
@@ -2836,6 +3300,22 @@
        "type": "PARITY_SUITE_P50_ID_007",
        "operation": "UPDATE"
       }
+     ]
+    },
+    {
+     "name": "w-policies-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w-policies-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -2935,6 +3415,22 @@
      ]
     },
     {
+     "name": "w-sets-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w-sets-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w-policies",
      "op": "write-domain-policies",
      "args": {
@@ -2970,6 +3466,22 @@
        "type": "PARITY_SUITE_P50_ID_008",
        "operation": "UPDATE"
       }
+     ]
+    },
+    {
+     "name": "w-policies-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w-policies-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -3055,6 +3567,22 @@
      ]
     },
     {
+     "name": "w-policies-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w-policies-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w-sets",
      "op": "write-external-id-sets",
      "args": {
@@ -3104,6 +3632,22 @@
        "type": "PARITY_SUITE_P50_ID_009",
        "operation": "UPDATE"
       }
+     ]
+    },
+    {
+     "name": "w-sets-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w-sets-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -3204,6 +3748,22 @@
      ]
     },
     {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w2",
      "op": "write-external-id-sets",
      "args": {
@@ -3253,6 +3813,22 @@
        "type": "PARITY_SUITE_P50_ID_018",
        "operation": "UPDATE"
       }
+     ]
+    },
+    {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -3353,6 +3929,22 @@
      ]
     },
     {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w2",
      "op": "write-external-id-sets",
      "args": {
@@ -3402,6 +3994,22 @@
        "type": "PARITY_SUITE_P50_ID_019",
        "operation": "UPDATE"
       }
+     ]
+    },
+    {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -3502,6 +4110,22 @@
      ]
     },
     {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w2",
      "op": "write-external-id-sets",
      "args": {
@@ -3554,6 +4178,22 @@
      ]
     },
     {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w3",
      "op": "change-set-status",
      "args": {
@@ -3577,6 +4217,22 @@
        "type": "PARITY_SUITE_P50_ID_032",
        "operation": "UPDATE"
       }
+     ]
+    },
+    {
+     "name": "w3-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w3-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -3677,6 +4333,22 @@
      ]
     },
     {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w1",
      "op": "write-external-id-sets",
      "args": {
@@ -3729,6 +4401,22 @@
      ]
     },
     {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w3",
      "op": "change-set-status",
      "args": {
@@ -3752,6 +4440,22 @@
        "type": "PARITY_SUITE_P50_ID_033",
        "operation": "UPDATE"
       }
+     ]
+    },
+    {
+     "name": "w3-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w3-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -3852,6 +4556,22 @@
      ]
     },
     {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w2",
      "op": "write-external-id-sets",
      "args": {
@@ -3904,6 +4624,22 @@
      ]
     },
     {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w3",
      "op": "delete-set",
      "args": {
@@ -3926,6 +4662,22 @@
        "type": "PARITY_SUITE_P50_ID_034",
        "operation": "UPDATE"
       }
+     ]
+    },
+    {
+     "name": "w3-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w3-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -4026,6 +4778,22 @@
      ]
     },
     {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w1",
      "op": "write-external-id-sets",
      "args": {
@@ -4078,6 +4846,22 @@
      ]
     },
     {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w3",
      "op": "delete-set",
      "args": {
@@ -4100,6 +4884,22 @@
        "type": "PARITY_SUITE_P50_ID_035",
        "operation": "UPDATE"
       }
+     ]
+    },
+    {
+     "name": "w3-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w3-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -4225,6 +5025,22 @@
      ]
     },
     {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "cleanup",
      "op": "write-external-id-sets",
      "args": {
@@ -4335,6 +5151,22 @@
      ]
     },
     {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "cleanup",
      "op": "write-external-id-sets",
      "args": {
@@ -4419,6 +5251,22 @@
      ]
     },
     {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w2",
      "op": "import-sets",
      "args": {},
@@ -4467,6 +5315,22 @@
        "type": "PARITY_SUITE_P50_ID_023",
        "operation": "UPDATE"
       }
+     ]
+    },
+    {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -4577,6 +5441,22 @@
      ]
     },
     {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w2",
      "op": "import-sets",
      "args": {},
@@ -4625,6 +5505,22 @@
        "type": "PARITY_SUITE_P50_ID_024",
        "operation": "UPDATE"
       }
+     ]
+    },
+    {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -4735,6 +5631,22 @@
      ]
     },
     {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w2",
      "op": "change-set-status",
      "args": {
@@ -4758,6 +5670,22 @@
        "type": "PARITY_SUITE_P50_ID_036",
        "operation": "UPDATE"
       }
+     ]
+    },
+    {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -4845,6 +5773,22 @@
      ]
     },
     {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w2",
      "op": "change-set-status",
      "args": {
@@ -4868,6 +5812,22 @@
        "type": "PARITY_SUITE_P50_ID_037",
        "operation": "UPDATE"
       }
+     ]
+    },
+    {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -4955,6 +5915,22 @@
      ]
     },
     {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w2",
      "op": "change-set-status",
      "args": {
@@ -4978,6 +5954,22 @@
        "type": "PARITY_SUITE_P50_ID_038",
        "operation": "UPDATE"
       }
+     ]
+    },
+    {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -5065,6 +6057,22 @@
      ]
     },
     {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w2",
      "op": "change-set-status",
      "args": {
@@ -5088,6 +6096,22 @@
        "type": "PARITY_SUITE_P50_ID_040",
        "operation": "UPDATE"
       }
+     ]
+    },
+    {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -5175,6 +6199,22 @@
      ]
     },
     {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w2",
      "op": "delete-set",
      "args": {
@@ -5197,6 +6237,22 @@
        "type": "PARITY_SUITE_P50_ID_041",
        "operation": "UPDATE"
       }
+     ]
+    },
+    {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -5284,6 +6340,22 @@
      ]
     },
     {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w2",
      "op": "delete-set",
      "args": {
@@ -5306,6 +6378,22 @@
        "type": "PARITY_SUITE_P50_ID_042",
        "operation": "UPDATE"
       }
+     ]
+    },
+    {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -5393,6 +6481,22 @@
      ]
     },
     {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w2",
      "op": "customize-sets",
      "args": {
@@ -5437,6 +6541,22 @@
      ]
     },
     {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w3",
      "op": "delete-set-customization",
      "args": {
@@ -5461,6 +6581,22 @@
        "type": "PARITY_SUITE_P50_ID_043",
        "operation": "UPDATE"
       }
+     ]
+    },
+    {
+     "name": "w3-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w3-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -5561,6 +6697,22 @@
      ]
     },
     {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w2",
      "op": "customize-sets",
      "args": {
@@ -5605,6 +6757,22 @@
      ]
     },
     {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w3",
      "op": "delete-set-customization",
      "args": {
@@ -5629,6 +6797,22 @@
        "type": "PARITY_SUITE_P50_ID_044",
        "operation": "UPDATE"
       }
+     ]
+    },
+    {
+     "name": "w3-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w3-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -5780,6 +6964,22 @@
      ]
     },
     {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w3",
      "op": "customize-pips",
      "args": {
@@ -5833,6 +7033,22 @@
         "x-parity-p50i-047-c": "c"
        }
       }
+     ]
+    },
+    {
+     "name": "w3-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w3-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -5995,6 +7211,22 @@
      ]
     },
     {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w3",
      "op": "customize-pips",
      "args": {
@@ -6048,6 +7280,22 @@
         "x-parity-p50i-048-c": "c"
        }
       }
+     ]
+    },
+    {
+     "name": "w3-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w3-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -6210,6 +7458,22 @@
      ]
     },
     {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w3",
      "op": "customize-pips",
      "args": {
@@ -6266,6 +7530,22 @@
      ]
     },
     {
+     "name": "w3-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w3-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w4",
      "op": "delete-pip-customization",
      "args": {
@@ -6310,6 +7590,22 @@
         "x-parity-p50i-049-c": "c"
        }
       }
+     ]
+    },
+    {
+     "name": "w4-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w4-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -6472,6 +7768,22 @@
      ]
     },
     {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w3",
      "op": "customize-pips",
      "args": {
@@ -6528,6 +7840,22 @@
      ]
     },
     {
+     "name": "w3-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w3-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w4",
      "op": "delete-pip-customization",
      "args": {
@@ -6572,6 +7900,22 @@
         "x-parity-p50i-050-c": "c"
        }
       }
+     ]
+    },
+    {
+     "name": "w4-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w4-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -6670,6 +8014,22 @@
      ]
     },
     {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w2",
      "op": "write-domain-policies",
      "args": {
@@ -6705,6 +8065,22 @@
        "type": "PARITY_SUITE_P50_ID_060",
        "operation": "UPDATE"
       }
+     ]
+    },
+    {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -6791,6 +8167,22 @@
      ]
     },
     {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w2",
      "op": "write-domain-policies",
      "args": {
@@ -6826,6 +8218,22 @@
        "type": "PARITY_SUITE_P50_ID_061",
        "operation": "UPDATE"
       }
+     ]
+    },
+    {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -6926,6 +8334,22 @@
      ]
     },
     {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w2",
      "op": "write-external-id-sets",
      "args": {
@@ -6975,6 +8399,22 @@
        "type": "PARITY_SUITE_P50_ID_066",
        "operation": "UPDATE"
       }
+     ]
+    },
+    {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -7075,6 +8515,22 @@
      ]
     },
     {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w2",
      "op": "write-external-id-sets",
      "args": {
@@ -7124,6 +8580,22 @@
        "type": "PARITY_SUITE_P50_ID_067",
        "operation": "UPDATE"
       }
+     ]
+    },
+    {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -7197,6 +8669,22 @@
      ]
     },
     {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "look",
      "op": "read-config-sets",
      "args": {},
@@ -7229,6 +8717,22 @@
        "operation": "UPDATE",
        "tenantId": "PARITY-P50I-072"
       }
+     ]
+    },
+    {
+     "name": "look-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "look-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -7290,6 +8794,22 @@
      ]
     },
     {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "look",
      "op": "read-config-sets",
      "args": {},
@@ -7322,6 +8842,22 @@
        "operation": "UPDATE",
        "tenantId": "parity-p50i-073 "
       }
+     ]
+    },
+    {
+     "name": "look-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "look-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -7409,6 +8945,22 @@
      ]
     },
     {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w2",
      "op": "customize-sets",
      "args": {
@@ -7450,6 +9002,22 @@
        "type": "PARITY_SUITE_P50_ID_030",
        "operation": "UPDATE"
       }
+     ]
+    },
+    {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -7550,6 +9118,22 @@
      ]
     },
     {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w2",
      "op": "customize-sets",
      "args": {
@@ -7591,6 +9175,22 @@
        "type": "PARITY_SUITE_P50_ID_031",
        "operation": "UPDATE"
       }
+     ]
+    },
+    {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -7678,6 +9278,22 @@
      ]
     },
     {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w2",
      "op": "write-domain-policies",
      "args": {
@@ -7713,6 +9329,22 @@
        "type": "PARITY_SUITE_P50_ID_062",
        "operation": "UPDATE"
       }
+     ]
+    },
+    {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -7799,6 +9431,22 @@
      ]
     },
     {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w2",
      "op": "write-domain-policies",
      "args": {
@@ -7834,6 +9482,22 @@
        "type": "PARITY_SUITE_P50_ID_063",
        "operation": "UPDATE"
       }
+     ]
+    },
+    {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -7934,6 +9598,22 @@
      ]
     },
     {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w2",
      "op": "write-external-id-sets",
      "args": {
@@ -7983,6 +9663,22 @@
        "type": "PARITY_SUITE_P50_ID_068",
        "operation": "UPDATE"
       }
+     ]
+    },
+    {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -8083,6 +9779,22 @@
      ]
     },
     {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w2",
      "op": "write-external-id-sets",
      "args": {
@@ -8132,6 +9844,22 @@
        "type": "PARITY_SUITE_P50_ID_069",
        "operation": "UPDATE"
       }
+     ]
+    },
+    {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -8205,6 +9933,22 @@
      ]
     },
     {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "look",
      "op": "read-config-sets",
      "args": {},
@@ -8237,6 +9981,22 @@
        "operation": "UPDATE",
        "tenantId": " parity-p50i-074"
       }
+     ]
+    },
+    {
+     "name": "look-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "look-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -8324,6 +10084,22 @@
      ]
     },
     {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "w2",
      "op": "change-set-status",
      "args": {
@@ -8347,6 +10123,22 @@
        "type": "PARITY_SUITE_P50_ID_039",
        "operation": "UPDATE"
       }
+     ]
+    },
+    {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {

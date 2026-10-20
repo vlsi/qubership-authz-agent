@@ -1,5 +1,5 @@
 {
- "about": "Round 57 (pap-export): how the v3 export renders the members of a simplified policy the specification's export synthesis leaves out; each case uploads one in a tenant of its own and reads the tenant's whole export back",
+ "about": "Round 57 (pap-export): how the v3 export renders the members of a simplified policy the specification's export synthesis leaves out; each case uploads one in a tenant of its own and reads the tenant's whole export back Every step that decides is followed by both raw reads of the v3 export, policySets and pips. They were added after the round was recorded, so that the export-fed profile can compare most decisions with legacy.",
  "standVersion": true,
  "cases": [
   {
@@ -54,6 +54,14 @@
        "operation": "READ",
        "filter": true
       }
+     ]
+    },
+    {
+     "name": "write-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     }
    ]
@@ -111,6 +119,14 @@
        "operation": "READ",
        "filter": true
       }
+     ]
+    },
+    {
+     "name": "write-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     }
    ]
@@ -175,6 +191,14 @@
        "filter": true
       }
      ]
+    },
+    {
+     "name": "write-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
     }
    ]
   },
@@ -233,6 +257,14 @@
        "filter": true
       }
      ]
+    },
+    {
+     "name": "write-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
     }
    ]
   },
@@ -290,6 +322,14 @@
        "operation": "READ",
        "filter": true
       }
+     ]
+    },
+    {
+     "name": "write-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     }
    ]
@@ -354,6 +394,14 @@
        "filter": true
       }
      ]
+    },
+    {
+     "name": "write-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
     }
    ]
   },
@@ -409,6 +457,14 @@
        "operation": "READ",
        "filter": true
       }
+     ]
+    },
+    {
+     "name": "write-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     }
    ]

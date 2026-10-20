@@ -1,5 +1,5 @@
 {
- "about": "Round 55 (may): what a policy set's status becomes and whether it still takes part in decisions after a status change: a lifecycle transition, a re-upload or an import with another status or none, a customization. Each case runs in a tenant of its own, reads the export first and last, and decides after every write on operations that only one set, policy or rule allows; a control uploads an ACTIVE set and decides first and last.",
+ "about": "Round 55 (may): what a policy set's status becomes and whether it still takes part in decisions after a status change: a lifecycle transition, a re-upload or an import with another status or none, a customization. Each case runs in a tenant of its own, reads the export first and last, and decides after every write on operations that only one set, policy or rule allows; a control uploads an ACTIVE set and decides first and last. Every step that decides is followed by both raw reads of the v3 export, policySets and pips. They were added after the round was recorded, so that the export-fed profile can compare most decisions with legacy.",
  "standVersion": true,
  "cases": [
   {
@@ -65,6 +65,22 @@
        "type": "PARITY_SUITE_P55S_903",
        "operation": "READ"
       }
+     ]
+    },
+    {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -310,6 +326,22 @@
      ]
     },
     {
+     "name": "top-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "top-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "inner-set",
      "op": "customize-sets",
      "args": {
@@ -338,6 +370,22 @@
        "type": "PARITY_SUITE_P55S_105",
        "operation": "CREATE"
       }
+     ]
+    },
+    {
+     "name": "inner-set-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-set-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -390,6 +438,22 @@
        "type": "PARITY_SUITE_P55S_105",
        "operation": "APPROVE"
       }
+     ]
+    },
+    {
+     "name": "inner-policy-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-policy-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -466,6 +530,22 @@
        "type": "PARITY_SUITE_P55S_105",
        "operation": "LIST"
       }
+     ]
+    },
+    {
+     "name": "inner-rule-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-rule-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -711,6 +791,22 @@
      ]
     },
     {
+     "name": "top-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "top-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "inner-set",
      "op": "customize-sets",
      "args": {
@@ -739,6 +835,22 @@
        "type": "PARITY_SUITE_P55S_110",
        "operation": "CREATE"
       }
+     ]
+    },
+    {
+     "name": "inner-set-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-set-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -791,6 +903,22 @@
        "type": "PARITY_SUITE_P55S_110",
        "operation": "APPROVE"
       }
+     ]
+    },
+    {
+     "name": "inner-policy-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-policy-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -867,6 +995,22 @@
        "type": "PARITY_SUITE_P55S_110",
        "operation": "LIST"
       }
+     ]
+    },
+    {
+     "name": "inner-rule-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-rule-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -1112,6 +1256,22 @@
      ]
     },
     {
+     "name": "top-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "top-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "inner-set",
      "op": "customize-sets",
      "args": {
@@ -1140,6 +1300,22 @@
        "type": "PARITY_SUITE_P55S_115",
        "operation": "CREATE"
       }
+     ]
+    },
+    {
+     "name": "inner-set-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-set-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -1192,6 +1368,22 @@
        "type": "PARITY_SUITE_P55S_115",
        "operation": "APPROVE"
       }
+     ]
+    },
+    {
+     "name": "inner-policy-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-policy-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -1268,6 +1460,22 @@
        "type": "PARITY_SUITE_P55S_115",
        "operation": "LIST"
       }
+     ]
+    },
+    {
+     "name": "inner-rule-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-rule-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -1513,6 +1721,22 @@
      ]
     },
     {
+     "name": "top-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "top-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "inner-set",
      "op": "customize-sets",
      "args": {
@@ -1541,6 +1765,22 @@
        "type": "PARITY_SUITE_P55S_120",
        "operation": "CREATE"
       }
+     ]
+    },
+    {
+     "name": "inner-set-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-set-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -1593,6 +1833,22 @@
        "type": "PARITY_SUITE_P55S_120",
        "operation": "APPROVE"
       }
+     ]
+    },
+    {
+     "name": "inner-policy-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-policy-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -1669,6 +1925,22 @@
        "type": "PARITY_SUITE_P55S_120",
        "operation": "LIST"
       }
+     ]
+    },
+    {
+     "name": "inner-rule-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-rule-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -1818,6 +2090,22 @@
      ]
     },
     {
+     "name": "top-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "top-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "inner-set",
      "op": "customize-sets",
      "args": {
@@ -1869,6 +2157,22 @@
        "type": "PARITY_SUITE_P55S_100",
        "operation": "CREATE"
       }
+     ]
+    },
+    {
+     "name": "inner-set-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-set-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -1970,6 +2274,22 @@
        "type": "PARITY_SUITE_P55S_100",
        "operation": "APPROVE"
       }
+     ]
+    },
+    {
+     "name": "inner-policy-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-policy-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -2103,6 +2423,22 @@
        "type": "PARITY_SUITE_P55S_100",
        "operation": "LIST"
       }
+     ]
+    },
+    {
+     "name": "inner-rule-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-rule-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -2342,6 +2678,22 @@
      ]
     },
     {
+     "name": "top-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "top-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "inner-set",
      "op": "customize-sets",
      "args": {
@@ -2370,6 +2722,22 @@
        "type": "PARITY_SUITE_P55S_125",
        "operation": "CREATE"
       }
+     ]
+    },
+    {
+     "name": "inner-set-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-set-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -2422,6 +2790,22 @@
        "type": "PARITY_SUITE_P55S_125",
        "operation": "APPROVE"
       }
+     ]
+    },
+    {
+     "name": "inner-policy-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-policy-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -2498,6 +2882,22 @@
        "type": "PARITY_SUITE_P55S_125",
        "operation": "LIST"
       }
+     ]
+    },
+    {
+     "name": "inner-rule-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-rule-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -2850,6 +3250,22 @@
      ]
     },
     {
+     "name": "top-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "top-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "inner-set",
      "op": "customize-sets",
      "args": {
@@ -2947,6 +3363,22 @@
        "type": "PARITY_SUITE_P55S_130",
        "operation": "CREATE"
       }
+     ]
+    },
+    {
+     "name": "inner-set-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-set-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -3055,6 +3487,22 @@
        "type": "PARITY_SUITE_P55S_130",
        "operation": "APPROVE"
       }
+     ]
+    },
+    {
+     "name": "inner-policy-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-policy-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -3174,6 +3622,22 @@
      ]
     },
     {
+     "name": "inner-rule-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-rule-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "after",
      "op": "read-config-sets",
      "args": {},
@@ -3249,6 +3713,22 @@
        "type": "PARITY_SUITE_P55S_953",
        "operation": "READ"
       }
+     ]
+    },
+    {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {

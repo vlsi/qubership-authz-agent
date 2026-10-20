@@ -1,5 +1,5 @@
 {
- "about": "Round 54 (should): short sequences of PAP operations, each in a tenant of its own, that send what no recorded answer has: an operation after earlier steps left its target present, inactive, customized, deleted, emptied or refused, on the same key, another spelling of it, the key in another domain or at another level, or an id at another depth. Each step records its status and, by turns, the error class, a read-back or a decision. A replay of a case round 45 answered comes first and last.",
+ "about": "Round 54 (should): short sequences of PAP operations, each in a tenant of its own, that send what no recorded answer has: an operation after earlier steps left its target present, inactive, customized, deleted, emptied or refused, on the same key, another spelling of it, the key in another domain or at another level, or an id at another depth. Each step records its status and, by turns, the error class, a read-back or a decision. A replay of a case round 45 answered comes first and last. Every step that decides is followed by both raw reads of the v3 export, policySets and pips. They were added after the round was recorded, so that the export-fed profile can compare most decisions with legacy.",
  "standVersion": true,
  "cases": [
   {
@@ -59,6 +59,22 @@
      ]
     },
     {
+     "name": "write-the-policy-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "write-the-policy-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "empty-the-policies",
      "op": "write-domain-policies",
      "args": {
@@ -73,6 +89,22 @@
       {
        "name": "after-emptying"
       }
+     ]
+    },
+    {
+     "name": "empty-the-policies-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "empty-the-policies-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -174,6 +206,24 @@
       "parity-p54s-0364",
       "parityP54S0364"
      ]
+    },
+    {
+     "name": "target-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ],
+     "tenant": "parity-p54s-0364/"
+    },
+    {
+     "name": "target-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ],
+     "tenant": "parity-p54s-0364/"
     }
    ],
    "tenant": "parity-p54s-0364"
@@ -321,6 +371,22 @@
       "PARITY_P54S_0136",
       "parity-p54s-0136",
       "parityP54S0136"
+     ]
+    },
+    {
+     "name": "target-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "target-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     }
    ],
@@ -526,6 +592,22 @@
        "type": "PARITY_SUITE_P54S_0012",
        "operation": "READ"
       }
+     ]
+    },
+    {
+     "name": "target-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "target-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     }
    ],
@@ -831,6 +913,22 @@
       "parity-p54s-0172",
       "parityP54S0172"
      ]
+    },
+    {
+     "name": "target-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "target-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
     }
    ],
    "tenant": "parity-p54s-0172"
@@ -1050,6 +1148,22 @@
       "parity-p54s-0319",
       "parityP54S0319"
      ]
+    },
+    {
+     "name": "target-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "target-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
     }
    ],
    "tenant": "parity-p54s-0319"
@@ -1120,6 +1234,22 @@
       "PARITY_P54S_0322",
       "parity-p54s-0322",
       "parityP54S0322"
+     ]
+    },
+    {
+     "name": "target-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "target-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     }
    ],
@@ -1297,6 +1427,22 @@
       "parity-p54s-0332",
       "parityP54S0332"
      ]
+    },
+    {
+     "name": "target-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "target-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
     }
    ],
    "tenant": "parity-p54s-0332"
@@ -1357,6 +1503,22 @@
        "type": "PARITY_SUITE_P54S_0020",
        "operation": "READ"
       }
+     ]
+    },
+    {
+     "name": "target-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "target-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     }
    ],
@@ -1435,6 +1597,22 @@
       "PARITY_P54S_0139",
       "parity-p54s-0139",
       "parityP54S0139"
+     ]
+    },
+    {
+     "name": "target-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "target-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     }
    ],
@@ -1516,6 +1694,24 @@
       "parity-p54s-0140",
       "parityP54S0140"
      ]
+    },
+    {
+     "name": "target-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ],
+     "tenant": "рarity-p54s-0140"
+    },
+    {
+     "name": "target-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ],
+     "tenant": "рarity-p54s-0140"
     }
    ],
    "tenant": "parity-p54s-0140"
@@ -1690,6 +1886,24 @@
       "parity-p54s-0076",
       "parityP54S0076"
      ]
+    },
+    {
+     "name": "target-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ],
+     "tenant": "рarity-p54s-0076"
+    },
+    {
+     "name": "target-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ],
+     "tenant": "рarity-p54s-0076"
     }
    ],
    "tenant": "parity-p54s-0076"
@@ -1812,6 +2026,22 @@
       "parity-p54s-0079",
       "parityP54S0079"
      ]
+    },
+    {
+     "name": "target-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "target-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
     }
    ],
    "tenant": "parity-p54s-0079"
@@ -1894,6 +2124,24 @@
       "parity-p54s-0063",
       "parityP54S0063"
      ]
+    },
+    {
+     "name": "target-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ],
+     "tenant": "pArItY-P54s-0063"
+    },
+    {
+     "name": "target-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ],
+     "tenant": "pArItY-P54s-0063"
     }
    ],
    "tenant": "parity-p54s-0063"
@@ -1977,6 +2225,22 @@
       "PARITY_P54S_0069",
       "parity-p54s-0069",
       "parityP54S0069"
+     ]
+    },
+    {
+     "name": "target-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "target-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     }
    ],
@@ -2530,6 +2794,22 @@
      ]
     },
     {
+     "name": "write-the-policy-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "write-the-policy-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "empty-the-policies",
      "op": "write-domain-policies",
      "args": {
@@ -2544,6 +2824,22 @@
       {
        "name": "after-emptying"
       }
+     ]
+    },
+    {
+     "name": "empty-the-policies-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "empty-the-policies-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {

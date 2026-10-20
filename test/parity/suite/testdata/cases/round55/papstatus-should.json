@@ -1,5 +1,5 @@
 {
- "about": "Round 55 (should): what a policy set's status becomes and whether it still takes part in decisions after a status change: a lifecycle transition, a re-upload or an import with another status or none, a customization. Each case runs in a tenant of its own, reads the export first and last, and decides after every write on operations that only one set, policy or rule allows; a control uploads an ACTIVE set and decides first and last.",
+ "about": "Round 55 (should): what a policy set's status becomes and whether it still takes part in decisions after a status change: a lifecycle transition, a re-upload or an import with another status or none, a customization. Each case runs in a tenant of its own, reads the export first and last, and decides after every write on operations that only one set, policy or rule allows; a control uploads an ACTIVE set and decides first and last. Every step that decides is followed by both raw reads of the v3 export, policySets and pips. They were added after the round was recorded, so that the export-fed profile can compare most decisions with legacy.",
  "standVersion": true,
  "cases": [
   {
@@ -65,6 +65,22 @@
        "type": "PARITY_SUITE_P55S_902",
        "operation": "READ"
       }
+     ]
+    },
+    {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -332,6 +348,22 @@
      ]
     },
     {
+     "name": "top-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "top-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "inner-set",
      "op": "write-external-id-sets",
      "args": {
@@ -483,6 +515,22 @@
        "type": "PARITY_SUITE_P55S_008",
        "operation": "CREATE"
       }
+     ]
+    },
+    {
+     "name": "inner-set-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-set-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -643,6 +691,22 @@
        "type": "PARITY_SUITE_P55S_008",
        "operation": "APPROVE"
       }
+     ]
+    },
+    {
+     "name": "inner-policy-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-policy-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -809,6 +873,22 @@
        "type": "PARITY_SUITE_P55S_008",
        "operation": "LIST"
       }
+     ]
+    },
+    {
+     "name": "inner-rule-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-rule-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -1075,6 +1155,22 @@
      ]
     },
     {
+     "name": "top-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "top-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "inner-set",
      "op": "write-external-id-sets",
      "args": {
@@ -1225,6 +1321,22 @@
        "type": "PARITY_SUITE_P55S_020",
        "operation": "CREATE"
       }
+     ]
+    },
+    {
+     "name": "inner-set-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-set-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -1382,6 +1494,22 @@
        "type": "PARITY_SUITE_P55S_020",
        "operation": "APPROVE"
       }
+     ]
+    },
+    {
+     "name": "inner-policy-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-policy-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -1543,6 +1671,22 @@
        "type": "PARITY_SUITE_P55S_020",
        "operation": "LIST"
       }
+     ]
+    },
+    {
+     "name": "inner-rule-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-rule-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -1810,6 +1954,22 @@
      ]
     },
     {
+     "name": "top-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "top-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "inner-set",
      "op": "write-external-id-sets",
      "args": {
@@ -1961,6 +2121,22 @@
        "type": "PARITY_SUITE_P55S_023",
        "operation": "CREATE"
       }
+     ]
+    },
+    {
+     "name": "inner-set-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-set-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -2121,6 +2297,22 @@
        "type": "PARITY_SUITE_P55S_023",
        "operation": "APPROVE"
       }
+     ]
+    },
+    {
+     "name": "inner-policy-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-policy-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -2287,6 +2479,22 @@
        "type": "PARITY_SUITE_P55S_023",
        "operation": "LIST"
       }
+     ]
+    },
+    {
+     "name": "inner-rule-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-rule-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -2548,6 +2756,22 @@
      ]
     },
     {
+     "name": "top-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "top-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "inner-set",
      "op": "write-external-id-sets",
      "args": {
@@ -2695,6 +2919,22 @@
        "type": "PARITY_SUITE_P55S_028",
        "operation": "CREATE"
       }
+     ]
+    },
+    {
+     "name": "inner-set-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-set-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -2853,6 +3093,22 @@
        "type": "PARITY_SUITE_P55S_028",
        "operation": "APPROVE"
       }
+     ]
+    },
+    {
+     "name": "inner-policy-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-policy-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -3019,6 +3275,22 @@
        "type": "PARITY_SUITE_P55S_028",
        "operation": "LIST"
       }
+     ]
+    },
+    {
+     "name": "inner-rule-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-rule-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -3284,6 +3556,22 @@
      ]
     },
     {
+     "name": "top-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "top-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "inner-set",
      "op": "import-sets",
      "args": {},
@@ -3433,6 +3721,22 @@
        "type": "PARITY_SUITE_P55S_055",
        "operation": "CREATE"
       }
+     ]
+    },
+    {
+     "name": "inner-set-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-set-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -3589,6 +3893,22 @@
        "type": "PARITY_SUITE_P55S_055",
        "operation": "APPROVE"
       }
+     ]
+    },
+    {
+     "name": "inner-policy-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-policy-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -3749,6 +4069,22 @@
        "type": "PARITY_SUITE_P55S_055",
        "operation": "LIST"
       }
+     ]
+    },
+    {
+     "name": "inner-rule-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-rule-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -4009,6 +4345,22 @@
      ]
     },
     {
+     "name": "top-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "top-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "inner-set",
      "op": "import-sets",
      "args": {},
@@ -4155,6 +4507,22 @@
        "type": "PARITY_SUITE_P55S_063",
        "operation": "CREATE"
       }
+     ]
+    },
+    {
+     "name": "inner-set-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-set-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -4312,6 +4680,22 @@
        "type": "PARITY_SUITE_P55S_063",
        "operation": "APPROVE"
       }
+     ]
+    },
+    {
+     "name": "inner-policy-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-policy-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -4477,6 +4861,22 @@
        "type": "PARITY_SUITE_P55S_063",
        "operation": "LIST"
       }
+     ]
+    },
+    {
+     "name": "inner-rule-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-rule-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -4850,6 +5250,22 @@
      ]
     },
     {
+     "name": "top-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "top-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "inner-set",
      "op": "import-sets",
      "args": {},
@@ -5000,6 +5416,22 @@
        "type": "PARITY_SUITE_P55S_068",
        "operation": "CREATE"
       }
+     ]
+    },
+    {
+     "name": "inner-set-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-set-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -5159,6 +5591,22 @@
        "type": "PARITY_SUITE_P55S_068",
        "operation": "APPROVE"
       }
+     ]
+    },
+    {
+     "name": "inner-policy-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-policy-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -5324,6 +5772,22 @@
        "type": "PARITY_SUITE_P55S_068",
        "operation": "LIST"
       }
+     ]
+    },
+    {
+     "name": "inner-rule-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-rule-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -5696,6 +6160,22 @@
      ]
     },
     {
+     "name": "top-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "top-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "inner-set",
      "op": "import-sets",
      "args": {},
@@ -5845,6 +6325,22 @@
        "type": "PARITY_SUITE_P55S_070",
        "operation": "CREATE"
       }
+     ]
+    },
+    {
+     "name": "inner-set-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-set-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -6001,6 +6497,22 @@
        "type": "PARITY_SUITE_P55S_070",
        "operation": "APPROVE"
       }
+     ]
+    },
+    {
+     "name": "inner-policy-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-policy-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -6161,6 +6673,22 @@
        "type": "PARITY_SUITE_P55S_070",
        "operation": "LIST"
       }
+     ]
+    },
+    {
+     "name": "inner-rule-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-rule-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -6513,6 +7041,22 @@
      ]
     },
     {
+     "name": "top-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "top-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "inner-set",
      "op": "customize-sets",
      "args": {
@@ -6610,6 +7154,22 @@
        "type": "PARITY_SUITE_P55S_131",
        "operation": "CREATE"
       }
+     ]
+    },
+    {
+     "name": "inner-set-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-set-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -6718,6 +7278,22 @@
        "type": "PARITY_SUITE_P55S_131",
        "operation": "APPROVE"
       }
+     ]
+    },
+    {
+     "name": "inner-policy-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-policy-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -6834,6 +7410,22 @@
        "type": "PARITY_SUITE_P55S_131",
        "operation": "LIST"
       }
+     ]
+    },
+    {
+     "name": "inner-rule-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-rule-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -7100,6 +7692,22 @@
      ]
     },
     {
+     "name": "top-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "top-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "inner-set",
      "op": "import-sets",
      "args": {},
@@ -7250,6 +7858,22 @@
        "type": "PARITY_SUITE_P55S_043",
        "operation": "CREATE"
       }
+     ]
+    },
+    {
+     "name": "inner-set-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-set-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -7409,6 +8033,22 @@
        "type": "PARITY_SUITE_P55S_043",
        "operation": "APPROVE"
       }
+     ]
+    },
+    {
+     "name": "inner-policy-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-policy-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -7574,6 +8214,22 @@
        "type": "PARITY_SUITE_P55S_043",
        "operation": "LIST"
       }
+     ]
+    },
+    {
+     "name": "inner-rule-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-rule-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -7840,6 +8496,22 @@
      ]
     },
     {
+     "name": "top-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "top-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "inner-set",
      "op": "import-sets",
      "args": {},
@@ -7990,6 +8662,22 @@
        "type": "PARITY_SUITE_P55S_058",
        "operation": "CREATE"
       }
+     ]
+    },
+    {
+     "name": "inner-set-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-set-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -8149,6 +8837,22 @@
        "type": "PARITY_SUITE_P55S_058",
        "operation": "APPROVE"
       }
+     ]
+    },
+    {
+     "name": "inner-policy-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-policy-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -8314,6 +9018,22 @@
        "type": "PARITY_SUITE_P55S_058",
        "operation": "LIST"
       }
+     ]
+    },
+    {
+     "name": "inner-rule-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-rule-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -8581,6 +9301,22 @@
      ]
     },
     {
+     "name": "top-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "top-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "inner-set",
      "op": "write-external-id-sets",
      "args": {
@@ -8732,6 +9468,22 @@
        "type": "PARITY_SUITE_P55S_013",
        "operation": "CREATE"
       }
+     ]
+    },
+    {
+     "name": "inner-set-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-set-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -8892,6 +9644,22 @@
        "type": "PARITY_SUITE_P55S_013",
        "operation": "APPROVE"
       }
+     ]
+    },
+    {
+     "name": "inner-policy-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-policy-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -9058,6 +9826,22 @@
        "type": "PARITY_SUITE_P55S_013",
        "operation": "LIST"
       }
+     ]
+    },
+    {
+     "name": "inner-rule-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-rule-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -9325,6 +10109,22 @@
      ]
     },
     {
+     "name": "top-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "top-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "inner-set",
      "op": "write-external-id-sets",
      "args": {
@@ -9476,6 +10276,22 @@
        "type": "PARITY_SUITE_P55S_018",
        "operation": "CREATE"
       }
+     ]
+    },
+    {
+     "name": "inner-set-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-set-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -9636,6 +10452,22 @@
        "type": "PARITY_SUITE_P55S_018",
        "operation": "APPROVE"
       }
+     ]
+    },
+    {
+     "name": "inner-policy-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-policy-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -9802,6 +10634,22 @@
        "type": "PARITY_SUITE_P55S_018",
        "operation": "LIST"
       }
+     ]
+    },
+    {
+     "name": "inner-rule-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-rule-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -10176,6 +11024,22 @@
      ]
     },
     {
+     "name": "top-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "top-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "inner-set",
      "op": "write-external-id-sets",
      "args": {
@@ -10327,6 +11191,22 @@
        "type": "PARITY_SUITE_P55S_033",
        "operation": "CREATE"
       }
+     ]
+    },
+    {
+     "name": "inner-set-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-set-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -10487,6 +11367,22 @@
        "type": "PARITY_SUITE_P55S_033",
        "operation": "APPROVE"
       }
+     ]
+    },
+    {
+     "name": "inner-policy-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-policy-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -10653,6 +11549,22 @@
        "type": "PARITY_SUITE_P55S_033",
        "operation": "LIST"
       }
+     ]
+    },
+    {
+     "name": "inner-rule-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-rule-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -11026,6 +11938,22 @@
      ]
     },
     {
+     "name": "top-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "top-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "inner-set",
      "op": "write-external-id-sets",
      "args": {
@@ -11176,6 +12104,22 @@
        "type": "PARITY_SUITE_P55S_035",
        "operation": "CREATE"
       }
+     ]
+    },
+    {
+     "name": "inner-set-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-set-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -11333,6 +12277,22 @@
        "type": "PARITY_SUITE_P55S_035",
        "operation": "APPROVE"
       }
+     ]
+    },
+    {
+     "name": "inner-policy-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-policy-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -11497,6 +12457,22 @@
      ]
     },
     {
+     "name": "inner-rule-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-rule-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "after",
      "op": "read-config-sets",
      "args": {},
@@ -11571,6 +12547,22 @@
        "type": "PARITY_SUITE_P55S_038",
        "operation": "READ"
       }
+     ]
+    },
+    {
+     "name": "top-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "top-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -11672,6 +12664,22 @@
        "type": "PARITY_SUITE_P55S_038",
        "operation": "CREATE"
       }
+     ]
+    },
+    {
+     "name": "inner-set-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-set-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -11813,6 +12821,22 @@
        "type": "PARITY_SUITE_P55S_038",
        "operation": "APPROVE"
       }
+     ]
+    },
+    {
+     "name": "inner-policy-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-policy-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -11978,6 +13002,22 @@
        "type": "PARITY_SUITE_P55S_038",
        "operation": "LIST"
       }
+     ]
+    },
+    {
+     "name": "inner-rule-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-rule-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -12244,6 +13284,22 @@
      ]
     },
     {
+     "name": "top-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "top-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "inner-set",
      "op": "import-sets",
      "args": {},
@@ -12394,6 +13450,22 @@
        "type": "PARITY_SUITE_P55S_053",
        "operation": "CREATE"
       }
+     ]
+    },
+    {
+     "name": "inner-set-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-set-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -12553,6 +13625,22 @@
        "type": "PARITY_SUITE_P55S_053",
        "operation": "APPROVE"
       }
+     ]
+    },
+    {
+     "name": "inner-policy-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-policy-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -12718,6 +13806,22 @@
        "type": "PARITY_SUITE_P55S_053",
        "operation": "LIST"
       }
+     ]
+    },
+    {
+     "name": "inner-rule-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-rule-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -12867,6 +13971,22 @@
      ]
     },
     {
+     "name": "top-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "top-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "inner-set",
      "op": "customize-sets",
      "args": {
@@ -12918,6 +14038,22 @@
        "type": "PARITY_SUITE_P55S_101",
        "operation": "CREATE"
       }
+     ]
+    },
+    {
+     "name": "inner-set-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-set-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -13019,6 +14155,22 @@
        "type": "PARITY_SUITE_P55S_101",
        "operation": "APPROVE"
       }
+     ]
+    },
+    {
+     "name": "inner-policy-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-policy-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -13152,6 +14304,22 @@
        "type": "PARITY_SUITE_P55S_101",
        "operation": "LIST"
       }
+     ]
+    },
+    {
+     "name": "inner-rule-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-rule-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -13391,6 +14559,22 @@
      ]
     },
     {
+     "name": "top-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "top-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "inner-set",
      "op": "customize-sets",
      "args": {
@@ -13419,6 +14603,22 @@
        "type": "PARITY_SUITE_P55S_126",
        "operation": "CREATE"
       }
+     ]
+    },
+    {
+     "name": "inner-set-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-set-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -13471,6 +14671,22 @@
        "type": "PARITY_SUITE_P55S_126",
        "operation": "APPROVE"
       }
+     ]
+    },
+    {
+     "name": "inner-policy-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-policy-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -13547,6 +14763,22 @@
        "type": "PARITY_SUITE_P55S_126",
        "operation": "LIST"
       }
+     ]
+    },
+    {
+     "name": "inner-rule-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-rule-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -13813,6 +15045,22 @@
      ]
     },
     {
+     "name": "top-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "top-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "inner-set",
      "op": "import-sets",
      "args": {},
@@ -13963,6 +15211,22 @@
        "type": "PARITY_SUITE_P55S_048",
        "operation": "CREATE"
       }
+     ]
+    },
+    {
+     "name": "inner-set-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-set-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -14122,6 +15386,22 @@
        "type": "PARITY_SUITE_P55S_048",
        "operation": "APPROVE"
       }
+     ]
+    },
+    {
+     "name": "inner-policy-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-policy-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -14287,6 +15567,22 @@
        "type": "PARITY_SUITE_P55S_048",
        "operation": "LIST"
       }
+     ]
+    },
+    {
+     "name": "inner-rule-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-rule-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -14547,6 +15843,22 @@
      ]
     },
     {
+     "name": "top-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "top-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "inner-set",
      "op": "write-external-id-sets",
      "args": {
@@ -14693,6 +16005,22 @@
        "type": "PARITY_SUITE_P55S_030",
        "operation": "CREATE"
       }
+     ]
+    },
+    {
+     "name": "inner-set-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-set-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -14848,6 +16176,22 @@
        "type": "PARITY_SUITE_P55S_030",
        "operation": "APPROVE"
       }
+     ]
+    },
+    {
+     "name": "inner-policy-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-policy-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -15012,6 +16356,22 @@
      ]
     },
     {
+     "name": "inner-rule-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-rule-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "after",
      "op": "read-config-sets",
      "args": {},
@@ -15085,6 +16445,22 @@
        "type": "PARITY_SUITE_P55S_040",
        "operation": "READ"
       }
+     ]
+    },
+    {
+     "name": "top-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "top-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -15185,6 +16561,22 @@
        "type": "PARITY_SUITE_P55S_040",
        "operation": "CREATE"
       }
+     ]
+    },
+    {
+     "name": "inner-set-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-set-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -15323,6 +16715,22 @@
        "type": "PARITY_SUITE_P55S_040",
        "operation": "APPROVE"
       }
+     ]
+    },
+    {
+     "name": "inner-policy-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-policy-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -15483,6 +16891,22 @@
        "type": "PARITY_SUITE_P55S_040",
        "operation": "LIST"
       }
+     ]
+    },
+    {
+     "name": "inner-rule-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-rule-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -15835,6 +17259,22 @@
      ]
     },
     {
+     "name": "top-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "top-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "inner-set",
      "op": "customize-sets",
      "args": {
@@ -15932,6 +17372,22 @@
        "type": "PARITY_SUITE_P55S_133",
        "operation": "CREATE"
       }
+     ]
+    },
+    {
+     "name": "inner-set-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-set-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -16040,6 +17496,22 @@
        "type": "PARITY_SUITE_P55S_133",
        "operation": "APPROVE"
       }
+     ]
+    },
+    {
+     "name": "inner-policy-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-policy-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -16154,6 +17626,22 @@
        "type": "PARITY_SUITE_P55S_133",
        "operation": "LIST"
       }
+     ]
+    },
+    {
+     "name": "inner-rule-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-rule-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -16399,6 +17887,22 @@
      ]
     },
     {
+     "name": "top-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "top-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "inner-set",
      "op": "customize-sets",
      "args": {
@@ -16427,6 +17931,22 @@
        "type": "PARITY_SUITE_P55S_106",
        "operation": "CREATE"
       }
+     ]
+    },
+    {
+     "name": "inner-set-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-set-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -16479,6 +17999,22 @@
        "type": "PARITY_SUITE_P55S_106",
        "operation": "APPROVE"
       }
+     ]
+    },
+    {
+     "name": "inner-policy-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-policy-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -16555,6 +18091,22 @@
        "type": "PARITY_SUITE_P55S_106",
        "operation": "LIST"
       }
+     ]
+    },
+    {
+     "name": "inner-rule-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-rule-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -16800,6 +18352,22 @@
      ]
     },
     {
+     "name": "top-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "top-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "inner-set",
      "op": "customize-sets",
      "args": {
@@ -16828,6 +18396,22 @@
        "type": "PARITY_SUITE_P55S_111",
        "operation": "CREATE"
       }
+     ]
+    },
+    {
+     "name": "inner-set-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-set-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -16880,6 +18464,22 @@
        "type": "PARITY_SUITE_P55S_111",
        "operation": "APPROVE"
       }
+     ]
+    },
+    {
+     "name": "inner-policy-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-policy-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -16956,6 +18556,22 @@
        "type": "PARITY_SUITE_P55S_111",
        "operation": "LIST"
       }
+     ]
+    },
+    {
+     "name": "inner-rule-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-rule-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -17201,6 +18817,22 @@
      ]
     },
     {
+     "name": "top-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "top-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "inner-set",
      "op": "customize-sets",
      "args": {
@@ -17229,6 +18861,22 @@
        "type": "PARITY_SUITE_P55S_121",
        "operation": "CREATE"
       }
+     ]
+    },
+    {
+     "name": "inner-set-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-set-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -17281,6 +18929,22 @@
        "type": "PARITY_SUITE_P55S_121",
        "operation": "APPROVE"
       }
+     ]
+    },
+    {
+     "name": "inner-policy-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-policy-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -17357,6 +19021,22 @@
        "type": "PARITY_SUITE_P55S_121",
        "operation": "LIST"
       }
+     ]
+    },
+    {
+     "name": "inner-rule-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-rule-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -17602,6 +19282,22 @@
      ]
     },
     {
+     "name": "top-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "top-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "inner-set",
      "op": "customize-sets",
      "args": {
@@ -17630,6 +19326,22 @@
        "type": "PARITY_SUITE_P55S_116",
        "operation": "CREATE"
       }
+     ]
+    },
+    {
+     "name": "inner-set-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-set-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -17682,6 +19394,22 @@
        "type": "PARITY_SUITE_P55S_116",
        "operation": "APPROVE"
       }
+     ]
+    },
+    {
+     "name": "inner-policy-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-policy-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -17758,6 +19486,22 @@
        "type": "PARITY_SUITE_P55S_116",
        "operation": "LIST"
       }
+     ]
+    },
+    {
+     "name": "inner-rule-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-rule-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -18003,6 +19747,22 @@
      ]
     },
     {
+     "name": "top-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "top-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "inner-set",
      "op": "customize-sets",
      "args": {
@@ -18031,6 +19791,22 @@
        "type": "PARITY_SUITE_P55S_118",
        "operation": "CREATE"
       }
+     ]
+    },
+    {
+     "name": "inner-set-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-set-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -18083,6 +19859,22 @@
        "type": "PARITY_SUITE_P55S_118",
        "operation": "APPROVE"
       }
+     ]
+    },
+    {
+     "name": "inner-policy-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-policy-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -18159,6 +19951,22 @@
        "type": "PARITY_SUITE_P55S_118",
        "operation": "LIST"
       }
+     ]
+    },
+    {
+     "name": "inner-rule-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-rule-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -18398,6 +20206,22 @@
      ]
     },
     {
+     "name": "top-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "top-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "inner-set",
      "op": "customize-sets",
      "args": {
@@ -18426,6 +20250,22 @@
        "type": "PARITY_SUITE_P55S_128",
        "operation": "CREATE"
       }
+     ]
+    },
+    {
+     "name": "inner-set-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-set-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -18478,6 +20318,22 @@
        "type": "PARITY_SUITE_P55S_128",
        "operation": "APPROVE"
       }
+     ]
+    },
+    {
+     "name": "inner-policy-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-policy-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -18557,6 +20413,22 @@
      ]
     },
     {
+     "name": "inner-rule-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-rule-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "after",
      "op": "read-config-sets",
      "args": {},
@@ -18632,6 +20504,22 @@
        "type": "PARITY_SUITE_P55S_003",
        "operation": "READ"
       }
+     ]
+    },
+    {
+     "name": "top-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "top-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -18734,6 +20622,22 @@
        "type": "PARITY_SUITE_P55S_003",
        "operation": "CREATE"
       }
+     ]
+    },
+    {
+     "name": "inner-set-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-set-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -18876,6 +20780,22 @@
        "type": "PARITY_SUITE_P55S_003",
        "operation": "APPROVE"
       }
+     ]
+    },
+    {
+     "name": "inner-policy-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-policy-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -19042,6 +20962,22 @@
        "type": "PARITY_SUITE_P55S_003",
        "operation": "LIST"
       }
+     ]
+    },
+    {
+     "name": "inner-rule-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-rule-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -19301,6 +21237,22 @@
      ]
     },
     {
+     "name": "top-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "top-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "inner-set",
      "op": "import-sets",
      "args": {},
@@ -19446,6 +21398,22 @@
        "type": "PARITY_SUITE_P55S_065",
        "operation": "CREATE"
       }
+     ]
+    },
+    {
+     "name": "inner-set-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-set-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -19600,6 +21568,22 @@
        "type": "PARITY_SUITE_P55S_065",
        "operation": "APPROVE"
       }
+     ]
+    },
+    {
+     "name": "inner-policy-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-policy-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -19760,6 +21744,22 @@
        "type": "PARITY_SUITE_P55S_065",
        "operation": "LIST"
       }
+     ]
+    },
+    {
+     "name": "inner-rule-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-rule-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -20010,6 +22010,22 @@
      ]
     },
     {
+     "name": "top-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "top-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "nested",
      "op": "change-set-status",
      "args": {
@@ -20034,6 +22050,22 @@
        "type": "PARITY_SUITE_P55S_072",
        "operation": "LIST"
       }
+     ]
+    },
+    {
+     "name": "nested-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "nested-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -20284,6 +22316,22 @@
      ]
     },
     {
+     "name": "top-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "top-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "nested",
      "op": "change-set-status",
      "args": {
@@ -20308,6 +22356,22 @@
        "type": "PARITY_SUITE_P55S_074",
        "operation": "LIST"
       }
+     ]
+    },
+    {
+     "name": "nested-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "nested-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -20558,6 +22622,22 @@
      ]
     },
     {
+     "name": "top-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "top-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "nested",
      "op": "change-set-status",
      "args": {
@@ -20582,6 +22662,22 @@
        "type": "PARITY_SUITE_P55S_075",
        "operation": "LIST"
       }
+     ]
+    },
+    {
+     "name": "nested-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "nested-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -20829,6 +22925,22 @@
      ]
     },
     {
+     "name": "top-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "top-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "nested",
      "op": "change-set-status",
      "args": {
@@ -20853,6 +22965,22 @@
        "type": "PARITY_SUITE_P55S_076",
        "operation": "LIST"
       }
+     ]
+    },
+    {
+     "name": "nested-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "nested-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -21155,6 +23283,22 @@
      ]
     },
     {
+     "name": "top-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "top-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "nested",
      "op": "change-set-status",
      "args": {
@@ -21179,6 +23323,22 @@
        "type": "PARITY_SUITE_P55S_077",
        "operation": "LIST"
       }
+     ]
+    },
+    {
+     "name": "nested-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "nested-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -21429,6 +23589,22 @@
      ]
     },
     {
+     "name": "top-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "top-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "nested",
      "op": "change-set-status",
      "args": {
@@ -21453,6 +23629,22 @@
        "type": "PARITY_SUITE_P55S_073",
        "operation": "LIST"
       }
+     ]
+    },
+    {
+     "name": "nested-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "nested-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -21601,6 +23793,22 @@
      ]
     },
     {
+     "name": "top-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "top-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "inner-set",
      "op": "customize-sets",
      "args": {
@@ -21651,6 +23859,22 @@
        "type": "PARITY_SUITE_P55S_103",
        "operation": "CREATE"
       }
+     ]
+    },
+    {
+     "name": "inner-set-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-set-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -21749,6 +23973,22 @@
        "type": "PARITY_SUITE_P55S_103",
        "operation": "APPROVE"
       }
+     ]
+    },
+    {
+     "name": "inner-policy-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-policy-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -21880,6 +24120,22 @@
      ]
     },
     {
+     "name": "inner-rule-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "inner-rule-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "after",
      "op": "read-config-sets",
      "args": {},
@@ -21928,6 +24184,22 @@
        "type": "PARITY_SUITE_P55S_071",
        "operation": "READ"
       }
+     ]
+    },
+    {
+     "name": "top-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "top-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -21982,6 +24254,22 @@
      ]
     },
     {
+     "name": "top-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "top-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "after",
      "op": "read-config-sets",
      "args": {},
@@ -22033,6 +24321,22 @@
      ]
     },
     {
+     "name": "top-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "top-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "after",
      "op": "read-config-sets",
      "args": {},
@@ -22081,6 +24385,22 @@
        "type": "PARITY_SUITE_P55S_092",
        "operation": "READ"
       }
+     ]
+    },
+    {
+     "name": "top-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "top-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -22159,6 +24479,22 @@
        "type": "PARITY_SUITE_P55S_952",
        "operation": "READ"
       }
+     ]
+    },
+    {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
