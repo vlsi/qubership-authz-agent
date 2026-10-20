@@ -1,0 +1,596 @@
+{
+ "about": "Round 65: the v3 export of sets read by a tenant beside another tenant's set customization, before and after it uploads a set of the customized policySetId. Each case cleans up the other tenant's customization and sets itself.",
+ "standVersion": true,
+ "cases": [
+  {
+   "id": "p65x-foreign-missing-set-control-first",
+   "about": "Control: an ACTIVE set uploaded in a tenant of its own, decided and read back.",
+   "resourceType": "PARITY_SUITE_P65X_FOREIGN_MISSING_SET_CONTROL_FIRST",
+   "tenant": "parity-p65x-foreign-missing-set-control-first",
+   "steps": [
+    {
+     "name": "w1",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p65x-foreign-missing-set-control-first"
+     },
+     "observe": [
+      "status",
+      "decide:w1-read"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "368ef867-73ae-d398-ef9e-65b6b6f33b24",
+       "name": "p65x-foreign-missing-set-control-first s",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P65X_FOREIGN_MISSING_SET_CONTROL_FIRST'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "e0abe409-f919-3203-e222-314e542a8e4e",
+         "name": "p65x-foreign-missing-set-control-first s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "094f40ed-a344-ebc9-745e-0a72789d88e9",
+           "name": "p65x-foreign-missing-set-control-first s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ],
+       "status": "ACTIVE"
+      }
+     ],
+     "requests": [
+      {
+       "name": "w1-read",
+       "type": "PARITY_SUITE_P65X_FOREIGN_MISSING_SET_CONTROL_FIRST",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "after",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-foreign-missing-set-control-first",
+      "PARITY_SUITE_P65X_FOREIGN_MISSING_SET_CONTROL_FIRST"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p65x-foreign-customer",
+   "about": "Another tenant uploads a set and customizes it at CUSTOMER; this tenant reads the export, uploads a set of the same policySetId without customizing it, reads again, then the other tenant deletes its customization and this tenant reads once more. By the mechanism the suite names (a customization over a set the reader's tree does not hold) the second read is 200; by the rule fitted to the same goldens (any CUSTOMER entry the reader does not share) it is 500.",
+   "resourceType": "PARITY_SUITE_P65X_FOREIGN_CUSTOMER",
+   "tenant": "parity-p65x-foreign-customer",
+   "steps": [
+    {
+     "name": "h1",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p65x-foreign-customer-holder"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "ea37ef8d-c872-e950-b287-d4d6e5f372d2",
+       "name": "p65x-foreign-customer s",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P65X_FOREIGN_CUSTOMER'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "2a245847-ca71-2fc9-1b2b-0a9a6413ff85",
+         "name": "p65x-foreign-customer s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "4904616e-6ae9-7b73-3de7-e95435d6b0de",
+           "name": "p65x-foreign-customer s rule",
+           "target": "operation == 'UPDATE'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ],
+       "status": "ACTIVE"
+      }
+     ],
+     "tenant": "parity-p65x-foreign-customer-holder"
+    },
+    {
+     "name": "h2",
+     "op": "customize-sets",
+     "args": {
+      "level": "CUSTOMER"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "ea37ef8d-c872-e950-b287-d4d6e5f372d2",
+       "policies": [
+        {
+         "policyId": "2a245847-ca71-2fc9-1b2b-0a9a6413ff85",
+         "rules": [
+          {
+           "ruleId": "4904616e-6ae9-7b73-3de7-e95435d6b0de",
+           "name": "p65x-foreign-customer s rule",
+           "effect": "ALLOW",
+           "target": "operation == 'READ'",
+           "condition": "true"
+          }
+         ]
+        }
+       ]
+      }
+     ],
+     "tenant": "parity-p65x-foreign-customer-holder"
+    },
+    {
+     "name": "r1",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-foreign-customer",
+      "PARITY_SUITE_P65X_FOREIGN_CUSTOMER"
+     ]
+    },
+    {
+     "name": "w1",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p65x-foreign-customer"
+     },
+     "observe": [
+      "status",
+      "decide:w1-delete"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "ea37ef8d-c872-e950-b287-d4d6e5f372d2",
+       "name": "p65x-foreign-customer own",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P65X_FOREIGN_CUSTOMER'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "c81787a8-5eba-7b26-bd44-a879ff7e679d",
+         "name": "p65x-foreign-customer own reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "cdef98ca-2993-59bb-2263-03abe6b86af5",
+           "name": "p65x-foreign-customer own rule",
+           "target": "operation == 'DELETE'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ],
+       "status": "ACTIVE"
+      }
+     ],
+     "requests": [
+      {
+       "name": "w1-delete",
+       "type": "PARITY_SUITE_P65X_FOREIGN_CUSTOMER",
+       "operation": "DELETE"
+      }
+     ]
+    },
+    {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "r2",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-foreign-customer",
+      "PARITY_SUITE_P65X_FOREIGN_CUSTOMER"
+     ]
+    },
+    {
+     "name": "h3",
+     "op": "delete-set-customization",
+     "args": {
+      "id": "ea37ef8d-c872-e950-b287-d4d6e5f372d2",
+      "level": "CUSTOMER",
+      "recursive": "true"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "tenant": "parity-p65x-foreign-customer-holder"
+    },
+    {
+     "name": "r3",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-foreign-customer",
+      "PARITY_SUITE_P65X_FOREIGN_CUSTOMER"
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "delete-set",
+     "args": {
+      "id": "ea37ef8d-c872-e950-b287-d4d6e5f372d2"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "cleanup-2",
+     "op": "delete-set",
+     "args": {
+      "id": "ea37ef8d-c872-e950-b287-d4d6e5f372d2"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "tenant": "parity-p65x-foreign-customer-holder"
+    }
+   ]
+  },
+  {
+   "id": "p65x-foreign-project",
+   "about": "Another tenant uploads a set and customizes it at PROJECT; this tenant reads the export, uploads a set of the same policySetId without customizing it, reads again, then the other tenant deletes its customization and this tenant reads once more. By the mechanism the suite names (a customization over a set the reader's tree does not hold) the second read is 200; by the rule fitted to the same goldens (a PROJECT entry over a set its own tenant uploaded, unless the reader shares it) it is 500.",
+   "resourceType": "PARITY_SUITE_P65X_FOREIGN_PROJECT",
+   "tenant": "parity-p65x-foreign-project",
+   "steps": [
+    {
+     "name": "h1",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p65x-foreign-project-holder"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "79e0e1d7-a4b8-09dc-1852-cceb452399d7",
+       "name": "p65x-foreign-project s",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P65X_FOREIGN_PROJECT'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "ed395fb2-97c0-6e65-1b26-0f68bafb4d40",
+         "name": "p65x-foreign-project s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "ac3cab5f-e35e-f4db-e6b8-c893d52b29b6",
+           "name": "p65x-foreign-project s rule",
+           "target": "operation == 'UPDATE'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ],
+       "status": "ACTIVE"
+      }
+     ],
+     "tenant": "parity-p65x-foreign-project-holder"
+    },
+    {
+     "name": "h2",
+     "op": "customize-sets",
+     "args": {
+      "level": "PROJECT"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "79e0e1d7-a4b8-09dc-1852-cceb452399d7",
+       "policies": [
+        {
+         "policyId": "ed395fb2-97c0-6e65-1b26-0f68bafb4d40",
+         "rules": [
+          {
+           "ruleId": "ac3cab5f-e35e-f4db-e6b8-c893d52b29b6",
+           "name": "p65x-foreign-project s rule",
+           "effect": "ALLOW",
+           "target": "operation == 'READ'",
+           "condition": "true"
+          }
+         ]
+        }
+       ]
+      }
+     ],
+     "tenant": "parity-p65x-foreign-project-holder"
+    },
+    {
+     "name": "r1",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-foreign-project",
+      "PARITY_SUITE_P65X_FOREIGN_PROJECT"
+     ]
+    },
+    {
+     "name": "w1",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p65x-foreign-project"
+     },
+     "observe": [
+      "status",
+      "decide:w1-delete"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "79e0e1d7-a4b8-09dc-1852-cceb452399d7",
+       "name": "p65x-foreign-project own",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P65X_FOREIGN_PROJECT'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "fbf429d1-6ddb-5181-9fe7-db1784efaca1",
+         "name": "p65x-foreign-project own reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "92d0d615-b41f-03ff-2ade-637cdeccbabe",
+           "name": "p65x-foreign-project own rule",
+           "target": "operation == 'DELETE'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ],
+       "status": "ACTIVE"
+      }
+     ],
+     "requests": [
+      {
+       "name": "w1-delete",
+       "type": "PARITY_SUITE_P65X_FOREIGN_PROJECT",
+       "operation": "DELETE"
+      }
+     ]
+    },
+    {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "r2",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-foreign-project",
+      "PARITY_SUITE_P65X_FOREIGN_PROJECT"
+     ]
+    },
+    {
+     "name": "h3",
+     "op": "delete-set-customization",
+     "args": {
+      "id": "79e0e1d7-a4b8-09dc-1852-cceb452399d7",
+      "level": "PROJECT",
+      "recursive": "true"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "tenant": "parity-p65x-foreign-project-holder"
+    },
+    {
+     "name": "r3",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-foreign-project",
+      "PARITY_SUITE_P65X_FOREIGN_PROJECT"
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "delete-set",
+     "args": {
+      "id": "79e0e1d7-a4b8-09dc-1852-cceb452399d7"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "cleanup-2",
+     "op": "delete-set",
+     "args": {
+      "id": "79e0e1d7-a4b8-09dc-1852-cceb452399d7"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "tenant": "parity-p65x-foreign-project-holder"
+    }
+   ]
+  },
+  {
+   "id": "p65x-foreign-missing-set-control-last",
+   "about": "Control: an ACTIVE set uploaded in a tenant of its own, decided and read back.",
+   "resourceType": "PARITY_SUITE_P65X_FOREIGN_MISSING_SET_CONTROL_LAST",
+   "tenant": "parity-p65x-foreign-missing-set-control-last",
+   "steps": [
+    {
+     "name": "w1",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p65x-foreign-missing-set-control-last"
+     },
+     "observe": [
+      "status",
+      "decide:w1-read"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "e561a63e-5d93-dddc-a7f5-95305a6ada97",
+       "name": "p65x-foreign-missing-set-control-last s",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P65X_FOREIGN_MISSING_SET_CONTROL_LAST'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "c6e8c2da-8ca8-da19-5661-7620bb92210f",
+         "name": "p65x-foreign-missing-set-control-last s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "c7f47b15-1336-9271-eb0a-430ac939b7d5",
+           "name": "p65x-foreign-missing-set-control-last s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ],
+       "status": "ACTIVE"
+      }
+     ],
+     "requests": [
+      {
+       "name": "w1-read",
+       "type": "PARITY_SUITE_P65X_FOREIGN_MISSING_SET_CONTROL_LAST",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "after",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-foreign-missing-set-control-last",
+      "PARITY_SUITE_P65X_FOREIGN_MISSING_SET_CONTROL_LAST"
+     ]
+    }
+   ]
+  }
+ ]
+}

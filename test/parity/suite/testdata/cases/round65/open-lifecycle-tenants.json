@@ -1,0 +1,1985 @@
+{
+ "about": "Round 65: a lifecycle transition of a set in the default tenant, in parity-mt-b and in a tenant nobody provisioned, each with no body, the literal null and {}. Rounds 48 to 55 sent every transition in a tenant nobody provisioned and without a body, and each answered 500. Each case uploads under an externalId of its own and deletes its set last.",
+ "standVersion": true,
+ "cases": [
+  {
+   "id": "p65x-lifecycle-tenants-control-first",
+   "about": "Control: an ACTIVE set uploaded in a tenant of its own, decided and read back.",
+   "resourceType": "PARITY_SUITE_P65X_LIFECYCLE_TENANTS_CONTROL_FIRST",
+   "tenant": "parity-p65x-lifecycle-tenants-control-first",
+   "steps": [
+    {
+     "name": "w1",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p65x-lifecycle-tenants-control-first"
+     },
+     "observe": [
+      "status",
+      "decide:w1-read"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "54f6ba4b-feea-c5f5-4d18-8522250dee29",
+       "name": "p65x-lifecycle-tenants-control-first s",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P65X_LIFECYCLE_TENANTS_CONTROL_FIRST'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "8c9afd42-c6a9-fe71-b7b8-eabef580cb72",
+         "name": "p65x-lifecycle-tenants-control-first s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "1374c2b4-97ff-125d-f529-822238061ea6",
+           "name": "p65x-lifecycle-tenants-control-first s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ],
+       "status": "ACTIVE"
+      }
+     ],
+     "requests": [
+      {
+       "name": "w1-read",
+       "type": "PARITY_SUITE_P65X_LIFECYCLE_TENANTS_CONTROL_FIRST",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "after",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-lifecycle-tenants-control-first",
+      "PARITY_SUITE_P65X_LIFECYCLE_TENANTS_CONTROL_FIRST"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p65x-lc-default-no-body",
+   "about": "A set uploaded INACTIVE, then activated and deactivated with no body, as rounds 48 to 55 sent, in the default tenant, under an externalId of its own. Each transition records its status and error class, the decision on the set's type after it and the export read back; the set is deleted last. Beside the same transition in the other tenants and with the other bodies, it tells whether the 500 of rounds 48 to 55 belongs to the tenant or to the body.",
+   "resourceType": "PARITY_SUITE_P65X_LC_DEFAULT_NO_BODY",
+   "steps": [
+    {
+     "name": "before",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-lc-default-no-body",
+      "PARITY_SUITE_P65X_LC_DEFAULT_NO_BODY"
+     ]
+    },
+    {
+     "name": "w1",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p65x-lc-default-no-body"
+     },
+     "observe": [
+      "status",
+      "decide:w1-probe"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "d808b173-5650-b04b-3168-a79d84520a7a",
+       "name": "p65x-lc-default-no-body s",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P65X_LC_DEFAULT_NO_BODY'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "a11a4c1f-9a65-f48e-10b8-b2f40fb60a4d",
+         "name": "p65x-lc-default-no-body s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "d732fa49-14c8-32e3-3c2a-fde8c4442880",
+           "name": "p65x-lc-default-no-body s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ],
+       "status": "INACTIVE"
+      }
+     ],
+     "requests": [
+      {
+       "name": "w1-probe",
+       "type": "PARITY_SUITE_P65X_LC_DEFAULT_NO_BODY",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "w2",
+     "op": "change-set-status",
+     "args": {
+      "id": "d808b173-5650-b04b-3168-a79d84520a7a",
+      "transition": "activate"
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:w2-probe"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "name": "w2-probe",
+       "type": "PARITY_SUITE_P65X_LC_DEFAULT_NO_BODY",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "w2-export",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-lc-default-no-body",
+      "PARITY_SUITE_P65X_LC_DEFAULT_NO_BODY"
+     ]
+    },
+    {
+     "name": "w3",
+     "op": "change-set-status",
+     "args": {
+      "id": "d808b173-5650-b04b-3168-a79d84520a7a",
+      "transition": "deactivate"
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:w3-probe"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "name": "w3-probe",
+       "type": "PARITY_SUITE_P65X_LC_DEFAULT_NO_BODY",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w3-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w3-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "w3-export",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-lc-default-no-body",
+      "PARITY_SUITE_P65X_LC_DEFAULT_NO_BODY"
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "delete-set",
+     "args": {
+      "id": "d808b173-5650-b04b-3168-a79d84520a7a"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "after",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-lc-default-no-body",
+      "PARITY_SUITE_P65X_LC_DEFAULT_NO_BODY"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p65x-lc-default-null-body",
+   "about": "A set uploaded INACTIVE, then activated and deactivated with the body null, in the default tenant, under an externalId of its own. Each transition records its status and error class, the decision on the set's type after it and the export read back; the set is deleted last. Beside the same transition in the other tenants and with the other bodies, it tells whether the 500 of rounds 48 to 55 belongs to the tenant or to the body.",
+   "resourceType": "PARITY_SUITE_P65X_LC_DEFAULT_NULL_BODY",
+   "steps": [
+    {
+     "name": "before",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-lc-default-null-body",
+      "PARITY_SUITE_P65X_LC_DEFAULT_NULL_BODY"
+     ]
+    },
+    {
+     "name": "w1",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p65x-lc-default-null-body"
+     },
+     "observe": [
+      "status",
+      "decide:w1-probe"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "de6ee810-1055-2eba-dd91-a57bc1a6de11",
+       "name": "p65x-lc-default-null-body s",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P65X_LC_DEFAULT_NULL_BODY'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "9c1cb3f9-f5a2-0b7a-9295-7c49ab42266f",
+         "name": "p65x-lc-default-null-body s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "0eeed980-6724-2197-6c6f-4e696be3f668",
+           "name": "p65x-lc-default-null-body s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ],
+       "status": "INACTIVE"
+      }
+     ],
+     "requests": [
+      {
+       "name": "w1-probe",
+       "type": "PARITY_SUITE_P65X_LC_DEFAULT_NULL_BODY",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "w2",
+     "op": "change-set-status",
+     "args": {
+      "id": "de6ee810-1055-2eba-dd91-a57bc1a6de11",
+      "transition": "activate"
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:w2-probe"
+     ],
+     "onRefusal": "continue",
+     "body": null,
+     "requests": [
+      {
+       "name": "w2-probe",
+       "type": "PARITY_SUITE_P65X_LC_DEFAULT_NULL_BODY",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "w2-export",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-lc-default-null-body",
+      "PARITY_SUITE_P65X_LC_DEFAULT_NULL_BODY"
+     ]
+    },
+    {
+     "name": "w3",
+     "op": "change-set-status",
+     "args": {
+      "id": "de6ee810-1055-2eba-dd91-a57bc1a6de11",
+      "transition": "deactivate"
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:w3-probe"
+     ],
+     "onRefusal": "continue",
+     "body": null,
+     "requests": [
+      {
+       "name": "w3-probe",
+       "type": "PARITY_SUITE_P65X_LC_DEFAULT_NULL_BODY",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w3-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w3-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "w3-export",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-lc-default-null-body",
+      "PARITY_SUITE_P65X_LC_DEFAULT_NULL_BODY"
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "delete-set",
+     "args": {
+      "id": "de6ee810-1055-2eba-dd91-a57bc1a6de11"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "after",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-lc-default-null-body",
+      "PARITY_SUITE_P65X_LC_DEFAULT_NULL_BODY"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p65x-lc-default-object-body",
+   "about": "A set uploaded INACTIVE, then activated and deactivated with the body {}, in the default tenant, under an externalId of its own. Each transition records its status and error class, the decision on the set's type after it and the export read back; the set is deleted last. Beside the same transition in the other tenants and with the other bodies, it tells whether the 500 of rounds 48 to 55 belongs to the tenant or to the body.",
+   "resourceType": "PARITY_SUITE_P65X_LC_DEFAULT_OBJECT_BODY",
+   "steps": [
+    {
+     "name": "before",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-lc-default-object-body",
+      "PARITY_SUITE_P65X_LC_DEFAULT_OBJECT_BODY"
+     ]
+    },
+    {
+     "name": "w1",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p65x-lc-default-object-body"
+     },
+     "observe": [
+      "status",
+      "decide:w1-probe"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "1cc87418-9a91-9a71-c272-fb0e8db0721a",
+       "name": "p65x-lc-default-object-body s",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P65X_LC_DEFAULT_OBJECT_BODY'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "6feb57c2-6b46-19d9-5afd-1128bd0ed0b3",
+         "name": "p65x-lc-default-object-body s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "71a7b49b-3d08-95c2-6942-6a04be0d3abd",
+           "name": "p65x-lc-default-object-body s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ],
+       "status": "INACTIVE"
+      }
+     ],
+     "requests": [
+      {
+       "name": "w1-probe",
+       "type": "PARITY_SUITE_P65X_LC_DEFAULT_OBJECT_BODY",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "w2",
+     "op": "change-set-status",
+     "args": {
+      "id": "1cc87418-9a91-9a71-c272-fb0e8db0721a",
+      "transition": "activate"
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:w2-probe"
+     ],
+     "onRefusal": "continue",
+     "body": {},
+     "requests": [
+      {
+       "name": "w2-probe",
+       "type": "PARITY_SUITE_P65X_LC_DEFAULT_OBJECT_BODY",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "w2-export",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-lc-default-object-body",
+      "PARITY_SUITE_P65X_LC_DEFAULT_OBJECT_BODY"
+     ]
+    },
+    {
+     "name": "w3",
+     "op": "change-set-status",
+     "args": {
+      "id": "1cc87418-9a91-9a71-c272-fb0e8db0721a",
+      "transition": "deactivate"
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:w3-probe"
+     ],
+     "onRefusal": "continue",
+     "body": {},
+     "requests": [
+      {
+       "name": "w3-probe",
+       "type": "PARITY_SUITE_P65X_LC_DEFAULT_OBJECT_BODY",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w3-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w3-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "w3-export",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-lc-default-object-body",
+      "PARITY_SUITE_P65X_LC_DEFAULT_OBJECT_BODY"
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "delete-set",
+     "args": {
+      "id": "1cc87418-9a91-9a71-c272-fb0e8db0721a"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "after",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-lc-default-object-body",
+      "PARITY_SUITE_P65X_LC_DEFAULT_OBJECT_BODY"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p65x-lc-mt-b-no-body",
+   "about": "A set uploaded INACTIVE, then activated and deactivated with no body, as rounds 48 to 55 sent, in parity-mt-b, the second tenant the stand provisioned, under an externalId of its own. Each transition records its status and error class, the decision on the set's type after it and the export read back; the set is deleted last. Beside the same transition in the other tenants and with the other bodies, it tells whether the 500 of rounds 48 to 55 belongs to the tenant or to the body.",
+   "resourceType": "PARITY_SUITE_P65X_LC_MT_B_NO_BODY",
+   "tenant": "parity-mt-b",
+   "steps": [
+    {
+     "name": "before",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-lc-mt-b-no-body",
+      "PARITY_SUITE_P65X_LC_MT_B_NO_BODY"
+     ]
+    },
+    {
+     "name": "w1",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p65x-lc-mt-b-no-body"
+     },
+     "observe": [
+      "status",
+      "decide:w1-probe"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "64906728-86e8-253e-93ae-ebc0cccd35e8",
+       "name": "p65x-lc-mt-b-no-body s",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P65X_LC_MT_B_NO_BODY'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "22747063-53d8-46a4-1337-d90413ba0efb",
+         "name": "p65x-lc-mt-b-no-body s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "028cbe75-f6d4-9bd3-df41-0893ca3dbc1e",
+           "name": "p65x-lc-mt-b-no-body s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ],
+       "status": "INACTIVE"
+      }
+     ],
+     "requests": [
+      {
+       "name": "w1-probe",
+       "type": "PARITY_SUITE_P65X_LC_MT_B_NO_BODY",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "w2",
+     "op": "change-set-status",
+     "args": {
+      "id": "64906728-86e8-253e-93ae-ebc0cccd35e8",
+      "transition": "activate"
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:w2-probe"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "name": "w2-probe",
+       "type": "PARITY_SUITE_P65X_LC_MT_B_NO_BODY",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "w2-export",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-lc-mt-b-no-body",
+      "PARITY_SUITE_P65X_LC_MT_B_NO_BODY"
+     ]
+    },
+    {
+     "name": "w3",
+     "op": "change-set-status",
+     "args": {
+      "id": "64906728-86e8-253e-93ae-ebc0cccd35e8",
+      "transition": "deactivate"
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:w3-probe"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "name": "w3-probe",
+       "type": "PARITY_SUITE_P65X_LC_MT_B_NO_BODY",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w3-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w3-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "w3-export",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-lc-mt-b-no-body",
+      "PARITY_SUITE_P65X_LC_MT_B_NO_BODY"
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "delete-set",
+     "args": {
+      "id": "64906728-86e8-253e-93ae-ebc0cccd35e8"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "after",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-lc-mt-b-no-body",
+      "PARITY_SUITE_P65X_LC_MT_B_NO_BODY"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p65x-lc-mt-b-null-body",
+   "about": "A set uploaded INACTIVE, then activated and deactivated with the body null, in parity-mt-b, the second tenant the stand provisioned, under an externalId of its own. Each transition records its status and error class, the decision on the set's type after it and the export read back; the set is deleted last. Beside the same transition in the other tenants and with the other bodies, it tells whether the 500 of rounds 48 to 55 belongs to the tenant or to the body.",
+   "resourceType": "PARITY_SUITE_P65X_LC_MT_B_NULL_BODY",
+   "tenant": "parity-mt-b",
+   "steps": [
+    {
+     "name": "before",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-lc-mt-b-null-body",
+      "PARITY_SUITE_P65X_LC_MT_B_NULL_BODY"
+     ]
+    },
+    {
+     "name": "w1",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p65x-lc-mt-b-null-body"
+     },
+     "observe": [
+      "status",
+      "decide:w1-probe"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "3f67b2a0-38d2-ed2f-54d8-16fc665edb47",
+       "name": "p65x-lc-mt-b-null-body s",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P65X_LC_MT_B_NULL_BODY'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "b612883a-d3bd-d013-bb9d-33b91ec1d141",
+         "name": "p65x-lc-mt-b-null-body s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "2d79b2be-3360-1bb4-2c92-428862ce14ff",
+           "name": "p65x-lc-mt-b-null-body s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ],
+       "status": "INACTIVE"
+      }
+     ],
+     "requests": [
+      {
+       "name": "w1-probe",
+       "type": "PARITY_SUITE_P65X_LC_MT_B_NULL_BODY",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "w2",
+     "op": "change-set-status",
+     "args": {
+      "id": "3f67b2a0-38d2-ed2f-54d8-16fc665edb47",
+      "transition": "activate"
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:w2-probe"
+     ],
+     "onRefusal": "continue",
+     "body": null,
+     "requests": [
+      {
+       "name": "w2-probe",
+       "type": "PARITY_SUITE_P65X_LC_MT_B_NULL_BODY",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "w2-export",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-lc-mt-b-null-body",
+      "PARITY_SUITE_P65X_LC_MT_B_NULL_BODY"
+     ]
+    },
+    {
+     "name": "w3",
+     "op": "change-set-status",
+     "args": {
+      "id": "3f67b2a0-38d2-ed2f-54d8-16fc665edb47",
+      "transition": "deactivate"
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:w3-probe"
+     ],
+     "onRefusal": "continue",
+     "body": null,
+     "requests": [
+      {
+       "name": "w3-probe",
+       "type": "PARITY_SUITE_P65X_LC_MT_B_NULL_BODY",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w3-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w3-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "w3-export",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-lc-mt-b-null-body",
+      "PARITY_SUITE_P65X_LC_MT_B_NULL_BODY"
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "delete-set",
+     "args": {
+      "id": "3f67b2a0-38d2-ed2f-54d8-16fc665edb47"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "after",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-lc-mt-b-null-body",
+      "PARITY_SUITE_P65X_LC_MT_B_NULL_BODY"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p65x-lc-mt-b-object-body",
+   "about": "A set uploaded INACTIVE, then activated and deactivated with the body {}, in parity-mt-b, the second tenant the stand provisioned, under an externalId of its own. Each transition records its status and error class, the decision on the set's type after it and the export read back; the set is deleted last. Beside the same transition in the other tenants and with the other bodies, it tells whether the 500 of rounds 48 to 55 belongs to the tenant or to the body.",
+   "resourceType": "PARITY_SUITE_P65X_LC_MT_B_OBJECT_BODY",
+   "tenant": "parity-mt-b",
+   "steps": [
+    {
+     "name": "before",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-lc-mt-b-object-body",
+      "PARITY_SUITE_P65X_LC_MT_B_OBJECT_BODY"
+     ]
+    },
+    {
+     "name": "w1",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p65x-lc-mt-b-object-body"
+     },
+     "observe": [
+      "status",
+      "decide:w1-probe"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "7bb75f2d-5e88-82ab-4370-76c1c7919152",
+       "name": "p65x-lc-mt-b-object-body s",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P65X_LC_MT_B_OBJECT_BODY'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "69aa48ba-f38d-819d-4a2b-b8e9ff0854a2",
+         "name": "p65x-lc-mt-b-object-body s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "eab1263d-f3b7-a45d-29a9-e4049dbbe7db",
+           "name": "p65x-lc-mt-b-object-body s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ],
+       "status": "INACTIVE"
+      }
+     ],
+     "requests": [
+      {
+       "name": "w1-probe",
+       "type": "PARITY_SUITE_P65X_LC_MT_B_OBJECT_BODY",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "w2",
+     "op": "change-set-status",
+     "args": {
+      "id": "7bb75f2d-5e88-82ab-4370-76c1c7919152",
+      "transition": "activate"
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:w2-probe"
+     ],
+     "onRefusal": "continue",
+     "body": {},
+     "requests": [
+      {
+       "name": "w2-probe",
+       "type": "PARITY_SUITE_P65X_LC_MT_B_OBJECT_BODY",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "w2-export",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-lc-mt-b-object-body",
+      "PARITY_SUITE_P65X_LC_MT_B_OBJECT_BODY"
+     ]
+    },
+    {
+     "name": "w3",
+     "op": "change-set-status",
+     "args": {
+      "id": "7bb75f2d-5e88-82ab-4370-76c1c7919152",
+      "transition": "deactivate"
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:w3-probe"
+     ],
+     "onRefusal": "continue",
+     "body": {},
+     "requests": [
+      {
+       "name": "w3-probe",
+       "type": "PARITY_SUITE_P65X_LC_MT_B_OBJECT_BODY",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w3-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w3-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "w3-export",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-lc-mt-b-object-body",
+      "PARITY_SUITE_P65X_LC_MT_B_OBJECT_BODY"
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "delete-set",
+     "args": {
+      "id": "7bb75f2d-5e88-82ab-4370-76c1c7919152"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "after",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-lc-mt-b-object-body",
+      "PARITY_SUITE_P65X_LC_MT_B_OBJECT_BODY"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p65x-lc-fresh-no-body",
+   "about": "A set uploaded INACTIVE, then activated and deactivated with no body, as rounds 48 to 55 sent, in a tenant nobody provisioned, as every transition of rounds 48 to 55. Each transition records its status and error class, the decision on the set's type after it and the export read back; the set is deleted last. Beside the same transition in the other tenants and with the other bodies, it tells whether the 500 of rounds 48 to 55 belongs to the tenant or to the body.",
+   "resourceType": "PARITY_SUITE_P65X_LC_FRESH_NO_BODY",
+   "tenant": "parity-p65x-lc-fresh-no-body",
+   "steps": [
+    {
+     "name": "before",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-lc-fresh-no-body",
+      "PARITY_SUITE_P65X_LC_FRESH_NO_BODY"
+     ]
+    },
+    {
+     "name": "w1",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p65x-lc-fresh-no-body"
+     },
+     "observe": [
+      "status",
+      "decide:w1-probe"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "f92a7122-3efc-3711-afe0-c4489c4eb82b",
+       "name": "p65x-lc-fresh-no-body s",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P65X_LC_FRESH_NO_BODY'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "ac06b89b-935a-567d-8981-ed40eedae875",
+         "name": "p65x-lc-fresh-no-body s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "f7c85b2a-67d8-e193-1779-e710f61bac01",
+           "name": "p65x-lc-fresh-no-body s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ],
+       "status": "INACTIVE"
+      }
+     ],
+     "requests": [
+      {
+       "name": "w1-probe",
+       "type": "PARITY_SUITE_P65X_LC_FRESH_NO_BODY",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "w2",
+     "op": "change-set-status",
+     "args": {
+      "id": "f92a7122-3efc-3711-afe0-c4489c4eb82b",
+      "transition": "activate"
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:w2-probe"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "name": "w2-probe",
+       "type": "PARITY_SUITE_P65X_LC_FRESH_NO_BODY",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "w2-export",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-lc-fresh-no-body",
+      "PARITY_SUITE_P65X_LC_FRESH_NO_BODY"
+     ]
+    },
+    {
+     "name": "w3",
+     "op": "change-set-status",
+     "args": {
+      "id": "f92a7122-3efc-3711-afe0-c4489c4eb82b",
+      "transition": "deactivate"
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "read-raw:read-config-sets",
+      "decide:w3-probe"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "name": "w3-probe",
+       "type": "PARITY_SUITE_P65X_LC_FRESH_NO_BODY",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w3-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "w3-export",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-lc-fresh-no-body",
+      "PARITY_SUITE_P65X_LC_FRESH_NO_BODY"
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "delete-set",
+     "args": {
+      "id": "f92a7122-3efc-3711-afe0-c4489c4eb82b"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "after",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-lc-fresh-no-body",
+      "PARITY_SUITE_P65X_LC_FRESH_NO_BODY"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p65x-lc-fresh-null-body",
+   "about": "A set uploaded INACTIVE, then activated and deactivated with the body null, in a tenant nobody provisioned, as every transition of rounds 48 to 55. Each transition records its status and error class, the decision on the set's type after it and the export read back; the set is deleted last. Beside the same transition in the other tenants and with the other bodies, it tells whether the 500 of rounds 48 to 55 belongs to the tenant or to the body.",
+   "resourceType": "PARITY_SUITE_P65X_LC_FRESH_NULL_BODY",
+   "tenant": "parity-p65x-lc-fresh-null-body",
+   "steps": [
+    {
+     "name": "before",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-lc-fresh-null-body",
+      "PARITY_SUITE_P65X_LC_FRESH_NULL_BODY"
+     ]
+    },
+    {
+     "name": "w1",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p65x-lc-fresh-null-body"
+     },
+     "observe": [
+      "status",
+      "decide:w1-probe"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "4be1cd34-c44e-84f7-b9bb-be3e153dc66f",
+       "name": "p65x-lc-fresh-null-body s",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P65X_LC_FRESH_NULL_BODY'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "8e7334d0-f395-2a41-cfb1-a0a0fdc2df47",
+         "name": "p65x-lc-fresh-null-body s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "1715139e-b593-c742-5e12-064970f9ad95",
+           "name": "p65x-lc-fresh-null-body s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ],
+       "status": "INACTIVE"
+      }
+     ],
+     "requests": [
+      {
+       "name": "w1-probe",
+       "type": "PARITY_SUITE_P65X_LC_FRESH_NULL_BODY",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "w2",
+     "op": "change-set-status",
+     "args": {
+      "id": "4be1cd34-c44e-84f7-b9bb-be3e153dc66f",
+      "transition": "activate"
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:w2-probe"
+     ],
+     "onRefusal": "continue",
+     "body": null,
+     "requests": [
+      {
+       "name": "w2-probe",
+       "type": "PARITY_SUITE_P65X_LC_FRESH_NULL_BODY",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "w2-export",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-lc-fresh-null-body",
+      "PARITY_SUITE_P65X_LC_FRESH_NULL_BODY"
+     ]
+    },
+    {
+     "name": "w3",
+     "op": "change-set-status",
+     "args": {
+      "id": "4be1cd34-c44e-84f7-b9bb-be3e153dc66f",
+      "transition": "deactivate"
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "read-raw:read-config-sets",
+      "decide:w3-probe"
+     ],
+     "onRefusal": "continue",
+     "body": null,
+     "requests": [
+      {
+       "name": "w3-probe",
+       "type": "PARITY_SUITE_P65X_LC_FRESH_NULL_BODY",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w3-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "w3-export",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-lc-fresh-null-body",
+      "PARITY_SUITE_P65X_LC_FRESH_NULL_BODY"
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "delete-set",
+     "args": {
+      "id": "4be1cd34-c44e-84f7-b9bb-be3e153dc66f"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "after",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-lc-fresh-null-body",
+      "PARITY_SUITE_P65X_LC_FRESH_NULL_BODY"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p65x-lc-fresh-object-body",
+   "about": "A set uploaded INACTIVE, then activated and deactivated with the body {}, in a tenant nobody provisioned, as every transition of rounds 48 to 55. Each transition records its status and error class, the decision on the set's type after it and the export read back; the set is deleted last. Beside the same transition in the other tenants and with the other bodies, it tells whether the 500 of rounds 48 to 55 belongs to the tenant or to the body.",
+   "resourceType": "PARITY_SUITE_P65X_LC_FRESH_OBJECT_BODY",
+   "tenant": "parity-p65x-lc-fresh-object-body",
+   "steps": [
+    {
+     "name": "before",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-lc-fresh-object-body",
+      "PARITY_SUITE_P65X_LC_FRESH_OBJECT_BODY"
+     ]
+    },
+    {
+     "name": "w1",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p65x-lc-fresh-object-body"
+     },
+     "observe": [
+      "status",
+      "decide:w1-probe"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "197b1bd5-6158-05f0-6c3f-16ad3fda7a22",
+       "name": "p65x-lc-fresh-object-body s",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P65X_LC_FRESH_OBJECT_BODY'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "1a81ccac-483e-47ae-897a-dd24bbd97b34",
+         "name": "p65x-lc-fresh-object-body s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "3de23e64-4498-218b-c7d9-efe903f57ff6",
+           "name": "p65x-lc-fresh-object-body s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ],
+       "status": "INACTIVE"
+      }
+     ],
+     "requests": [
+      {
+       "name": "w1-probe",
+       "type": "PARITY_SUITE_P65X_LC_FRESH_OBJECT_BODY",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "w2",
+     "op": "change-set-status",
+     "args": {
+      "id": "197b1bd5-6158-05f0-6c3f-16ad3fda7a22",
+      "transition": "activate"
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:w2-probe"
+     ],
+     "onRefusal": "continue",
+     "body": {},
+     "requests": [
+      {
+       "name": "w2-probe",
+       "type": "PARITY_SUITE_P65X_LC_FRESH_OBJECT_BODY",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "w2-export",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-lc-fresh-object-body",
+      "PARITY_SUITE_P65X_LC_FRESH_OBJECT_BODY"
+     ]
+    },
+    {
+     "name": "w3",
+     "op": "change-set-status",
+     "args": {
+      "id": "197b1bd5-6158-05f0-6c3f-16ad3fda7a22",
+      "transition": "deactivate"
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "read-raw:read-config-sets",
+      "decide:w3-probe"
+     ],
+     "onRefusal": "continue",
+     "body": {},
+     "requests": [
+      {
+       "name": "w3-probe",
+       "type": "PARITY_SUITE_P65X_LC_FRESH_OBJECT_BODY",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w3-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "w3-export",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-lc-fresh-object-body",
+      "PARITY_SUITE_P65X_LC_FRESH_OBJECT_BODY"
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "delete-set",
+     "args": {
+      "id": "197b1bd5-6158-05f0-6c3f-16ad3fda7a22"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "after",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-lc-fresh-object-body",
+      "PARITY_SUITE_P65X_LC_FRESH_OBJECT_BODY"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p65x-lifecycle-tenants-control-last",
+   "about": "Control: an ACTIVE set uploaded in a tenant of its own, decided and read back.",
+   "resourceType": "PARITY_SUITE_P65X_LIFECYCLE_TENANTS_CONTROL_LAST",
+   "tenant": "parity-p65x-lifecycle-tenants-control-last",
+   "steps": [
+    {
+     "name": "w1",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p65x-lifecycle-tenants-control-last"
+     },
+     "observe": [
+      "status",
+      "decide:w1-read"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "e4f2cae4-d477-07bd-9d4c-53a112f6fe35",
+       "name": "p65x-lifecycle-tenants-control-last s",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P65X_LIFECYCLE_TENANTS_CONTROL_LAST'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "516d19ed-ab50-48b2-4221-988b0be37049",
+         "name": "p65x-lifecycle-tenants-control-last s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "70038281-f469-3855-2b6a-1457047d3989",
+           "name": "p65x-lifecycle-tenants-control-last s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ],
+       "status": "ACTIVE"
+      }
+     ],
+     "requests": [
+      {
+       "name": "w1-read",
+       "type": "PARITY_SUITE_P65X_LIFECYCLE_TENANTS_CONTROL_LAST",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "after",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-lifecycle-tenants-control-last",
+      "PARITY_SUITE_P65X_LIFECYCLE_TENANTS_CONTROL_LAST"
+     ]
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,299 @@
+{
+ "about": "Round 65 (should): PAP sequences on which the specification and two second models, written apart from it, answer differently: each case is the shortest sequence with the smallest bodies found that keeps one such difference, in a tenant of its own. A replay of a case round 45 answered comes first and last.",
+ "standVersion": true,
+ "cases": [
+  {
+   "id": "p65s-control-d2-should-first",
+   "about": "control: replays p45-own-domain of round 45, whose answers are recorded",
+   "resourceType": "PARITY_SUITE_R45_P45_OWN_DOMAIN",
+   "steps": [
+    {
+     "name": "declare-the-domain",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_P45_OWN_DOMAIN"
+     },
+     "body": [
+      {
+       "name": "subject.parityP45OwnDomain",
+       "pipType": "TOKEN",
+       "type": "UUID",
+       "claim": "parityP45OwnDomain",
+       "cacheable": false
+      }
+     ],
+     "observe": [
+      "status",
+      "error-class",
+      "read:read-domain-pips"
+     ]
+    },
+    {
+     "name": "write-the-policy",
+     "op": "write-domain-policies",
+     "args": {
+      "domain": "PARITY_P45_OWN_DOMAIN"
+     },
+     "body": [
+      {
+       "component": "PARITY",
+       "reason": "p45-own-domain",
+       "resourceType": "PARITY_SUITE_R45_P45_OWN_DOMAIN",
+       "operation": "READ",
+       "roles": [
+        "ROLE_PARITY_READER"
+       ],
+       "applicableForFrontend": false,
+       "id": "6a18aa53-fd84-2af8-f97f-d26d42233983"
+      }
+     ],
+     "observe": [
+      "status",
+      "error-class",
+      "decide:here"
+     ],
+     "requests": [
+      {
+       "name": "here"
+      }
+     ]
+    },
+    {
+     "name": "empty-the-policies",
+     "op": "write-domain-policies",
+     "args": {
+      "domain": "PARITY_P45_OWN_DOMAIN"
+     },
+     "body": [],
+     "observe": [
+      "status",
+      "decide:after-emptying"
+     ],
+     "requests": [
+      {
+       "name": "after-emptying"
+      }
+     ]
+    },
+    {
+     "name": "empty-the-domain",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_P45_OWN_DOMAIN"
+     },
+     "body": [],
+     "observe": [
+      "status",
+      "read:read-domain-pips"
+     ]
+    },
+    {
+     "name": "export-after",
+     "op": "read-config-pips",
+     "markers": [
+      "PARITY_P45_OWN_DOMAIN"
+     ]
+    }
+   ]
+  },
+  {
+   "about": "the read of import-pips after import-pips, import-pips, read-config-pips, write-domain-policies, write-domain-pips, write-domain-policies: the specification and the second models answer apart (java | kotlin | spec); shrunk from p0-meta-perm-import-pips-a",
+   "id": "d2p65-37914d8d47",
+   "resourceType": "PARITY_SUITE_P0_META_175",
+   "steps": [
+    {
+     "args": {},
+     "body": [
+      {
+       "header": "x-parity-p0-meta-175-a",
+       "name": "subject.parityP0Meta175A",
+       "pipType": "HEADER"
+      }
+     ],
+     "name": "w1",
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "op": "import-pips"
+    },
+    {
+     "args": {},
+     "body": [
+      {
+       "domain": "PARITY_P0_META_176",
+       "header": "x-parity-p0-meta-176-a",
+       "name": "subject.parityP0Meta176A",
+       "pipType": "HEADER",
+       "type": "REGULAR"
+      }
+     ],
+     "name": "w2",
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "op": "import-pips"
+    },
+    {
+     "args": {},
+     "markers": [
+      "PARITY_P0_META_175",
+      "parity_p0_meta_175_"
+     ],
+     "name": "p-r0",
+     "observe": [
+      "read:read-config-pips"
+     ],
+     "op": "read-config-pips"
+    }
+   ],
+   "tenant": "parity-d2p65-37914d8d47"
+  },
+  {
+   "about": "the read of write-domain-pips after write-domain-pips, read-config-pips, write-domain-policies, write-domain-pips, write-domain-policies: the specification and the second models answer apart (java | kotlin | spec); shrunk from p0-meta-exp-write-domain-pips-rec2",
+   "id": "d2p65-8ab6713812",
+   "resourceType": "PARITY_SUITE_P0_META_041",
+   "steps": [
+    {
+     "args": {
+      "domain": "PARITY_P0_META_041"
+     },
+     "body": [
+      {
+       "claim": "department",
+       "name": "subject.parityP0Meta041RP49Meta285RConfigExportToken",
+       "pipType": "TOKEN"
+      },
+      {
+       "name": "subject.permissions.PARITY_CONFIG_EXPORT",
+       "pipType": "MAPPING"
+      },
+      {
+       "header": "x-parity-config-export",
+       "name": "subject.parityP0Meta041RP49Meta285RConfigExportHeader",
+       "pipType": "HEADER"
+      },
+      {
+       "name": "subject.parityP0Meta041RP49Meta285RConfigExportGeneral",
+       "url": "http://pip-mock:8090/api/v1/pip/config-export"
+      }
+     ],
+     "name": "w1",
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "op": "write-domain-pips"
+    },
+    {
+     "args": {},
+     "markers": [
+      "PARITY_P0_META_041",
+      "parity_p0_meta_041_"
+     ],
+     "name": "p1-r0",
+     "observe": [
+      "read:read-config-pips"
+     ],
+     "op": "read-config-pips"
+    }
+   ],
+   "tenant": "parity-d2p65-8ab6713812"
+  },
+  {
+   "id": "p65s-control-d2-should-last",
+   "about": "control: replays p45-own-domain of round 45, whose answers are recorded",
+   "resourceType": "PARITY_SUITE_R45_P45_OWN_DOMAIN",
+   "steps": [
+    {
+     "name": "declare-the-domain",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_P45_OWN_DOMAIN"
+     },
+     "body": [
+      {
+       "name": "subject.parityP45OwnDomain",
+       "pipType": "TOKEN",
+       "type": "UUID",
+       "claim": "parityP45OwnDomain",
+       "cacheable": false
+      }
+     ],
+     "observe": [
+      "status",
+      "error-class",
+      "read:read-domain-pips"
+     ]
+    },
+    {
+     "name": "write-the-policy",
+     "op": "write-domain-policies",
+     "args": {
+      "domain": "PARITY_P45_OWN_DOMAIN"
+     },
+     "body": [
+      {
+       "component": "PARITY",
+       "reason": "p45-own-domain",
+       "resourceType": "PARITY_SUITE_R45_P45_OWN_DOMAIN",
+       "operation": "READ",
+       "roles": [
+        "ROLE_PARITY_READER"
+       ],
+       "applicableForFrontend": false,
+       "id": "6a18aa53-fd84-2af8-f97f-d26d42233983"
+      }
+     ],
+     "observe": [
+      "status",
+      "error-class",
+      "decide:here"
+     ],
+     "requests": [
+      {
+       "name": "here"
+      }
+     ]
+    },
+    {
+     "name": "empty-the-policies",
+     "op": "write-domain-policies",
+     "args": {
+      "domain": "PARITY_P45_OWN_DOMAIN"
+     },
+     "body": [],
+     "observe": [
+      "status",
+      "decide:after-emptying"
+     ],
+     "requests": [
+      {
+       "name": "after-emptying"
+      }
+     ]
+    },
+    {
+     "name": "empty-the-domain",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_P45_OWN_DOMAIN"
+     },
+     "body": [],
+     "observe": [
+      "status",
+      "read:read-domain-pips"
+     ]
+    },
+    {
+     "name": "export-after",
+     "op": "read-config-pips",
+     "markers": [
+      "PARITY_P45_OWN_DOMAIN"
+     ]
+    }
+   ]
+  }
+ ]
+}

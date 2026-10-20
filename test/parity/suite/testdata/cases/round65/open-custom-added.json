@@ -1,0 +1,555 @@
+{
+ "about": "Round 65: entities a customization adds that an upload no longer can send as they are: a rule without a condition, a nested set without its algorithm, rules placed in a set. Each case runs in a tenant of its own.",
+ "standVersion": true,
+ "cases": [
+  {
+   "id": "p65x-custom-added-control-first",
+   "about": "Control: an ACTIVE set uploaded in a tenant of its own, decided and read back.",
+   "resourceType": "PARITY_SUITE_P65X_CUSTOM_ADDED_CONTROL_FIRST",
+   "tenant": "parity-p65x-custom-added-control-first",
+   "steps": [
+    {
+     "name": "w1",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p65x-custom-added-control-first"
+     },
+     "observe": [
+      "status",
+      "decide:w1-read"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "25c5411a-6d70-08f6-4ed6-130498ed95f3",
+       "name": "p65x-custom-added-control-first s",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P65X_CUSTOM_ADDED_CONTROL_FIRST'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "9650f01e-84de-15e4-d200-6e6721a62345",
+         "name": "p65x-custom-added-control-first s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "4a4417a7-f897-d64c-59aa-c9edbb98868b",
+           "name": "p65x-custom-added-control-first s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ],
+       "status": "ACTIVE"
+      }
+     ],
+     "requests": [
+      {
+       "name": "w1-read",
+       "type": "PARITY_SUITE_P65X_CUSTOM_ADDED_CONTROL_FIRST",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "after",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-custom-added-control-first",
+      "PARITY_SUITE_P65X_CUSTOM_ADDED_CONTROL_FIRST"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p65c-added-rule-without-condition",
+   "about": "A CUSTOMER customization adds a rule without a condition, for UPDATE, to a set's policy.",
+   "resourceType": "PARITY_SUITE_P65C_ADDED_RULE_WITHOUT_CONDITION",
+   "tenant": "parity-p65c-added-rule-without-condition",
+   "steps": [
+    {
+     "name": "w1",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p65c-added-rule-without-condition"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "8b9f231f-c048-f8ea-12cd-90f106224b63",
+       "name": "p65c-added-rule-without-condition s",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P65C_ADDED_RULE_WITHOUT_CONDITION'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "fc4ff235-fc93-3d32-a577-47f73e36a3b8",
+         "name": "p65c-added-rule-without-condition s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "048e7eb2-c461-eb1c-de8f-5fa3c8b1da2e",
+           "name": "p65c-added-rule-without-condition s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ],
+       "status": "ACTIVE"
+      }
+     ]
+    },
+    {
+     "name": "w2",
+     "op": "customize-sets",
+     "args": {
+      "level": "CUSTOMER"
+     },
+     "observe": [
+      "status",
+      "decide:w2-read",
+      "decide:w2-update"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "8b9f231f-c048-f8ea-12cd-90f106224b63",
+       "policies": [
+        {
+         "policyId": "fc4ff235-fc93-3d32-a577-47f73e36a3b8",
+         "rules": [
+          {
+           "ruleId": "71c8eb61-69a2-74fd-2806-01cf9bd321e2",
+           "name": "p65c-added-rule-without-condition added rule",
+           "effect": "ALLOW",
+           "target": "operation == 'UPDATE'"
+          }
+         ]
+        }
+       ]
+      }
+     ],
+     "requests": [
+      {
+       "name": "w2-read",
+       "type": "PARITY_SUITE_P65C_ADDED_RULE_WITHOUT_CONDITION",
+       "operation": "READ"
+      },
+      {
+       "name": "w2-update",
+       "type": "PARITY_SUITE_P65C_ADDED_RULE_WITHOUT_CONDITION",
+       "operation": "UPDATE"
+      }
+     ]
+    },
+    {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "delete-set-customization",
+     "args": {
+      "id": "8b9f231f-c048-f8ea-12cd-90f106224b63",
+      "level": "CUSTOMER",
+      "recursive": "true"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    }
+   ]
+  },
+  {
+   "id": "p65c-added-nested-without-algorithm",
+   "about": "A CUSTOMER customization adds to a set two nested sets without combiningAlgorithm: for UPDATE the first policy allows and the second denies, for DELETE the first denies and the second allows.",
+   "resourceType": "PARITY_SUITE_P65C_ADDED_NESTED_WITHOUT_ALGORITHM",
+   "tenant": "parity-p65c-added-nested-without-algorithm",
+   "steps": [
+    {
+     "name": "w1",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p65c-added-nested-without-algorithm"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "d88a27fc-b03b-a6af-6f93-199e625af82c",
+       "name": "p65c-added-nested-without-algorithm s",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P65C_ADDED_NESTED_WITHOUT_ALGORITHM'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "f680f8b2-ea38-e4b0-12a9-f75d7b3057e5",
+         "name": "p65c-added-nested-without-algorithm s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "7069186e-e222-817e-f9d2-abb4fee95b61",
+           "name": "p65c-added-nested-without-algorithm s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ],
+       "status": "ACTIVE"
+      }
+     ]
+    },
+    {
+     "name": "w2",
+     "op": "customize-sets",
+     "args": {
+      "level": "CUSTOMER"
+     },
+     "observe": [
+      "status",
+      "decide:w2-read",
+      "decide:w2-update",
+      "decide:w2-delete"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "d88a27fc-b03b-a6af-6f93-199e625af82c",
+       "policySets": [
+        {
+         "policySetId": "ac31c54f-cb1e-6509-5cce-755534ac15e2",
+         "name": "p65c-added-nested-without-algorithm n",
+         "target": "resourceType == 'PARITY_SUITE_P65C_ADDED_NESTED_WITHOUT_ALGORITHM'",
+         "policySets": [],
+         "policies": [
+          {
+           "policyId": "d5456a31-f267-2efe-b2e6-0dfc2c8858ff",
+           "name": "p65c-added-nested-without-algorithm n reader",
+           "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+           "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+           "rules": [
+            {
+             "ruleId": "4daae445-cb56-5c66-5954-d97cdff33bdd",
+             "name": "p65c-added-nested-without-algorithm n rule",
+             "target": "operation == 'UPDATE'",
+             "condition": "true",
+             "effect": "ALLOW"
+            }
+           ]
+          },
+          {
+           "policyId": "01057f95-3613-23a4-334c-e3e826f1618b",
+           "name": "p65c-added-nested-without-algorithm n second",
+           "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+           "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+           "rules": [
+            {
+             "ruleId": "9ee83f0b-ddcc-c2f2-6930-6bf9b891a8d3",
+             "name": "p65c-added-nested-without-algorithm n second rule",
+             "target": "operation == 'UPDATE'",
+             "condition": "true",
+             "effect": "DENY"
+            }
+           ]
+          }
+         ],
+         "status": "ACTIVE"
+        },
+        {
+         "policySetId": "d5d326b7-b3b7-168f-e411-70d29b972f11",
+         "name": "p65c-added-nested-without-algorithm m",
+         "target": "resourceType == 'PARITY_SUITE_P65C_ADDED_NESTED_WITHOUT_ALGORITHM'",
+         "policySets": [],
+         "policies": [
+          {
+           "policyId": "c570cc39-a5f7-cc34-b45b-3fd9816f374a",
+           "name": "p65c-added-nested-without-algorithm m reader",
+           "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+           "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+           "rules": [
+            {
+             "ruleId": "a2ab7599-f33c-0eff-ea3e-fbc82f97a7ce",
+             "name": "p65c-added-nested-without-algorithm m rule",
+             "target": "operation == 'DELETE'",
+             "condition": "true",
+             "effect": "DENY"
+            }
+           ]
+          },
+          {
+           "policyId": "c3d30a11-37ac-dc38-a25c-afec83848603",
+           "name": "p65c-added-nested-without-algorithm m second",
+           "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+           "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+           "rules": [
+            {
+             "ruleId": "89bb10f2-5e12-d663-4c6d-372768716e2b",
+             "name": "p65c-added-nested-without-algorithm m second rule",
+             "target": "operation == 'DELETE'",
+             "condition": "true",
+             "effect": "ALLOW"
+            }
+           ]
+          }
+         ],
+         "status": "ACTIVE"
+        }
+       ]
+      }
+     ],
+     "requests": [
+      {
+       "name": "w2-read",
+       "type": "PARITY_SUITE_P65C_ADDED_NESTED_WITHOUT_ALGORITHM",
+       "operation": "READ"
+      },
+      {
+       "name": "w2-update",
+       "type": "PARITY_SUITE_P65C_ADDED_NESTED_WITHOUT_ALGORITHM",
+       "operation": "UPDATE"
+      },
+      {
+       "name": "w2-delete",
+       "type": "PARITY_SUITE_P65C_ADDED_NESTED_WITHOUT_ALGORITHM",
+       "operation": "DELETE"
+      }
+     ]
+    },
+    {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "delete-set-customization",
+     "args": {
+      "id": "d88a27fc-b03b-a6af-6f93-199e625af82c",
+      "level": "CUSTOMER",
+      "recursive": "true"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    }
+   ]
+  },
+  {
+   "id": "p65c-added-rules-in-a-set",
+   "about": "A CUSTOMER customization adds a set of a new id whose rules stand in the set itself, without a policy, one allowing UPDATE.",
+   "resourceType": "PARITY_SUITE_P65C_ADDED_RULES_IN_A_SET",
+   "tenant": "parity-p65c-added-rules-in-a-set",
+   "steps": [
+    {
+     "name": "w1",
+     "op": "customize-sets",
+     "args": {
+      "level": "CUSTOMER"
+     },
+     "observe": [
+      "status",
+      "decide:w1-update"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "c9a95abc-2a01-2074-033d-a3b3db4aa02c",
+       "name": "p65c-added-rules-in-a-set added",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "status": "ACTIVE",
+       "target": "resourceType == 'PARITY_SUITE_P65C_ADDED_RULES_IN_A_SET'",
+       "policies": [],
+       "policySets": [],
+       "rules": [
+        {
+         "ruleId": "70a2a6f1-1d3f-90a7-8775-d5152fe7caa1",
+         "name": "p65c-added-rules-in-a-set added rule",
+         "effect": "ALLOW",
+         "target": "operation == 'UPDATE'",
+         "condition": "true"
+        }
+       ]
+      }
+     ],
+     "requests": [
+      {
+       "name": "w1-update",
+       "type": "PARITY_SUITE_P65C_ADDED_RULES_IN_A_SET",
+       "operation": "UPDATE"
+      }
+     ]
+    },
+    {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "delete-set-customization",
+     "args": {
+      "id": "c9a95abc-2a01-2074-033d-a3b3db4aa02c",
+      "level": "CUSTOMER",
+      "recursive": "true"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    }
+   ]
+  },
+  {
+   "id": "p65x-custom-added-control-last",
+   "about": "Control: an ACTIVE set uploaded in a tenant of its own, decided and read back.",
+   "resourceType": "PARITY_SUITE_P65X_CUSTOM_ADDED_CONTROL_LAST",
+   "tenant": "parity-p65x-custom-added-control-last",
+   "steps": [
+    {
+     "name": "w1",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p65x-custom-added-control-last"
+     },
+     "observe": [
+      "status",
+      "decide:w1-read"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "05e596da-a667-6481-5620-a21e8b055455",
+       "name": "p65x-custom-added-control-last s",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P65X_CUSTOM_ADDED_CONTROL_LAST'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "07249e6c-72b0-5d38-cbec-8b00b606f0d6",
+         "name": "p65x-custom-added-control-last s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "aa50faca-1bca-9859-df18-b7b870430d6b",
+           "name": "p65x-custom-added-control-last s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ],
+       "status": "ACTIVE"
+      }
+     ],
+     "requests": [
+      {
+       "name": "w1-read",
+       "type": "PARITY_SUITE_P65X_CUSTOM_ADDED_CONTROL_LAST",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "after",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-custom-added-control-last",
+      "PARITY_SUITE_P65X_CUSTOM_ADDED_CONTROL_LAST"
+     ]
+    }
+   ]
+  }
+ ]
+}

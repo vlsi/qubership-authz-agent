@@ -1,0 +1,284 @@
+{
+ "about": "Round 65: the v3 export of PIPs after another tenant's PIP customization is deleted, read by a tenant whose first write came after the customization and by one whose first write came before it.",
+ "standVersion": true,
+ "cases": [
+  {
+   "id": "p65x-foreign-pip-copy-control-first",
+   "about": "Control: an ACTIVE set uploaded in a tenant of its own, decided and read back.",
+   "resourceType": "PARITY_SUITE_P65X_FOREIGN_PIP_COPY_CONTROL_FIRST",
+   "tenant": "parity-p65x-foreign-pip-copy-control-first",
+   "steps": [
+    {
+     "name": "w1",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p65x-foreign-pip-copy-control-first"
+     },
+     "observe": [
+      "status",
+      "decide:w1-read"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "eff3a840-64d0-4b0b-3b9a-3c3e0cfad3b9",
+       "name": "p65x-foreign-pip-copy-control-first s",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P65X_FOREIGN_PIP_COPY_CONTROL_FIRST'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "6a1d0239-b9b5-edc0-356b-e3b6f6bcc5f6",
+         "name": "p65x-foreign-pip-copy-control-first s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "3f37aabb-29e0-8acf-b41e-a85c87dbe23b",
+           "name": "p65x-foreign-pip-copy-control-first s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ],
+       "status": "ACTIVE"
+      }
+     ],
+     "requests": [
+      {
+       "name": "w1-read",
+       "type": "PARITY_SUITE_P65X_FOREIGN_PIP_COPY_CONTROL_FIRST",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "after",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-foreign-pip-copy-control-first",
+      "PARITY_SUITE_P65X_FOREIGN_PIP_COPY_CONTROL_FIRST"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p65x-pip-copy",
+   "about": "Another tenant adds a HEADER PIP by a CUSTOMER customization after one tenant's first write and before this tenant's first write; this tenant reads the PIP export, the other tenant deletes the customization, and both read again. Listed for the tenants that wrote later, the PIP either goes with the customization or stays as a copy taken at this tenant's first write.",
+   "resourceType": "PARITY_SUITE_P65X_PIP_COPY",
+   "tenant": "parity-p65x-pip-copy",
+   "steps": [
+    {
+     "name": "e1",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_P65X_PIP_COPY_EARLY"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": [],
+     "tenant": "parity-p65x-pip-copy-early"
+    },
+    {
+     "name": "u1",
+     "op": "customize-pips",
+     "args": {
+      "level": "CUSTOMER"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "name": "subject.parityP65xAdded",
+       "pipType": "HEADER",
+       "header": "x-parity-p65x-added",
+       "defaultValue": "none",
+       "type": "REGULAR",
+       "cacheable": false
+      }
+     ],
+     "tenant": "parity-p65x-pip-copy-other"
+    },
+    {
+     "name": "w1",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_P65X_PIP_COPY"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": []
+    },
+    {
+     "name": "r1",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read:read-config-pips"
+     ],
+     "markers": [
+      "subject.parityP65xAdded"
+     ]
+    },
+    {
+     "name": "r1-early",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read:read-config-pips"
+     ],
+     "markers": [
+      "subject.parityP65xAdded"
+     ],
+     "tenant": "parity-p65x-pip-copy-early"
+    },
+    {
+     "name": "u2",
+     "op": "delete-pip-customization",
+     "args": {
+      "name": "subject.parityP65xAdded",
+      "level": "CUSTOMER"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "tenant": "parity-p65x-pip-copy-other"
+    },
+    {
+     "name": "r2",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read:read-config-pips"
+     ],
+     "markers": [
+      "subject.parityP65xAdded"
+     ]
+    },
+    {
+     "name": "r2-early",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read:read-config-pips"
+     ],
+     "markers": [
+      "subject.parityP65xAdded"
+     ],
+     "tenant": "parity-p65x-pip-copy-early"
+    }
+   ]
+  },
+  {
+   "id": "p65x-foreign-pip-copy-control-last",
+   "about": "Control: an ACTIVE set uploaded in a tenant of its own, decided and read back.",
+   "resourceType": "PARITY_SUITE_P65X_FOREIGN_PIP_COPY_CONTROL_LAST",
+   "tenant": "parity-p65x-foreign-pip-copy-control-last",
+   "steps": [
+    {
+     "name": "w1",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p65x-foreign-pip-copy-control-last"
+     },
+     "observe": [
+      "status",
+      "decide:w1-read"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "32912cd2-c5de-b5bd-1ff1-e7be392f7302",
+       "name": "p65x-foreign-pip-copy-control-last s",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P65X_FOREIGN_PIP_COPY_CONTROL_LAST'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "0a251060-621d-3ed2-a177-d0b55830b4da",
+         "name": "p65x-foreign-pip-copy-control-last s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "1b5ea8c2-6ea9-6c4a-c566-9bb67b4c5469",
+           "name": "p65x-foreign-pip-copy-control-last s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ],
+       "status": "ACTIVE"
+      }
+     ],
+     "requests": [
+      {
+       "name": "w1-read",
+       "type": "PARITY_SUITE_P65X_FOREIGN_PIP_COPY_CONTROL_LAST",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "after",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-foreign-pip-copy-control-last",
+      "PARITY_SUITE_P65X_FOREIGN_PIP_COPY_CONTROL_LAST"
+     ]
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,1677 @@
+{
+ "about": "Round 65: smaller questions about PAP writes and reads: an import of PIPs without a domain, ids padded with other control characters, a HEADER's defaults, a set's deprecated as a boolean, the error classes of two refusals, simplified policies with an empty component or role, an import with a blank boolean, and a delete before and after the upload. Each case runs in a tenant of its own.",
+ "standVersion": true,
+ "cases": [
+  {
+   "id": "p65x-misc-control-first",
+   "about": "Control: an ACTIVE set uploaded in a tenant of its own, decided and read back.",
+   "resourceType": "PARITY_SUITE_P65X_MISC_CONTROL_FIRST",
+   "tenant": "parity-p65x-misc-control-first",
+   "steps": [
+    {
+     "name": "w1",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p65x-misc-control-first"
+     },
+     "observe": [
+      "status",
+      "decide:w1-read"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "563a5150-c273-7802-b93d-ddc7d3b2df22",
+       "name": "p65x-misc-control-first s",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P65X_MISC_CONTROL_FIRST'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "9b79129d-eb73-644f-6ebb-956814c99552",
+         "name": "p65x-misc-control-first s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "ab5754e5-6763-74c1-5afc-c26e1012faa8",
+           "name": "p65x-misc-control-first s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ],
+       "status": "ACTIVE"
+      }
+     ],
+     "requests": [
+      {
+       "name": "w1-read",
+       "type": "PARITY_SUITE_P65X_MISC_CONTROL_FIRST",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "after",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-misc-control-first",
+      "PARITY_SUITE_P65X_MISC_CONTROL_FIRST"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p65m-import-pips-without-domain",
+   "about": "An import of a PIP without a domain, the domain read of \"\" and the PIP export, then a set whose rule reads the PIP.",
+   "resourceType": "PARITY_SUITE_P65M_IMPORT_PIPS_WITHOUT_DOMAIN",
+   "tenant": "parity-p65m-import-pips-without-domain",
+   "steps": [
+    {
+     "name": "w1",
+     "op": "import-pips",
+     "args": {},
+     "observe": [
+      "status",
+      "error-class"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "name": "subject.parityP65mNoDomain",
+       "pipType": "TOKEN",
+       "claim": "department",
+       "defaultValue": "none",
+       "type": "REGULAR",
+       "cacheable": false
+      }
+     ]
+    },
+    {
+     "name": "r1",
+     "op": "read-domain-pips",
+     "args": {
+      "domain": ""
+     },
+     "observe": [
+      "read:read-domain-pips"
+     ],
+     "markers": [
+      "subject.parityP65mNoDomain"
+     ]
+    },
+    {
+     "name": "r2",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read:read-config-pips"
+     ],
+     "markers": [
+      "subject.parityP65mNoDomain"
+     ]
+    },
+    {
+     "name": "w2",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p65m-import-pips-without-domain"
+     },
+     "observe": [
+      "status",
+      "decide:w2-probe"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "c1ecf699-d872-96a4-4aa0-038eb89140f5",
+       "name": "p65m-import-pips-without-domain s",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P65M_IMPORT_PIPS_WITHOUT_DOMAIN'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "eff95d97-91c8-4063-acd5-7a5c539d0bf1",
+         "name": "p65m-import-pips-without-domain s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "6e40082e-83d6-6e14-755f-ebf8f428bd07",
+           "name": "p65m-import-pips-without-domain s rule",
+           "target": "operation == 'READ'",
+           "condition": "subject.parityP65mNoDomain == 'none'",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ],
+       "status": "ACTIVE"
+      }
+     ],
+     "requests": [
+      {
+       "name": "w2-probe",
+       "type": "PARITY_SUITE_P65M_IMPORT_PIPS_WITHOUT_DOMAIN",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "delete-set",
+     "args": {
+      "id": "c1ecf699-d872-96a4-4aa0-038eb89140f5"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    }
+   ]
+  },
+  {
+   "id": "p65m-id-padded-vt",
+   "about": "A set uploaded with its policySetId padded with U+000B on both sides, read back and decided: round 50 sent spaces and carriage returns (200) and tabs, form feeds and line feeds (500) only.",
+   "resourceType": "PARITY_SUITE_P65M_ID_PADDED_VT",
+   "tenant": "parity-p65m-id-padded-vt",
+   "steps": [
+    {
+     "name": "w1",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p65m-id-padded-vt"
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:w1-probe"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "\u000bb77c5ce1-1c57-c29a-6545-48232b30783f\u000b",
+       "name": "p65m-id-padded-vt s",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P65M_ID_PADDED_VT'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "7840825a-f536-5697-24ea-c7b5cf57dff4",
+         "name": "p65m-id-padded-vt s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "f34c6321-2322-9c64-9987-9222c5af0127",
+           "name": "p65m-id-padded-vt s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ],
+       "status": "ACTIVE"
+      }
+     ],
+     "requests": [
+      {
+       "name": "w1-probe",
+       "type": "PARITY_SUITE_P65M_ID_PADDED_VT",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "w1-export",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65m-id-padded-vt",
+      "PARITY_SUITE_P65M_ID_PADDED_VT"
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "delete-set",
+     "args": {
+      "id": "b77c5ce1-1c57-c29a-6545-48232b30783f"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    }
+   ]
+  },
+  {
+   "id": "p65m-id-padded-us",
+   "about": "A set uploaded with its policySetId padded with U+001F on both sides, read back and decided: round 50 sent spaces and carriage returns (200) and tabs, form feeds and line feeds (500) only.",
+   "resourceType": "PARITY_SUITE_P65M_ID_PADDED_US",
+   "tenant": "parity-p65m-id-padded-us",
+   "steps": [
+    {
+     "name": "w1",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p65m-id-padded-us"
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:w1-probe"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "\u001ff2446df1-eba1-6011-b2b5-b21009f5391e\u001f",
+       "name": "p65m-id-padded-us s",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P65M_ID_PADDED_US'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "79c2883e-74c6-324e-8b9b-cdcc964f6b2d",
+         "name": "p65m-id-padded-us s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "917c6ab8-a426-823d-0d42-5cacfa3d1146",
+           "name": "p65m-id-padded-us s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ],
+       "status": "ACTIVE"
+      }
+     ],
+     "requests": [
+      {
+       "name": "w1-probe",
+       "type": "PARITY_SUITE_P65M_ID_PADDED_US",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "w1-export",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65m-id-padded-us",
+      "PARITY_SUITE_P65M_ID_PADDED_US"
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "delete-set",
+     "args": {
+      "id": "f2446df1-eba1-6011-b2b5-b21009f5391e"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    }
+   ]
+  },
+  {
+   "id": "p65m-id-padded-fs",
+   "about": "A set uploaded with its policySetId padded with U+001C on both sides, read back and decided: round 50 sent spaces and carriage returns (200) and tabs, form feeds and line feeds (500) only.",
+   "resourceType": "PARITY_SUITE_P65M_ID_PADDED_FS",
+   "tenant": "parity-p65m-id-padded-fs",
+   "steps": [
+    {
+     "name": "w1",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p65m-id-padded-fs"
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:w1-probe"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "\u001ceb2b94b1-a065-cf0b-1a1c-6c4da95d7230\u001c",
+       "name": "p65m-id-padded-fs s",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P65M_ID_PADDED_FS'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "afd2d0b1-4629-9d4e-2d22-9cb9c539e3dd",
+         "name": "p65m-id-padded-fs s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "3638f30c-e1f2-da69-3de7-1b9b07206116",
+           "name": "p65m-id-padded-fs s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ],
+       "status": "ACTIVE"
+      }
+     ],
+     "requests": [
+      {
+       "name": "w1-probe",
+       "type": "PARITY_SUITE_P65M_ID_PADDED_FS",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "w1-export",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65m-id-padded-fs",
+      "PARITY_SUITE_P65M_ID_PADDED_FS"
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "delete-set",
+     "args": {
+      "id": "eb2b94b1-a065-cf0b-1a1c-6c4da95d7230"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    }
+   ]
+  },
+  {
+   "id": "p65m-id-padded-crlf",
+   "about": "A set uploaded with its policySetId padded with U+000D U+000A on both sides, read back and decided: round 50 sent spaces and carriage returns (200) and tabs, form feeds and line feeds (500) only.",
+   "resourceType": "PARITY_SUITE_P65M_ID_PADDED_CRLF",
+   "tenant": "parity-p65m-id-padded-crlf",
+   "steps": [
+    {
+     "name": "w1",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p65m-id-padded-crlf"
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:w1-probe"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "\r\n5a54c801-5c91-afea-9558-a1d86125a69e\r\n",
+       "name": "p65m-id-padded-crlf s",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P65M_ID_PADDED_CRLF'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "daa9e796-17b5-5aba-8722-a3e904167bf3",
+         "name": "p65m-id-padded-crlf s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "b533da2c-f724-b0c9-14df-a739e7e2dfc8",
+           "name": "p65m-id-padded-crlf s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ],
+       "status": "ACTIVE"
+      }
+     ],
+     "requests": [
+      {
+       "name": "w1-probe",
+       "type": "PARITY_SUITE_P65M_ID_PADDED_CRLF",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "w1-export",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65m-id-padded-crlf",
+      "PARITY_SUITE_P65M_ID_PADDED_CRLF"
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "delete-set",
+     "args": {
+      "id": "5a54c801-5c91-afea-9558-a1d86125a69e"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    }
+   ]
+  },
+  {
+   "id": "p65m-id-padded-nel",
+   "about": "A set uploaded with its policySetId padded with U+0085 on both sides, read back and decided: round 50 sent spaces and carriage returns (200) and tabs, form feeds and line feeds (500) only.",
+   "resourceType": "PARITY_SUITE_P65M_ID_PADDED_NEL",
+   "tenant": "parity-p65m-id-padded-nel",
+   "steps": [
+    {
+     "name": "w1",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p65m-id-padded-nel"
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:w1-probe"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "081ee4bb-51f7-b6d9-d719-354d9b3dd4a2",
+       "name": "p65m-id-padded-nel s",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P65M_ID_PADDED_NEL'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "e1dd664f-bb72-cad5-f53f-8a7cf5b76b65",
+         "name": "p65m-id-padded-nel s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "e5de448e-9e53-a033-360a-d3e3f491dba7",
+           "name": "p65m-id-padded-nel s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ],
+       "status": "ACTIVE"
+      }
+     ],
+     "requests": [
+      {
+       "name": "w1-probe",
+       "type": "PARITY_SUITE_P65M_ID_PADDED_NEL",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "w1-export",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65m-id-padded-nel",
+      "PARITY_SUITE_P65M_ID_PADDED_NEL"
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "delete-set",
+     "args": {
+      "id": "081ee4bb-51f7-b6d9-d719-354d9b3dd4a2"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    }
+   ]
+  },
+  {
+   "id": "p65m-header-defaults",
+   "about": "Two HEADER PIPs, one sent without cacheable and cachePeriod, one with cacheable true and no cachePeriod, read back from the domain and through the export.",
+   "resourceType": "PARITY_SUITE_P65M_HEADER_DEFAULTS",
+   "tenant": "parity-p65m-header-defaults",
+   "steps": [
+    {
+     "name": "w1",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_P65M_HEADER"
+     },
+     "observe": [
+      "status",
+      "read-raw:read-domain-pips"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "name": "subject.parityP65mHeaderBare",
+       "pipType": "HEADER",
+       "header": "x-parity-p65m-bare",
+       "defaultValue": "none",
+       "type": "REGULAR"
+      },
+      {
+       "name": "subject.parityP65mHeaderCached",
+       "pipType": "HEADER",
+       "header": "x-parity-p65m-cached",
+       "defaultValue": "none",
+       "type": "REGULAR",
+       "cacheable": true
+      }
+     ]
+    },
+    {
+     "name": "r1",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read:read-config-pips"
+     ],
+     "markers": [
+      "subject.parityP65mHeaderBare",
+      "subject.parityP65mHeaderCached"
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_P65M_HEADER"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": []
+    }
+   ]
+  },
+  {
+   "id": "p65m-set-deprecated-true",
+   "about": "A set uploaded with deprecated true, a boolean, read back.",
+   "resourceType": "PARITY_SUITE_P65M_SET_DEPRECATED_TRUE",
+   "tenant": "parity-p65m-set-deprecated-true",
+   "steps": [
+    {
+     "name": "w1",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p65m-set-deprecated-true"
+     },
+     "observe": [
+      "status",
+      "read-raw:read-config-sets",
+      "decide:w1-probe"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "fe26335d-ddda-32d1-d42b-cdb395023202",
+       "name": "p65m-set-deprecated-true s",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P65M_SET_DEPRECATED_TRUE'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "e263f978-0b43-64e7-a9ba-3b7a38ae1256",
+         "name": "p65m-set-deprecated-true s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "9bef1723-b263-381c-3756-146eba2b33d2",
+           "name": "p65m-set-deprecated-true s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ],
+       "status": "ACTIVE",
+       "deprecated": true
+      }
+     ],
+     "requests": [
+      {
+       "name": "w1-probe",
+       "type": "PARITY_SUITE_P65M_SET_DEPRECATED_TRUE",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "delete-set",
+     "args": {
+      "id": "fe26335d-ddda-32d1-d42b-cdb395023202"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    }
+   ]
+  },
+  {
+   "id": "p65m-set-deprecated-false",
+   "about": "A set uploaded with deprecated false, a boolean, read back.",
+   "resourceType": "PARITY_SUITE_P65M_SET_DEPRECATED_FALSE",
+   "tenant": "parity-p65m-set-deprecated-false",
+   "steps": [
+    {
+     "name": "w1",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p65m-set-deprecated-false"
+     },
+     "observe": [
+      "status",
+      "read-raw:read-config-sets",
+      "decide:w1-probe"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "c37eecb0-d8df-ef66-94f0-440e08531d45",
+       "name": "p65m-set-deprecated-false s",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P65M_SET_DEPRECATED_FALSE'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "98ac5a63-df2a-cd7b-0d84-121b6ae024e9",
+         "name": "p65m-set-deprecated-false s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "bebbb02f-4b80-b686-20a9-349f2205b573",
+           "name": "p65m-set-deprecated-false s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ],
+       "status": "ACTIVE",
+       "deprecated": false
+      }
+     ],
+     "requests": [
+      {
+       "name": "w1-probe",
+       "type": "PARITY_SUITE_P65M_SET_DEPRECATED_FALSE",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "delete-set",
+     "args": {
+      "id": "c37eecb0-d8df-ef66-94f0-440e08531d45"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    }
+   ]
+  },
+  {
+   "id": "p65m-id-error-class-tab",
+   "about": "A set whose policySetId is padded with tabs: the status and the error class of the refusal (round 50 recorded the status only).",
+   "resourceType": "PARITY_SUITE_P65M_ID_ERROR_CLASS_TAB",
+   "tenant": "parity-p65m-id-error-class-tab",
+   "steps": [
+    {
+     "name": "w1",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p65m-id-error-class-tab"
+     },
+     "observe": [
+      "status",
+      "error-class"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "\tb511f79c-a0bb-bb4f-b1f0-d5bae22ffa67\t",
+       "name": "p65m-id-error-class-tab s",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P65M_ID_ERROR_CLASS_TAB'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "1ac8544b-6035-5c91-733b-4d9913a064c6",
+         "name": "p65m-id-error-class-tab s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "26b16f00-e39a-03aa-21cf-d6783abdfd03",
+           "name": "p65m-id-error-class-tab s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ],
+       "status": "ACTIVE"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p65m-id-error-class-nbsp",
+   "about": "A set whose policySetId is padded with no-break spaces: the status and the error class of the refusal (round 50 recorded the status only).",
+   "resourceType": "PARITY_SUITE_P65M_ID_ERROR_CLASS_NBSP",
+   "tenant": "parity-p65m-id-error-class-nbsp",
+   "steps": [
+    {
+     "name": "w1",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p65m-id-error-class-nbsp"
+     },
+     "observe": [
+      "status",
+      "error-class"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": " f69c07e9-c1e0-f7fc-13b4-981c6c4cd321 ",
+       "name": "p65m-id-error-class-nbsp s",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P65M_ID_ERROR_CLASS_NBSP'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "0bd58e83-d527-7afe-7306-0624f5060a53",
+         "name": "p65m-id-error-class-nbsp s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "43a5e6ef-a612-b90f-971d-3cea9c311b52",
+           "name": "p65m-id-error-class-nbsp s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ],
+       "status": "ACTIVE"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p65m-pip-name-twice-error-class",
+   "about": "One GENERAL PIP declared twice in one write, each with a whole ${subject.id} in its requestAttributes: the status and the error class of the refusal (round 52 recorded the status only).",
+   "resourceType": "PARITY_SUITE_P65M_PIP_NAME_TWICE_ERROR_CLASS",
+   "tenant": "parity-p65m-pip-name-twice-error-class",
+   "steps": [
+    {
+     "name": "w1",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_P65M_TWICE"
+     },
+     "observe": [
+      "status",
+      "error-class"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "name": "subject.parityP65mTwice",
+       "pipType": "GENERAL",
+       "httpMethod": "POST",
+       "cacheable": false,
+       "url": "http://pip-mock:8090/api/v1/pip/p65m-twice",
+       "requestAttributes": {
+        "x": "${subject.id}"
+       }
+      },
+      {
+       "name": "subject.parityP65mTwice",
+       "pipType": "GENERAL",
+       "httpMethod": "POST",
+       "cacheable": false,
+       "url": "http://pip-mock:8090/api/v1/pip/p65m-twice",
+       "requestAttributes": {
+        "x": "${subject.id}"
+       }
+      }
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_P65M_TWICE"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": []
+    }
+   ]
+  },
+  {
+   "id": "p65m-simplified-empty-component",
+   "about": "A simplified policy whose component is \"\": refused, or stored and read back.",
+   "resourceType": "PARITY_SUITE_P65M_SIMPLIFIED_EMPTY_COMPONENT",
+   "tenant": "parity-p65m-simplified-empty-component",
+   "steps": [
+    {
+     "name": "w1",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "P65M_SIMPLIFIED_EMPTY_COMPONENT"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": []
+    },
+    {
+     "name": "w2",
+     "op": "write-domain-policies",
+     "args": {
+      "domain": "P65M_SIMPLIFIED_EMPTY_COMPONENT"
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:w2-probe"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "component": "",
+       "reason": "p65m-simplified-empty-component",
+       "resourceType": "PARITY_SUITE_P65M_SIMPLIFIED_EMPTY_COMPONENT",
+       "operation": "READ",
+       "roles": [
+        "ROLE_PARITY_READER"
+       ],
+       "applicableForFrontend": false,
+       "id": "9d9390f3-7161-9c30-c374-3c3318bb1ba3"
+      }
+     ],
+     "requests": [
+      {
+       "name": "w2-probe",
+       "type": "PARITY_SUITE_P65M_SIMPLIFIED_EMPTY_COMPONENT",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "r1",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65m-simplified-empty-component",
+      "PARITY_SUITE_P65M_SIMPLIFIED_EMPTY_COMPONENT"
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "write-domain-policies",
+     "args": {
+      "domain": "P65M_SIMPLIFIED_EMPTY_COMPONENT"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": []
+    }
+   ]
+  },
+  {
+   "id": "p65m-simplified-empty-role",
+   "about": "A simplified policy whose only role is [\"\"]: refused, or stored and read back.",
+   "resourceType": "PARITY_SUITE_P65M_SIMPLIFIED_EMPTY_ROLE",
+   "tenant": "parity-p65m-simplified-empty-role",
+   "steps": [
+    {
+     "name": "w1",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "P65M_SIMPLIFIED_EMPTY_ROLE"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": []
+    },
+    {
+     "name": "w2",
+     "op": "write-domain-policies",
+     "args": {
+      "domain": "P65M_SIMPLIFIED_EMPTY_ROLE"
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:w2-probe"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "component": "PARITY",
+       "reason": "p65m-simplified-empty-role",
+       "resourceType": "PARITY_SUITE_P65M_SIMPLIFIED_EMPTY_ROLE",
+       "operation": "READ",
+       "roles": [
+        ""
+       ],
+       "applicableForFrontend": false,
+       "id": "334f0da2-b79a-9463-b4ca-b7305189c89b"
+      }
+     ],
+     "requests": [
+      {
+       "name": "w2-probe",
+       "type": "PARITY_SUITE_P65M_SIMPLIFIED_EMPTY_ROLE",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "r1",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65m-simplified-empty-role",
+      "PARITY_SUITE_P65M_SIMPLIFIED_EMPTY_ROLE"
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "write-domain-policies",
+     "args": {
+      "domain": "P65M_SIMPLIFIED_EMPTY_ROLE"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": []
+    }
+   ]
+  },
+  {
+   "id": "p65m-simplified-empty-role-blank",
+   "about": "A simplified policy whose only role is [\" \"]: refused, or stored and read back.",
+   "resourceType": "PARITY_SUITE_P65M_SIMPLIFIED_EMPTY_ROLE_BLANK",
+   "tenant": "parity-p65m-simplified-empty-role-blank",
+   "steps": [
+    {
+     "name": "w1",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "P65M_SIMPLIFIED_EMPTY_ROLE_BLANK"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": []
+    },
+    {
+     "name": "w2",
+     "op": "write-domain-policies",
+     "args": {
+      "domain": "P65M_SIMPLIFIED_EMPTY_ROLE_BLANK"
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:w2-probe"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "component": "PARITY",
+       "reason": "p65m-simplified-empty-role-blank",
+       "resourceType": "PARITY_SUITE_P65M_SIMPLIFIED_EMPTY_ROLE_BLANK",
+       "operation": "READ",
+       "roles": [
+        " "
+       ],
+       "applicableForFrontend": false,
+       "id": "37836d38-9d63-2f25-5250-4b594b8c8214"
+      }
+     ],
+     "requests": [
+      {
+       "name": "w2-probe",
+       "type": "PARITY_SUITE_P65M_SIMPLIFIED_EMPTY_ROLE_BLANK",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w2-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "r1",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65m-simplified-empty-role-blank",
+      "PARITY_SUITE_P65M_SIMPLIFIED_EMPTY_ROLE_BLANK"
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "write-domain-policies",
+     "args": {
+      "domain": "P65M_SIMPLIFIED_EMPTY_ROLE_BLANK"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": []
+    }
+   ]
+  },
+  {
+   "id": "p65m-import-pips-blank-cacheable",
+   "about": "An import of a TOKEN PIP whose cacheable is \" \", which a write binds as null, read back from the domain and the export.",
+   "resourceType": "PARITY_SUITE_P65M_IMPORT_PIPS_BLANK_CACHEABLE",
+   "tenant": "parity-p65m-import-pips-blank-cacheable",
+   "steps": [
+    {
+     "name": "w1",
+     "op": "import-pips",
+     "args": {},
+     "observe": [
+      "status",
+      "error-class"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "domain": "PARITY_P65M_BLANK",
+       "name": "subject.parityP65mBlank",
+       "pipType": "TOKEN",
+       "claim": "department",
+       "defaultValue": "none",
+       "type": "REGULAR",
+       "cacheable": " "
+      }
+     ]
+    },
+    {
+     "name": "r0",
+     "op": "read-domain-pips",
+     "args": {
+      "domain": "PARITY_P65M_BLANK"
+     },
+     "observe": [
+      "read-raw:read-domain-pips"
+     ]
+    },
+    {
+     "name": "r1",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read:read-config-pips"
+     ],
+     "markers": [
+      "subject.parityP65mBlank"
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_P65M_BLANK"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": []
+    }
+   ]
+  },
+  {
+   "id": "p65m-delete-set-delete-first",
+   "about": "A DELETE of a set before the upload of the same set, each step decided after it: one side of the dependency-order pair of the delete.",
+   "resourceType": "PARITY_SUITE_P65M_DELETE_SET_DELETE_FIRST",
+   "tenant": "parity-p65m-delete-set-delete-first",
+   "steps": [
+    {
+     "name": "w-delete",
+     "op": "delete-set",
+     "args": {
+      "id": "2fa640c4-9cfa-b10d-db70-d993ca43423b"
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:delete-probe"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "name": "delete-probe",
+       "type": "PARITY_SUITE_P65M_DELETE_SET_DELETE_FIRST",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w-delete-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w-delete-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "w-upload",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p65m-delete-set-delete-first"
+     },
+     "observe": [
+      "status",
+      "decide:upload-probe"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "2fa640c4-9cfa-b10d-db70-d993ca43423b",
+       "name": "p65m-delete-set-delete-first s",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P65M_DELETE_SET_DELETE_FIRST'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "c667e147-25a1-da4e-9bfe-1bfd48e726aa",
+         "name": "p65m-delete-set-delete-first s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "50270eb8-6f6f-fc3b-b81b-4cecb6b3360f",
+           "name": "p65m-delete-set-delete-first s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ],
+       "status": "ACTIVE"
+      }
+     ],
+     "requests": [
+      {
+       "name": "upload-probe",
+       "type": "PARITY_SUITE_P65M_DELETE_SET_DELETE_FIRST",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w-upload-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w-upload-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p65m-delete-set-upload-first",
+   "about": "A DELETE of a set after the upload of the same set, each step decided after it: one side of the dependency-order pair of the delete.",
+   "resourceType": "PARITY_SUITE_P65M_DELETE_SET_UPLOAD_FIRST",
+   "tenant": "parity-p65m-delete-set-upload-first",
+   "steps": [
+    {
+     "name": "w-upload",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p65m-delete-set-upload-first"
+     },
+     "observe": [
+      "status",
+      "decide:upload-probe"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "4d094b19-7912-93c9-de9b-07150860a8d9",
+       "name": "p65m-delete-set-upload-first s",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P65M_DELETE_SET_UPLOAD_FIRST'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "2a597083-09c2-f13e-30e0-33bbc80ff324",
+         "name": "p65m-delete-set-upload-first s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "6482e277-3bcd-8685-b340-a8aae40c5e8d",
+           "name": "p65m-delete-set-upload-first s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ],
+       "status": "ACTIVE"
+      }
+     ],
+     "requests": [
+      {
+       "name": "upload-probe",
+       "type": "PARITY_SUITE_P65M_DELETE_SET_UPLOAD_FIRST",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w-upload-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w-upload-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "w-delete",
+     "op": "delete-set",
+     "args": {
+      "id": "4d094b19-7912-93c9-de9b-07150860a8d9"
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:delete-probe"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "name": "delete-probe",
+       "type": "PARITY_SUITE_P65M_DELETE_SET_UPLOAD_FIRST",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w-delete-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w-delete-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p65x-misc-control-last",
+   "about": "Control: an ACTIVE set uploaded in a tenant of its own, decided and read back.",
+   "resourceType": "PARITY_SUITE_P65X_MISC_CONTROL_LAST",
+   "tenant": "parity-p65x-misc-control-last",
+   "steps": [
+    {
+     "name": "w1",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p65x-misc-control-last"
+     },
+     "observe": [
+      "status",
+      "decide:w1-read"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "1dfde114-7f71-6a4f-86bf-b0b2757bd05b",
+       "name": "p65x-misc-control-last s",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P65X_MISC_CONTROL_LAST'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "3471d8fa-546a-2ef1-bcc7-cf63791d1a77",
+         "name": "p65x-misc-control-last s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "28f10a05-a251-f08a-0de3-e2bc6f5456e8",
+           "name": "p65x-misc-control-last s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ],
+       "status": "ACTIVE"
+      }
+     ],
+     "requests": [
+      {
+       "name": "w1-read",
+       "type": "PARITY_SUITE_P65X_MISC_CONTROL_LAST",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "after",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-misc-control-last",
+      "PARITY_SUITE_P65X_MISC_CONTROL_LAST"
+     ]
+    }
+   ]
+  }
+ ]
+}

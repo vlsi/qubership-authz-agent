@@ -1,0 +1,364 @@
+{
+ "about": "Round 65: the alternatives no golden kills that a case of their own can tell: permissionScope in a simplified policy of a domain that declares it, an import of a set id spelled in another case. Each case runs in a tenant of its own.",
+ "standVersion": true,
+ "cases": [
+  {
+   "id": "p65x-survivors-control-first",
+   "about": "Control: an ACTIVE set uploaded in a tenant of its own, decided and read back.",
+   "resourceType": "PARITY_SUITE_P65X_SURVIVORS_CONTROL_FIRST",
+   "tenant": "parity-p65x-survivors-control-first",
+   "steps": [
+    {
+     "name": "w1",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p65x-survivors-control-first"
+     },
+     "observe": [
+      "status",
+      "decide:w1-read"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "22b0f2f8-383c-8a36-c662-d40798b76e0a",
+       "name": "p65x-survivors-control-first s",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P65X_SURVIVORS_CONTROL_FIRST'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "902e7851-28c8-b482-a279-30220fb8ebb9",
+         "name": "p65x-survivors-control-first s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "e7922bff-8eef-deb7-0c20-2240b47b7a89",
+           "name": "p65x-survivors-control-first s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ],
+       "status": "ACTIVE"
+      }
+     ],
+     "requests": [
+      {
+       "name": "w1-read",
+       "type": "PARITY_SUITE_P65X_SURVIVORS_CONTROL_FIRST",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "after",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-survivors-control-first",
+      "PARITY_SUITE_P65X_SURVIVORS_CONTROL_FIRST"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p65x-scope-in-simplified",
+   "about": "A simplified policy whose condition reads a path under subject.permissionScope, in a domain that declares PERMISSION_SCOPE: refused for being a simplified policy, or accepted.",
+   "resourceType": "PARITY_SUITE_P65X_SCOPE_IN_SIMPLIFIED",
+   "tenant": "parity-p65x-scope-in-simplified",
+   "steps": [
+    {
+     "name": "w1",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_P65X_SCOPE"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "name": "subject.permissionScope",
+       "pipType": "PERMISSION_SCOPE",
+       "url": "http://pip-mock:8090",
+       "cacheable": false,
+       "cachePeriod": 1
+      }
+     ]
+    },
+    {
+     "name": "w2",
+     "op": "write-domain-policies",
+     "args": {
+      "domain": "PARITY_P65X_SCOPE"
+     },
+     "observe": [
+      "status",
+      "error-class"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "component": "PARITY",
+       "reason": "p65x-scope-in-simplified",
+       "resourceType": "PARITY_SUITE_P65X_SCOPE_IN_SIMPLIFIED",
+       "operation": "READ",
+       "roles": [
+        "ROLE_PARITY_READER"
+       ],
+       "applicableForFrontend": false,
+       "id": "7942a09b-78bc-1fe1-b6e7-5bafbca81b82",
+       "condition": "subject.permissionScope.region CONTAINS 'r1'"
+      }
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "write-domain-policies",
+     "args": {
+      "domain": "PARITY_P65X_SCOPE"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": []
+    }
+   ]
+  },
+  {
+   "id": "p65x-import-id-upper",
+   "about": "A set uploaded with its policySetId in upper case, then an import of a set of the same id in lower case, read back raw: one set or two.",
+   "resourceType": "PARITY_SUITE_P65X_IMPORT_ID_UPPER",
+   "tenant": "parity-p65x-import-id-upper",
+   "steps": [
+    {
+     "name": "w1",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p65x-import-id-upper"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "FE28C4D0-7F03-E37D-C1DD-3CE0CCA80E01",
+       "name": "p65x-import-id-upper s",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P65X_IMPORT_ID_UPPER'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "5190ecd4-616a-60af-c3a4-25d4633a00c3",
+         "name": "p65x-import-id-upper s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "b71cbd6a-6d0b-a961-b9ab-af43d84fc951",
+           "name": "p65x-import-id-upper s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ],
+       "status": "ACTIVE"
+      }
+     ]
+    },
+    {
+     "name": "w2",
+     "op": "import-sets",
+     "args": {},
+     "observe": [
+      "status",
+      "read-raw:read-config-sets",
+      "decide:w2-read",
+      "decide:w2-update"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "fe28c4d0-7f03-e37d-c1dd-3ce0cca80e01",
+       "name": "p65x-import-id-upper b",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P65X_IMPORT_ID_UPPER'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "06931d9f-c4b9-ad3d-f80f-01f76f4520c1",
+         "name": "p65x-import-id-upper b reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "28568e28-9407-5ce2-352e-3bdbe3445d3b",
+           "name": "p65x-import-id-upper b rule",
+           "target": "operation == 'UPDATE'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ],
+       "status": "ACTIVE",
+       "externalId": "parity-p65x-import-id-upper"
+      }
+     ],
+     "requests": [
+      {
+       "name": "w2-read",
+       "type": "PARITY_SUITE_P65X_IMPORT_ID_UPPER",
+       "operation": "READ"
+      },
+      {
+       "name": "w2-update",
+       "type": "PARITY_SUITE_P65X_IMPORT_ID_UPPER",
+       "operation": "UPDATE"
+      }
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "delete-set",
+     "args": {
+      "id": "fe28c4d0-7f03-e37d-c1dd-3ce0cca80e01"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "cleanup-2",
+     "op": "delete-set",
+     "args": {
+      "id": "FE28C4D0-7F03-E37D-C1DD-3CE0CCA80E01"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    }
+   ]
+  },
+  {
+   "id": "p65x-survivors-control-last",
+   "about": "Control: an ACTIVE set uploaded in a tenant of its own, decided and read back.",
+   "resourceType": "PARITY_SUITE_P65X_SURVIVORS_CONTROL_LAST",
+   "tenant": "parity-p65x-survivors-control-last",
+   "steps": [
+    {
+     "name": "w1",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p65x-survivors-control-last"
+     },
+     "observe": [
+      "status",
+      "decide:w1-read"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "164a60c0-6d66-9b55-32a9-4c5bc821932d",
+       "name": "p65x-survivors-control-last s",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P65X_SURVIVORS_CONTROL_LAST'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "a69335a4-53fe-0ae1-8f31-d11092c7d807",
+         "name": "p65x-survivors-control-last s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "d58d0f39-54f4-3354-6581-8b867dc3dd6e",
+           "name": "p65x-survivors-control-last s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ],
+       "status": "ACTIVE"
+      }
+     ],
+     "requests": [
+      {
+       "name": "w1-read",
+       "type": "PARITY_SUITE_P65X_SURVIVORS_CONTROL_LAST",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "after",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-survivors-control-last",
+      "PARITY_SUITE_P65X_SURVIVORS_CONTROL_LAST"
+     ]
+    }
+   ]
+  }
+ ]
+}

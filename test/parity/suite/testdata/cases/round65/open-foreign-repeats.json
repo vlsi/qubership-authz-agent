@@ -1,0 +1,652 @@
+{
+ "about": "Round 65: how often the v3 export lists a set no customization names, read by a tenant that holds a set customization, beside two other tenants customizing the same set and alone. The second carrier of pap-read-raw-v1/sequence/p47-o068/write-1.",
+ "standVersion": true,
+ "cases": [
+  {
+   "id": "p65x-foreign-repeats-control-first",
+   "about": "Control: an ACTIVE set uploaded in a tenant of its own, decided and read back.",
+   "resourceType": "PARITY_SUITE_P65X_FOREIGN_REPEATS_CONTROL_FIRST",
+   "tenant": "parity-p65x-foreign-repeats-control-first",
+   "steps": [
+    {
+     "name": "w1",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p65x-foreign-repeats-control-first"
+     },
+     "observe": [
+      "status",
+      "decide:w1-read"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "ace3e414-3ef7-eb11-9c56-94a0973168a7",
+       "name": "p65x-foreign-repeats-control-first s",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P65X_FOREIGN_REPEATS_CONTROL_FIRST'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "76b527e3-b58a-bd3f-5e0c-bc34f7e4f36a",
+         "name": "p65x-foreign-repeats-control-first s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "7334586e-dc89-7090-7d1b-827e0890bdde",
+           "name": "p65x-foreign-repeats-control-first s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ],
+       "status": "ACTIVE"
+      }
+     ],
+     "requests": [
+      {
+       "name": "w1-read",
+       "type": "PARITY_SUITE_P65X_FOREIGN_REPEATS_CONTROL_FIRST",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "after",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-foreign-repeats-control-first",
+      "PARITY_SUITE_P65X_FOREIGN_REPEATS_CONTROL_FIRST"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "p65x-repeats-shared",
+   "about": "This tenant holds a set customized at CUSTOMER and another set no customization names; two other tenants customize the same set at the same level. The raw read of the export lists the uncustomized set once for every tenant holding a customization of that set, this one included (three times), or once.",
+   "resourceType": "PARITY_SUITE_P65X_REPEATS_SHARED",
+   "tenant": "parity-p65x-repeats-shared",
+   "steps": [
+    {
+     "name": "o0a",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p65x-repeats-shared-t1"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "0b4654aa-edf5-d442-a0b6-bf8660fe1fb4",
+       "name": "p65x-repeats-shared s",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P65X_REPEATS_SHARED'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "5e9463a1-9311-0537-b6ec-030dc8b23f7e",
+         "name": "p65x-repeats-shared s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "caf9b91e-6380-d40f-3854-8224b53f45e7",
+           "name": "p65x-repeats-shared s rule",
+           "target": "operation == 'UPDATE'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ],
+       "status": "ACTIVE"
+      }
+     ],
+     "tenant": "parity-p65x-repeats-shared-t1"
+    },
+    {
+     "name": "o0b",
+     "op": "customize-sets",
+     "args": {
+      "level": "CUSTOMER"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "0b4654aa-edf5-d442-a0b6-bf8660fe1fb4",
+       "policies": [
+        {
+         "policyId": "5e9463a1-9311-0537-b6ec-030dc8b23f7e",
+         "rules": [
+          {
+           "ruleId": "caf9b91e-6380-d40f-3854-8224b53f45e7",
+           "name": "p65x-repeats-shared s rule",
+           "effect": "ALLOW",
+           "target": "operation == 'READ'",
+           "condition": "true"
+          }
+         ]
+        }
+       ]
+      }
+     ],
+     "tenant": "parity-p65x-repeats-shared-t1"
+    },
+    {
+     "name": "o1a",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p65x-repeats-shared-t2"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "0b4654aa-edf5-d442-a0b6-bf8660fe1fb4",
+       "name": "p65x-repeats-shared s",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P65X_REPEATS_SHARED'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "5e9463a1-9311-0537-b6ec-030dc8b23f7e",
+         "name": "p65x-repeats-shared s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "caf9b91e-6380-d40f-3854-8224b53f45e7",
+           "name": "p65x-repeats-shared s rule",
+           "target": "operation == 'UPDATE'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ],
+       "status": "ACTIVE"
+      }
+     ],
+     "tenant": "parity-p65x-repeats-shared-t2"
+    },
+    {
+     "name": "o1b",
+     "op": "customize-sets",
+     "args": {
+      "level": "CUSTOMER"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "0b4654aa-edf5-d442-a0b6-bf8660fe1fb4",
+       "policies": [
+        {
+         "policyId": "5e9463a1-9311-0537-b6ec-030dc8b23f7e",
+         "rules": [
+          {
+           "ruleId": "caf9b91e-6380-d40f-3854-8224b53f45e7",
+           "name": "p65x-repeats-shared s rule",
+           "effect": "ALLOW",
+           "target": "operation == 'READ'",
+           "condition": "true"
+          }
+         ]
+        }
+       ]
+      }
+     ],
+     "tenant": "parity-p65x-repeats-shared-t2"
+    },
+    {
+     "name": "w1",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p65x-repeats-shared"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "0b4654aa-edf5-d442-a0b6-bf8660fe1fb4",
+       "name": "p65x-repeats-shared s",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P65X_REPEATS_SHARED'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "5e9463a1-9311-0537-b6ec-030dc8b23f7e",
+         "name": "p65x-repeats-shared s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "caf9b91e-6380-d40f-3854-8224b53f45e7",
+           "name": "p65x-repeats-shared s rule",
+           "target": "operation == 'UPDATE'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ],
+       "status": "ACTIVE"
+      },
+      {
+       "policySetId": "e2b73c65-b5e5-4949-669f-9c2d58b5ae0c",
+       "name": "p65x-repeats-shared q",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P65X_REPEATS_SHARED'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "e0148a30-6878-202b-a732-3837719766be",
+         "name": "p65x-repeats-shared q reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "8bf5f0df-cd79-d994-e647-4e34ad8f9883",
+           "name": "p65x-repeats-shared q rule",
+           "target": "operation == 'LIST'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ],
+       "status": "ACTIVE"
+      }
+     ]
+    },
+    {
+     "name": "w2",
+     "op": "customize-sets",
+     "args": {
+      "level": "CUSTOMER"
+     },
+     "observe": [
+      "status",
+      "read-raw:read-config-sets",
+      "decide:w2-read",
+      "decide:w2-list"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "0b4654aa-edf5-d442-a0b6-bf8660fe1fb4",
+       "policies": [
+        {
+         "policyId": "5e9463a1-9311-0537-b6ec-030dc8b23f7e",
+         "rules": [
+          {
+           "ruleId": "caf9b91e-6380-d40f-3854-8224b53f45e7",
+           "name": "p65x-repeats-shared s rule",
+           "effect": "ALLOW",
+           "target": "operation == 'READ'",
+           "condition": "true"
+          }
+         ]
+        }
+       ]
+      }
+     ],
+     "requests": [
+      {
+       "name": "w2-read",
+       "type": "PARITY_SUITE_P65X_REPEATS_SHARED",
+       "operation": "READ"
+      },
+      {
+       "name": "w2-list",
+       "type": "PARITY_SUITE_P65X_REPEATS_SHARED",
+       "operation": "LIST"
+      }
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "delete-set-customization",
+     "args": {
+      "id": "0b4654aa-edf5-d442-a0b6-bf8660fe1fb4",
+      "level": "CUSTOMER",
+      "recursive": "true"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "cleanup-0",
+     "op": "delete-set-customization",
+     "args": {
+      "id": "0b4654aa-edf5-d442-a0b6-bf8660fe1fb4",
+      "level": "CUSTOMER",
+      "recursive": "true"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "tenant": "parity-p65x-repeats-shared-t1"
+    },
+    {
+     "name": "cleanup-1",
+     "op": "delete-set-customization",
+     "args": {
+      "id": "0b4654aa-edf5-d442-a0b6-bf8660fe1fb4",
+      "level": "CUSTOMER",
+      "recursive": "true"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "tenant": "parity-p65x-repeats-shared-t2"
+    },
+    {
+     "name": "cleanup-s",
+     "op": "delete-set",
+     "args": {
+      "id": "0b4654aa-edf5-d442-a0b6-bf8660fe1fb4"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "cleanup-q",
+     "op": "delete-set",
+     "args": {
+      "id": "e2b73c65-b5e5-4949-669f-9c2d58b5ae0c"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "cleanup-0-s",
+     "op": "delete-set",
+     "args": {
+      "id": "0b4654aa-edf5-d442-a0b6-bf8660fe1fb4"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "tenant": "parity-p65x-repeats-shared-t1"
+    },
+    {
+     "name": "cleanup-1-s",
+     "op": "delete-set",
+     "args": {
+      "id": "0b4654aa-edf5-d442-a0b6-bf8660fe1fb4"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "tenant": "parity-p65x-repeats-shared-t2"
+    }
+   ]
+  },
+  {
+   "id": "p65x-repeats-alone",
+   "about": "A tenant holding a set customized at CUSTOMER and another set, with no other tenant sharing the customization: the raw read lists the uncustomized set once either way.",
+   "resourceType": "PARITY_SUITE_P65X_REPEATS_ALONE",
+   "tenant": "parity-p65x-repeats-alone",
+   "steps": [
+    {
+     "name": "w1",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p65x-repeats-alone"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "3749211f-db7e-a30b-609e-e4d5377796ec",
+       "name": "p65x-repeats-alone s",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P65X_REPEATS_ALONE'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "55613d0f-bdc8-2c0b-240c-ec1630a92d8d",
+         "name": "p65x-repeats-alone s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "059ff1d1-965f-0f8b-3bd3-7b8185736561",
+           "name": "p65x-repeats-alone s rule",
+           "target": "operation == 'UPDATE'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ],
+       "status": "ACTIVE"
+      },
+      {
+       "policySetId": "28330b2f-bdd8-1cbc-ebec-7e5e19d03d10",
+       "name": "p65x-repeats-alone q",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P65X_REPEATS_ALONE'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "8ef817e9-23c7-16d6-2ed3-6d61d8715bfd",
+         "name": "p65x-repeats-alone q reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "298c2383-1668-05a0-6db3-cb8fd2ee703f",
+           "name": "p65x-repeats-alone q rule",
+           "target": "operation == 'LIST'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ],
+       "status": "ACTIVE"
+      }
+     ]
+    },
+    {
+     "name": "w2",
+     "op": "customize-sets",
+     "args": {
+      "level": "CUSTOMER"
+     },
+     "observe": [
+      "status",
+      "read-raw:read-config-sets",
+      "decide:w2-read"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "3749211f-db7e-a30b-609e-e4d5377796ec",
+       "policies": [
+        {
+         "policyId": "55613d0f-bdc8-2c0b-240c-ec1630a92d8d",
+         "rules": [
+          {
+           "ruleId": "059ff1d1-965f-0f8b-3bd3-7b8185736561",
+           "name": "p65x-repeats-alone s rule",
+           "effect": "ALLOW",
+           "target": "operation == 'READ'",
+           "condition": "true"
+          }
+         ]
+        }
+       ]
+      }
+     ],
+     "requests": [
+      {
+       "name": "w2-read",
+       "type": "PARITY_SUITE_P65X_REPEATS_ALONE",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w2-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "cleanup",
+     "op": "delete-set-customization",
+     "args": {
+      "id": "3749211f-db7e-a30b-609e-e4d5377796ec",
+      "level": "CUSTOMER",
+      "recursive": "true"
+     },
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    }
+   ]
+  },
+  {
+   "id": "p65x-foreign-repeats-control-last",
+   "about": "Control: an ACTIVE set uploaded in a tenant of its own, decided and read back.",
+   "resourceType": "PARITY_SUITE_P65X_FOREIGN_REPEATS_CONTROL_LAST",
+   "tenant": "parity-p65x-foreign-repeats-control-last",
+   "steps": [
+    {
+     "name": "w1",
+     "op": "write-external-id-sets",
+     "args": {
+      "externalId": "parity-p65x-foreign-repeats-control-last"
+     },
+     "observe": [
+      "status",
+      "decide:w1-read"
+     ],
+     "onRefusal": "continue",
+     "body": [
+      {
+       "policySetId": "06187ab2-44d6-7d4c-6c83-0fbe23a9f25f",
+       "name": "p65x-foreign-repeats-control-last s",
+       "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+       "target": "resourceType == 'PARITY_SUITE_P65X_FOREIGN_REPEATS_CONTROL_LAST'",
+       "policySets": [],
+       "policies": [
+        {
+         "policyId": "6f19576b-5c7e-024f-60e0-a71b3bb6639a",
+         "name": "p65x-foreign-repeats-control-last s reader",
+         "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+         "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+         "rules": [
+          {
+           "ruleId": "a6ba3c15-480b-394c-3d30-dfebf2afee39",
+           "name": "p65x-foreign-repeats-control-last s rule",
+           "target": "operation == 'READ'",
+           "condition": "true",
+           "effect": "ALLOW"
+          }
+         ]
+        }
+       ],
+       "status": "ACTIVE"
+      }
+     ],
+     "requests": [
+      {
+       "name": "w1-read",
+       "type": "PARITY_SUITE_P65X_FOREIGN_REPEATS_CONTROL_LAST",
+       "operation": "READ"
+      }
+     ]
+    },
+    {
+     "name": "w1-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "w1-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
+     "name": "after",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read:read-config-sets"
+     ],
+     "markers": [
+      "p65x-foreign-repeats-control-last",
+      "PARITY_SUITE_P65X_FOREIGN_REPEATS_CONTROL_LAST"
+     ]
+    }
+   ]
+  }
+ ]
+}
