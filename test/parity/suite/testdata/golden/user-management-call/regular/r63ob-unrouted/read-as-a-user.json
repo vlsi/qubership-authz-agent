@@ -1,0 +1,17 @@
+{
+  "calls": [
+    {
+      "method": "GET",
+      "requestUri": "/api/v1/user-management/scim/users/00000000-0000-0000-0000-000000006304",
+      "headerNames": [
+        "authorization",
+        "tenant",
+        "user-agent"
+      ],
+      "headers": {
+        "authorization": "\u003cservice account\u003e",
+        "tenant": "\u003ctenant_id\u003e"
+      }
+    }
+  ]
+}

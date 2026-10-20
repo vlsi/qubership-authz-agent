@@ -1,0 +1,20 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "component": "PARITY_SUITE_P60O_014",
+      "domain": "PARITY_P60O_014",
+      "fieldPolicyOperation": "WRITE",
+      "fieldPolicyType": "WHITELIST",
+      "fields": [
+        "f2"
+      ],
+      "id": "e02833ab-ac71-391b-6883-f6cb8c6d3a96",
+      "reason": "parity p60o-014-rewrite",
+      "resourceType": "PARITY_SUITE_P60O_014",
+      "roles": [
+        "ROLE_PARITY_P60O_014_A"
+      ]
+    }
+  ]
+}

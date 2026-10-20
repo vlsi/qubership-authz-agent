@@ -1,0 +1,120 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "read": {
+        "whitelist": {
+          "fields": [
+            "101",
+            "102",
+            "103"
+          ],
+          "fullAccess": false
+        }
+      },
+      "resourceType": "PARITY_SUITE_P60O_001",
+      "role": "ROLE_PARITY_P60O_001_1",
+      "tenantId": "parity-p60o-001",
+      "write": {
+        "whitelist": {
+          "fields": [],
+          "fullAccess": false
+        }
+      }
+    },
+    {
+      "read": {
+        "whitelist": {
+          "fields": [
+            "102",
+            "104"
+          ],
+          "fullAccess": false
+        }
+      },
+      "resourceType": "PARITY_SUITE_P60O_001",
+      "role": "ROLE_PARITY_P60O_001_2",
+      "tenantId": "parity-p60o-001",
+      "write": {
+        "whitelist": {
+          "fields": [],
+          "fullAccess": false
+        }
+      }
+    },
+    {
+      "read": {
+        "whitelist": {
+          "fields": [],
+          "fullAccess": false
+        }
+      },
+      "resourceType": "PARITY_SUITE_P60O_001",
+      "role": "ROLE_PARITY_P60O_001_1",
+      "tenantId": "parity-p60o-001",
+      "write": {
+        "whitelist": {
+          "fields": [
+            "101",
+            "102"
+          ],
+          "fullAccess": false
+        }
+      }
+    },
+    {
+      "read": {
+        "whitelist": {
+          "fields": [],
+          "fullAccess": true
+        }
+      },
+      "resourceType": "PARITY_SUITE_P60O_001",
+      "role": "ROLE_PARITY_P60O_001_2",
+      "tenantId": "parity-p60o-001",
+      "write": {
+        "whitelist": {
+          "fields": [],
+          "fullAccess": true
+        }
+      }
+    },
+    {
+      "read": {
+        "whitelist": {
+          "fields": [],
+          "fullAccess": true
+        }
+      },
+      "resourceType": "PARITY_SUITE_P60O_001",
+      "role": "ROLE_PARITY_P60O_001_3",
+      "tenantId": "parity-p60o-001",
+      "write": {
+        "whitelist": {
+          "fields": [],
+          "fullAccess": true
+        }
+      }
+    },
+    {
+      "read": {
+        "whitelist": {
+          "fields": [],
+          "fullAccess": true
+        }
+      },
+      "resourceType": "all",
+      "role": "ROLE_PARITY_P60O_001_4",
+      "tenantId": "parity-p60o-001",
+      "write": {
+        "whitelist": {
+          "fields": [],
+          "fullAccess": true
+        }
+      }
+    }
+  ],
+  "keptTenants": [
+    "parity-p60o-001"
+  ]
+}

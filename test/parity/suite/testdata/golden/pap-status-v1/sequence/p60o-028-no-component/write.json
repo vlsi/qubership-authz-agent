@@ -1,0 +1,6 @@
+{
+  "status": 400,
+  "message": {
+    "message": "'component' field can't be blank for obligation with ID: '93fcb775-2fd5-8f50-1fe8-fd45505084c1'"
+  }
+}

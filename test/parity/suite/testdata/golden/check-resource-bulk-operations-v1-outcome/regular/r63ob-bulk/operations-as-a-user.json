@@ -1,0 +1,9 @@
+{
+  "status": 200,
+  "decision": {
+    "READ": [
+      "r63a",
+      "r63b"
+    ]
+  }
+}

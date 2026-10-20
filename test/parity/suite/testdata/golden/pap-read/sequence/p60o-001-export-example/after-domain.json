@@ -1,0 +1,81 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "component": "PARITY_SUITE_P60O_001",
+      "domain": "PARITY_P60O_001",
+      "fieldPolicyOperation": "ALL",
+      "fieldPolicyType": "FULL_ACCESS",
+      "fields": [],
+      "id": "4a6f2fa3-4695-117d-9e70-5549394f2a63",
+      "reason": "parity p60o-001-export-example",
+      "resourceType": "all",
+      "roles": [
+        "ROLE_PARITY_P60O_001_4"
+      ]
+    },
+    {
+      "component": "PARITY_SUITE_P60O_001",
+      "domain": "PARITY_P60O_001",
+      "fieldPolicyOperation": "ALL",
+      "fieldPolicyType": "FULL_ACCESS",
+      "fields": [],
+      "id": "9691852d-718a-44b0-ccf7-5f5b9fce0b69",
+      "reason": "parity p60o-001-export-example",
+      "resourceType": "PARITY_SUITE_P60O_001",
+      "roles": [
+        "ROLE_PARITY_P60O_001_2",
+        "ROLE_PARITY_P60O_001_3"
+      ]
+    },
+    {
+      "component": "PARITY_SUITE_P60O_001",
+      "domain": "PARITY_P60O_001",
+      "fieldPolicyOperation": "READ",
+      "fieldPolicyType": "WHITELIST",
+      "fields": [
+        "101",
+        "102",
+        "103"
+      ],
+      "id": "35bf2ec2-5cb3-e37a-ac9a-37f41d44709e",
+      "reason": "parity p60o-001-export-example",
+      "resourceType": "PARITY_SUITE_P60O_001",
+      "roles": [
+        "ROLE_PARITY_P60O_001_1"
+      ]
+    },
+    {
+      "component": "PARITY_SUITE_P60O_001",
+      "domain": "PARITY_P60O_001",
+      "fieldPolicyOperation": "READ",
+      "fieldPolicyType": "WHITELIST",
+      "fields": [
+        "102",
+        "104"
+      ],
+      "id": "91d60b2c-b12c-d813-4057-cc580636625f",
+      "reason": "parity p60o-001-export-example",
+      "resourceType": "PARITY_SUITE_P60O_001",
+      "roles": [
+        "ROLE_PARITY_P60O_001_2"
+      ]
+    },
+    {
+      "component": "PARITY_SUITE_P60O_001",
+      "domain": "PARITY_P60O_001",
+      "fieldPolicyOperation": "WRITE",
+      "fieldPolicyType": "WHITELIST",
+      "fields": [
+        "101",
+        "102"
+      ],
+      "id": "fac9cbce-1226-ff10-f161-d79a1c6ca9bc",
+      "reason": "parity p60o-001-export-example",
+      "resourceType": "PARITY_SUITE_P60O_001",
+      "roles": [
+        "ROLE_PARITY_P60O_001_1"
+      ]
+    }
+  ]
+}

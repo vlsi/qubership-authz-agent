@@ -1,0 +1,21 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "component": "PARITY_SUITE_P60O_003",
+      "domain": "PARITY_P60O_003",
+      "fieldPolicyOperation": "READ",
+      "fieldPolicyType": "WHITELIST",
+      "fields": [
+        "f1",
+        "f2"
+      ],
+      "id": "e5e8ac1c-87c8-cf04-3ba9-d033046bac86",
+      "reason": "parity p60o-003-read-whitelist",
+      "resourceType": "PARITY_SUITE_P60O_003",
+      "roles": [
+        "ROLE_PARITY_P60O_003_A"
+      ]
+    }
+  ]
+}

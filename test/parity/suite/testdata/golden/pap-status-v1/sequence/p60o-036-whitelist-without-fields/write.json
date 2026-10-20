@@ -1,0 +1,6 @@
+{
+  "status": 400,
+  "message": {
+    "message": "'fields' field can't be empty in case 'fieldPolicyType' == 'WHITELIST' for obligation with ID: 'a502324f-1146-e33f-5b8e-0474a08ca89b'"
+  }
+}

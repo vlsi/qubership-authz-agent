@@ -1,0 +1,35 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "component": "PARITY_SUITE_P60O_012",
+      "domain": "PARITY_P60O_012",
+      "fieldPolicyOperation": "READ",
+      "fieldPolicyType": "WHITELIST",
+      "fields": [
+        "f1"
+      ],
+      "id": "4397f3a6-0194-7c67-ad47-16aaead66d60",
+      "reason": "parity p60o-012-all-unlisted-type",
+      "resourceType": "all",
+      "roles": [
+        "ROLE_PARITY_P60O_012_A"
+      ]
+    },
+    {
+      "component": "PARITY_SUITE_P60O_012",
+      "domain": "PARITY_P60O_012",
+      "fieldPolicyOperation": "READ",
+      "fieldPolicyType": "WHITELIST",
+      "fields": [
+        "f2"
+      ],
+      "id": "d4be0a47-d86a-0741-db26-e83ab31d4dfb",
+      "reason": "parity p60o-012-all-unlisted-type",
+      "resourceType": "PARITY_SUITE_P60O_012",
+      "roles": [
+        "ROLE_PARITY_P60O_012_B"
+      ]
+    }
+  ]
+}

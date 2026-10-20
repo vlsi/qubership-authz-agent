@@ -1,0 +1,6 @@
+{
+  "status": 400,
+  "body": {
+    "message": "'fieldPolicyOperation' field can't be null for obligation with ID: '6bd15b92-d7ca-1e85-6be8-359fd9a8d728'"
+  }
+}

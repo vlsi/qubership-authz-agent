@@ -1,0 +1,7 @@
+{
+  "status": 400,
+  "decision": false,
+  "message": {
+    "message": "Illegal character in path at index 73: http://user-management-mock:8080/api/v1/user-management/scim/users/parity 63"
+  }
+}

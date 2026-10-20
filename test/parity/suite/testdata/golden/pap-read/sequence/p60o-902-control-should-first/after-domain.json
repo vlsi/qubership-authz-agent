@@ -1,0 +1,20 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "component": "PARITY_SUITE_P60O_902",
+      "domain": "PARITY_P60O_902",
+      "fieldPolicyOperation": "READ",
+      "fieldPolicyType": "WHITELIST",
+      "fields": [
+        "f1"
+      ],
+      "id": "fcd76135-c2cf-7562-a668-eaff7c0b09c9",
+      "reason": "parity p60o-902-control-should-first",
+      "resourceType": "PARITY_SUITE_P60O_902",
+      "roles": [
+        "ROLE_PARITY_P60O_902_A"
+      ]
+    }
+  ]
+}

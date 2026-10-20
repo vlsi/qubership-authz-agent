@@ -1,0 +1,28 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "read": {
+        "whitelist": {
+          "fields": [
+            "5",
+            "f1"
+          ],
+          "fullAccess": false
+        }
+      },
+      "resourceType": "PARITY_SUITE_P60O_016",
+      "role": "ROLE_PARITY_P60O_016_A",
+      "tenantId": "parity-p60o-016",
+      "write": {
+        "whitelist": {
+          "fields": [],
+          "fullAccess": false
+        }
+      }
+    }
+  ],
+  "keptTenants": [
+    "parity-p60o-016"
+  ]
+}

@@ -1,0 +1,4 @@
+{
+  "status": 400,
+  "body": "Cannot deserialize value of type `\u003credacted\u003e` from String \"read\": not one of the values accepted for Enum class: [ALL, READ, WRITE]"
+}

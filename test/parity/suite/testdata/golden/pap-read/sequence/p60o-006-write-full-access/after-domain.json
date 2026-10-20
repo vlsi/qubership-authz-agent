@@ -1,0 +1,18 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "component": "PARITY_SUITE_P60O_006",
+      "domain": "PARITY_P60O_006",
+      "fieldPolicyOperation": "WRITE",
+      "fieldPolicyType": "FULL_ACCESS",
+      "fields": [],
+      "id": "256426df-ab38-77b9-4410-c3220361dea3",
+      "reason": "parity p60o-006-write-full-access",
+      "resourceType": "PARITY_SUITE_P60O_006",
+      "roles": [
+        "ROLE_PARITY_P60O_006_A"
+      ]
+    }
+  ]
+}

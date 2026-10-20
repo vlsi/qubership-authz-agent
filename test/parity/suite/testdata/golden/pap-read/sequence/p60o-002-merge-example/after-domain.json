@@ -1,0 +1,51 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "component": "PARITY_SUITE_P60O_002",
+      "domain": "PARITY_P60O_002",
+      "fieldPolicyOperation": "READ",
+      "fieldPolicyType": "WHITELIST",
+      "fields": [
+        "101",
+        "102",
+        "103"
+      ],
+      "id": "0331cec0-49b6-0749-f5e8-5f4e064ea006",
+      "reason": "parity p60o-002-merge-example",
+      "resourceType": "PARITY_SUITE_P60O_002",
+      "roles": [
+        "ROLE_PARITY_P60O_002_1"
+      ]
+    },
+    {
+      "component": "PARITY_SUITE_P60O_002",
+      "domain": "PARITY_P60O_002",
+      "fieldPolicyOperation": "WRITE",
+      "fieldPolicyType": "FULL_ACCESS",
+      "fields": [],
+      "id": "962693fb-2335-fcdb-fdfc-62dca639b948",
+      "reason": "parity p60o-002-merge-example",
+      "resourceType": "PARITY_SUITE_P60O_002",
+      "roles": [
+        "ROLE_PARITY_P60O_002_2"
+      ]
+    },
+    {
+      "component": "PARITY_SUITE_P60O_002",
+      "domain": "PARITY_P60O_002",
+      "fieldPolicyOperation": "WRITE",
+      "fieldPolicyType": "WHITELIST",
+      "fields": [
+        "101",
+        "102"
+      ],
+      "id": "85970ed3-a8e5-5de4-6af9-bc877dd05f1a",
+      "reason": "parity p60o-002-merge-example",
+      "resourceType": "PARITY_SUITE_P60O_002",
+      "roles": [
+        "ROLE_PARITY_P60O_002_1"
+      ]
+    }
+  ]
+}

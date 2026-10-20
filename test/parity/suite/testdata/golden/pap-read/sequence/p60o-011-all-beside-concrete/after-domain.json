@@ -1,0 +1,33 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "component": "PARITY_SUITE_P60O_011",
+      "domain": "PARITY_P60O_011",
+      "fieldPolicyOperation": "READ",
+      "fieldPolicyType": "FULL_ACCESS",
+      "fields": [],
+      "id": "aea8f774-6ddc-01fc-8df9-84e78947bb4c",
+      "reason": "parity p60o-011-all-beside-concrete",
+      "resourceType": "all",
+      "roles": [
+        "ROLE_PARITY_P60O_011_A"
+      ]
+    },
+    {
+      "component": "PARITY_SUITE_P60O_011",
+      "domain": "PARITY_P60O_011",
+      "fieldPolicyOperation": "READ",
+      "fieldPolicyType": "WHITELIST",
+      "fields": [
+        "f1"
+      ],
+      "id": "1dcbb2a4-4019-7682-d14c-978c79eb1ce5",
+      "reason": "parity p60o-011-all-beside-concrete",
+      "resourceType": "PARITY_SUITE_P60O_011",
+      "roles": [
+        "ROLE_PARITY_P60O_011_A"
+      ]
+    }
+  ]
+}

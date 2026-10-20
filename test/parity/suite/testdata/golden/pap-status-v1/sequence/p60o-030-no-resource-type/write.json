@@ -1,0 +1,6 @@
+{
+  "status": 400,
+  "message": {
+    "message": "'resourceType' field can't be blank for obligation with ID: '92f1f139-9e22-35e5-fadf-1d3d8442bedb'"
+  }
+}

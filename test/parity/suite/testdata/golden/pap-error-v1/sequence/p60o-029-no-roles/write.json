@@ -1,0 +1,6 @@
+{
+  "status": 400,
+  "body": {
+    "message": "'roles' field can't be empty for obligation with ID: 'b94fa090-b859-c400-528e-a81dd56c56f4'"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "component": "PARITY_SUITE_P60O_013",
+      "domain": "PARITY_P60O_013",
+      "fieldPolicyOperation": "READ",
+      "fieldPolicyType": "WHITELIST",
+      "fields": [
+        "f1"
+      ],
+      "id": "60f2178a-ef78-5176-5716-21f5886aee12",
+      "reason": "parity p60o-013-two-tenants",
+      "resourceType": "PARITY_SUITE_P60O_013",
+      "roles": [
+        "ROLE_PARITY_P60O_013_A"
+      ]
+    }
+  ]
+}

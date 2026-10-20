@@ -1,0 +1,49 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "read": {
+        "whitelist": {
+          "fields": [
+            "101",
+            "102",
+            "103"
+          ],
+          "fullAccess": false
+        }
+      },
+      "resourceType": "PARITY_SUITE_P60O_002",
+      "role": "ROLE_PARITY_P60O_002_1",
+      "tenantId": "parity-p60o-002",
+      "write": {
+        "whitelist": {
+          "fields": [
+            "101",
+            "102"
+          ],
+          "fullAccess": false
+        }
+      }
+    },
+    {
+      "read": {
+        "whitelist": {
+          "fields": [],
+          "fullAccess": false
+        }
+      },
+      "resourceType": "PARITY_SUITE_P60O_002",
+      "role": "ROLE_PARITY_P60O_002_2",
+      "tenantId": "parity-p60o-002",
+      "write": {
+        "whitelist": {
+          "fields": [],
+          "fullAccess": true
+        }
+      }
+    }
+  ],
+  "keptTenants": [
+    "parity-p60o-002"
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "status": 400,
+  "message": {
+    "message": "'fields' field must be empty in case 'fieldPolicyType' == 'FULL_ACCESS' for obligation with ID: '3c92c91d-1db3-743f-efdc-afafa9053724'"
+  }
+}
