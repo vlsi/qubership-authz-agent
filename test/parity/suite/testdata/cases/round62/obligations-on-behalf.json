@@ -1,5 +1,5 @@
 {
- "about": "Round 62 (on-behalf): the obligations member of v2 checks, filters and bulk operations on a stand with access-control.obligations.enabled=true and access-control.obligations.merge.strategy=weak; the cases of the round before, under the other strategy. Each case runs in a tenant of its own and reads the merged export first; a control goes first and last. The checks send userId: record this file only on a stand whose user lookup answers for the parity realm's users (the User Management stub of round 63).",
+ "about": "Round 62 (on-behalf): the obligations member of v2 checks, filters and bulk operations on a stand with access-control.obligations.enabled=true and access-control.obligations.merge.strategy=weak; the cases of the round before, under the other strategy. Each case runs in a tenant of its own and reads the merged export first; a control goes first and last. Every step that decides is followed by both raw reads of the v3 export, policySets and pips. The checks send userId: record this file only on a stand whose user lookup answers for the parity realm's users (the User Management stub of round 63).",
  "standVersion": true,
  "standProperties": {
   "access-control.obligations.enabled": "true",
@@ -118,6 +118,22 @@
         "obligations": "true"
        }
       }
+     ]
+    },
+    {
+     "name": "decide-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "decide-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
@@ -321,6 +337,22 @@
      ]
     },
     {
+     "name": "decide-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "decide-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
+     ]
+    },
+    {
      "name": "cleanup",
      "op": "delete-domain-obligations",
      "args": {
@@ -467,6 +499,22 @@
         "obligations": "true"
        }
       }
+     ]
+    },
+    {
+     "name": "decide-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "decide-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
