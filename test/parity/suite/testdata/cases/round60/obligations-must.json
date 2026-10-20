@@ -1,5 +1,5 @@
 {
- "about": "Round 60 (must): obligations written, read back by domain and exported raw and merged, and v2 requests that ask for obligations, on a stand with access-control.obligations.enabled=false. Each case runs in a tenant of its own and reads the merged export first; a control goes first and last.",
+ "about": "Round 60 (must): obligations written, read back by domain and exported raw and merged, and v2 requests that ask for obligations, on a stand with access-control.obligations.enabled=false. Each case runs in a tenant of its own and reads the merged export first; a control goes first and last. Every step that decides is followed by both raw reads of the v3 export, policySets and pips. They were added after the round was sent, so that the export-fed profile can compare most decisions with legacy.",
  "standVersion": true,
  "standProperties": {
   "access-control.obligations.enabled": "false"
@@ -2630,6 +2630,22 @@
         "obligations": "true"
        }
       }
+     ]
+    },
+    {
+     "name": "decide-raw-sets",
+     "op": "read-config-sets",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-sets"
+     ]
+    },
+    {
+     "name": "decide-raw-pips",
+     "op": "read-config-pips",
+     "args": {},
+     "observe": [
+      "read-raw:read-config-pips"
      ]
     },
     {
