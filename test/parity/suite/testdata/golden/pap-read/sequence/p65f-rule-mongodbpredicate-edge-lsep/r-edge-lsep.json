@@ -1,0 +1,207 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "externalId": "parity-p65-fld-013-blank-vt",
+        "name": "p65f-rule-mongodbpredicate s-blank-vt",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "p65f-rule-mongodbpredicate s-blank-vt reader",
+            "policyId": "9c06e231-8299-159c-4c58-bf137f567a88",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "mongodbPredicate": "\u000b",
+                "name": "p65f-rule-mongodbpredicate s-blank-vt rule",
+                "ruleId": "8c2b1816-bbbd-262e-9b62-a385b3e8834c",
+                "ruleType": "DEFAULT",
+                "target": "operation == 'READ'",
+                "tenantId": "parity-p65f-013-blank-vt"
+              }
+            ],
+            "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+            "tenantId": "parity-p65f-013-blank-vt"
+          }
+        ],
+        "policySetId": "35724810-51d6-ef6c-353a-9b4f977d3d14",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P65_FLD_013'",
+        "tenantId": "parity-p65f-013-blank-vt",
+        "type": "DEFAULT"
+      },
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "externalId": "parity-p65-fld-013-edge-cr",
+        "name": "p65f-rule-mongodbpredicate s-edge-cr",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "p65f-rule-mongodbpredicate s-edge-cr reader",
+            "policyId": "5dca606a-83da-de9b-38cf-b4a83aca3562",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "mongodbPredicate": "\r\"a\":{\"$eq\":\"y\"}\r",
+                "name": "p65f-rule-mongodbpredicate s-edge-cr rule",
+                "ruleId": "557c1f10-3dd6-65ce-1508-3cf855aced34",
+                "ruleType": "DEFAULT",
+                "target": "operation == 'READ'",
+                "tenantId": "parity-p65f-013-edge-cr"
+              }
+            ],
+            "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+            "tenantId": "parity-p65f-013-edge-cr"
+          }
+        ],
+        "policySetId": "d5caac12-5392-b9fb-c484-2c4904859210",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P65_FLD_013'",
+        "tenantId": "parity-p65f-013-edge-cr",
+        "type": "DEFAULT"
+      },
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "externalId": "parity-p65-fld-013-edge-ff",
+        "name": "p65f-rule-mongodbpredicate s-edge-ff",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "p65f-rule-mongodbpredicate s-edge-ff reader",
+            "policyId": "0eb3fc5e-8d82-3d37-8d9c-1c44f76a769c",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "mongodbPredicate": "\f\"a\":{\"$eq\":\"y\"}\f",
+                "name": "p65f-rule-mongodbpredicate s-edge-ff rule",
+                "ruleId": "d63ea14f-3596-13fa-5e95-3c4cba76d60c",
+                "ruleType": "DEFAULT",
+                "target": "operation == 'READ'",
+                "tenantId": "parity-p65f-013-edge-ff"
+              }
+            ],
+            "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+            "tenantId": "parity-p65f-013-edge-ff"
+          }
+        ],
+        "policySetId": "dea1f17b-44ea-b3a0-6130-a29dc4948685",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P65_FLD_013'",
+        "tenantId": "parity-p65f-013-edge-ff",
+        "type": "DEFAULT"
+      },
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "externalId": "parity-p65-fld-013-edge-lf",
+        "name": "p65f-rule-mongodbpredicate s-edge-lf",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "p65f-rule-mongodbpredicate s-edge-lf reader",
+            "policyId": "0899c7dc-e03f-6e9a-2dd4-db71ed206959",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "mongodbPredicate": "\n\"a\":{\"$eq\":\"y\"}\n",
+                "name": "p65f-rule-mongodbpredicate s-edge-lf rule",
+                "ruleId": "e6b97e17-bb84-3026-ef08-5fdeb732b9d7",
+                "ruleType": "DEFAULT",
+                "target": "operation == 'READ'",
+                "tenantId": "parity-p65f-013-edge-lf"
+              }
+            ],
+            "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+            "tenantId": "parity-p65f-013-edge-lf"
+          }
+        ],
+        "policySetId": "5d50b9dd-662a-9317-9f7b-387b69334dfc",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P65_FLD_013'",
+        "tenantId": "parity-p65f-013-edge-lf",
+        "type": "DEFAULT"
+      },
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "externalId": "parity-p65-fld-013-edge-lsep",
+        "name": "p65f-rule-mongodbpredicate s-edge-lsep",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "p65f-rule-mongodbpredicate s-edge-lsep reader",
+            "policyId": "bf0b5d29-1424-a373-8cd8-499f5ffdedf6",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "mongodbPredicate": "\u2028\"a\":{\"$eq\":\"y\"}\u2028",
+                "name": "p65f-rule-mongodbpredicate s-edge-lsep rule",
+                "ruleId": "bf61dfec-3aef-5fbe-8d4d-04948af039a3",
+                "ruleType": "DEFAULT",
+                "target": "operation == 'READ'",
+                "tenantId": "parity-p65f-013-edge-lsep"
+              }
+            ],
+            "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+            "tenantId": "parity-p65f-013-edge-lsep"
+          }
+        ],
+        "policySetId": "8c2a9e79-f5ef-9767-6660-1a4179084108",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P65_FLD_013'",
+        "tenantId": "parity-p65f-013-edge-lsep",
+        "type": "DEFAULT"
+      },
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "externalId": "parity-p65-fld-013-empty-string",
+        "name": "p65f-rule-mongodbpredicate s-empty-string",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "p65f-rule-mongodbpredicate s-empty-string reader",
+            "policyId": "f822e696-56d7-c362-13ce-8cf223090dd9",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "mongodbPredicate": "",
+                "name": "p65f-rule-mongodbpredicate s-empty-string rule",
+                "ruleId": "c52ba86b-7ec0-feb8-6640-07db6bc311b5",
+                "ruleType": "DEFAULT",
+                "target": "operation == 'READ'",
+                "tenantId": "parity-p65f-013-empty-string"
+              }
+            ],
+            "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+            "tenantId": "parity-p65f-013-empty-string"
+          }
+        ],
+        "policySetId": "d6b4f9d3-fbf9-716a-7639-c9108506aabd",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P65_FLD_013'",
+        "tenantId": "parity-p65f-013-empty-string",
+        "type": "DEFAULT"
+      }
+    ]
+  },
+  "keptTenants": [
+    "parity-p65f-013-blank-vt",
+    "parity-p65f-013-edge-cr",
+    "parity-p65f-013-edge-ff",
+    "parity-p65f-013-edge-lf",
+    "parity-p65f-013-edge-lsep",
+    "parity-p65f-013-empty-string"
+  ]
+}

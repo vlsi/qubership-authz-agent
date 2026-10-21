@@ -1,0 +1,20 @@
+{
+  "status": 200,
+  "body": {
+    "pips": [
+      {
+        "cacheable": false,
+        "defaultValue": "none",
+        "domain": "PARITY_P65_FLD_016",
+        "header": "x-parity-p65f-016-a",
+        "name": "subject.parityP65F016A",
+        "pipType": "HEADER",
+        "tenantId": "parity-p65f-016-edge-vt",
+        "type": "UUID"
+      }
+    ]
+  },
+  "keptTenants": [
+    "parity-p65f-016-edge-vt"
+  ]
+}

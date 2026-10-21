@@ -1,0 +1,41 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "component": "PARITY",
+        "domain": "PARITY_P49_META_045",
+        "name": "PARITY_P49_META_045_PARITY_PARITY_SUITE_P49_META_045_PolicySet",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "PARITY_P49_META_045_PARITY_PARITY_SUITE_P49_META_045_READ_Policy",
+            "policyId": "7eea462b-4012-a04a-7b4a-2d355e2c3634",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "mongodbPredicate": "\"a\":{\"$eq\":\"mongo-nested\"}",
+                "name": "r29fields-predicates-every-key",
+                "rsqlPredicate": "a==rsql",
+                "ruleId": "aac26bb1-c2a5-f034-35f9-f11ab293765f",
+                "ruleType": "DEFAULT",
+                "target": "subject.roles CONTAINS ANY 'ROLE_PARITY_READER'",
+                "tenantId": "parity-p49-meta-exp-write-domain-policies-rec1"
+              }
+            ],
+            "target": "operation == 'READ'",
+            "tenantId": "parity-p49-meta-exp-write-domain-policies-rec1"
+          }
+        ],
+        "policySetId": "397eea46-2b40-12a0-4a7b-4a2d355e2c36",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P49_META_045'",
+        "tenantId": "parity-p49-meta-exp-write-domain-policies-rec1",
+        "type": "SIMPLIFIED"
+      }
+    ]
+  }
+}

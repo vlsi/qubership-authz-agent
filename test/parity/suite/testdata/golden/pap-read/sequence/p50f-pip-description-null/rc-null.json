@@ -1,0 +1,20 @@
+{
+  "status": 200,
+  "body": {
+    "pips": [
+      {
+        "cacheable": false,
+        "defaultValue": "none",
+        "domain": "PARITY_P50_FLD_001",
+        "header": "x-parity-p50f-001-a",
+        "name": "subject.parityP50F001A",
+        "pipType": "HEADER",
+        "tenantId": "parity-p50f-001-null",
+        "type": "REGULAR"
+      }
+    ]
+  },
+  "keptTenants": [
+    "parity-p50f-001-null"
+  ]
+}

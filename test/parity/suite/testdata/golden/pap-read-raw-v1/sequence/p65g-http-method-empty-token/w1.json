@@ -1,0 +1,14 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "cacheable": false,
+      "claim": "department",
+      "defaultValue": "none",
+      "domain": "P65G_HTTP_METHOD_EMPTY_TOKEN",
+      "name": "subject.parityP65gTokenMethod",
+      "pipType": "TOKEN",
+      "type": "REGULAR"
+    }
+  ]
+}

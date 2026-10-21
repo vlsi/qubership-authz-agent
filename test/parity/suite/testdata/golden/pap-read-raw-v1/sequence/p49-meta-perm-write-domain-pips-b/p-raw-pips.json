@@ -1,0 +1,42 @@
+{
+  "status": 200,
+  "body": {
+    "pips": [
+      {
+        "cacheable": false,
+        "defaultValue": "other",
+        "domain": "PARITY_P49_META_185",
+        "header": "x-parity-p49-meta-185-a",
+        "name": "subject.parityP49Meta185A",
+        "pipType": "HEADER",
+        "tenantId": "parity-p49-meta-perm-write-domain-pips-b",
+        "type": "REGULAR"
+      },
+      {
+        "cacheable": false,
+        "defaultValue": "other",
+        "domain": "PARITY_P49_META_186",
+        "header": "x-parity-p49-meta-186-a",
+        "name": "subject.parityP49Meta186A",
+        "pipType": "HEADER",
+        "tenantId": "parity-p49-meta-perm-write-domain-pips-b",
+        "type": "REGULAR"
+      },
+      {
+        "cacheable": true,
+        "customMapping": {
+          "subject.roles": {
+            "ROLE_PARITY_READER": [
+              "parity_p49_meta_273_n"
+            ]
+          }
+        },
+        "name": "subject.permissions",
+        "pipType": "MAPPING",
+        "productMapping": {},
+        "tenantId": "parity-p49-meta-perm-write-domain-pips-b",
+        "type": "UUID"
+      }
+    ]
+  }
+}

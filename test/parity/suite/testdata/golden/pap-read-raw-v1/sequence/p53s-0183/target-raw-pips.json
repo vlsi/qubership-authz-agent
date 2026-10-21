@@ -1,0 +1,14 @@
+{
+  "status": 200,
+  "body": {
+    "pips": [
+      {
+        "cacheable": true,
+        "name": "subject.permissions",
+        "pipType": "MAPPING",
+        "tenantId": "parity-p53s-0183",
+        "type": "UUID"
+      }
+    ]
+  }
+}

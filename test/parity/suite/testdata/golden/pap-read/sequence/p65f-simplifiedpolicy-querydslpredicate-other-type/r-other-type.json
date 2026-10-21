@@ -1,0 +1,108 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "component": "PARITY",
+        "domain": "PARITY_P65_FLD_010",
+        "name": "PARITY_P65_FLD_010_PARITY_PARITY_SUITE_P65_FLD_010_PolicySet",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "PARITY_P65_FLD_010_PARITY_PARITY_SUITE_P65_FLD_010_READ_Policy",
+            "policyId": "6bddcf32-1f45-9d59-6976-42cdb87470e0",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p65f-simplifiedpolicy-querydslpredicate p",
+                "ruleId": "c8eb3898-e347-9209-a9ea-9f2e4134e167",
+                "ruleType": "DEFAULT",
+                "target": "subject.roles CONTAINS ANY 'ROLE_PARITY_READER'",
+                "tenantId": "parity-p65f-010-empty-string"
+              }
+            ],
+            "target": "operation == 'READ'",
+            "tenantId": "parity-p65f-010-empty-string"
+          }
+        ],
+        "policySetId": "4c6bddcf-321f-459d-5969-7642cdb87470",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P65_FLD_010'",
+        "tenantId": "parity-p65f-010-empty-string",
+        "type": "SIMPLIFIED"
+      },
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "component": "PARITY",
+        "domain": "PARITY_P65_FLD_010",
+        "name": "PARITY_P65_FLD_010_PARITY_PARITY_SUITE_P65_FLD_010_PolicySet",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "PARITY_P65_FLD_010_PARITY_PARITY_SUITE_P65_FLD_010_READ_Policy",
+            "policyId": "6bddcf32-1f45-9d59-6976-42cdb87470e0",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p65f-simplifiedpolicy-querydslpredicate p",
+                "ruleId": "c8eb3898-e347-9209-a9ea-9f2e4134e167",
+                "ruleType": "DEFAULT",
+                "target": "subject.roles CONTAINS ANY 'ROLE_PARITY_READER'",
+                "tenantId": "parity-p65f-010-null"
+              }
+            ],
+            "target": "operation == 'READ'",
+            "tenantId": "parity-p65f-010-null"
+          }
+        ],
+        "policySetId": "4c6bddcf-321f-459d-5969-7642cdb87470",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P65_FLD_010'",
+        "tenantId": "parity-p65f-010-null",
+        "type": "SIMPLIFIED"
+      },
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "component": "PARITY",
+        "domain": "PARITY_P65_FLD_010",
+        "name": "PARITY_P65_FLD_010_PARITY_PARITY_SUITE_P65_FLD_010_PolicySet",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "PARITY_P65_FLD_010_PARITY_PARITY_SUITE_P65_FLD_010_READ_Policy",
+            "policyId": "6bddcf32-1f45-9d59-6976-42cdb87470e0",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p65f-simplifiedpolicy-querydslpredicate p",
+                "ruleId": "c8eb3898-e347-9209-a9ea-9f2e4134e167",
+                "ruleType": "DEFAULT",
+                "target": "subject.roles CONTAINS ANY 'ROLE_PARITY_READER'",
+                "tenantId": "parity-p65f-010-other-type"
+              }
+            ],
+            "target": "operation == 'READ'",
+            "tenantId": "parity-p65f-010-other-type"
+          }
+        ],
+        "policySetId": "4c6bddcf-321f-459d-5969-7642cdb87470",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P65_FLD_010'",
+        "tenantId": "parity-p65f-010-other-type",
+        "type": "SIMPLIFIED"
+      }
+    ]
+  },
+  "keptTenants": [
+    "parity-p65f-010-empty-string",
+    "parity-p65f-010-null",
+    "parity-p65f-010-other-type"
+  ]
+}

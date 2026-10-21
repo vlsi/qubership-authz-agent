@@ -1,0 +1,37 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "name": "p48c-state-import-generated-ids s",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "p48c-state-import-generated-ids s reader",
+            "policyId": "\u003cgenerated UUID\u003e",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p48c-state-import-generated-ids s rule",
+                "ruleId": "\u003cgenerated UUID\u003e",
+                "ruleType": "DEFAULT",
+                "target": "operation == 'READ'",
+                "tenantId": "parity-p48-claim-import-generated-ids"
+              }
+            ],
+            "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+            "tenantId": "parity-p48-claim-import-generated-ids"
+          }
+        ],
+        "policySetId": "\u003cgenerated UUID\u003e",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P48C_STATE_006'",
+        "tenantId": "parity-p48-claim-import-generated-ids",
+        "type": "DEFAULT"
+      }
+    ]
+  }
+}

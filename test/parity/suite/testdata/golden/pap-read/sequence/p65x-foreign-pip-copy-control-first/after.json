@@ -1,0 +1,41 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "externalId": "parity-p65x-foreign-pip-copy-control-first",
+        "name": "p65x-foreign-pip-copy-control-first s",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "p65x-foreign-pip-copy-control-first s reader",
+            "policyId": "6a1d0239-b9b5-edc0-356b-e3b6f6bcc5f6",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p65x-foreign-pip-copy-control-first s rule",
+                "ruleId": "3f37aabb-29e0-8acf-b41e-a85c87dbe23b",
+                "ruleType": "DEFAULT",
+                "target": "operation == 'READ'",
+                "tenantId": "parity-p65x-foreign-pip-copy-control-first"
+              }
+            ],
+            "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+            "tenantId": "parity-p65x-foreign-pip-copy-control-first"
+          }
+        ],
+        "policySetId": "eff3a840-64d0-4b0b-3b9a-3c3e0cfad3b9",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P65X_FOREIGN_PIP_COPY_CONTROL_FIRST'",
+        "tenantId": "parity-p65x-foreign-pip-copy-control-first",
+        "type": "DEFAULT"
+      }
+    ]
+  },
+  "keptTenants": [
+    "parity-p65x-foreign-pip-copy-control-first"
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "status": 200,
+  "body": {
+    "pips": [
+      {
+        "cachePeriod": 1,
+        "cacheable": true,
+        "domain": "PARITY_P49_META_215",
+        "name": "subject.permissionScope",
+        "pipType": "PERMISSION_SCOPE",
+        "tenantId": "parity-p49-meta-rt-write-domain-pips-rec2",
+        "type": "UUID",
+        "url": "http://pip-mock:8090"
+      },
+      {
+        "cacheable": false,
+        "claim": "department",
+        "defaultValue": "none",
+        "domain": "PARITY_P49_META_215",
+        "name": "subject.parityP49Meta215RConfigExportToken",
+        "pipType": "TOKEN",
+        "tenantId": "parity-p49-meta-rt-write-domain-pips-rec2",
+        "type": "UUID"
+      },
+      {
+        "cacheable": false,
+        "defaultValue": "none",
+        "domain": "PARITY_P49_META_215",
+        "header": "x-parity-config-export",
+        "name": "subject.parityP49Meta215RConfigExportHeader",
+        "pipType": "HEADER",
+        "tenantId": "parity-p49-meta-rt-write-domain-pips-rec2",
+        "type": "UUID"
+      },
+      {
+        "cacheable": false,
+        "domain": "PARITY_P49_META_215",
+        "httpMethod": "POST",
+        "jsonPath": "$.value",
+        "name": "subject.parityP49Meta215RConfigExportGeneral",
+        "pipType": "GENERAL",
+        "requestAttributes": {
+          "resourceType": "PARITY_SUITE_P49_META_215"
+        },
+        "tenantId": "parity-p49-meta-rt-write-domain-pips-rec2",
+        "type": "JSON",
+        "url": "http://pip-mock:8090/api/v1/pip/config-export"
+      },
+      {
+        "cacheable": true,
+        "customMapping": {
+          "subject.roles": {
+            "ROLE_PARITY_READER": [
+              "parity_config_export"
+            ]
+          }
+        },
+        "name": "subject.permissions",
+        "pipType": "MAPPING",
+        "productMapping": {},
+        "tenantId": "parity-p49-meta-rt-write-domain-pips-rec2",
+        "type": "UUID"
+      }
+    ]
+  }
+}

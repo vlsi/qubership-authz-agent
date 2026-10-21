@@ -1,0 +1,69 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "externalId": "parity-p49-meta-171",
+        "name": "p49-meta-perm-delete-set-customization-a s",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "p49-meta-perm-delete-set-customization-a s reader",
+            "policyId": "05dc04d1-8752-7f1b-1497-8f67c0a1d6bb",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p49-meta-perm-delete-set-customization-a s rule",
+                "ruleId": "c5c3092b-8364-13b5-a11c-0760040d7df6",
+                "ruleType": "DEFAULT",
+                "target": "operation == 'UPDATE'",
+                "tenantId": "parity-p49-meta-perm-delete-set-customization-a"
+              }
+            ],
+            "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+            "tenantId": "parity-p49-meta-perm-delete-set-customization-a"
+          }
+        ],
+        "policySetId": "22db5191-6e60-2aee-fe05-d5c9cdb70192",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P49_META_171'",
+        "tenantId": "parity-p49-meta-perm-delete-set-customization-a",
+        "type": "DEFAULT"
+      },
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "externalId": "parity-p49-meta-172",
+        "name": "p49-meta-perm-delete-set-customization-a s",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "p49-meta-perm-delete-set-customization-a s reader",
+            "policyId": "b9045d2b-55f6-5561-8233-57f51bb3f7b6",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p49-meta-perm-delete-set-customization-a s rule",
+                "ruleId": "d6acd550-c7f5-0dbf-97f5-6dfdf8330b32",
+                "ruleType": "DEFAULT",
+                "target": "operation == 'UPDATE'",
+                "tenantId": "parity-p49-meta-perm-delete-set-customization-a"
+              }
+            ],
+            "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+            "tenantId": "parity-p49-meta-perm-delete-set-customization-a"
+          }
+        ],
+        "policySetId": "f3decc41-4004-ac2a-663a-5612952ff435",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P49_META_172'",
+        "tenantId": "parity-p49-meta-perm-delete-set-customization-a",
+        "type": "DEFAULT"
+      }
+    ]
+  }
+}

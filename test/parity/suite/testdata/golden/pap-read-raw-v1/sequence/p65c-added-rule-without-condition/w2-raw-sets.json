@@ -1,0 +1,46 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "name": "p65c-added-rule-without-condition s",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "p65c-added-rule-without-condition s reader",
+            "policyId": "fc4ff235-fc93-3d32-a577-47f73e36a3b8",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p65c-added-rule-without-condition added rule",
+                "ruleId": "71c8eb61-69a2-74fd-2806-01cf9bd321e2",
+                "ruleType": "DEFAULT",
+                "target": "operation == 'UPDATE'",
+                "tenantId": "parity-p65c-added-rule-without-condition"
+              },
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p65c-added-rule-without-condition s rule",
+                "ruleId": "048e7eb2-c461-eb1c-de8f-5fa3c8b1da2e",
+                "ruleType": "DEFAULT",
+                "target": "operation == 'READ'",
+                "tenantId": "parity-p65c-added-rule-without-condition"
+              }
+            ],
+            "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+            "tenantId": "parity-p65c-added-rule-without-condition"
+          }
+        ],
+        "policySetId": "8b9f231f-c048-f8ea-12cd-90f106224b63",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P65C_ADDED_RULE_WITHOUT_CONDITION'",
+        "tenantId": "parity-p65c-added-rule-without-condition",
+        "type": "DEFAULT"
+      }
+    ]
+  }
+}

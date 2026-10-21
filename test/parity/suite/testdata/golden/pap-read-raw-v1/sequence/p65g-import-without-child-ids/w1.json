@@ -1,0 +1,37 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "name": "p65g-import-without-child-ids s",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "p65g-import-without-child-ids s reader",
+            "policyId": "\u003cgenerated UUID\u003e",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p65g-import-without-child-ids s rule",
+                "ruleId": "\u003cgenerated UUID\u003e",
+                "ruleType": "DEFAULT",
+                "target": "operation == 'READ'",
+                "tenantId": "parity-p65g-import-without-child-ids"
+              }
+            ],
+            "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+            "tenantId": "parity-p65g-import-without-child-ids"
+          }
+        ],
+        "policySetId": "6065e3ec-8798-462d-453e-6a3d066573a2",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P65G_IMPORT_WITHOUT_CHILD_IDS'",
+        "tenantId": "parity-p65g-import-without-child-ids",
+        "type": "DEFAULT"
+      }
+    ]
+  }
+}

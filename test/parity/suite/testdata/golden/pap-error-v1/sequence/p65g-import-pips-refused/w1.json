@@ -1,0 +1,4 @@
+{
+  "status": 400,
+  "body": "Cannot deserialize value of type `\u003credacted\u003e` from String \"PARITY_UNKNOWN_TYPE\": not one of the values accepted for Enum class: [PERMISSION_SCOPE, FILTERED, GENERAL, TOKEN, HEADER, MAPPING]"
+}

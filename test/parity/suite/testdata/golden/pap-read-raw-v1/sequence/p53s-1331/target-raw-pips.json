@@ -1,0 +1,22 @@
+{
+  "status": 200,
+  "body": {
+    "pips": [
+      {
+        "cacheable": true,
+        "customMapping": {
+          "subject.roles": {
+            "ROLE_PARITY_P53S_1331_R%31": [
+              "parity_p53s_1331_0",
+              "parity_p53s_1331_1"
+            ]
+          }
+        },
+        "name": "subject.permissions",
+        "pipType": "MAPPING",
+        "tenantId": "parity-p53s-1331",
+        "type": "UUID"
+      }
+    ]
+  }
+}

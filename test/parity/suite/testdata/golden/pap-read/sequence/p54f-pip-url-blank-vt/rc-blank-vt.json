@@ -1,0 +1,93 @@
+{
+  "status": 200,
+  "body": {
+    "pips": [
+      {
+        "cacheable": false,
+        "domain": "PARITY_P54_FLD_035",
+        "httpMethod": "POST",
+        "jsonPath": "$.groups",
+        "name": "subject.parityP54F035A",
+        "pipType": "GENERAL",
+        "tenantId": "parity-p54f-035-blank-cr",
+        "type": "JSON",
+        "url": "\r"
+      },
+      {
+        "cacheable": false,
+        "domain": "PARITY_P54_FLD_035",
+        "httpMethod": "POST",
+        "jsonPath": "$.groups",
+        "name": "subject.parityP54F035A",
+        "pipType": "GENERAL",
+        "tenantId": "parity-p54f-035-blank-ff",
+        "type": "JSON",
+        "url": "\f"
+      },
+      {
+        "cacheable": false,
+        "domain": "PARITY_P54_FLD_035",
+        "httpMethod": "POST",
+        "jsonPath": "$.groups",
+        "name": "subject.parityP54F035A",
+        "pipType": "GENERAL",
+        "tenantId": "parity-p54f-035-blank-lf",
+        "type": "JSON",
+        "url": "\n"
+      },
+      {
+        "cacheable": false,
+        "domain": "PARITY_P54_FLD_035",
+        "httpMethod": "POST",
+        "jsonPath": "$.groups",
+        "name": "subject.parityP54F035A",
+        "pipType": "GENERAL",
+        "tenantId": "parity-p54f-035-blank-lsep",
+        "type": "JSON",
+        "url": "\u2028"
+      },
+      {
+        "cacheable": false,
+        "domain": "PARITY_P54_FLD_035",
+        "httpMethod": "POST",
+        "jsonPath": "$.groups",
+        "name": "subject.parityP54F035A",
+        "pipType": "GENERAL",
+        "tenantId": "parity-p54f-035-blank-nbsp",
+        "type": "JSON",
+        "url": " "
+      },
+      {
+        "cacheable": false,
+        "domain": "PARITY_P54_FLD_035",
+        "httpMethod": "POST",
+        "jsonPath": "$.groups",
+        "name": "subject.parityP54F035A",
+        "pipType": "GENERAL",
+        "tenantId": "parity-p54f-035-blank-tab",
+        "type": "JSON",
+        "url": "\t"
+      },
+      {
+        "cacheable": false,
+        "domain": "PARITY_P54_FLD_035",
+        "httpMethod": "POST",
+        "jsonPath": "$.groups",
+        "name": "subject.parityP54F035A",
+        "pipType": "GENERAL",
+        "tenantId": "parity-p54f-035-blank-vt",
+        "type": "JSON",
+        "url": "\u000b"
+      }
+    ]
+  },
+  "keptTenants": [
+    "parity-p54f-035-blank-cr",
+    "parity-p54f-035-blank-ff",
+    "parity-p54f-035-blank-lf",
+    "parity-p54f-035-blank-lsep",
+    "parity-p54f-035-blank-nbsp",
+    "parity-p54f-035-blank-tab",
+    "parity-p54f-035-blank-vt"
+  ]
+}

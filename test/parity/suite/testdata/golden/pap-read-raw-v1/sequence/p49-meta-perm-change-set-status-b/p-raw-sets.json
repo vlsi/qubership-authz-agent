@@ -1,0 +1,131 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "externalId": "parity-p49-meta-153",
+        "name": "p49-meta-perm-change-set-status-b s",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "p49-meta-perm-change-set-status-b s reader",
+            "policyId": "8c51885e-0efc-0741-85d7-941d7efe82f0",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p49-meta-perm-change-set-status-b s rule",
+                "ruleId": "b6621f0d-3f5d-64dd-0ff9-8a7cd20f69d4",
+                "ruleType": "DEFAULT",
+                "target": "operation == 'READ'",
+                "tenantId": "parity-p49-meta-perm-change-set-status-b"
+              }
+            ],
+            "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+            "tenantId": "parity-p49-meta-perm-change-set-status-b"
+          }
+        ],
+        "policySetId": "9a380c75-fb51-62f5-d8d8-5673bb33a05d",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P49_META_153'",
+        "tenantId": "parity-p49-meta-perm-change-set-status-b",
+        "type": "DEFAULT"
+      },
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "externalId": "parity-p49-meta-153",
+        "name": "p49-meta-perm-change-set-status-b u",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "p49-meta-perm-change-set-status-b u reader",
+            "policyId": "98853e10-5b6a-2f3d-7f65-f62c3ab14075",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p49-meta-perm-change-set-status-b u rule",
+                "ruleId": "653807c6-1c55-ccad-2686-99977001a560",
+                "ruleType": "DEFAULT",
+                "target": "operation == 'UPDATE'",
+                "tenantId": "parity-p49-meta-perm-change-set-status-b"
+              }
+            ],
+            "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+            "tenantId": "parity-p49-meta-perm-change-set-status-b"
+          }
+        ],
+        "policySetId": "b994b4a2-53c3-8d67-2bb9-3f19047b6f21",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P49_META_153'",
+        "tenantId": "parity-p49-meta-perm-change-set-status-b",
+        "type": "DEFAULT"
+      },
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "externalId": "parity-p49-meta-154",
+        "name": "p49-meta-perm-change-set-status-b s",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "p49-meta-perm-change-set-status-b s reader",
+            "policyId": "866fb085-6e87-6385-4895-c4b07987f811",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p49-meta-perm-change-set-status-b s rule",
+                "ruleId": "c7031bc3-77bb-1abe-5346-952cec5209f0",
+                "ruleType": "DEFAULT",
+                "target": "operation == 'READ'",
+                "tenantId": "parity-p49-meta-perm-change-set-status-b"
+              }
+            ],
+            "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+            "tenantId": "parity-p49-meta-perm-change-set-status-b"
+          }
+        ],
+        "policySetId": "e1ba012b-c021-2cf1-69cf-c50df80fed91",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P49_META_154'",
+        "tenantId": "parity-p49-meta-perm-change-set-status-b",
+        "type": "DEFAULT"
+      },
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "externalId": "parity-p49-meta-154",
+        "name": "p49-meta-perm-change-set-status-b u",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "p49-meta-perm-change-set-status-b u reader",
+            "policyId": "34387b38-b6ff-3c52-291f-5aec6a97980d",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p49-meta-perm-change-set-status-b u rule",
+                "ruleId": "9ba4fdf4-a732-147d-bde2-b3a99cf7f988",
+                "ruleType": "DEFAULT",
+                "target": "operation == 'UPDATE'",
+                "tenantId": "parity-p49-meta-perm-change-set-status-b"
+              }
+            ],
+            "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+            "tenantId": "parity-p49-meta-perm-change-set-status-b"
+          }
+        ],
+        "policySetId": "1cfacb8d-b104-44ea-9695-e433b2722f57",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P49_META_154'",
+        "tenantId": "parity-p49-meta-perm-change-set-status-b",
+        "type": "DEFAULT"
+      }
+    ]
+  }
+}

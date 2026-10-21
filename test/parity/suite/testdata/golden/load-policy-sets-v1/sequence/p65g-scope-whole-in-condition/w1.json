@@ -1,0 +1,4 @@
+{
+  "status": 400,
+  "message": "Expression [subject.permissionScope IS NULL]: Invalid expression: subject.permissionScope PIP doesn't exist"
+}

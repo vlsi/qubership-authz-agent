@@ -1,0 +1,6 @@
+{
+  "status": 400,
+  "body": {
+    "message": "The 'level' parameter is required for the '/access/v1/config/customization/policySet/c18b98b0-a016-9822-d3f9-aa9a6c322793' endpoint."
+  }
+}

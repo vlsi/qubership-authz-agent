@@ -1,0 +1,31 @@
+{
+  "status": 200,
+  "body": {
+    "pips": [
+      {
+        "cacheable": true,
+        "domain": "PARITY_P54_FLD_038",
+        "name": "subject.parityP54F038A.filtered",
+        "pipType": "FILTERED",
+        "resourceType": "\f",
+        "tenantId": "parity-p54f-038-blank-ff",
+        "type": "UUID",
+        "url": "http://pip-mock/api/v1/pip/parity-doc"
+      },
+      {
+        "cacheable": true,
+        "domain": "PARITY_P54_FLD_038",
+        "name": "subject.parityP54F038A.filtered",
+        "pipType": "FILTERED",
+        "resourceType": "\r",
+        "tenantId": "parity-p54f-038-blank-cr",
+        "type": "UUID",
+        "url": "http://pip-mock/api/v1/pip/parity-doc"
+      }
+    ]
+  },
+  "keptTenants": [
+    "parity-p54f-038-blank-cr",
+    "parity-p54f-038-blank-ff"
+  ]
+}

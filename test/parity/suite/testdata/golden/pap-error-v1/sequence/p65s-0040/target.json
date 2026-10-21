@@ -1,0 +1,6 @@
+{
+  "status": 404,
+  "body": {
+    "message": "Policy set with id=71bdbb18-9f8a-d5ab-1bf9-e3f96cbda2cf doesn't exist"
+  }
+}

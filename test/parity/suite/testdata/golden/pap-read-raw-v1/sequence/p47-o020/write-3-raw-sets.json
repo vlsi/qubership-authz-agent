@@ -1,0 +1,39 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "component": "PARITY",
+        "domain": "PARITY_ISOLATED",
+        "name": "PARITY_ISOLATED_PARITY_PARITY_SUITE_R36K_R36GAPS_MAPPING_TABLE_A_TEXT_PolicySet",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "PARITY_ISOLATED_PARITY_PARITY_SUITE_R36K_R36GAPS_MAPPING_TABLE_A_TEXT_READ_Policy",
+            "policyId": "a136c72e-de23-4973-c838-5fce10aa8b9c",
+            "rules": [
+              {
+                "condition": "subject.permissions CONTAINS 'PARITY_R36_TEXT' OR resource.a == 'y'",
+                "effect": "ALLOW",
+                "name": "r36gaps-mapping-table-a-text",
+                "ruleId": "00000000-0000-0000-0000-0000000f0001",
+                "ruleType": "DEFAULT",
+                "target": "subject.roles CONTAINS ANY 'ROLE_PARITY_READER'",
+                "tenantId": "parity-p47-o020"
+              }
+            ],
+            "target": "operation == 'READ'",
+            "tenantId": "parity-p47-o020"
+          }
+        ],
+        "policySetId": "f9a136c7-2ede-2349-73c8-385fce10aa8b",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_R36K_R36GAPS_MAPPING_TABLE_A_TEXT'",
+        "tenantId": "parity-p47-o020",
+        "type": "SIMPLIFIED"
+      }
+    ]
+  }
+}

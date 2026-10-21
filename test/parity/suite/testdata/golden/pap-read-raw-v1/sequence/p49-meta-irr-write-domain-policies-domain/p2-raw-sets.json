@@ -1,0 +1,71 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "component": "PARITY",
+        "domain": "PARITY_P49_META_139",
+        "name": "PARITY_P49_META_139_PARITY_PARITY_SUITE_P49_META_139_PolicySet",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "PARITY_P49_META_139_PARITY_PARITY_SUITE_P49_META_139_READ_Policy",
+            "policyId": "d9786fe1-8e6a-88c6-7307-62f540a36b1e",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p49-meta-irr-write-domain-policies-domain p",
+                "ruleId": "1c50ca3f-4eda-9417-be8d-ff319a24e69b",
+                "ruleType": "DEFAULT",
+                "target": "subject.roles CONTAINS ANY 'ROLE_PARITY_READER'",
+                "tenantId": "parity-p49-meta-irr-write-domain-policies-domain"
+              }
+            ],
+            "target": "operation == 'READ'",
+            "tenantId": "parity-p49-meta-irr-write-domain-policies-domain"
+          }
+        ],
+        "policySetId": "b3d9786f-e18e-6a88-c673-0762f540a36b",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P49_META_139'",
+        "tenantId": "parity-p49-meta-irr-write-domain-policies-domain",
+        "type": "SIMPLIFIED"
+      },
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "component": "PARITY",
+        "domain": "PARITY_P49_META_140",
+        "name": "PARITY_P49_META_140_PARITY_PARITY_SUITE_P49_META_140_PolicySet",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "PARITY_P49_META_140_PARITY_PARITY_SUITE_P49_META_140_READ_Policy",
+            "policyId": "1a9cd61b-1fca-94aa-2fb1-b65e43a522be",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p49-meta-irr-write-domain-policies-domain p",
+                "ruleId": "a9a1f0b1-7240-8914-a6f8-6acbe5ef5cc8",
+                "ruleType": "DEFAULT",
+                "target": "subject.roles CONTAINS ANY 'ROLE_PARITY_READER'",
+                "tenantId": "parity-p49-meta-irr-write-domain-policies-domain"
+              }
+            ],
+            "target": "operation == 'READ'",
+            "tenantId": "parity-p49-meta-irr-write-domain-policies-domain"
+          }
+        ],
+        "policySetId": "7a1a9cd6-1b1f-ca94-aa2f-b1b65e43a522",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P49_META_140'",
+        "tenantId": "parity-p49-meta-irr-write-domain-policies-domain",
+        "type": "SIMPLIFIED"
+      }
+    ]
+  }
+}

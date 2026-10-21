@@ -1,0 +1,37 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "name": "p50i-custom-lookup-x a",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "p50i-custom-lookup-x a reader",
+            "policyId": "d9807a40-9992-16a0-d2f0-ab77a06c2a70",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p50i-custom-lookup-x a rule",
+                "ruleId": "3f604a47-e7ac-f94e-f46e-c003a0cc12d9",
+                "ruleType": "DEFAULT",
+                "target": "operation == 'READ'",
+                "tenantId": "parity-p50i-028"
+              }
+            ],
+            "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+            "tenantId": "parity-p50i-028"
+          }
+        ],
+        "policySetId": "0cb59437-0c46-bf03-9608-2efb36d7ba54",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P50_ID_028'",
+        "tenantId": "parity-p50i-028",
+        "type": "DEFAULT"
+      }
+    ]
+  }
+}

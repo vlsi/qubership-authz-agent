@@ -1,0 +1,73 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "externalId": "parity-p65x-custom-id-case",
+        "name": "p65x-custom-id-case s",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "p65x-custom-id-case s reader",
+            "policyId": "c70ea7eb-185d-c71d-c89e-30094fd72800",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p65x-custom-id-case s rule",
+                "ruleId": "2512dc4d-cf39-2a7a-b5f9-d15dbca98c7b",
+                "ruleType": "DEFAULT",
+                "target": "operation == 'UPDATE'",
+                "tenantId": "parity-p65x-custom-id-case"
+              }
+            ],
+            "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+            "tenantId": "parity-p65x-custom-id-case"
+          }
+        ],
+        "policySetId": "d6cb5ec6-2d8d-16b9-c5e3-cbdfb73b5607",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P65X_CUSTOM_ID_CASE'",
+        "tenantId": "parity-p65x-custom-id-case",
+        "type": "DEFAULT"
+      },
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "externalId": "parity-p65x-custom-id-case-reader",
+        "name": "p65x-custom-id-case o",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "p65x-custom-id-case o reader",
+            "policyId": "0600b742-9c3f-eec0-29f0-c4922a7d6eaf",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p65x-custom-id-case o rule",
+                "ruleId": "4a6443d3-8488-24ce-2ce7-85a31063b2f8",
+                "ruleType": "DEFAULT",
+                "target": "operation == 'LIST'",
+                "tenantId": "parity-p65x-custom-id-case-reader"
+              }
+            ],
+            "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+            "tenantId": "parity-p65x-custom-id-case-reader"
+          }
+        ],
+        "policySetId": "f6a16f75-61ca-d8cd-fac4-314bbcc1f8c4",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P65X_CUSTOM_ID_CASE'",
+        "tenantId": "parity-p65x-custom-id-case-reader",
+        "type": "DEFAULT"
+      }
+    ]
+  },
+  "keptTenants": [
+    "parity-p65x-custom-id-case",
+    "parity-p65x-custom-id-case-reader"
+  ]
+}

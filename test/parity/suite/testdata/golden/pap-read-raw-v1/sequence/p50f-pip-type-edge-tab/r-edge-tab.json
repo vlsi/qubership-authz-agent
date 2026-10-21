@@ -1,0 +1,14 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "cacheable": false,
+      "defaultValue": "none",
+      "domain": "PARITY_P50_FLD_025",
+      "header": "x-parity-p50f-025-a",
+      "name": "subject.parityP50F025A",
+      "pipType": "HEADER",
+      "type": "UUID"
+    }
+  ]
+}

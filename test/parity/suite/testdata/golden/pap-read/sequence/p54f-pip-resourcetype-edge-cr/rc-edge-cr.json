@@ -1,0 +1,97 @@
+{
+  "status": 200,
+  "body": {
+    "pips": [
+      {
+        "cacheable": true,
+        "domain": "PARITY_P54_FLD_038",
+        "name": "subject.parityP54F038A.filtered",
+        "pipType": "FILTERED",
+        "resourceType": "\f",
+        "tenantId": "parity-p54f-038-blank-ff",
+        "type": "UUID",
+        "url": "http://pip-mock/api/v1/pip/parity-doc"
+      },
+      {
+        "cacheable": true,
+        "domain": "PARITY_P54_FLD_038",
+        "name": "subject.parityP54F038A.filtered",
+        "pipType": "FILTERED",
+        "resourceType": "\n",
+        "tenantId": "parity-p54f-038-blank-lf",
+        "type": "UUID",
+        "url": "http://pip-mock/api/v1/pip/parity-doc"
+      },
+      {
+        "cacheable": true,
+        "domain": "PARITY_P54_FLD_038",
+        "name": "subject.parityP54F038A.filtered",
+        "pipType": "FILTERED",
+        "resourceType": "\r",
+        "tenantId": "parity-p54f-038-blank-cr",
+        "type": "UUID",
+        "url": "http://pip-mock/api/v1/pip/parity-doc"
+      },
+      {
+        "cacheable": true,
+        "domain": "PARITY_P54_FLD_038",
+        "name": "subject.parityP54F038A.filtered",
+        "pipType": "FILTERED",
+        "resourceType": "\rPARITY_SCHEMA\r",
+        "tenantId": "parity-p54f-038-edge-cr",
+        "type": "UUID",
+        "url": "http://pip-mock/api/v1/pip/parity-doc"
+      },
+      {
+        "cacheable": true,
+        "domain": "PARITY_P54_FLD_038",
+        "name": "subject.parityP54F038A.filtered",
+        "pipType": "FILTERED",
+        "resourceType": "\t",
+        "tenantId": "parity-p54f-038-blank-tab",
+        "type": "UUID",
+        "url": "http://pip-mock/api/v1/pip/parity-doc"
+      },
+      {
+        "cacheable": true,
+        "domain": "PARITY_P54_FLD_038",
+        "name": "subject.parityP54F038A.filtered",
+        "pipType": "FILTERED",
+        "resourceType": "\u000b",
+        "tenantId": "parity-p54f-038-blank-vt",
+        "type": "UUID",
+        "url": "http://pip-mock/api/v1/pip/parity-doc"
+      },
+      {
+        "cacheable": true,
+        "domain": "PARITY_P54_FLD_038",
+        "name": "subject.parityP54F038A.filtered",
+        "pipType": "FILTERED",
+        "resourceType": "\u2028",
+        "tenantId": "parity-p54f-038-blank-lsep",
+        "type": "UUID",
+        "url": "http://pip-mock/api/v1/pip/parity-doc"
+      },
+      {
+        "cacheable": true,
+        "domain": "PARITY_P54_FLD_038",
+        "name": "subject.parityP54F038A.filtered",
+        "pipType": "FILTERED",
+        "resourceType": " ",
+        "tenantId": "parity-p54f-038-blank-nbsp",
+        "type": "UUID",
+        "url": "http://pip-mock/api/v1/pip/parity-doc"
+      }
+    ]
+  },
+  "keptTenants": [
+    "parity-p54f-038-blank-cr",
+    "parity-p54f-038-blank-ff",
+    "parity-p54f-038-blank-lf",
+    "parity-p54f-038-blank-lsep",
+    "parity-p54f-038-blank-nbsp",
+    "parity-p54f-038-blank-tab",
+    "parity-p54f-038-blank-vt",
+    "parity-p54f-038-edge-cr"
+  ]
+}

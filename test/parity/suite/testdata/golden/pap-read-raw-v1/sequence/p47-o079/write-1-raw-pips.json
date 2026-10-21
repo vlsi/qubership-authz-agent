@@ -1,0 +1,21 @@
+{
+  "status": 200,
+  "body": {
+    "pips": [
+      {
+        "cacheable": false,
+        "domain": "PARITY_ISOLATED",
+        "httpMethod": "POST",
+        "name": "subject.parityR40HeldAddSet",
+        "pipType": "GENERAL",
+        "requestAttributes": {
+          "case": "r40open-m2m-held-custom-add-set",
+          "x": "${subject.isM2M}"
+        },
+        "tenantId": "parity-p47-o079",
+        "type": "UUID",
+        "url": "http://pip-mock:8090/api/v1/pip/r40open-m2m-held-custom-add-set"
+      }
+    ]
+  }
+}

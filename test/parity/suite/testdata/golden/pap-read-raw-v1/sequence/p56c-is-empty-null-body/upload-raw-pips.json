@@ -1,0 +1,20 @@
+{
+  "status": 200,
+  "body": {
+    "pips": [
+      {
+        "cacheable": false,
+        "domain": "PARITY_P56C_IS_EMPTY_NULL_BODY",
+        "httpMethod": "POST",
+        "name": "subject.parityP56cNullBody",
+        "pipType": "GENERAL",
+        "requestAttributes": {
+          "case": "p56c-is-empty-null-body"
+        },
+        "tenantId": "parity-p56c-is-empty-null-body",
+        "type": "UUID",
+        "url": "http://pip-mock:8090/api/v1/pip/p56c-null-body"
+      }
+    ]
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "externalId": "parity-p65x-custom-added-control-last",
+        "name": "p65x-custom-added-control-last s",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "p65x-custom-added-control-last s reader",
+            "policyId": "07249e6c-72b0-5d38-cbec-8b00b606f0d6",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p65x-custom-added-control-last s rule",
+                "ruleId": "aa50faca-1bca-9859-df18-b7b870430d6b",
+                "ruleType": "DEFAULT",
+                "target": "operation == 'READ'",
+                "tenantId": "parity-p65x-custom-added-control-last"
+              }
+            ],
+            "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+            "tenantId": "parity-p65x-custom-added-control-last"
+          }
+        ],
+        "policySetId": "05e596da-a667-6481-5620-a21e8b055455",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P65X_CUSTOM_ADDED_CONTROL_LAST'",
+        "tenantId": "parity-p65x-custom-added-control-last",
+        "type": "DEFAULT"
+      }
+    ]
+  },
+  "keptTenants": [
+    "parity-p65x-custom-added-control-last"
+  ]
+}

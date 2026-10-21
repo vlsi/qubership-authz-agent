@@ -1,0 +1,14 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "cacheable": false,
+      "claim": "department",
+      "defaultValue": "none",
+      "domain": "PARITY_P65M_BLANK",
+      "name": "subject.parityP65mBlank",
+      "pipType": "TOKEN",
+      "type": "REGULAR"
+    }
+  ]
+}

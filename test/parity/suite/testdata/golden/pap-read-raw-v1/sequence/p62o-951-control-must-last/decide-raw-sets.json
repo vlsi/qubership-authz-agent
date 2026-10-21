@@ -1,0 +1,38 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "externalId": "parity-p62o-951",
+        "name": "p62o-951-control-must-last allow",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "p62o-951-control-must-last allow",
+            "policyId": "c77f7bd9-3f13-3b49-4e26-c644aa7b84f1",
+            "rules": [
+              {
+                "condition": "resource.a == 'y'",
+                "effect": "ALLOW",
+                "name": "p62o-951-control-must-last allow",
+                "ruleId": "bbaefe0c-f59a-106d-02d2-67fe9de7a880",
+                "ruleType": "DEFAULT",
+                "target": "true",
+                "tenantId": "parity-p62o-951"
+              }
+            ],
+            "target": "operation == 'READ'",
+            "tenantId": "parity-p62o-951"
+          }
+        ],
+        "policySetId": "c21029c5-30c9-b680-86fb-e701140d14a7",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P62O_951'",
+        "tenantId": "parity-p62o-951",
+        "type": "DEFAULT"
+      }
+    ]
+  }
+}

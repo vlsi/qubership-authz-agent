@@ -1,0 +1,71 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "component": "PARITY",
+        "domain": "PARITY_P49_META_177",
+        "name": "PARITY_P49_META_177_PARITY_PARITY_SUITE_P49_META_177_PolicySet",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "PARITY_P49_META_177_PARITY_PARITY_SUITE_P49_META_177_READ_Policy",
+            "policyId": "7536aef2-eec9-b840-0ad8-277e5d89596e",
+            "rules": [
+              {
+                "condition": "subject.parityP49Meta177A == 'none'",
+                "effect": "ALLOW",
+                "name": "p49-meta-perm-import-pips-b p",
+                "ruleId": "ead3b9f0-e806-79c3-6dd9-0f73beb83d0f",
+                "ruleType": "DEFAULT",
+                "target": "subject.roles CONTAINS ANY 'ROLE_PARITY_READER'",
+                "tenantId": "parity-p49-meta-perm-import-pips-b"
+              }
+            ],
+            "target": "operation == 'READ'",
+            "tenantId": "parity-p49-meta-perm-import-pips-b"
+          }
+        ],
+        "policySetId": "4b7536ae-f2ee-c9b8-400a-d8277e5d8959",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P49_META_177'",
+        "tenantId": "parity-p49-meta-perm-import-pips-b",
+        "type": "SIMPLIFIED"
+      },
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "component": "PARITY",
+        "domain": "PARITY_P49_META_178",
+        "name": "PARITY_P49_META_178_PARITY_PARITY_SUITE_P49_META_178_PolicySet",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "PARITY_P49_META_178_PARITY_PARITY_SUITE_P49_META_178_READ_Policy",
+            "policyId": "528c2004-5072-e9fb-734e-fe88ddaf75b7",
+            "rules": [
+              {
+                "condition": "subject.parityP49Meta178A == 'none'",
+                "effect": "ALLOW",
+                "name": "p49-meta-perm-import-pips-b p",
+                "ruleId": "c44176a3-442c-c82b-7b62-f48b63b45eaf",
+                "ruleType": "DEFAULT",
+                "target": "subject.roles CONTAINS ANY 'ROLE_PARITY_READER'",
+                "tenantId": "parity-p49-meta-perm-import-pips-b"
+              }
+            ],
+            "target": "operation == 'READ'",
+            "tenantId": "parity-p49-meta-perm-import-pips-b"
+          }
+        ],
+        "policySetId": "40528c20-0450-72e9-fb73-4efe88ddaf75",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P49_META_178'",
+        "tenantId": "parity-p49-meta-perm-import-pips-b",
+        "type": "SIMPLIFIED"
+      }
+    ]
+  }
+}

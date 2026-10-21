@@ -1,0 +1,17 @@
+{
+  "status": 200,
+  "body": {
+    "pips": [
+      {
+        "cacheable": false,
+        "defaultValue": "none",
+        "domain": "PARITY_P50_ID_049",
+        "header": "x-parity-p50i-049-a",
+        "name": "subject.parityP50I049A",
+        "pipType": "HEADER",
+        "tenantId": "parity-p50i-049",
+        "type": "REGULAR"
+      }
+    ]
+  }
+}

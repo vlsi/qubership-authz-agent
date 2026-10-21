@@ -1,0 +1,73 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "externalId": "parity-p65x-knob-object-body-children",
+        "name": "p65x-knob-object-body-children s",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "p65x-knob-object-body-children s reader",
+            "policyId": "9475ee59-d47e-3481-5129-cdb34a2f8eb4",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p65x-knob-object-body-children s rule",
+                "ruleId": "6dae84d9-03b4-f70b-2291-d7b0c146de0e",
+                "ruleType": "DEFAULT",
+                "target": "operation == 'READ'",
+                "tenantId": "default"
+              }
+            ],
+            "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+            "tenantId": "default"
+          }
+        ],
+        "policySetId": "edfe87ab-a83a-8882-e9ec-804182f488b6",
+        "policySets": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "externalId": "parity-p65x-knob-object-body-children",
+            "name": "p65x-knob-object-body-children n",
+            "policies": [
+              {
+                "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+                "name": "p65x-knob-object-body-children n reader",
+                "policyId": "1b53ab20-0985-151e-097d-3b5072e30618",
+                "rules": [
+                  {
+                    "condition": "true",
+                    "effect": "ALLOW",
+                    "name": "p65x-knob-object-body-children n rule",
+                    "ruleId": "32cbddb6-0d55-1087-72b5-c1f90588a498",
+                    "ruleType": "DEFAULT",
+                    "target": "operation == 'UPDATE'",
+                    "tenantId": "default"
+                  }
+                ],
+                "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+                "tenantId": "default"
+              }
+            ],
+            "policySetId": "3b295260-1dca-fba5-9fe1-1ccb6eb8612c",
+            "policySets": [],
+            "status": "INACTIVE",
+            "target": "resourceType == 'PARITY_SUITE_P65X_KNOB_OBJECT_BODY_CHILDREN'",
+            "tenantId": "default",
+            "type": "DEFAULT"
+          }
+        ],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P65X_KNOB_OBJECT_BODY_CHILDREN'",
+        "tenantId": "default",
+        "type": "DEFAULT"
+      }
+    ]
+  },
+  "keptTenants": [
+    "default"
+  ]
+}

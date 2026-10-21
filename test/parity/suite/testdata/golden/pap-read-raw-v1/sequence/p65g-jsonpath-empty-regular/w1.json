@@ -1,0 +1,15 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "cacheable": false,
+      "domain": "PARITY_P65G_JSONPATH",
+      "httpMethod": "POST",
+      "jsonPath": "",
+      "name": "subject.parityP65gJsonPath",
+      "pipType": "GENERAL",
+      "type": "REGULAR",
+      "url": "http://pip-mock:8090/api/v1/pip/p65g-jsonpath"
+    }
+  ]
+}

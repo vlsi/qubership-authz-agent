@@ -1,0 +1,14 @@
+{
+  "status": 200,
+  "body": {
+    "level": "custom",
+    "permissions": [
+      {
+        "permission": "parity_p65g_twice",
+        "pipNames": [
+          "subject.permissions"
+        ]
+      }
+    ]
+  }
+}

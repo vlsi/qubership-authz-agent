@@ -1,0 +1,38 @@
+{
+  "status": 200,
+  "body": {
+    "pips": [
+      {
+        "cacheable": true,
+        "customMapping": {
+          "subject.roles": {
+            "ROLE_PARITY_READER": [
+              "parity_p49_meta_163_m",
+              "parity_p49_meta_164_m"
+            ]
+          }
+        },
+        "name": "subject.permissions",
+        "pipType": "MAPPING",
+        "productMapping": {},
+        "tenantId": "parity-p49-meta-perm-delete-pip-customization-a",
+        "type": "UUID"
+      },
+      {
+        "cacheable": true,
+        "customMapping": {
+          "subject.roles": {
+            "ROLE_PARITY_READER": [
+              "parity_p49_meta_273_n"
+            ]
+          }
+        },
+        "name": "subject.permissions",
+        "pipType": "MAPPING",
+        "productMapping": {},
+        "tenantId": "parity-p49-meta-perm-delete-pip-customization-a",
+        "type": "UUID"
+      }
+    ]
+  }
+}

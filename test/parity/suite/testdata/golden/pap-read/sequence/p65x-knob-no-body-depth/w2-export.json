@@ -1,0 +1,73 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "externalId": "parity-p65x-knob-no-body-depth",
+        "name": "p65x-knob-no-body-depth s",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "p65x-knob-no-body-depth s reader",
+            "policyId": "fbf8a7ba-51b3-9138-71cd-cad218f9d2dd",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p65x-knob-no-body-depth s rule",
+                "ruleId": "313a8fce-0be2-c67b-c0a9-5f63d1ca7b29",
+                "ruleType": "DEFAULT",
+                "target": "operation == 'READ'",
+                "tenantId": "default"
+              }
+            ],
+            "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+            "tenantId": "default"
+          }
+        ],
+        "policySetId": "2a19bf98-c6ff-7ef3-6718-e361d8efc350",
+        "policySets": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "externalId": "parity-p65x-knob-no-body-depth",
+            "name": "p65x-knob-no-body-depth n",
+            "policies": [
+              {
+                "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+                "name": "p65x-knob-no-body-depth n reader",
+                "policyId": "7e569733-36f3-7b2f-b92c-7cd58d945c43",
+                "rules": [
+                  {
+                    "condition": "true",
+                    "effect": "ALLOW",
+                    "name": "p65x-knob-no-body-depth n rule",
+                    "ruleId": "39efd221-e74f-9b19-58d1-2d3a36c58c4c",
+                    "ruleType": "DEFAULT",
+                    "target": "operation == 'UPDATE'",
+                    "tenantId": "default"
+                  }
+                ],
+                "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+                "tenantId": "default"
+              }
+            ],
+            "policySetId": "5acd88e2-47cc-4a8e-d358-a31c251cdf49",
+            "policySets": [],
+            "status": "ACTIVE",
+            "target": "resourceType == 'PARITY_SUITE_P65X_KNOB_NO_BODY_DEPTH'",
+            "tenantId": "default",
+            "type": "DEFAULT"
+          }
+        ],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P65X_KNOB_NO_BODY_DEPTH'",
+        "tenantId": "default",
+        "type": "DEFAULT"
+      }
+    ]
+  },
+  "keptTenants": [
+    "default"
+  ]
+}

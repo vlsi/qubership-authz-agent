@@ -1,0 +1,31 @@
+{
+  "status": 200,
+  "body": {
+    "pips": [
+      {
+        "cacheable": false,
+        "defaultValue": "none",
+        "domain": "PARITY_P50_FLD_044",
+        "header": " X-Parity-Doc ",
+        "name": "subject.parityP50F044A",
+        "pipType": "HEADER",
+        "tenantId": "parity-p50f-044-edge-space",
+        "type": "REGULAR"
+      },
+      {
+        "cacheable": false,
+        "defaultValue": "none",
+        "domain": "PARITY_P50_FLD_044",
+        "header": "5",
+        "name": "subject.parityP50F044A",
+        "pipType": "HEADER",
+        "tenantId": "parity-p50f-044-other-type",
+        "type": "REGULAR"
+      }
+    ]
+  },
+  "keptTenants": [
+    "parity-p50f-044-edge-space",
+    "parity-p50f-044-other-type"
+  ]
+}

@@ -1,0 +1,126 @@
+{
+  "status": 200,
+  "body": {
+    "pips": [
+      {
+        "beanName": "\f",
+        "cacheable": false,
+        "domain": "PARITY_P65_FLD_037",
+        "httpMethod": "POST",
+        "jsonPath": "$.groups",
+        "name": "subject.parityP65F037A",
+        "pipType": "GENERAL",
+        "tenantId": "parity-p65f-037-blank-ff",
+        "type": "JSON",
+        "url": "http://pip-mock/api/v1/pip/parity-doc"
+      },
+      {
+        "beanName": "\fparityDocBean\f",
+        "cacheable": false,
+        "domain": "PARITY_P65_FLD_037",
+        "httpMethod": "POST",
+        "jsonPath": "$.groups",
+        "name": "subject.parityP65F037A",
+        "pipType": "GENERAL",
+        "tenantId": "parity-p65f-037-edge-ff",
+        "type": "JSON",
+        "url": "http://pip-mock/api/v1/pip/parity-doc"
+      },
+      {
+        "beanName": "\n",
+        "cacheable": false,
+        "domain": "PARITY_P65_FLD_037",
+        "httpMethod": "POST",
+        "jsonPath": "$.groups",
+        "name": "subject.parityP65F037A",
+        "pipType": "GENERAL",
+        "tenantId": "parity-p65f-037-blank-lf",
+        "type": "JSON",
+        "url": "http://pip-mock/api/v1/pip/parity-doc"
+      },
+      {
+        "beanName": "\r",
+        "cacheable": false,
+        "domain": "PARITY_P65_FLD_037",
+        "httpMethod": "POST",
+        "jsonPath": "$.groups",
+        "name": "subject.parityP65F037A",
+        "pipType": "GENERAL",
+        "tenantId": "parity-p65f-037-blank-cr",
+        "type": "JSON",
+        "url": "http://pip-mock/api/v1/pip/parity-doc"
+      },
+      {
+        "beanName": "\rparityDocBean\r",
+        "cacheable": false,
+        "domain": "PARITY_P65_FLD_037",
+        "httpMethod": "POST",
+        "jsonPath": "$.groups",
+        "name": "subject.parityP65F037A",
+        "pipType": "GENERAL",
+        "tenantId": "parity-p65f-037-edge-cr",
+        "type": "JSON",
+        "url": "http://pip-mock/api/v1/pip/parity-doc"
+      },
+      {
+        "beanName": "\t",
+        "cacheable": false,
+        "domain": "PARITY_P65_FLD_037",
+        "httpMethod": "POST",
+        "jsonPath": "$.groups",
+        "name": "subject.parityP65F037A",
+        "pipType": "GENERAL",
+        "tenantId": "parity-p65f-037-blank-tab",
+        "type": "JSON",
+        "url": "http://pip-mock/api/v1/pip/parity-doc"
+      },
+      {
+        "beanName": "\u000b",
+        "cacheable": false,
+        "domain": "PARITY_P65_FLD_037",
+        "httpMethod": "POST",
+        "jsonPath": "$.groups",
+        "name": "subject.parityP65F037A",
+        "pipType": "GENERAL",
+        "tenantId": "parity-p65f-037-blank-vt",
+        "type": "JSON",
+        "url": "http://pip-mock/api/v1/pip/parity-doc"
+      },
+      {
+        "beanName": "\u2028",
+        "cacheable": false,
+        "domain": "PARITY_P65_FLD_037",
+        "httpMethod": "POST",
+        "jsonPath": "$.groups",
+        "name": "subject.parityP65F037A",
+        "pipType": "GENERAL",
+        "tenantId": "parity-p65f-037-blank-lsep",
+        "type": "JSON",
+        "url": "http://pip-mock/api/v1/pip/parity-doc"
+      },
+      {
+        "beanName": " ",
+        "cacheable": false,
+        "domain": "PARITY_P65_FLD_037",
+        "httpMethod": "POST",
+        "jsonPath": "$.groups",
+        "name": "subject.parityP65F037A",
+        "pipType": "GENERAL",
+        "tenantId": "parity-p65f-037-blank-nbsp",
+        "type": "JSON",
+        "url": "http://pip-mock/api/v1/pip/parity-doc"
+      }
+    ]
+  },
+  "keptTenants": [
+    "parity-p65f-037-blank-cr",
+    "parity-p65f-037-blank-ff",
+    "parity-p65f-037-blank-lf",
+    "parity-p65f-037-blank-lsep",
+    "parity-p65f-037-blank-nbsp",
+    "parity-p65f-037-blank-tab",
+    "parity-p65f-037-blank-vt",
+    "parity-p65f-037-edge-cr",
+    "parity-p65f-037-edge-ff"
+  ]
+}

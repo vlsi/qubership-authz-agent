@@ -1,0 +1,39 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "component": "PARITY",
+        "domain": "PARITY_P50_ID_063",
+        "name": "PARITY_P50_ID_063_PARITY_PARITY_SUITE_P50_ID_063_PolicySet",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "PARITY_P50_ID_063_PARITY_PARITY_SUITE_P50_ID_063_READ_Policy",
+            "policyId": "5a286e9f-a6e7-ec93-f335-0d619770638b",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p50i-domain-policies-spelled-trail-tab a",
+                "ruleId": "aabaae57-eb27-5fb2-3762-cafe3c58e837",
+                "ruleType": "DEFAULT",
+                "target": "subject.roles CONTAINS ANY 'ROLE_PARITY_READER'",
+                "tenantId": "parity-p50i-063"
+              }
+            ],
+            "target": "operation == 'READ'",
+            "tenantId": "parity-p50i-063"
+          }
+        ],
+        "policySetId": "a15a286e-9fa6-e7ec-93f3-350d61977063",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P50_ID_063'",
+        "tenantId": "parity-p50i-063",
+        "type": "SIMPLIFIED"
+      }
+    ]
+  }
+}

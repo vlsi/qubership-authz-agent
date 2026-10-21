@@ -1,0 +1,55 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "name": "p65g-second-import-child-without-id s",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "p65g-second-import-child-without-id added",
+            "policyId": "\u003cgenerated UUID\u003e",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p65g-second-import-child-without-id added rule",
+                "ruleId": "ec1afe72-b7de-f5df-6023-a62b294c85d2",
+                "ruleType": "DEFAULT",
+                "target": "operation == 'LIST'",
+                "tenantId": "parity-p65g-second-import-child-without-id"
+              }
+            ],
+            "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+            "tenantId": "parity-p65g-second-import-child-without-id"
+          },
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "p65g-second-import-child-without-id s reader",
+            "policyId": "67e0a3b0-b314-a77e-efe5-66f263114b86",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p65g-second-import-child-without-id s rule",
+                "ruleId": "0132d870-a0ef-7e6d-abe7-3932f32f67c1",
+                "ruleType": "DEFAULT",
+                "target": "operation == 'READ'",
+                "tenantId": "parity-p65g-second-import-child-without-id"
+              }
+            ],
+            "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+            "tenantId": "parity-p65g-second-import-child-without-id"
+          }
+        ],
+        "policySetId": "16683714-c8da-1856-1067-a00c9d9dce14",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P65G_SECOND_IMPORT_CHILD_WITHOUT_ID'",
+        "tenantId": "parity-p65g-second-import-child-without-id",
+        "type": "DEFAULT"
+      }
+    ]
+  }
+}

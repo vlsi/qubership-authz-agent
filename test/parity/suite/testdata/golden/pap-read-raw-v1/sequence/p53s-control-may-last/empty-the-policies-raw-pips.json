@@ -1,0 +1,242 @@
+{
+  "status": 200,
+  "body": {
+    "pips": [
+      {
+        "cacheable": false,
+        "claim": "department",
+        "defaultValue": "none",
+        "domain": "PARITY",
+        "name": "subject.parityDepartment",
+        "pipType": "TOKEN",
+        "tenantId": "default",
+        "type": "UUID"
+      },
+      {
+        "cacheable": false,
+        "claim": "parityNoSuchClaim",
+        "defaultValue": "none",
+        "domain": "PARITY",
+        "name": "subject.parityNoClaimDefault",
+        "pipType": "TOKEN",
+        "tenantId": "default",
+        "type": "UUID"
+      },
+      {
+        "cacheable": false,
+        "claim": "parityNoSuchClaim",
+        "domain": "PARITY",
+        "name": "subject.parityNoClaim",
+        "pipType": "TOKEN",
+        "tenantId": "default",
+        "type": "UUID"
+      },
+      {
+        "cacheable": false,
+        "claim": "parityP45OwnDomain",
+        "domain": "PARITY_P45_OWN_DOMAIN",
+        "name": "subject.parityP45OwnDomain",
+        "pipType": "TOKEN",
+        "tenantId": "default",
+        "type": "UUID"
+      },
+      {
+        "cacheable": false,
+        "claim": "tier",
+        "defaultValue": "none",
+        "domain": "PARITY",
+        "name": "subject.parityTier",
+        "pipType": "TOKEN",
+        "tenantId": "default",
+        "type": "UUID"
+      },
+      {
+        "cacheable": false,
+        "defaultValue": "none",
+        "domain": "PARITY",
+        "header": "x-parity-pip-attribute",
+        "name": "subject.parityHeaderAttr",
+        "pipType": "HEADER",
+        "tenantId": "default",
+        "type": "UUID"
+      },
+      {
+        "cacheable": false,
+        "domain": "PARITY",
+        "httpMethod": "POST",
+        "jsonPath": "$.department",
+        "name": "subject.parityMetaDepartment",
+        "pipType": "GENERAL",
+        "requestAttributes": {
+          "resourceType": "PARITY_SUITE_META"
+        },
+        "tenantId": "default",
+        "type": "JSON",
+        "url": "http://pip-mock:8090/api/v1/pip/meta"
+      },
+      {
+        "cacheable": false,
+        "domain": "PARITY",
+        "httpMethod": "POST",
+        "jsonPath": "$.ids",
+        "name": "subject.parityMetaIds",
+        "pipType": "GENERAL",
+        "requestAttributes": {
+          "resourceType": "PARITY_SUITE_META"
+        },
+        "tenantId": "default",
+        "type": "JSON",
+        "url": "http://pip-mock:8090/api/v1/pip/meta"
+      },
+      {
+        "cacheable": false,
+        "domain": "PARITY",
+        "httpMethod": "POST",
+        "jsonPath": "$.maxAmount",
+        "name": "subject.parityMetaMaxAmount",
+        "pipType": "GENERAL",
+        "requestAttributes": {
+          "resourceType": "PARITY_SUITE_META"
+        },
+        "tenantId": "default",
+        "type": "JSON",
+        "url": "http://pip-mock:8090/api/v1/pip/meta"
+      },
+      {
+        "cacheable": false,
+        "domain": "PARITY",
+        "httpMethod": "POST",
+        "jsonPath": "$.value",
+        "name": "subject.parityArchivedScalar",
+        "pipType": "GENERAL",
+        "requestAttributes": {
+          "resourceType": "PARITY_SUITE_ARCHIVED_SCALAR"
+        },
+        "tenantId": "default",
+        "type": "JSON",
+        "url": "http://pip-mock:8090/api/v1/pip/archived-scalar"
+      },
+      {
+        "cacheable": false,
+        "domain": "PARITY",
+        "httpMethod": "POST",
+        "jsonPath": "$.value",
+        "name": "subject.parityEmptyJson",
+        "pipType": "GENERAL",
+        "requestAttributes": {
+          "resourceType": "PARITY_SUITE_SEM_EMPTY_JSON"
+        },
+        "tenantId": "default",
+        "type": "JSON",
+        "url": "http://pip-mock:8090/api/v1/pip/sem-empty-json"
+      },
+      {
+        "cacheable": false,
+        "domain": "PARITY",
+        "httpMethod": "POST",
+        "jsonPath": "$.value",
+        "name": "subject.parityMaxAmountScalar",
+        "pipType": "GENERAL",
+        "requestAttributes": {
+          "resourceType": "PARITY_SUITE_MAX_AMOUNT_SCALAR"
+        },
+        "tenantId": "default",
+        "type": "JSON",
+        "url": "http://pip-mock:8090/api/v1/pip/max-amount-scalar"
+      },
+      {
+        "cacheable": false,
+        "domain": "PARITY",
+        "httpMethod": "POST",
+        "jsonPath": "$.value",
+        "name": "subject.parityStatusScalar",
+        "pipType": "GENERAL",
+        "requestAttributes": {
+          "resourceType": "PARITY_SUITE_STATUS_SCALAR"
+        },
+        "tenantId": "default",
+        "type": "JSON",
+        "url": "http://pip-mock:8090/api/v1/pip/status-scalar"
+      },
+      {
+        "cacheable": false,
+        "domain": "PARITY",
+        "httpMethod": "POST",
+        "jsonPath": "$.value",
+        "name": "subject.parityTagScalar",
+        "pipType": "GENERAL",
+        "requestAttributes": {
+          "resourceType": "PARITY_SUITE_TAG_SCALAR"
+        },
+        "tenantId": "default",
+        "type": "JSON",
+        "url": "http://pip-mock:8090/api/v1/pip/tag-scalar"
+      },
+      {
+        "cacheable": false,
+        "domain": "PARITY",
+        "httpMethod": "POST",
+        "name": "subject.parityAllowed",
+        "pipType": "GENERAL",
+        "requestAttributes": {
+          "resourceType": "PARITY_PAYMENT"
+        },
+        "tenantId": "default",
+        "type": "UUID",
+        "url": "http://pip-mock:8090/api/v1/pip/allowed"
+      },
+      {
+        "cacheable": false,
+        "domain": "PARITY",
+        "httpMethod": "POST",
+        "name": "subject.parityBroken",
+        "pipType": "GENERAL",
+        "requestAttributes": {
+          "resourceType": "PARITY_SUITE_SEM_BROKEN"
+        },
+        "tenantId": "default",
+        "type": "UUID",
+        "url": "http://pip-mock:8090/api/v1/pip/sem-broken"
+      },
+      {
+        "cacheable": false,
+        "domain": "PARITY",
+        "httpMethod": "POST",
+        "name": "subject.parityBroken404",
+        "pipType": "GENERAL",
+        "requestAttributes": {
+          "resourceType": "PARITY_SUITE_SEM2_404"
+        },
+        "tenantId": "default",
+        "type": "UUID",
+        "url": "http://pip-mock:8090/api/v1/pip/sem-404"
+      },
+      {
+        "cacheable": false,
+        "domain": "PARITY",
+        "httpMethod": "POST",
+        "name": "subject.parityNullBody",
+        "pipType": "GENERAL",
+        "requestAttributes": {
+          "resourceType": "PARITY_SUITE_SEM2_NULL_BODY"
+        },
+        "tenantId": "default",
+        "type": "UUID",
+        "url": "http://pip-mock:8090/api/v1/pip/sem-null-body"
+      },
+      {
+        "cacheable": false,
+        "domain": "PARITY",
+        "httpMethod": "POST",
+        "name": "subject.parityStatusAllowed",
+        "pipType": "GENERAL",
+        "requestAttributes": {
+          "resourceType": "PARITY_SUITE_STATUS_ALLOWED"
+        },
+        "tenantId": "default",
+        "type": "UUID",
+        "url": "http://pip-mock:8090/api/v1/pip/status-allowed"
+      }
+    ]
+  }
+}

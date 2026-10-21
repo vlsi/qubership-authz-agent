@@ -1,0 +1,34 @@
+{
+  "status": 200,
+  "body": {
+    "pips": [
+      {
+        "cacheable": false,
+        "domain": "PARITY_ISOLATED",
+        "httpMethod": "POST",
+        "name": "subject.parityR15Failing",
+        "pipType": "GENERAL",
+        "requestAttributes": {
+          "case": "subject.parityR15Failing"
+        },
+        "tenantId": "parity-p47-o130",
+        "type": "UUID",
+        "url": "http://pip-mock:8090/api/v1/pip/r15-failing"
+      },
+      {
+        "cacheable": false,
+        "headers": "X-Parity-Cp-Fwd",
+        "httpMethod": "POST",
+        "jsonPath": "$.a",
+        "name": "subject.parityR29CpGeneral",
+        "pipType": "GENERAL",
+        "requestAttributes": {
+          "case": "r29structure-cpip"
+        },
+        "tenantId": "parity-p47-o130",
+        "type": "JSON",
+        "url": "http://pip-mock:8090/api/v1/pip/r29structure-cpip"
+      }
+    ]
+  }
+}

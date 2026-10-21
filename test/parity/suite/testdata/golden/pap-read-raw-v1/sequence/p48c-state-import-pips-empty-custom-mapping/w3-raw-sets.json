@@ -1,0 +1,39 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "component": "PARITY",
+        "domain": "PARITY_P48C_STATE_010",
+        "name": "PARITY_P48C_STATE_010_PARITY_PARITY_SUITE_P48C_STATE_010_PolicySet",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "PARITY_P48C_STATE_010_PARITY_PARITY_SUITE_P48C_STATE_010_READ_Policy",
+            "policyId": "1eb3dc4d-fdc6-8a18-4502-a204306d983c",
+            "rules": [
+              {
+                "condition": "subject.permissions CONTAINS 'parity_p010_m'",
+                "effect": "ALLOW",
+                "name": "p48c-state-import-pips-empty-custom-mapping p",
+                "ruleId": "9f6a86d2-6c62-98fd-abd9-0c0c24ba0726",
+                "ruleType": "DEFAULT",
+                "target": "subject.roles CONTAINS ANY 'ROLE_PARITY_READER'",
+                "tenantId": "parity-p48-claim-import-pips-empty-custom-mapping"
+              }
+            ],
+            "target": "operation == 'READ'",
+            "tenantId": "parity-p48-claim-import-pips-empty-custom-mapping"
+          }
+        ],
+        "policySetId": "951eb3dc-4dfd-c68a-1845-02a204306d98",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P48C_STATE_010'",
+        "tenantId": "parity-p48-claim-import-pips-empty-custom-mapping",
+        "type": "SIMPLIFIED"
+      }
+    ]
+  }
+}

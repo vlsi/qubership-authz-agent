@@ -1,0 +1,37 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "name": "p65g-delete-custom-without-level s",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "p65g-delete-custom-without-level s reader",
+            "policyId": "a4b5867a-585d-8038-b22e-0367a754c5b0",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p65g-delete-custom-without-level s rule",
+                "ruleId": "e2bd1ef9-ecd9-e43d-b924-99385d32163e",
+                "ruleType": "DEFAULT",
+                "target": "operation == 'READ'",
+                "tenantId": "parity-p65g-delete-custom-without-level"
+              }
+            ],
+            "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+            "tenantId": "parity-p65g-delete-custom-without-level"
+          }
+        ],
+        "policySetId": "c18b98b0-a016-9822-d3f9-aa9a6c322793",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P65G_DELETE_CUSTOM_WITHOUT_LEVEL'",
+        "tenantId": "parity-p65g-delete-custom-without-level",
+        "type": "DEFAULT"
+      }
+    ]
+  }
+}

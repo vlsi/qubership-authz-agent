@@ -1,0 +1,14 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "cacheable": false,
+      "defaultValue": "none",
+      "domain": "PARITY_P65_FLD_041",
+      "header": "x-parity-p65f-041-a",
+      "name": "subject.parityP65F041A",
+      "pipType": "HEADER",
+      "type": "REGULAR"
+    }
+  ]
+}

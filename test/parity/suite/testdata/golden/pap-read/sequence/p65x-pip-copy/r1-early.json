@@ -1,0 +1,19 @@
+{
+  "status": 200,
+  "body": {
+    "pips": [
+      {
+        "cacheable": false,
+        "defaultValue": "none",
+        "header": "x-parity-p65x-added",
+        "name": "subject.parityP65xAdded",
+        "pipType": "HEADER",
+        "tenantId": "parity-p65x-pip-copy-early",
+        "type": "REGULAR"
+      }
+    ]
+  },
+  "keptTenants": [
+    "parity-p65x-pip-copy-early"
+  ]
+}

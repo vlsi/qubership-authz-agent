@@ -1,0 +1,21 @@
+{
+  "status": 200,
+  "body": {
+    "pips": [
+      {
+        "cacheable": false,
+        "headers": "X-Parity-Cp-Fwd",
+        "httpMethod": "POST",
+        "jsonPath": "$.a",
+        "name": "subject.parityR29CpGeneral",
+        "pipType": "GENERAL",
+        "requestAttributes": {
+          "case": "r29structure-cpip"
+        },
+        "tenantId": "parity-p47-o103",
+        "type": "JSON",
+        "url": "http://pip-mock:8090/api/v1/pip/r29structure-cpip"
+      }
+    ]
+  }
+}

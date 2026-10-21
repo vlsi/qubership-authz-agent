@@ -1,0 +1,69 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "externalId": "parity-p49-meta-169",
+        "name": "p49-meta-perm-delete-set-b u",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "p49-meta-perm-delete-set-b u reader",
+            "policyId": "a5a9a400-0cb6-099d-d671-beab9a503495",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p49-meta-perm-delete-set-b u rule",
+                "ruleId": "32d1922f-ecd6-7672-a131-556cc2716801",
+                "ruleType": "DEFAULT",
+                "target": "operation == 'UPDATE'",
+                "tenantId": "parity-p49-meta-perm-delete-set-b"
+              }
+            ],
+            "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+            "tenantId": "parity-p49-meta-perm-delete-set-b"
+          }
+        ],
+        "policySetId": "676481ec-287b-85fe-1b60-3cb4bdb44b82",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P49_META_169'",
+        "tenantId": "parity-p49-meta-perm-delete-set-b",
+        "type": "DEFAULT"
+      },
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "externalId": "parity-p49-meta-170",
+        "name": "p49-meta-perm-delete-set-b u",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "p49-meta-perm-delete-set-b u reader",
+            "policyId": "1a24826d-86c9-74ce-436b-7b103df51893",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p49-meta-perm-delete-set-b u rule",
+                "ruleId": "b3af59ee-6e04-6afc-3c56-8bed09dd24a1",
+                "ruleType": "DEFAULT",
+                "target": "operation == 'UPDATE'",
+                "tenantId": "parity-p49-meta-perm-delete-set-b"
+              }
+            ],
+            "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+            "tenantId": "parity-p49-meta-perm-delete-set-b"
+          }
+        ],
+        "policySetId": "917a110f-0edb-0ca6-c9fb-791862f54ab9",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P49_META_170'",
+        "tenantId": "parity-p49-meta-perm-delete-set-b",
+        "type": "DEFAULT"
+      }
+    ]
+  }
+}

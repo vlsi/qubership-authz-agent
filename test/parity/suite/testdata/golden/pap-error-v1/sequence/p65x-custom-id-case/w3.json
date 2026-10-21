@@ -1,0 +1,6 @@
+{
+  "status": 400,
+  "body": {
+    "message": "Cannot delete item. Policy Set with 'd6cb5ec6-2d8d-16b9-c5e3-cbdfb73b5607' id have customization."
+  }
+}

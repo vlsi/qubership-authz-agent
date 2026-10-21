@@ -1,0 +1,15 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "cacheable": false,
+      "defaultValue": "none",
+      "description": " parity doc sample ",
+      "domain": "PARITY_P50_FLD_001",
+      "header": "x-parity-p50f-001-a",
+      "name": "subject.parityP50F001A",
+      "pipType": "HEADER",
+      "type": "REGULAR"
+    }
+  ]
+}

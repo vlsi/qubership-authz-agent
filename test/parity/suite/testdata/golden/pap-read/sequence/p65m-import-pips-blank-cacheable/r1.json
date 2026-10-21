@@ -1,0 +1,20 @@
+{
+  "status": 200,
+  "body": {
+    "pips": [
+      {
+        "cacheable": false,
+        "claim": "department",
+        "defaultValue": "none",
+        "domain": "PARITY_P65M_BLANK",
+        "name": "subject.parityP65mBlank",
+        "pipType": "TOKEN",
+        "tenantId": "parity-p65m-import-pips-blank-cacheable",
+        "type": "REGULAR"
+      }
+    ]
+  },
+  "keptTenants": [
+    "parity-p65m-import-pips-blank-cacheable"
+  ]
+}

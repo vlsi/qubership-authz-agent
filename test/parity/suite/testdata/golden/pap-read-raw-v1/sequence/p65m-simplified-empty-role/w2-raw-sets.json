@@ -1,0 +1,39 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "component": "PARITY",
+        "domain": "P65M_SIMPLIFIED_EMPTY_ROLE",
+        "name": "P65M_SIMPLIFIED_EMPTY_ROLE_PARITY_PARITY_SUITE_P65M_SIMPLIFIED_EMPTY_ROLE_PolicySet",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "P65M_SIMPLIFIED_EMPTY_ROLE_PARITY_PARITY_SUITE_P65M_SIMPLIFIED_EMPTY_ROLE_READ_Policy",
+            "policyId": "80089f83-a6c3-f4bf-ae89-0f1a103f553e",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p65m-simplified-empty-role",
+                "ruleId": "334f0da2-b79a-9463-b4ca-b7305189c89b",
+                "ruleType": "DEFAULT",
+                "target": "subject.roles CONTAINS ANY ''",
+                "tenantId": "parity-p65m-simplified-empty-role"
+              }
+            ],
+            "target": "operation == 'READ'",
+            "tenantId": "parity-p65m-simplified-empty-role"
+          }
+        ],
+        "policySetId": "6080089f-83a6-c3f4-bfae-890f1a103f55",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P65M_SIMPLIFIED_EMPTY_ROLE'",
+        "tenantId": "parity-p65m-simplified-empty-role",
+        "type": "SIMPLIFIED"
+      }
+    ]
+  }
+}

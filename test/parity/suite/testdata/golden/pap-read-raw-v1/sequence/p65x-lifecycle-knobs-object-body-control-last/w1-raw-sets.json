@@ -1,0 +1,38 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "externalId": "parity-p65x-lifecycle-knobs-object-body-control-last",
+        "name": "p65x-lifecycle-knobs-object-body-control-last s",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "p65x-lifecycle-knobs-object-body-control-last s reader",
+            "policyId": "c4d122f7-f921-d6cb-3f7d-eb87bb84d599",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p65x-lifecycle-knobs-object-body-control-last s rule",
+                "ruleId": "6e366dbd-8c90-5eea-de6c-bb7d262107b5",
+                "ruleType": "DEFAULT",
+                "target": "operation == 'READ'",
+                "tenantId": "parity-p65x-lifecycle-knobs-object-body-control-last"
+              }
+            ],
+            "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+            "tenantId": "parity-p65x-lifecycle-knobs-object-body-control-last"
+          }
+        ],
+        "policySetId": "2e470260-eeee-267a-9cf2-0d2d40b02d9c",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P65X_LIFECYCLE_KNOBS_OBJECT_BODY_CONTROL_LAST'",
+        "tenantId": "parity-p65x-lifecycle-knobs-object-body-control-last",
+        "type": "DEFAULT"
+      }
+    ]
+  }
+}

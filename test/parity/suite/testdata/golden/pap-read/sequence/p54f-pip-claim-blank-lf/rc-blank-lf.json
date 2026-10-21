@@ -1,0 +1,39 @@
+{
+  "status": 200,
+  "body": {
+    "pips": [
+      {
+        "cacheable": false,
+        "claim": "\f",
+        "domain": "PARITY_P54_FLD_049",
+        "name": "subject.parityP54F049A",
+        "pipType": "TOKEN",
+        "tenantId": "parity-p54f-049-blank-ff",
+        "type": "UUID"
+      },
+      {
+        "cacheable": false,
+        "claim": "\n",
+        "domain": "PARITY_P54_FLD_049",
+        "name": "subject.parityP54F049A",
+        "pipType": "TOKEN",
+        "tenantId": "parity-p54f-049-blank-lf",
+        "type": "UUID"
+      },
+      {
+        "cacheable": false,
+        "claim": "\r",
+        "domain": "PARITY_P54_FLD_049",
+        "name": "subject.parityP54F049A",
+        "pipType": "TOKEN",
+        "tenantId": "parity-p54f-049-blank-cr",
+        "type": "UUID"
+      }
+    ]
+  },
+  "keptTenants": [
+    "parity-p54f-049-blank-cr",
+    "parity-p54f-049-blank-ff",
+    "parity-p54f-049-blank-lf"
+  ]
+}

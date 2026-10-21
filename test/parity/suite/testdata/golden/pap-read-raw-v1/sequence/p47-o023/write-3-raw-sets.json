@@ -1,0 +1,39 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "component": "PARITY",
+        "domain": "PARITY_ISOLATED",
+        "name": "PARITY_ISOLATED_PARITY_PARITY_SUITE_R29F_R29PIPFIELD_NAME_STARTS_WITH_DIGIT_PolicySet",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "PARITY_ISOLATED_PARITY_PARITY_SUITE_R29F_R29PIPFIELD_NAME_STARTS_WITH_DIGIT_READ_Policy",
+            "policyId": "90f21fba-dd66-f43a-d3b3-85e6f518e0b2",
+            "rules": [
+              {
+                "condition": "subject.1parityR29 == 'v' OR resource.a == 'y'",
+                "effect": "ALLOW",
+                "name": "r29pipfield-name-starts-with-digit",
+                "ruleId": "00000000-0000-0000-0000-0000000f0001",
+                "ruleType": "DEFAULT",
+                "target": "subject.roles CONTAINS ANY 'ROLE_PARITY_READER'",
+                "tenantId": "parity-p47-o023"
+              }
+            ],
+            "target": "operation == 'READ'",
+            "tenantId": "parity-p47-o023"
+          }
+        ],
+        "policySetId": "2690f21f-badd-66f4-3ad3-b385e6f518e0",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_R29F_R29PIPFIELD_NAME_STARTS_WITH_DIGIT'",
+        "tenantId": "parity-p47-o023",
+        "type": "SIMPLIFIED"
+      }
+    ]
+  }
+}

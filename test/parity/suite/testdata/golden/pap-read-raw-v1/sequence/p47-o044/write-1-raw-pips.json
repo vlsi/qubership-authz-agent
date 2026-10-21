@@ -1,0 +1,30 @@
+{
+  "status": 200,
+  "body": {
+    "pips": [
+      {
+        "cachePeriod": 1,
+        "cacheable": true,
+        "domain": "PARITY_ISOLATED",
+        "name": "subject.permissionScope",
+        "pipType": "PERMISSION_SCOPE",
+        "tenantId": "parity-p47-o044",
+        "type": "UUID",
+        "url": "http://pip-mock:8090"
+      },
+      {
+        "cacheable": false,
+        "domain": "PARITY_ISOLATED",
+        "httpMethod": "POST",
+        "name": "subject.parityR14Failing",
+        "pipType": "GENERAL",
+        "requestAttributes": {
+          "case": "subject.parityR14Failing"
+        },
+        "tenantId": "parity-p47-o044",
+        "type": "UUID",
+        "url": "http://pip-mock:8090/api/v1/pip/r14-failing"
+      }
+    ]
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "status": 200,
+  "body": {
+    "pips": [
+      {
+        "cacheable": false,
+        "domain": "PARITY_P50_FLD_042",
+        "httpMethod": "POST",
+        "jsonPath": "$.groups",
+        "name": "subject.parityP50F042A",
+        "pipType": "GENERAL",
+        "tenantId": "parity-p50f-042-null",
+        "type": "JSON",
+        "url": "http://pip-mock/api/v1/pip/parity-doc"
+      }
+    ]
+  },
+  "keptTenants": [
+    "parity-p50f-042-null"
+  ]
+}

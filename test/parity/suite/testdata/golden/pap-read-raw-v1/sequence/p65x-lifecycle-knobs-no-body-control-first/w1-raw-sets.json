@@ -1,0 +1,38 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "externalId": "parity-p65x-lifecycle-knobs-no-body-control-first",
+        "name": "p65x-lifecycle-knobs-no-body-control-first s",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "p65x-lifecycle-knobs-no-body-control-first s reader",
+            "policyId": "8fadc881-ecf6-2f16-5b14-dc0079e0c0eb",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p65x-lifecycle-knobs-no-body-control-first s rule",
+                "ruleId": "000b9ffe-87c2-3033-9f7a-1aec26b9b352",
+                "ruleType": "DEFAULT",
+                "target": "operation == 'READ'",
+                "tenantId": "parity-p65x-lifecycle-knobs-no-body-control-first"
+              }
+            ],
+            "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+            "tenantId": "parity-p65x-lifecycle-knobs-no-body-control-first"
+          }
+        ],
+        "policySetId": "1033154e-384b-e1ec-fe5b-bf5812d3bd4a",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P65X_LIFECYCLE_KNOBS_NO_BODY_CONTROL_FIRST'",
+        "tenantId": "parity-p65x-lifecycle-knobs-no-body-control-first",
+        "type": "DEFAULT"
+      }
+    ]
+  }
+}

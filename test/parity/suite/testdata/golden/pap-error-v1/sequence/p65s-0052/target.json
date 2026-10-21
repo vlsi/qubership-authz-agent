@@ -1,0 +1,6 @@
+{
+  "status": 404,
+  "body": {
+    "message": "Unable to extract parameter from http request: \u003credacted\u003e(\"id\") value is '%0Aefce6df7-1ace-e8cf-42de-fb89b15d5d56%0A'"
+  }
+}

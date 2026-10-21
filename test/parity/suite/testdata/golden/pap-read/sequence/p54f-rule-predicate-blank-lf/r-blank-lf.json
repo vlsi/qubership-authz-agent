@@ -1,0 +1,42 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "externalId": "parity-p54-fld-029-blank-lf",
+        "name": "p54f-rule-predicate s-blank-lf",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "p54f-rule-predicate s-blank-lf reader",
+            "policyId": "3bef4818-dba0-a222-bb11-bb719655102e",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p54f-rule-predicate s-blank-lf rule",
+                "predicate": "\n",
+                "ruleId": "7b62456d-28ec-91b2-5a68-ae88ed65629f",
+                "ruleType": "DEFAULT",
+                "target": "operation == 'READ'",
+                "tenantId": "parity-p54f-029-blank-lf"
+              }
+            ],
+            "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+            "tenantId": "parity-p54f-029-blank-lf"
+          }
+        ],
+        "policySetId": "73625ff7-d4d6-f1b6-95cc-c8facddac631",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P54_FLD_029'",
+        "tenantId": "parity-p54f-029-blank-lf",
+        "type": "DEFAULT"
+      }
+    ]
+  },
+  "keptTenants": [
+    "parity-p54f-029-blank-lf"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "cacheable": false,
+      "defaultValue": "none",
+      "domain": "PARITY_P54_FLD_047",
+      "header": "\rX-Parity-Doc\r",
+      "name": "subject.parityP54F047A",
+      "pipType": "HEADER",
+      "type": "REGULAR"
+    }
+  ]
+}

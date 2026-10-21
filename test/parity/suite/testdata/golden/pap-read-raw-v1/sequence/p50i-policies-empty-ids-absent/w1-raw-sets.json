@@ -1,0 +1,57 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "component": "PARITY",
+        "domain": "PARITY_P50_ID_004",
+        "name": "PARITY_P50_ID_004_PARITY_PARITY_SUITE_P50_ID_004_PolicySet",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "PARITY_P50_ID_004_PARITY_PARITY_SUITE_P50_ID_004_READ_Policy",
+            "policyId": "892d3d9a-6936-24ac-c0ad-75d9e1695d14",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p50i-policies-empty-ids-absent a",
+                "ruleId": "2d3d9a69-3624-acc0-ad75-d9e1695d1405",
+                "ruleType": "DEFAULT",
+                "target": "subject.roles CONTAINS ANY 'ROLE_PARITY_READER'",
+                "tenantId": "parity-p50i-004"
+              }
+            ],
+            "target": "operation == 'READ'",
+            "tenantId": "parity-p50i-004"
+          },
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "PARITY_P50_ID_004_PARITY_PARITY_SUITE_P50_ID_004_UPDATE_Policy",
+            "policyId": "7fdb38e3-f3be-a8f6-cc87-11d46531673f",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p50i-policies-empty-ids-absent b",
+                "ruleId": "db38e3f3-bea8-f6cc-8711-d46531673fc2",
+                "ruleType": "DEFAULT",
+                "target": "subject.roles CONTAINS ANY 'ROLE_PARITY_READER'",
+                "tenantId": "parity-p50i-004"
+              }
+            ],
+            "target": "operation == 'UPDATE'",
+            "tenantId": "parity-p50i-004"
+          }
+        ],
+        "policySetId": "37892d3d-9a69-3624-acc0-ad75d9e1695d",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P50_ID_004'",
+        "tenantId": "parity-p50i-004",
+        "type": "SIMPLIFIED"
+      }
+    ]
+  }
+}

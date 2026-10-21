@@ -1,0 +1,25 @@
+{
+  "status": 200,
+  "decision": true,
+  "obligations": {
+    "read": {
+      "whitelist": {
+        "fields": [
+          "f1",
+          "f2"
+        ],
+        "fullAccess": false
+      }
+    },
+    "resourceType": "PARITY_SUITE_P61O_106",
+    "write": {
+      "whitelist": {
+        "fields": [
+          "f1",
+          "f2"
+        ],
+        "fullAccess": false
+      }
+    }
+  }
+}

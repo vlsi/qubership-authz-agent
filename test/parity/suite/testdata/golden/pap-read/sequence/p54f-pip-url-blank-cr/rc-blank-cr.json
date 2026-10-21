@@ -1,0 +1,21 @@
+{
+  "status": 200,
+  "body": {
+    "pips": [
+      {
+        "cacheable": false,
+        "domain": "PARITY_P54_FLD_035",
+        "httpMethod": "POST",
+        "jsonPath": "$.groups",
+        "name": "subject.parityP54F035A",
+        "pipType": "GENERAL",
+        "tenantId": "parity-p54f-035-blank-cr",
+        "type": "JSON",
+        "url": "\r"
+      }
+    ]
+  },
+  "keptTenants": [
+    "parity-p54f-035-blank-cr"
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "status": 200,
+  "body": {
+    "pips": [
+      {
+        "cacheable": false,
+        "defaultValue": "none",
+        "domain": "PARITY_P54_FLD_006",
+        "header": "x-parity-p54f-006-a",
+        "name": "subject.parityP54F006A",
+        "pipType": "HEADER",
+        "tenantId": "parity-p54f-006-blank-cr",
+        "type": "REGULAR"
+      },
+      {
+        "cacheable": false,
+        "defaultValue": "none",
+        "domain": "PARITY_P54_FLD_006",
+        "header": "x-parity-p54f-006-a",
+        "name": "subject.parityP54F006A",
+        "pipType": "HEADER",
+        "tenantId": "parity-p54f-006-blank-ff",
+        "type": "REGULAR"
+      },
+      {
+        "cacheable": false,
+        "defaultValue": "none",
+        "domain": "PARITY_P54_FLD_006",
+        "header": "x-parity-p54f-006-a",
+        "name": "subject.parityP54F006A",
+        "pipType": "HEADER",
+        "tenantId": "parity-p54f-006-blank-lf",
+        "type": "REGULAR"
+      },
+      {
+        "cacheable": false,
+        "defaultValue": "none",
+        "domain": "PARITY_P54_FLD_006",
+        "header": "x-parity-p54f-006-a",
+        "name": "subject.parityP54F006A",
+        "pipType": "HEADER",
+        "tenantId": "parity-p54f-006-one-element-list",
+        "type": "REGULAR"
+      }
+    ]
+  },
+  "keptTenants": [
+    "parity-p54f-006-blank-cr",
+    "parity-p54f-006-blank-ff",
+    "parity-p54f-006-blank-lf",
+    "parity-p54f-006-one-element-list"
+  ]
+}

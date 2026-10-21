@@ -1,0 +1,19 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "cacheable": false,
+      "customMapping": {
+        "subject.roles": {
+          "ROLE_PARITY_P65I_983": [
+            "parity_p65i_983_a"
+          ]
+        }
+      },
+      "domain": "PARITY_P65_ID_983",
+      "name": "subject.permissions.PARITY_P65I983_A",
+      "pipType": "MAPPING",
+      "type": "UUID"
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "status": 400,
+  "body": {
+    "message": "Next duplicates were found: [\n\t{PIP name 'subject.parityP65gTwin', PIP type 'GENERAL}]\n"
+  }
+}

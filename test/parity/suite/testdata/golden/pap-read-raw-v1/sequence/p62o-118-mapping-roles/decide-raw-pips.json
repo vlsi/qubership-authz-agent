@@ -1,0 +1,22 @@
+{
+  "status": 200,
+  "body": {
+    "pips": [
+      {
+        "cacheable": false,
+        "customMapping": {
+          "subject.roles": {
+            "ROLE_PARITY_READER": [
+              "role_parity_p62o_118_perm"
+            ]
+          }
+        },
+        "domain": "PARITY_P62O_118",
+        "name": "subject.permissions",
+        "pipType": "MAPPING",
+        "tenantId": "parity-p62o-118",
+        "type": "UUID"
+      }
+    ]
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "component": "PARITY",
+        "domain": "PARITY_P50_ID_002",
+        "name": "PARITY_P50_ID_002_PARITY_PARITY_SUITE_P50_ID_002_PolicySet",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "PARITY_P50_ID_002_PARITY_PARITY_SUITE_P50_ID_002_READ_Policy",
+            "policyId": "f6ea4bb4-2ff6-1a87-ba2e-06d8e18cff2d",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p50i-policies-body-twin-d a",
+                "ruleId": "88880855-300a-e31e-bfe8-790dce97a55c",
+                "ruleType": "DEFAULT",
+                "target": "subject.roles CONTAINS ANY 'ROLE_PARITY_READER'",
+                "tenantId": "parity-p50i-002"
+              }
+            ],
+            "target": "operation == 'READ'",
+            "tenantId": "parity-p50i-002"
+          },
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "PARITY_P50_ID_002_PARITY_PARITY_SUITE_P50_ID_002_UPDATE_Policy",
+            "policyId": "6c25bcd1-4d61-726d-6d1a-ee6d09586df7",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p50i-policies-body-twin-d b",
+                "ruleId": "3deb4331-0920-e1bc-be94-f5f389cb213f",
+                "ruleType": "DEFAULT",
+                "target": "subject.roles CONTAINS ANY 'ROLE_PARITY_READER'",
+                "tenantId": "parity-p50i-002"
+              }
+            ],
+            "target": "operation == 'UPDATE'",
+            "tenantId": "parity-p50i-002"
+          }
+        ],
+        "policySetId": "50f6ea4b-b42f-f61a-87ba-2e06d8e18cff",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P50_ID_002'",
+        "tenantId": "parity-p50i-002",
+        "type": "SIMPLIFIED"
+      }
+    ]
+  }
+}

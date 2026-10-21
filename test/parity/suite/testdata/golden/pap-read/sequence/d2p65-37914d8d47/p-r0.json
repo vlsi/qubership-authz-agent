@@ -1,0 +1,27 @@
+{
+  "status": 200,
+  "body": {
+    "pips": [
+      {
+        "cacheable": false,
+        "domain": "PARITY_P0_META_176",
+        "header": "x-parity-p0-meta-176-a",
+        "name": "subject.parityP0Meta176A",
+        "pipType": "HEADER",
+        "tenantId": "parity-d2p65-37914d8d47",
+        "type": "REGULAR"
+      },
+      {
+        "cacheable": false,
+        "header": "x-parity-p0-meta-175-a",
+        "name": "subject.parityP0Meta175A",
+        "pipType": "HEADER",
+        "tenantId": "parity-d2p65-37914d8d47",
+        "type": "UUID"
+      }
+    ]
+  },
+  "keptTenants": [
+    "parity-d2p65-37914d8d47"
+  ]
+}

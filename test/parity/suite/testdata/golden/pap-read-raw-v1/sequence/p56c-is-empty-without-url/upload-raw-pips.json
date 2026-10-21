@@ -1,0 +1,17 @@
+{
+  "status": 200,
+  "body": {
+    "pips": [
+      {
+        "beanName": "parityP56cWithoutUrl",
+        "cacheable": false,
+        "domain": "PARITY_P56C_IS_EMPTY_WITHOUT_URL",
+        "httpMethod": "POST",
+        "name": "subject.parityP56cWithoutUrl",
+        "pipType": "GENERAL",
+        "tenantId": "parity-p56c-is-empty-without-url",
+        "type": "UUID"
+      }
+    ]
+  }
+}

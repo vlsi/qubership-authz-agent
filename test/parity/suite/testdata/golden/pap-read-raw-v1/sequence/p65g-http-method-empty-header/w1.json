@@ -1,0 +1,14 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "cacheable": false,
+      "defaultValue": "none",
+      "domain": "P65G_HTTP_METHOD_EMPTY_HEADER",
+      "header": "x-parity-p65g-method",
+      "name": "subject.parityP65gHeaderMethod",
+      "pipType": "HEADER",
+      "type": "REGULAR"
+    }
+  ]
+}

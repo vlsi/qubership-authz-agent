@@ -1,0 +1,42 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "component": "PARITY",
+        "domain": "PARITY_P65_FLD_021",
+        "name": "PARITY_P65_FLD_021_PARITY_\u000bALL\u000b_PolicySet",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "PARITY_P65_FLD_021_PARITY_\u000bALL\u000b_READ_Policy",
+            "policyId": "a954559b-becc-1494-431f-a729a6266244",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p65f-simplifiedpolicy-resourcetype p",
+                "ruleId": "51050e68-1896-f362-ff13-3cbda122dabd",
+                "ruleType": "DEFAULT",
+                "target": "subject.roles CONTAINS ANY 'ROLE_PARITY_READER'",
+                "tenantId": "parity-p65f-021-edge-vt"
+              }
+            ],
+            "target": "operation == 'READ'",
+            "tenantId": "parity-p65f-021-edge-vt"
+          }
+        ],
+        "policySetId": "94a95455-9bbe-cc14-9443-1fa729a62662",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'ALL'",
+        "tenantId": "parity-p65f-021-edge-vt",
+        "type": "SIMPLIFIED"
+      }
+    ]
+  },
+  "keptTenants": [
+    "parity-p65f-021-edge-vt"
+  ]
+}

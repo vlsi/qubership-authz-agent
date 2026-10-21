@@ -1,0 +1,18 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "name": "p65c-added-rules-in-a-set added",
+        "policies": [],
+        "policySetId": "c9a95abc-2a01-2074-033d-a3b3db4aa02c",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P65C_ADDED_RULES_IN_A_SET'",
+        "tenantId": "parity-p65c-added-rules-in-a-set",
+        "type": "DEFAULT"
+      }
+    ]
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "externalId": "parity-p56c-pip-call-token",
+        "name": "p56c-pip-call-token set",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "p56c-pip-call-token set-policy",
+            "policyId": "84bcd10b-243f-db5b-bbf7-795af8f7fd5e",
+            "rules": [
+              {
+                "condition": "subject.parityP56cToken CONTAINS 'v'",
+                "effect": "ALLOW",
+                "name": "p56c-pip-call-token probe",
+                "ruleId": "a4c2e8a5-ede7-fdaa-8c94-98dbc8f741d3",
+                "ruleType": "DEFAULT",
+                "target": "true",
+                "tenantId": "parity-p56c-pip-call-token"
+              }
+            ],
+            "target": "true",
+            "tenantId": "parity-p56c-pip-call-token"
+          }
+        ],
+        "policySetId": "4fa57ac3-fd6e-5555-b24e-97c4bca3f66e",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P56C_PIP_CALL_TOKEN'",
+        "tenantId": "parity-p56c-pip-call-token",
+        "type": "DEFAULT"
+      }
+    ]
+  }
+}

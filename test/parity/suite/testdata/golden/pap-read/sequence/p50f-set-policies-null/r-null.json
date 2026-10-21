@@ -1,0 +1,22 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "externalId": "parity-p50-fld-007-null",
+        "name": "p50f-set-policies s-null",
+        "policies": [],
+        "policySetId": "3978ca86-c57e-242b-8680-4f77ad4b8e3e",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P50_FLD_007'",
+        "tenantId": "parity-p50f-007-null",
+        "type": "DEFAULT"
+      }
+    ]
+  },
+  "keptTenants": [
+    "parity-p50f-007-null"
+  ]
+}

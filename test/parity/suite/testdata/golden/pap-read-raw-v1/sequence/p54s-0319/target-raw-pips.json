@@ -1,0 +1,27 @@
+{
+  "status": 200,
+  "body": {
+    "pips": [
+      {
+        "cacheable": false,
+        "defaultValue": "none",
+        "domain": "PARITY_P54S_0319_D1",
+        "header": "x-subject-parityp54s0319n2",
+        "name": "subject.parityP54S0319N2",
+        "pipType": "HEADER",
+        "tenantId": "parity-p54s-0319",
+        "type": "REGULAR"
+      },
+      {
+        "cacheable": false,
+        "defaultValue": "none",
+        "domain": "PARITY_P54S_0319_D1",
+        "header": "x-subject-parityp54s0319n3",
+        "name": "subject.parityP54S0319N3",
+        "pipType": "HEADER",
+        "tenantId": "parity-p54s-0319",
+        "type": "REGULAR"
+      }
+    ]
+  }
+}

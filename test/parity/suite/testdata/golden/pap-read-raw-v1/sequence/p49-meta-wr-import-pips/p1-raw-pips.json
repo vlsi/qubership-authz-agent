@@ -1,0 +1,32 @@
+{
+  "status": 200,
+  "body": {
+    "pips": [
+      {
+        "cacheable": false,
+        "defaultValue": "other",
+        "domain": "PARITY_P49_META_277",
+        "header": "x-parity-p49-meta-277-a",
+        "name": "subject.parityP49Meta277A",
+        "pipType": "HEADER",
+        "tenantId": "parity-p49-meta-wr-import-pips",
+        "type": "REGULAR"
+      },
+      {
+        "cacheable": true,
+        "customMapping": {
+          "subject.roles": {
+            "ROLE_PARITY_READER": [
+              "parity_p49_meta_273_n"
+            ]
+          }
+        },
+        "name": "subject.permissions",
+        "pipType": "MAPPING",
+        "productMapping": {},
+        "tenantId": "parity-p49-meta-wr-import-pips",
+        "type": "UUID"
+      }
+    ]
+  }
+}

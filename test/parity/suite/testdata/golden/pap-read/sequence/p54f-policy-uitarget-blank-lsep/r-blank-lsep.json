@@ -1,0 +1,41 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "externalId": "parity-p54-fld-063-blank-lsep",
+        "name": "p54f-policy-uitarget s-blank-lsep",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "p54f-policy-uitarget s-blank-lsep reader",
+            "policyId": "4a16bac6-a72f-968d-3fa0-952953e9300b",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p54f-policy-uitarget s-blank-lsep rule",
+                "ruleId": "44718a29-7bcd-85fc-4ae4-9e853bcdcdfd",
+                "ruleType": "DEFAULT",
+                "target": "operation == 'READ'",
+                "tenantId": "parity-p54f-063-blank-lsep"
+              }
+            ],
+            "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+            "tenantId": "parity-p54f-063-blank-lsep"
+          }
+        ],
+        "policySetId": "5167b829-67fd-0515-9398-bcef971166c2",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P54_FLD_063'",
+        "tenantId": "parity-p54f-063-blank-lsep",
+        "type": "DEFAULT"
+      }
+    ]
+  },
+  "keptTenants": [
+    "parity-p54f-063-blank-lsep"
+  ]
+}

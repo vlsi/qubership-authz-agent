@@ -1,0 +1,23 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "cacheable": false,
+      "defaultValue": "none",
+      "domain": "PARITY_P65M_HEADER",
+      "header": "x-parity-p65m-bare",
+      "name": "subject.parityP65mHeaderBare",
+      "pipType": "HEADER",
+      "type": "REGULAR"
+    },
+    {
+      "cacheable": false,
+      "defaultValue": "none",
+      "domain": "PARITY_P65M_HEADER",
+      "header": "x-parity-p65m-cached",
+      "name": "subject.parityP65mHeaderCached",
+      "pipType": "HEADER",
+      "type": "REGULAR"
+    }
+  ]
+}

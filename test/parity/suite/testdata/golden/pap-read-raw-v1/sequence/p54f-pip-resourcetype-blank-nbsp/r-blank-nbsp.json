@@ -1,0 +1,14 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "cacheable": true,
+      "domain": "PARITY_P54_FLD_038",
+      "name": "subject.parityP54F038A.filtered",
+      "pipType": "FILTERED",
+      "resourceType": " ",
+      "type": "UUID",
+      "url": "http://pip-mock/api/v1/pip/parity-doc"
+    }
+  ]
+}

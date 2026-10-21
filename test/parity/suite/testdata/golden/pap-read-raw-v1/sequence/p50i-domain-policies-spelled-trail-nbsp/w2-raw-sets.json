@@ -1,0 +1,71 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "component": "PARITY",
+        "domain": "PARITY_P50_ID_064",
+        "name": "PARITY_P50_ID_064_PARITY_PARITY_SUITE_P50_ID_064_PolicySet",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "PARITY_P50_ID_064_PARITY_PARITY_SUITE_P50_ID_064_READ_Policy",
+            "policyId": "c295af97-97c8-3c27-0908-51e7338034ed",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p50i-domain-policies-spelled-trail-nbsp a",
+                "ruleId": "0e7130f9-ca0b-db7a-0a05-a3a12e737a25",
+                "ruleType": "DEFAULT",
+                "target": "subject.roles CONTAINS ANY 'ROLE_PARITY_READER'",
+                "tenantId": "parity-p50i-064"
+              }
+            ],
+            "target": "operation == 'READ'",
+            "tenantId": "parity-p50i-064"
+          }
+        ],
+        "policySetId": "bfc295af-9797-c83c-2709-0851e7338034",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P50_ID_064'",
+        "tenantId": "parity-p50i-064",
+        "type": "SIMPLIFIED"
+      },
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "component": "PARITY",
+        "domain": "PARITY_P50_ID_064 ",
+        "name": "PARITY_P50_ID_064 _PARITY_PARITY_SUITE_P50_ID_064_PolicySet",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "PARITY_P50_ID_064 _PARITY_PARITY_SUITE_P50_ID_064_UPDATE_Policy",
+            "policyId": "64df5600-9565-30dd-a762-f44bcb39d3f4",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p50i-domain-policies-spelled-trail-nbsp b",
+                "ruleId": "0c5b4aa5-ff16-e782-cbab-f600cd50e431",
+                "ruleType": "DEFAULT",
+                "target": "subject.roles CONTAINS ANY 'ROLE_PARITY_READER'",
+                "tenantId": "parity-p50i-064"
+              }
+            ],
+            "target": "operation == 'UPDATE'",
+            "tenantId": "parity-p50i-064"
+          }
+        ],
+        "policySetId": "1364df56-0095-6530-dda7-62f44bcb39d3",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P50_ID_064'",
+        "tenantId": "parity-p50i-064",
+        "type": "SIMPLIFIED"
+      }
+    ]
+  }
+}

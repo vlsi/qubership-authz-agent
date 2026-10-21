@@ -1,0 +1,42 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "externalId": "parity-p65-fld-013-empty-string",
+        "name": "p65f-rule-mongodbpredicate s-empty-string",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "p65f-rule-mongodbpredicate s-empty-string reader",
+            "policyId": "f822e696-56d7-c362-13ce-8cf223090dd9",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "mongodbPredicate": "",
+                "name": "p65f-rule-mongodbpredicate s-empty-string rule",
+                "ruleId": "c52ba86b-7ec0-feb8-6640-07db6bc311b5",
+                "ruleType": "DEFAULT",
+                "target": "operation == 'READ'",
+                "tenantId": "parity-p65f-013-empty-string"
+              }
+            ],
+            "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+            "tenantId": "parity-p65f-013-empty-string"
+          }
+        ],
+        "policySetId": "d6b4f9d3-fbf9-716a-7639-c9108506aabd",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P65_FLD_013'",
+        "tenantId": "parity-p65f-013-empty-string",
+        "type": "DEFAULT"
+      }
+    ]
+  },
+  "keptTenants": [
+    "parity-p65f-013-empty-string"
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "cacheable": false,
+      "claim": "5",
+      "domain": "PARITY_P50_FLD_046",
+      "name": "subject.parityP50F046A",
+      "pipType": "TOKEN",
+      "type": "UUID"
+    }
+  ]
+}

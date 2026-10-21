@@ -1,0 +1,28 @@
+{
+  "status": 200,
+  "result": {
+    "calculationResult": "USE_FILTER_CONDITION",
+    "filterCondition": "",
+    "mongodbFilterCondition": "",
+    "rsqlFilterCondition": "a==y",
+    "sqlFilterCondition": "",
+    "customFilterCondition": null
+  },
+  "obligations": {
+    "read": {
+      "whitelist": {
+        "fields": [
+          "f1"
+        ],
+        "fullAccess": false
+      }
+    },
+    "resourceType": "PARITY_SUITE_P62O_115",
+    "write": {
+      "whitelist": {
+        "fields": [],
+        "fullAccess": true
+      }
+    }
+  }
+}

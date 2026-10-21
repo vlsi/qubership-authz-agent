@@ -1,0 +1,21 @@
+{
+  "status": 200,
+  "body": {
+    "pips": [
+      {
+        "cacheable": false,
+        "defaultValue": "none",
+        "description": "\r",
+        "domain": "PARITY_P65_FLD_036",
+        "header": "x-parity-p65f-036-a",
+        "name": "subject.parityP65F036A",
+        "pipType": "HEADER",
+        "tenantId": "parity-p65f-036-blank-cr",
+        "type": "REGULAR"
+      }
+    ]
+  },
+  "keptTenants": [
+    "parity-p65f-036-blank-cr"
+  ]
+}

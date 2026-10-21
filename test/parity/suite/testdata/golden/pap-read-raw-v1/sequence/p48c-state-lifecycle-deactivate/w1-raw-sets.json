@@ -1,0 +1,38 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "externalId": "parity-p48c-state-008",
+        "name": "p48c-state-lifecycle-deactivate s",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "p48c-state-lifecycle-deactivate s reader",
+            "policyId": "ee1c4d14-528c-1fff-e63e-a8ba6391da2b",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p48c-state-lifecycle-deactivate s rule",
+                "ruleId": "10056d5e-3ec2-34a3-ee01-3220e1990a73",
+                "ruleType": "DEFAULT",
+                "target": "operation == 'READ'",
+                "tenantId": "parity-p48-claim-lifecycle-deactivate"
+              }
+            ],
+            "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+            "tenantId": "parity-p48-claim-lifecycle-deactivate"
+          }
+        ],
+        "policySetId": "6574f8c3-3051-4923-459a-8989603c214f",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P48C_STATE_008'",
+        "tenantId": "parity-p48-claim-lifecycle-deactivate",
+        "type": "DEFAULT"
+      }
+    ]
+  }
+}

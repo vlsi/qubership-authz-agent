@@ -1,0 +1,41 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "externalId": "parity-p50-fld-035-absent",
+        "name": "p50f-rule-ruleid s-absent",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "p50f-rule-ruleid s-absent reader",
+            "policyId": "b4afc51d-a1b3-1ad3-1883-e990fa5302ae",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p50f-rule-ruleid s-absent rule",
+                "ruleId": "\u003cgenerated UUID\u003e",
+                "ruleType": "DEFAULT",
+                "target": "operation == 'READ'",
+                "tenantId": "parity-p50f-035-absent"
+              }
+            ],
+            "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+            "tenantId": "parity-p50f-035-absent"
+          }
+        ],
+        "policySetId": "655e85c8-e125-d3be-0bbd-6e4a9cbf2b11",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P50_FLD_035'",
+        "tenantId": "parity-p50f-035-absent",
+        "type": "DEFAULT"
+      }
+    ]
+  },
+  "keptTenants": [
+    "parity-p50f-035-absent"
+  ]
+}

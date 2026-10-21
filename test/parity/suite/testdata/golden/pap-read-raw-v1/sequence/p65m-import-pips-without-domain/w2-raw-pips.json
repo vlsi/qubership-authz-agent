@@ -1,0 +1,16 @@
+{
+  "status": 200,
+  "body": {
+    "pips": [
+      {
+        "cacheable": false,
+        "claim": "department",
+        "defaultValue": "none",
+        "name": "subject.parityP65mNoDomain",
+        "pipType": "TOKEN",
+        "tenantId": "parity-p65m-import-pips-without-domain",
+        "type": "REGULAR"
+      }
+    ]
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "beanName": "5",
+      "cacheable": false,
+      "domain": "PARITY_P50_FLD_008",
+      "httpMethod": "POST",
+      "jsonPath": "$.groups",
+      "name": "subject.parityP50F008A",
+      "pipType": "GENERAL",
+      "type": "JSON",
+      "url": "http://pip-mock/api/v1/pip/parity-doc"
+    }
+  ]
+}

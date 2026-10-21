@@ -1,0 +1,6 @@
+{
+  "status": 400,
+  "message": {
+    "message": "simplified policy 'predicates' must contain at least one predicate format"
+  }
+}

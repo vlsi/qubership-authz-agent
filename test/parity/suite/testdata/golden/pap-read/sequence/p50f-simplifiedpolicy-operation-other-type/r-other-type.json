@@ -1,0 +1,108 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "component": "PARITY",
+        "domain": "PARITY_P50_FLD_031",
+        "name": "PARITY_P50_FLD_031_PARITY_PARITY_SUITE_P50_FLD_031_PolicySet",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "PARITY_P50_FLD_031_PARITY_PARITY_SUITE_P50_FLD_031_ READ _Policy",
+            "policyId": "81c0309f-67a1-79b2-e209-1a482e384034",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p50f-simplifiedpolicy-operation p",
+                "ruleId": "48bb660a-6cd6-bd39-505c-73a018d318ff",
+                "ruleType": "DEFAULT",
+                "target": "subject.roles CONTAINS ANY 'ROLE_PARITY_READER'",
+                "tenantId": "parity-p50f-031-edge-space"
+              }
+            ],
+            "target": "operation == 'READ'",
+            "tenantId": "parity-p50f-031-edge-space"
+          }
+        ],
+        "policySetId": "e181c030-9f67-a179-b2e2-091a482e3840",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P50_FLD_031'",
+        "tenantId": "parity-p50f-031-edge-space",
+        "type": "SIMPLIFIED"
+      },
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "component": "PARITY",
+        "domain": "PARITY_P50_FLD_031",
+        "name": "PARITY_P50_FLD_031_PARITY_PARITY_SUITE_P50_FLD_031_PolicySet",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "PARITY_P50_FLD_031_PARITY_PARITY_SUITE_P50_FLD_031_5_Policy",
+            "policyId": "8b05dbb3-d777-ac08-c426-760dacd10f64",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p50f-simplifiedpolicy-operation p",
+                "ruleId": "48bb660a-6cd6-bd39-505c-73a018d318ff",
+                "ruleType": "DEFAULT",
+                "target": "subject.roles CONTAINS ANY 'ROLE_PARITY_READER'",
+                "tenantId": "parity-p50f-031-other-type"
+              }
+            ],
+            "target": "operation == '5'",
+            "tenantId": "parity-p50f-031-other-type"
+          }
+        ],
+        "policySetId": "a58b05db-b3d7-77ac-08c4-26760dacd10f",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P50_FLD_031'",
+        "tenantId": "parity-p50f-031-other-type",
+        "type": "SIMPLIFIED"
+      },
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "component": "PARITY",
+        "domain": "PARITY_P50_FLD_031",
+        "name": "PARITY_P50_FLD_031_PARITY_PARITY_SUITE_P50_FLD_031_PolicySet",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "PARITY_P50_FLD_031_PARITY_PARITY_SUITE_P50_FLD_031__Policy",
+            "policyId": "f1f82b05-78c7-6704-6ab9-025d9739680a",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p50f-simplifiedpolicy-operation p",
+                "ruleId": "48bb660a-6cd6-bd39-505c-73a018d318ff",
+                "ruleType": "DEFAULT",
+                "target": "subject.roles CONTAINS ANY 'ROLE_PARITY_READER'",
+                "tenantId": "parity-p50f-031-empty-string"
+              }
+            ],
+            "target": "operation == ''",
+            "tenantId": "parity-p50f-031-empty-string"
+          }
+        ],
+        "policySetId": "0cf1f82b-0578-c767-046a-b9025d973968",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P50_FLD_031'",
+        "tenantId": "parity-p50f-031-empty-string",
+        "type": "SIMPLIFIED"
+      }
+    ]
+  },
+  "keptTenants": [
+    "parity-p50f-031-edge-space",
+    "parity-p50f-031-empty-string",
+    "parity-p50f-031-other-type"
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "status": 200,
+  "body": {
+    "pips": [
+      {
+        "cacheable": false,
+        "defaultValue": "none",
+        "domain": "PARITY_P49_META_245",
+        "header": "x-parity-p49-meta-245-b",
+        "name": "subject.parityP49Meta245B",
+        "pipType": "HEADER",
+        "tenantId": "parity-p49-meta-split-import-pips-b",
+        "type": "REGULAR"
+      },
+      {
+        "cacheable": false,
+        "defaultValue": "none",
+        "domain": "PARITY_P49_META_246",
+        "header": "x-parity-p49-meta-246-a",
+        "name": "subject.parityP49Meta246A",
+        "pipType": "HEADER",
+        "tenantId": "parity-p49-meta-split-import-pips-b",
+        "type": "REGULAR"
+      },
+      {
+        "cacheable": false,
+        "defaultValue": "other",
+        "domain": "PARITY_P49_META_245",
+        "header": "x-parity-p49-meta-245-a",
+        "name": "subject.parityP49Meta245A",
+        "pipType": "HEADER",
+        "tenantId": "parity-p49-meta-split-import-pips-b",
+        "type": "REGULAR"
+      },
+      {
+        "cacheable": true,
+        "customMapping": {
+          "subject.roles": {
+            "ROLE_PARITY_READER": [
+              "parity_p49_meta_273_n"
+            ]
+          }
+        },
+        "name": "subject.permissions",
+        "pipType": "MAPPING",
+        "productMapping": {},
+        "tenantId": "parity-p49-meta-split-import-pips-b",
+        "type": "UUID"
+      }
+    ]
+  }
+}

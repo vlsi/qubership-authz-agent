@@ -1,0 +1,17 @@
+{
+  "status": 200,
+  "body": {
+    "pips": [
+      {
+        "cacheable": false,
+        "claim": "department",
+        "defaultValue": "none",
+        "domain": "PARITY_P54_STATE_040",
+        "name": "subject.parityP040A",
+        "pipType": "TOKEN",
+        "tenantId": "parity-p54-state-040",
+        "type": "REGULAR"
+      }
+    ]
+  }
+}

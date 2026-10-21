@@ -1,0 +1,75 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "component": "PARITY",
+        "domain": "PARITY_P50_ID_045",
+        "name": "PARITY_P50_ID_045_PARITY_PARITY_SUITE_P50_ID_045_PolicySet",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "PARITY_P50_ID_045_PARITY_PARITY_SUITE_P50_ID_045_CREATE_Policy",
+            "policyId": "ab7ffa26-2bd6-12ba-61ee-77110a0edcb9",
+            "rules": [
+              {
+                "condition": "subject.parityP50I045A CONTAINS 'c'",
+                "effect": "ALLOW",
+                "name": "p50i-pip-custom-twin-x create",
+                "ruleId": "303ea8a1-e55c-583c-f40f-47d32cd2c24a",
+                "ruleType": "DEFAULT",
+                "target": "subject.roles CONTAINS ANY 'ROLE_PARITY_READER'",
+                "tenantId": "parity-p50i-045"
+              }
+            ],
+            "target": "operation == 'CREATE'",
+            "tenantId": "parity-p50i-045"
+          },
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "PARITY_P50_ID_045_PARITY_PARITY_SUITE_P50_ID_045_READ_Policy",
+            "policyId": "4e732b1e-351a-163d-8eb6-48ae9d09b94a",
+            "rules": [
+              {
+                "condition": "subject.parityP50I045A CONTAINS 'r'",
+                "effect": "ALLOW",
+                "name": "p50i-pip-custom-twin-x read",
+                "ruleId": "63c9e4a4-a8ac-e4fe-547a-149ae039c038",
+                "ruleType": "DEFAULT",
+                "target": "subject.roles CONTAINS ANY 'ROLE_PARITY_READER'",
+                "tenantId": "parity-p50i-045"
+              }
+            ],
+            "target": "operation == 'READ'",
+            "tenantId": "parity-p50i-045"
+          },
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "PARITY_P50_ID_045_PARITY_PARITY_SUITE_P50_ID_045_UPDATE_Policy",
+            "policyId": "c01bfe3f-3ba4-8603-c84a-036e37c8460b",
+            "rules": [
+              {
+                "condition": "subject.parityP50I045A CONTAINS 'u'",
+                "effect": "ALLOW",
+                "name": "p50i-pip-custom-twin-x update",
+                "ruleId": "26f4962b-2609-303a-1cdd-a09de3720d7d",
+                "ruleType": "DEFAULT",
+                "target": "subject.roles CONTAINS ANY 'ROLE_PARITY_READER'",
+                "tenantId": "parity-p50i-045"
+              }
+            ],
+            "target": "operation == 'UPDATE'",
+            "tenantId": "parity-p50i-045"
+          }
+        ],
+        "policySetId": "5b4e732b-1e35-1a16-3d8e-b648ae9d09b9",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P50_ID_045'",
+        "tenantId": "parity-p50i-045",
+        "type": "SIMPLIFIED"
+      }
+    ]
+  }
+}

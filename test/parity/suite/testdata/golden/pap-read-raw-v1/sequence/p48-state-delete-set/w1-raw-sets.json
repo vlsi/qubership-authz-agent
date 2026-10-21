@@ -1,0 +1,70 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "externalId": "parity-p48-state-008",
+        "name": "p48-state-delete-set s",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "p48-state-delete-set s reader",
+            "policyId": "a1c9819e-1f40-abf7-c9c8-673c6cb3fa50",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p48-state-delete-set s rule",
+                "ruleId": "1465e9cc-9dd6-2774-4d3b-8551e8d1d51a",
+                "ruleType": "DEFAULT",
+                "target": "operation == 'UPDATE'",
+                "tenantId": "parity-p48-state-008"
+              }
+            ],
+            "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+            "tenantId": "parity-p48-state-008"
+          }
+        ],
+        "policySetId": "8e7547c4-feff-4d92-6d71-db0b4b754a37",
+        "policySets": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "externalId": "parity-p48-state-008",
+            "name": "p48-state-delete-set n",
+            "policies": [
+              {
+                "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+                "name": "p48-state-delete-set n reader",
+                "policyId": "fe789b4e-48e8-bca6-b636-c4a907f7115d",
+                "rules": [
+                  {
+                    "condition": "true",
+                    "effect": "ALLOW",
+                    "name": "p48-state-delete-set n rule",
+                    "ruleId": "6db728d2-bc9d-5649-43e9-e9779f0d6617",
+                    "ruleType": "DEFAULT",
+                    "target": "operation == 'UPDATE'",
+                    "tenantId": "parity-p48-state-008"
+                  }
+                ],
+                "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+                "tenantId": "parity-p48-state-008"
+              }
+            ],
+            "policySetId": "186d5253-dc46-c65a-1450-970c46093982",
+            "policySets": [],
+            "status": "ACTIVE",
+            "target": "resourceType == 'PARITY_SUITE_P48_STATE_008'",
+            "tenantId": "parity-p48-state-008",
+            "type": "DEFAULT"
+          }
+        ],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P48_STATE_008'",
+        "tenantId": "parity-p48-state-008",
+        "type": "DEFAULT"
+      }
+    ]
+  }
+}

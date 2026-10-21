@@ -1,0 +1,21 @@
+{
+  "status": 200,
+  "body": {
+    "pips": [
+      {
+        "cacheable": false,
+        "domain": "PARITY_P65_FLD_018",
+        "httpMethod": "POST",
+        "jsonPath": "\u000b$.groups\u000b",
+        "name": "subject.parityP65F018A",
+        "pipType": "GENERAL",
+        "tenantId": "parity-p65f-018-edge-vt",
+        "type": "JSON",
+        "url": "http://pip-mock/api/v1/pip/parity-doc"
+      }
+    ]
+  },
+  "keptTenants": [
+    "parity-p65f-018-edge-vt"
+  ]
+}

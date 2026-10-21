@@ -1,0 +1,21 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "name": "p65f-cust-policy-status s",
+        "policies": [],
+        "policySetId": "8dbb7d4d-1363-c3c7-a60e-198794fc71c8",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P65_FLD_004'",
+        "tenantId": "parity-p65f-004-edge-vt",
+        "type": "DEFAULT"
+      }
+    ]
+  },
+  "keptTenants": [
+    "parity-p65f-004-edge-vt"
+  ]
+}

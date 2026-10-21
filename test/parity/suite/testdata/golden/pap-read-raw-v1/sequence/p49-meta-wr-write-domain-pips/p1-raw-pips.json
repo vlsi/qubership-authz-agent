@@ -1,0 +1,17 @@
+{
+  "status": 200,
+  "body": {
+    "pips": [
+      {
+        "cacheable": false,
+        "defaultValue": "other",
+        "domain": "PARITY_P49_META_281",
+        "header": "x-parity-p49-meta-281-a",
+        "name": "subject.parityP49Meta281A",
+        "pipType": "HEADER",
+        "tenantId": "parity-p49-meta-wr-write-domain-pips",
+        "type": "REGULAR"
+      }
+    ]
+  }
+}

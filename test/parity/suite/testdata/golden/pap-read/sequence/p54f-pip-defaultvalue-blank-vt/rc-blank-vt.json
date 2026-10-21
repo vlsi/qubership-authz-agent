@@ -1,0 +1,86 @@
+{
+  "status": 200,
+  "body": {
+    "pips": [
+      {
+        "cacheable": false,
+        "defaultValue": "\f",
+        "domain": "PARITY_P54_FLD_048",
+        "header": "x-parity-p54f-048-a",
+        "name": "subject.parityP54F048A",
+        "pipType": "HEADER",
+        "tenantId": "parity-p54f-048-blank-ff",
+        "type": "REGULAR"
+      },
+      {
+        "cacheable": false,
+        "defaultValue": "\n",
+        "domain": "PARITY_P54_FLD_048",
+        "header": "x-parity-p54f-048-a",
+        "name": "subject.parityP54F048A",
+        "pipType": "HEADER",
+        "tenantId": "parity-p54f-048-blank-lf",
+        "type": "REGULAR"
+      },
+      {
+        "cacheable": false,
+        "defaultValue": "\r",
+        "domain": "PARITY_P54_FLD_048",
+        "header": "x-parity-p54f-048-a",
+        "name": "subject.parityP54F048A",
+        "pipType": "HEADER",
+        "tenantId": "parity-p54f-048-blank-cr",
+        "type": "REGULAR"
+      },
+      {
+        "cacheable": false,
+        "defaultValue": "\t",
+        "domain": "PARITY_P54_FLD_048",
+        "header": "x-parity-p54f-048-a",
+        "name": "subject.parityP54F048A",
+        "pipType": "HEADER",
+        "tenantId": "parity-p54f-048-blank-tab",
+        "type": "REGULAR"
+      },
+      {
+        "cacheable": false,
+        "defaultValue": "\u000b",
+        "domain": "PARITY_P54_FLD_048",
+        "header": "x-parity-p54f-048-a",
+        "name": "subject.parityP54F048A",
+        "pipType": "HEADER",
+        "tenantId": "parity-p54f-048-blank-vt",
+        "type": "REGULAR"
+      },
+      {
+        "cacheable": false,
+        "defaultValue": "\u2028",
+        "domain": "PARITY_P54_FLD_048",
+        "header": "x-parity-p54f-048-a",
+        "name": "subject.parityP54F048A",
+        "pipType": "HEADER",
+        "tenantId": "parity-p54f-048-blank-lsep",
+        "type": "REGULAR"
+      },
+      {
+        "cacheable": false,
+        "defaultValue": " ",
+        "domain": "PARITY_P54_FLD_048",
+        "header": "x-parity-p54f-048-a",
+        "name": "subject.parityP54F048A",
+        "pipType": "HEADER",
+        "tenantId": "parity-p54f-048-blank-nbsp",
+        "type": "REGULAR"
+      }
+    ]
+  },
+  "keptTenants": [
+    "parity-p54f-048-blank-cr",
+    "parity-p54f-048-blank-ff",
+    "parity-p54f-048-blank-lf",
+    "parity-p54f-048-blank-lsep",
+    "parity-p54f-048-blank-nbsp",
+    "parity-p54f-048-blank-tab",
+    "parity-p54f-048-blank-vt"
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "status": 400,
+  "message": {
+    "message": "simplified policy 'component' field can't be null"
+  }
+}

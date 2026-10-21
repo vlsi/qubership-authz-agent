@@ -1,0 +1,20 @@
+{
+  "status": 200,
+  "body": {
+    "pips": [
+      {
+        "cacheable": false,
+        "domain": "PARITY_P56C_TOKEN",
+        "httpMethod": "POST",
+        "name": "subject.parityP56cToken",
+        "pipType": "GENERAL",
+        "requestAttributes": {
+          "case": "p56c-pip-call-token"
+        },
+        "tenantId": "parity-p56c-pip-call-token",
+        "type": "UUID",
+        "url": "http://pip-mock:8090/api/v1/pip/p56c-token"
+      }
+    ]
+  }
+}

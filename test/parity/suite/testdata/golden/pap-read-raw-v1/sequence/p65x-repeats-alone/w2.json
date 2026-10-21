@@ -1,0 +1,67 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "name": "p65x-repeats-alone q",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "p65x-repeats-alone q reader",
+            "policyId": "8ef817e9-23c7-16d6-2ed3-6d61d8715bfd",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p65x-repeats-alone q rule",
+                "ruleId": "298c2383-1668-05a0-6db3-cb8fd2ee703f",
+                "ruleType": "DEFAULT",
+                "target": "operation == 'LIST'",
+                "tenantId": "parity-p65x-repeats-alone"
+              }
+            ],
+            "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+            "tenantId": "parity-p65x-repeats-alone"
+          }
+        ],
+        "policySetId": "28330b2f-bdd8-1cbc-ebec-7e5e19d03d10",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P65X_REPEATS_ALONE'",
+        "tenantId": "parity-p65x-repeats-alone",
+        "type": "DEFAULT"
+      },
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "name": "p65x-repeats-alone s",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "p65x-repeats-alone s reader",
+            "policyId": "55613d0f-bdc8-2c0b-240c-ec1630a92d8d",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p65x-repeats-alone s rule",
+                "ruleId": "059ff1d1-965f-0f8b-3bd3-7b8185736561",
+                "ruleType": "DEFAULT",
+                "target": "operation == 'READ'",
+                "tenantId": "parity-p65x-repeats-alone"
+              }
+            ],
+            "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+            "tenantId": "parity-p65x-repeats-alone"
+          }
+        ],
+        "policySetId": "3749211f-db7e-a30b-609e-e4d5377796ec",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P65X_REPEATS_ALONE'",
+        "tenantId": "parity-p65x-repeats-alone",
+        "type": "DEFAULT"
+      }
+    ]
+  }
+}

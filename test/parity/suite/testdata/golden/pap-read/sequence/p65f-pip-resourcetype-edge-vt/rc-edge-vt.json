@@ -1,0 +1,20 @@
+{
+  "status": 200,
+  "body": {
+    "pips": [
+      {
+        "cacheable": true,
+        "domain": "PARITY_P65_FLD_020",
+        "name": "subject.parityP65F020A.filtered",
+        "pipType": "FILTERED",
+        "resourceType": "\u000bPARITY_SCHEMA\u000b",
+        "tenantId": "parity-p65f-020-edge-vt",
+        "type": "UUID",
+        "url": "http://pip-mock/api/v1/pip/parity-doc"
+      }
+    ]
+  },
+  "keptTenants": [
+    "parity-p65f-020-edge-vt"
+  ]
+}

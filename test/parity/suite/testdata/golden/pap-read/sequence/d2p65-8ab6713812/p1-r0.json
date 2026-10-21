@@ -1,0 +1,45 @@
+{
+  "status": 200,
+  "body": {
+    "pips": [
+      {
+        "cacheable": false,
+        "claim": "department",
+        "domain": "PARITY_P0_META_041",
+        "name": "subject.parityP0Meta041RP49Meta285RConfigExportToken",
+        "pipType": "TOKEN",
+        "tenantId": "parity-d2p65-8ab6713812",
+        "type": "UUID"
+      },
+      {
+        "cacheable": false,
+        "domain": "PARITY_P0_META_041",
+        "header": "x-parity-config-export",
+        "name": "subject.parityP0Meta041RP49Meta285RConfigExportHeader",
+        "pipType": "HEADER",
+        "tenantId": "parity-d2p65-8ab6713812",
+        "type": "UUID"
+      },
+      {
+        "cacheable": true,
+        "domain": "PARITY_P0_META_041",
+        "name": "subject.parityP0Meta041RP49Meta285RConfigExportGeneral",
+        "pipType": "GENERAL",
+        "tenantId": "parity-d2p65-8ab6713812",
+        "type": "UUID",
+        "url": "http://pip-mock:8090/api/v1/pip/config-export"
+      },
+      {
+        "cacheable": true,
+        "name": "subject.permissions",
+        "pipType": "MAPPING",
+        "productMapping": {},
+        "tenantId": "parity-d2p65-8ab6713812",
+        "type": "UUID"
+      }
+    ]
+  },
+  "keptTenants": [
+    "parity-d2p65-8ab6713812"
+  ]
+}

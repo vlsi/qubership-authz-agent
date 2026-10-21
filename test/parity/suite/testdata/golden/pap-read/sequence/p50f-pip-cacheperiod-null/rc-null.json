@@ -1,0 +1,20 @@
+{
+  "status": 200,
+  "body": {
+    "pips": [
+      {
+        "cachePeriod": 60,
+        "cacheable": true,
+        "domain": "PARITY_P50_FLD_043",
+        "name": "subject.permissionScope",
+        "pipType": "PERMISSION_SCOPE",
+        "tenantId": "parity-p50f-043-null",
+        "type": "UUID",
+        "url": "http://pip-mock"
+      }
+    ]
+  },
+  "keptTenants": [
+    "parity-p50f-043-null"
+  ]
+}

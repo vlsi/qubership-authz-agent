@@ -1,0 +1,53 @@
+{
+  "status": 200,
+  "body": {
+    "pips": [
+      {
+        "cachePeriod": 60,
+        "cacheable": true,
+        "domain": "PARITY_P54_FLD_057",
+        "name": "subject.permissionScope",
+        "pipType": "PERMISSION_SCOPE",
+        "tenantId": "parity-p54f-057-blank-ff",
+        "type": "UUID",
+        "url": "http://pip-mock"
+      },
+      {
+        "cachePeriod": 60,
+        "cacheable": true,
+        "domain": "PARITY_P54_FLD_057",
+        "name": "subject.permissionScope",
+        "pipType": "PERMISSION_SCOPE",
+        "tenantId": "parity-p54f-057-blank-lf",
+        "type": "UUID",
+        "url": "http://pip-mock"
+      },
+      {
+        "cachePeriod": 60,
+        "cacheable": true,
+        "domain": "PARITY_P54_FLD_057",
+        "name": "subject.permissionScope",
+        "pipType": "PERMISSION_SCOPE",
+        "tenantId": "parity-p54f-057-blank-tab",
+        "type": "UUID",
+        "url": "http://pip-mock"
+      },
+      {
+        "cachePeriod": 60,
+        "cacheable": true,
+        "domain": "PARITY_P54_FLD_057",
+        "name": "subject.permissionScope",
+        "pipType": "PERMISSION_SCOPE",
+        "tenantId": "parity-p54f-057-blank-vt",
+        "type": "UUID",
+        "url": "http://pip-mock"
+      }
+    ]
+  },
+  "keptTenants": [
+    "parity-p54f-057-blank-ff",
+    "parity-p54f-057-blank-lf",
+    "parity-p54f-057-blank-tab",
+    "parity-p54f-057-blank-vt"
+  ]
+}

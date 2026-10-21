@@ -1,0 +1,38 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "externalId": "parity-p65x-lifecycle-knobs-no-body-control-last",
+        "name": "p65x-lifecycle-knobs-no-body-control-last s",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "p65x-lifecycle-knobs-no-body-control-last s reader",
+            "policyId": "741b8250-67d3-5397-6724-ea6ea4db181a",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p65x-lifecycle-knobs-no-body-control-last s rule",
+                "ruleId": "e67f670a-6bfc-c25d-09d0-16fc3d47e9b6",
+                "ruleType": "DEFAULT",
+                "target": "operation == 'READ'",
+                "tenantId": "parity-p65x-lifecycle-knobs-no-body-control-last"
+              }
+            ],
+            "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+            "tenantId": "parity-p65x-lifecycle-knobs-no-body-control-last"
+          }
+        ],
+        "policySetId": "988011f3-27ad-46f5-a3e3-3b468fd6cb81",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P65X_LIFECYCLE_KNOBS_NO_BODY_CONTROL_LAST'",
+        "tenantId": "parity-p65x-lifecycle-knobs-no-body-control-last",
+        "type": "DEFAULT"
+      }
+    ]
+  }
+}

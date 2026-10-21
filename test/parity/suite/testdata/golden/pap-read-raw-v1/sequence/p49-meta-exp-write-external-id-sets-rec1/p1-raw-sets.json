@@ -1,0 +1,134 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "externalId": "parity-p49-meta-051",
+        "name": "r29pairs-one-010 s0",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_OVERRIDES",
+            "name": "r29pairs-one-010 s0p0",
+            "policyId": "6ae8a474-fc23-0d93-2023-1fc784ba8cdd",
+            "rules": [
+              {
+                "condition": "resource.f1a IN subject.roles",
+                "effect": "NOT_APPLICABLE",
+                "mongodbPredicate": "{ \"f1a\": { \"$in\": ${subject.roles} } }",
+                "name": "r29pairs-one-010 r1",
+                "predicate": "${resourceType}.f1a.in(${subject.roles})",
+                "rsqlPredicate": "f1a=in=(${subject.roles})",
+                "ruleId": "e4dab472-cd9f-054a-2df6-5f4b71dad003",
+                "ruleType": "DEFAULT",
+                "sqlPredicate": "f1a IN (${subject.roles})",
+                "target": "true",
+                "tenantId": "parity-p49-meta-exp-write-external-id-sets-rec1"
+              },
+              {
+                "condition": "true",
+                "effect": "DENY",
+                "name": "r29pairs-one-010 r2",
+                "ruleId": "09472abe-faa2-4f19-4c5f-828f585be16b",
+                "ruleType": "DEFAULT",
+                "target": "true",
+                "tenantId": "parity-p49-meta-exp-write-external-id-sets-rec1"
+              }
+            ],
+            "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+            "tenantId": "parity-p49-meta-exp-write-external-id-sets-rec1"
+          }
+        ],
+        "policySetId": "a665a09a-c1b4-8d2b-710f-0193f74bef79",
+        "policySets": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "externalId": "parity-p49-meta-051",
+            "name": "r29pairs-one-010 s0n1",
+            "policies": [
+              {
+                "combiningAlgorithm": "DENY_OVERRIDES",
+                "name": "r29pairs-one-010 s0n1p0",
+                "policyId": "4ea7a0c6-e672-4e84-a2d7-36f8f94044b7",
+                "rules": [
+                  {
+                    "condition": "resource.f3a == 'PARITY_SUITE_P49_META_051' OR resource.f3a IN subject.permissions",
+                    "customPredicate": {
+                      "params": {
+                        "p0": "resourceType",
+                        "p1": "subject.permissions"
+                      },
+                      "predicate": "[{\"value\":${p0},\"property\":\"f3a\",\"operator\":\"in\"},{\"value\":${p1},\"property\":\"f3a\",\"operator\":\"in\"}]"
+                    },
+                    "effect": "NOT_APPLICABLE",
+                    "name": "r29pairs-one-010 r3",
+                    "ruleId": "71afa9fa-bd9f-2bbf-f3cf-e8eb431016ad",
+                    "ruleType": "DEFAULT",
+                    "target": "true",
+                    "tenantId": "parity-p49-meta-exp-write-external-id-sets-rec1"
+                  },
+                  {
+                    "condition": "resource.f4a == 'PARITY_SUITE_P49_META_051' AND resource.f4b == 'v1'",
+                    "effect": "NOT_APPLICABLE",
+                    "name": "r29pairs-one-010 r4",
+                    "predicate": "(${resourceType}.f4a.eq(${resourceType})).and(${resourceType}.f4b.eq(\"v1\"))",
+                    "ruleId": "68e94759-a27b-e620-fb5a-fad0e7f38ffe",
+                    "ruleType": "DEFAULT",
+                    "target": "true",
+                    "tenantId": "parity-p49-meta-exp-write-external-id-sets-rec1"
+                  },
+                  {
+                    "condition": "resource.f5a IN subject.roles",
+                    "customPredicate": {
+                      "params": {
+                        "p0": "subject.roles"
+                      },
+                      "predicate": "[{\"value\":${p0},\"property\":\"f5a\",\"operator\":\"in\"}]"
+                    },
+                    "effect": "USE_FILTER_CONDITION",
+                    "name": "r29pairs-one-010 r5",
+                    "ruleId": "a19725c6-01b6-9661-582e-2cc29e89cc6a",
+                    "ruleType": "DEFAULT",
+                    "target": "true",
+                    "tenantId": "parity-p49-meta-exp-write-external-id-sets-rec1"
+                  }
+                ],
+                "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+                "tenantId": "parity-p49-meta-exp-write-external-id-sets-rec1"
+              },
+              {
+                "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+                "name": "r29pairs-one-010 s0n1p1",
+                "policyId": "e55e360a-d4f6-b0b3-462e-114b2c20f4aa",
+                "rules": [
+                  {
+                    "condition": "resource.f6a == subject.id",
+                    "effect": "ALLOW",
+                    "name": "r29pairs-one-010 r6",
+                    "predicate": "${resourceType}.f6a.eq(",
+                    "ruleId": "1ed3d3b0-c246-6f98-8bfe-7586e9155175",
+                    "ruleType": "DEFAULT",
+                    "target": "true",
+                    "tenantId": "parity-p49-meta-exp-write-external-id-sets-rec1"
+                  }
+                ],
+                "target": "true",
+                "tenantId": "parity-p49-meta-exp-write-external-id-sets-rec1"
+              }
+            ],
+            "policySetId": "533d85a8-f35c-e502-b50c-c9f8c2f5397b",
+            "policySets": [],
+            "status": "INACTIVE",
+            "target": "true",
+            "tenantId": "parity-p49-meta-exp-write-external-id-sets-rec1",
+            "type": "DEFAULT"
+          }
+        ],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P49_META_051'",
+        "tenantId": "parity-p49-meta-exp-write-external-id-sets-rec1",
+        "type": "DEFAULT"
+      }
+    ]
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "name": "p50i-import-twin-d a",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "p50i-import-twin-d a reader",
+            "policyId": "1f4072ec-362b-bf92-5822-61496ab0852a",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p50i-import-twin-d a rule",
+                "ruleId": "a2a7408b-3752-ff1d-1c57-945605100017",
+                "ruleType": "DEFAULT",
+                "target": "operation == 'READ'",
+                "tenantId": "parity-p50i-021"
+              }
+            ],
+            "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+            "tenantId": "parity-p50i-021"
+          }
+        ],
+        "policySetId": "5ac0125b-5cf7-15eb-7655-3e04ce89fa09",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P50_ID_021'",
+        "tenantId": "parity-p50i-021",
+        "type": "DEFAULT"
+      },
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "name": "p50i-import-twin-d b",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "p50i-import-twin-d b reader",
+            "policyId": "59f9b27a-505a-df8b-2ba9-f352f40108f2",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p50i-import-twin-d b rule",
+                "ruleId": "30d67a9a-dfaf-f1b3-0464-a9154ae52c69",
+                "ruleType": "DEFAULT",
+                "target": "operation == 'UPDATE'",
+                "tenantId": "parity-p50i-021"
+              }
+            ],
+            "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+            "tenantId": "parity-p50i-021"
+          }
+        ],
+        "policySetId": "9da3515d-a9a7-4cd3-1680-fca4f9af17ab",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P50_ID_021'",
+        "tenantId": "parity-p50i-021",
+        "type": "DEFAULT"
+      }
+    ]
+  }
+}

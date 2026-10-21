@@ -1,0 +1,33 @@
+{
+  "status": 200,
+  "body": {
+    "pips": [
+      {
+        "cacheable": false,
+        "domain": "PARITY_P54_FLD_036",
+        "httpMethod": "POST",
+        "jsonPath": "\r$.groups\r",
+        "name": "subject.parityP54F036A",
+        "pipType": "GENERAL",
+        "tenantId": "parity-p54f-036-edge-cr",
+        "type": "JSON",
+        "url": "http://pip-mock/api/v1/pip/parity-doc"
+      },
+      {
+        "cacheable": false,
+        "domain": "PARITY_P54_FLD_036",
+        "httpMethod": "POST",
+        "jsonPath": " ",
+        "name": "subject.parityP54F036A",
+        "pipType": "GENERAL",
+        "tenantId": "parity-p54f-036-blank-nbsp",
+        "type": "JSON",
+        "url": "http://pip-mock/api/v1/pip/parity-doc"
+      }
+    ]
+  },
+  "keptTenants": [
+    "parity-p54f-036-blank-nbsp",
+    "parity-p54f-036-edge-cr"
+  ]
+}

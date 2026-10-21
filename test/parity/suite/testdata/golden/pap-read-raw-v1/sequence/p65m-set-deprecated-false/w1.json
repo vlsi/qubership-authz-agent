@@ -1,0 +1,39 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "deprecated": false,
+        "externalId": "parity-p65m-set-deprecated-false",
+        "name": "p65m-set-deprecated-false s",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "p65m-set-deprecated-false s reader",
+            "policyId": "98ac5a63-df2a-cd7b-0d84-121b6ae024e9",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p65m-set-deprecated-false s rule",
+                "ruleId": "bebbb02f-4b80-b686-20a9-349f2205b573",
+                "ruleType": "DEFAULT",
+                "target": "operation == 'READ'",
+                "tenantId": "parity-p65m-set-deprecated-false"
+              }
+            ],
+            "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+            "tenantId": "parity-p65m-set-deprecated-false"
+          }
+        ],
+        "policySetId": "c37eecb0-d8df-ef66-94f0-440e08531d45",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P65M_SET_DEPRECATED_FALSE'",
+        "tenantId": "parity-p65m-set-deprecated-false",
+        "type": "DEFAULT"
+      }
+    ]
+  }
+}

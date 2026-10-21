@@ -1,0 +1,69 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "externalId": "parity-p61o-201",
+        "name": "p61o-201-on-behalf allow",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "p61o-201-on-behalf allow",
+            "policyId": "31562163-4949-17e4-4560-a3a0df94c1d0",
+            "rules": [
+              {
+                "condition": "resource.a == 'y'",
+                "effect": "ALLOW",
+                "name": "p61o-201-on-behalf allow",
+                "ruleId": "1be15c4f-79fc-821d-dbf9-2b027af35090",
+                "ruleType": "DEFAULT",
+                "target": "true",
+                "tenantId": "parity-p61o-201"
+              }
+            ],
+            "target": "operation == 'READ'",
+            "tenantId": "parity-p61o-201"
+          }
+        ],
+        "policySetId": "9f003d1b-1a7e-df36-64f1-8dd474aa2425",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P61O_201'",
+        "tenantId": "parity-p61o-201",
+        "type": "DEFAULT"
+      },
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "externalId": "parity-p61o-201",
+        "name": "p61o-201-on-behalf view as",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "p61o-201-on-behalf view as",
+            "policyId": "eb884933-8cf0-6c8b-adc9-e5d82baa697a",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p61o-201-on-behalf view as",
+                "ruleId": "03490e83-16a3-feeb-452f-684dcf9e1108",
+                "ruleType": "DEFAULT",
+                "target": "true",
+                "tenantId": "parity-p61o-201"
+              }
+            ],
+            "target": "operation == 'VIEW_AS_ANOTHER_USER'",
+            "tenantId": "parity-p61o-201"
+          }
+        ],
+        "policySetId": "0056660a-8ce1-f527-304b-9f3e1619e4ca",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'OnBehalfOfUserAuthorization'",
+        "tenantId": "parity-p61o-201",
+        "type": "DEFAULT"
+      }
+    ]
+  }
+}

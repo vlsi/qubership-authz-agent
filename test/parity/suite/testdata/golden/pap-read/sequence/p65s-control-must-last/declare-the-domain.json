@@ -1,0 +1,13 @@
+{
+  "status": 200,
+  "body": [
+    {
+      "cacheable": false,
+      "claim": "parityP45OwnDomain",
+      "domain": "PARITY_P45_OWN_DOMAIN",
+      "name": "subject.parityP45OwnDomain",
+      "pipType": "TOKEN",
+      "type": "UUID"
+    }
+  ]
+}

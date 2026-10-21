@@ -1,0 +1,16 @@
+{
+  "status": 200,
+  "body": {
+    "pips": [
+      {
+        "cacheable": true,
+        "customMapping": {},
+        "name": "subject.permissions",
+        "pipType": "MAPPING",
+        "productMapping": {},
+        "tenantId": "parity-p48-claim-import-pips-empty-custom-mapping",
+        "type": "UUID"
+      }
+    ]
+  }
+}

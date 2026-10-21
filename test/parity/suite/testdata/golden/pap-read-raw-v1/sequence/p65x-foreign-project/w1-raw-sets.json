@@ -1,0 +1,68 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "externalId": "parity-p65x-foreign-project",
+        "name": "p65x-foreign-project own",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "p65x-foreign-project own reader",
+            "policyId": "fbf429d1-6ddb-5181-9fe7-db1784efaca1",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p65x-foreign-project own rule",
+                "ruleId": "92d0d615-b41f-03ff-2ade-637cdeccbabe",
+                "ruleType": "DEFAULT",
+                "target": "operation == 'DELETE'",
+                "tenantId": "parity-p65x-foreign-project"
+              }
+            ],
+            "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+            "tenantId": "parity-p65x-foreign-project"
+          }
+        ],
+        "policySetId": "79e0e1d7-a4b8-09dc-1852-cceb452399d7",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P65X_FOREIGN_PROJECT'",
+        "tenantId": "parity-p65x-foreign-project",
+        "type": "DEFAULT"
+      },
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "name": "p65x-foreign-project s",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "p65x-foreign-project s reader",
+            "policyId": "ed395fb2-97c0-6e65-1b26-0f68bafb4d40",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p65x-foreign-project s rule",
+                "ruleId": "ac3cab5f-e35e-f4db-e6b8-c893d52b29b6",
+                "ruleType": "DEFAULT",
+                "target": "operation == 'READ'",
+                "tenantId": "parity-p65x-foreign-project-holder"
+              }
+            ],
+            "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+            "tenantId": "parity-p65x-foreign-project"
+          }
+        ],
+        "policySetId": "79e0e1d7-a4b8-09dc-1852-cceb452399d7",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P65X_FOREIGN_PROJECT'",
+        "tenantId": "parity-p65x-foreign-project",
+        "type": "DEFAULT"
+      }
+    ]
+  }
+}

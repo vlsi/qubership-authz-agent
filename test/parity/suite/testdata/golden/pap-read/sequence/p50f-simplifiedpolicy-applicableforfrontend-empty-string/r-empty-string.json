@@ -1,0 +1,108 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "component": "PARITY",
+        "domain": "PARITY_P50_FLD_047",
+        "name": "PARITY_P50_FLD_047_PARITY_PARITY_SUITE_P50_FLD_047_PolicySet",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "PARITY_P50_FLD_047_PARITY_PARITY_SUITE_P50_FLD_047_READ_Policy",
+            "policyId": "5c43d58f-c548-fdda-65fc-d3974aa7a9d8",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p50f-simplifiedpolicy-applicableforfrontend p",
+                "ruleId": "7d3fa4f5-c548-d003-7450-d19af7d81423",
+                "ruleType": "DEFAULT",
+                "target": "subject.roles CONTAINS ANY 'ROLE_PARITY_READER'",
+                "tenantId": "parity-p50f-047-absent"
+              }
+            ],
+            "target": "operation == 'READ'",
+            "tenantId": "parity-p50f-047-absent"
+          }
+        ],
+        "policySetId": "3e5c43d5-8fc5-48fd-da65-fcd3974aa7a9",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P50_FLD_047'",
+        "tenantId": "parity-p50f-047-absent",
+        "type": "SIMPLIFIED"
+      },
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "component": "PARITY",
+        "domain": "PARITY_P50_FLD_047",
+        "name": "PARITY_P50_FLD_047_PARITY_PARITY_SUITE_P50_FLD_047_PolicySet",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "PARITY_P50_FLD_047_PARITY_PARITY_SUITE_P50_FLD_047_READ_Policy",
+            "policyId": "5c43d58f-c548-fdda-65fc-d3974aa7a9d8",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p50f-simplifiedpolicy-applicableforfrontend p",
+                "ruleId": "7d3fa4f5-c548-d003-7450-d19af7d81423",
+                "ruleType": "DEFAULT",
+                "target": "subject.roles CONTAINS ANY 'ROLE_PARITY_READER'",
+                "tenantId": "parity-p50f-047-default-explicit"
+              }
+            ],
+            "target": "operation == 'READ'",
+            "tenantId": "parity-p50f-047-default-explicit"
+          }
+        ],
+        "policySetId": "3e5c43d5-8fc5-48fd-da65-fcd3974aa7a9",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P50_FLD_047'",
+        "tenantId": "parity-p50f-047-default-explicit",
+        "type": "SIMPLIFIED"
+      },
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "component": "PARITY",
+        "domain": "PARITY_P50_FLD_047",
+        "name": "PARITY_P50_FLD_047_PARITY_PARITY_SUITE_P50_FLD_047_PolicySet",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "PARITY_P50_FLD_047_PARITY_PARITY_SUITE_P50_FLD_047_READ_Policy",
+            "policyId": "5c43d58f-c548-fdda-65fc-d3974aa7a9d8",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p50f-simplifiedpolicy-applicableforfrontend p",
+                "ruleId": "7d3fa4f5-c548-d003-7450-d19af7d81423",
+                "ruleType": "DEFAULT",
+                "target": "subject.roles CONTAINS ANY 'ROLE_PARITY_READER'",
+                "tenantId": "parity-p50f-047-empty-string"
+              }
+            ],
+            "target": "operation == 'READ'",
+            "tenantId": "parity-p50f-047-empty-string"
+          }
+        ],
+        "policySetId": "3e5c43d5-8fc5-48fd-da65-fcd3974aa7a9",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P50_FLD_047'",
+        "tenantId": "parity-p50f-047-empty-string",
+        "type": "SIMPLIFIED"
+      }
+    ]
+  },
+  "keptTenants": [
+    "parity-p50f-047-absent",
+    "parity-p50f-047-default-explicit",
+    "parity-p50f-047-empty-string"
+  ]
+}

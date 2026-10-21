@@ -1,0 +1,71 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "externalId": "parity-p65x-foreign-customer",
+        "name": "p65x-foreign-customer own",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "p65x-foreign-customer own reader",
+            "policyId": "c81787a8-5eba-7b26-bd44-a879ff7e679d",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p65x-foreign-customer own rule",
+                "ruleId": "cdef98ca-2993-59bb-2263-03abe6b86af5",
+                "ruleType": "DEFAULT",
+                "target": "operation == 'DELETE'",
+                "tenantId": "parity-p65x-foreign-customer"
+              }
+            ],
+            "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+            "tenantId": "parity-p65x-foreign-customer"
+          },
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "p65x-foreign-customer s reader",
+            "policyId": "2a245847-ca71-2fc9-1b2b-0a9a6413ff85",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p65x-foreign-customer s rule",
+                "ruleId": "4904616e-6ae9-7b73-3de7-e95435d6b0de",
+                "ruleType": "DEFAULT",
+                "target": "operation == 'UPDATE'",
+                "tenantId": "parity-p65x-foreign-customer-holder"
+              }
+            ],
+            "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+            "tenantId": "parity-p65x-foreign-customer-holder"
+          }
+        ],
+        "policySetId": "ea37ef8d-c872-e950-b287-d4d6e5f372d2",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P65X_FOREIGN_CUSTOMER'",
+        "tenantId": "parity-p65x-foreign-customer",
+        "type": "DEFAULT"
+      },
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "name": "p65x-foreign-customer s",
+        "policies": [],
+        "policySetId": "ea37ef8d-c872-e950-b287-d4d6e5f372d2",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P65X_FOREIGN_CUSTOMER'",
+        "tenantId": "parity-p65x-foreign-customer",
+        "type": "DEFAULT"
+      }
+    ]
+  },
+  "keptTenants": [
+    "parity-p65x-foreign-customer",
+    "parity-p65x-foreign-customer-holder"
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "status": 200,
+  "body": {
+    "pips": [
+      {
+        "cacheable": false,
+        "claim": "department",
+        "defaultValue": "none",
+        "domain": "P65G_HTTP_METHOD_EMPTY_TOKEN",
+        "name": "subject.parityP65gTokenMethod",
+        "pipType": "TOKEN",
+        "tenantId": "parity-p65g-http-method-empty-token",
+        "type": "REGULAR"
+      }
+    ]
+  },
+  "keptTenants": [
+    "parity-p65g-http-method-empty-token"
+  ]
+}

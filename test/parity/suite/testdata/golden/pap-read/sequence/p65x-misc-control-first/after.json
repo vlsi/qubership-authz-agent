@@ -1,0 +1,41 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "externalId": "parity-p65x-misc-control-first",
+        "name": "p65x-misc-control-first s",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "p65x-misc-control-first s reader",
+            "policyId": "9b79129d-eb73-644f-6ebb-956814c99552",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p65x-misc-control-first s rule",
+                "ruleId": "ab5754e5-6763-74c1-5afc-c26e1012faa8",
+                "ruleType": "DEFAULT",
+                "target": "operation == 'READ'",
+                "tenantId": "parity-p65x-misc-control-first"
+              }
+            ],
+            "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+            "tenantId": "parity-p65x-misc-control-first"
+          }
+        ],
+        "policySetId": "563a5150-c273-7802-b93d-ddc7d3b2df22",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P65X_MISC_CONTROL_FIRST'",
+        "tenantId": "parity-p65x-misc-control-first",
+        "type": "DEFAULT"
+      }
+    ]
+  },
+  "keptTenants": [
+    "parity-p65x-misc-control-first"
+  ]
+}

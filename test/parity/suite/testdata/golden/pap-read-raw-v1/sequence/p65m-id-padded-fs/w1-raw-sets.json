@@ -1,0 +1,38 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "externalId": "parity-p65m-id-padded-fs",
+        "name": "p65m-id-padded-fs s",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "p65m-id-padded-fs s reader",
+            "policyId": "afd2d0b1-4629-9d4e-2d22-9cb9c539e3dd",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p65m-id-padded-fs s rule",
+                "ruleId": "3638f30c-e1f2-da69-3de7-1b9b07206116",
+                "ruleType": "DEFAULT",
+                "target": "operation == 'READ'",
+                "tenantId": "parity-p65m-id-padded-fs"
+              }
+            ],
+            "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+            "tenantId": "parity-p65m-id-padded-fs"
+          }
+        ],
+        "policySetId": "eb2b94b1-a065-cf0b-1a1c-6c4da95d7230",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P65M_ID_PADDED_FS'",
+        "tenantId": "parity-p65m-id-padded-fs",
+        "type": "DEFAULT"
+      }
+    ]
+  }
+}

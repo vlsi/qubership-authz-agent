@@ -1,0 +1,69 @@
+{
+  "status": 200,
+  "body": {
+    "pips": [
+      {
+        "cacheable": false,
+        "defaultValue": "none",
+        "description": "\f",
+        "domain": "PARITY_P65_FLD_036",
+        "header": "x-parity-p65f-036-a",
+        "name": "subject.parityP65F036A",
+        "pipType": "HEADER",
+        "tenantId": "parity-p65f-036-blank-ff",
+        "type": "REGULAR"
+      },
+      {
+        "cacheable": false,
+        "defaultValue": "none",
+        "description": "\n",
+        "domain": "PARITY_P65_FLD_036",
+        "header": "x-parity-p65f-036-a",
+        "name": "subject.parityP65F036A",
+        "pipType": "HEADER",
+        "tenantId": "parity-p65f-036-blank-lf",
+        "type": "REGULAR"
+      },
+      {
+        "cacheable": false,
+        "defaultValue": "none",
+        "description": "\r",
+        "domain": "PARITY_P65_FLD_036",
+        "header": "x-parity-p65f-036-a",
+        "name": "subject.parityP65F036A",
+        "pipType": "HEADER",
+        "tenantId": "parity-p65f-036-blank-cr",
+        "type": "REGULAR"
+      },
+      {
+        "cacheable": false,
+        "defaultValue": "none",
+        "description": "\u2028",
+        "domain": "PARITY_P65_FLD_036",
+        "header": "x-parity-p65f-036-a",
+        "name": "subject.parityP65F036A",
+        "pipType": "HEADER",
+        "tenantId": "parity-p65f-036-blank-lsep",
+        "type": "REGULAR"
+      },
+      {
+        "cacheable": false,
+        "defaultValue": "none",
+        "description": " ",
+        "domain": "PARITY_P65_FLD_036",
+        "header": "x-parity-p65f-036-a",
+        "name": "subject.parityP65F036A",
+        "pipType": "HEADER",
+        "tenantId": "parity-p65f-036-blank-nbsp",
+        "type": "REGULAR"
+      }
+    ]
+  },
+  "keptTenants": [
+    "parity-p65f-036-blank-cr",
+    "parity-p65f-036-blank-ff",
+    "parity-p65f-036-blank-lf",
+    "parity-p65f-036-blank-lsep",
+    "parity-p65f-036-blank-nbsp"
+  ]
+}

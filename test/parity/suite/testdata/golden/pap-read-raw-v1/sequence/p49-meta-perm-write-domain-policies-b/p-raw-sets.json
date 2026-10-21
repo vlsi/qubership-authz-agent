@@ -1,0 +1,71 @@
+{
+  "status": 200,
+  "body": {
+    "policySets": [
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "component": "PARITY",
+        "domain": "PARITY_P49_META_189",
+        "name": "PARITY_P49_META_189_PARITY_PARITY_SUITE_P49_META_189_PolicySet",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "PARITY_P49_META_189_PARITY_PARITY_SUITE_P49_META_189_READ_Policy",
+            "policyId": "34894978-1c43-f543-c398-58047bab38fa",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p49-meta-perm-write-domain-policies-b p",
+                "ruleId": "a716f47f-fefa-ac06-5087-5ad414b201bd",
+                "ruleType": "DEFAULT",
+                "target": "subject.roles CONTAINS ANY 'ROLE_PARITY_READER'",
+                "tenantId": "parity-p49-meta-perm-write-domain-policies-b"
+              }
+            ],
+            "target": "operation == 'READ'",
+            "tenantId": "parity-p49-meta-perm-write-domain-policies-b"
+          }
+        ],
+        "policySetId": "1f348949-781c-43f5-43c3-9858047bab38",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P49_META_189'",
+        "tenantId": "parity-p49-meta-perm-write-domain-policies-b",
+        "type": "SIMPLIFIED"
+      },
+      {
+        "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+        "component": "PARITY",
+        "domain": "PARITY_P49_META_190",
+        "name": "PARITY_P49_META_190_PARITY_PARITY_SUITE_P49_META_190_PolicySet",
+        "policies": [
+          {
+            "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+            "name": "PARITY_P49_META_190_PARITY_PARITY_SUITE_P49_META_190_READ_Policy",
+            "policyId": "6b80757c-3356-1a56-874b-4a33fac0f93a",
+            "rules": [
+              {
+                "condition": "true",
+                "effect": "ALLOW",
+                "name": "p49-meta-perm-write-domain-policies-b p",
+                "ruleId": "379c8576-54bc-2470-d8b1-6270837c1000",
+                "ruleType": "DEFAULT",
+                "target": "subject.roles CONTAINS ANY 'ROLE_PARITY_READER'",
+                "tenantId": "parity-p49-meta-perm-write-domain-policies-b"
+              }
+            ],
+            "target": "operation == 'READ'",
+            "tenantId": "parity-p49-meta-perm-write-domain-policies-b"
+          }
+        ],
+        "policySetId": "676b8075-7c33-561a-5687-4b4a33fac0f9",
+        "policySets": [],
+        "status": "ACTIVE",
+        "target": "resourceType == 'PARITY_SUITE_P49_META_190'",
+        "tenantId": "parity-p49-meta-perm-write-domain-policies-b",
+        "type": "SIMPLIFIED"
+      }
+    ]
+  }
+}
