@@ -1,6 +1,6 @@
 {
   "status": 400,
   "body": {
-    "message": "Next duplicates were found:\nduplicates in rules: [\n\t{RuleId=9b16a1cc-360e-b2ee-9512-1ba3ef88a60c, policyId=5d080a6e-fd8f-6282-f560-900752e00b88, policySetId=42a447d3-4df0-584d-6920-5e14718265c2}]\n"
+    "message": "Next duplicates were found:\nduplicates in rules: [\n\t{RuleId=9b16a1cc-360e-b2ee-9512-1ba3ef88a60c, policyId=\u003cone of the duplicating policies\u003e, policySetId=42a447d3-4df0-584d-6920-5e14718265c2}]\n"
   }
 }
