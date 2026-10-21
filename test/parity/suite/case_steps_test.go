@@ -511,6 +511,85 @@ func (ids generatedIDs) replace(v any) bool {
 	return masked
 }
 
+// duplicatingPolicy stands in a recorded refusal for the policy the PAP names
+// in an entry of its "duplicates in rules" list.
+const duplicatingPolicy = "<one of the duplicating policies>"
+
+// duplicateRuleEntry matches an entry of the "duplicates in rules" list,
+// {RuleId=<rule>, policyId=<policy>, policySetId=<set>}, up to the policy; the
+// groups are the text before the policy, the rule, and the policy.
+var duplicateRuleEntry = regexp.MustCompile(`(\{RuleId=(` + uuidPattern + `), policyId=)(` + uuidPattern + `)`)
+
+// duplicatedRules holds, in lower case, the ruleIds that one body of a case
+// writes into more than one policy. The PAP refuses such a body with
+// "duplicates in rules" and names the policy in which it met the rule second;
+// it keeps the policies of a set in an order that differs from one stand to
+// the next, so which of them it names differs too.
+type duplicatedRules map[string]bool
+
+// caseDuplicatedRules returns the duplicatedRules of the bodies a case sends.
+// A policy is an element with rules; a rule in it counts once however often
+// the policy lists it.
+func caseDuplicatedRules(bodies []any) duplicatedRules {
+	rules := duplicatedRules{}
+	for _, body := range bodies {
+		text, err := json.Marshal(body)
+		if err != nil {
+			continue
+		}
+		policies := map[string]int{}
+		countRulePolicies(decodeRaw(text), policies)
+		for rule, n := range policies {
+			if n > 1 {
+				rules[rule] = true
+			}
+		}
+	}
+	return rules
+}
+
+// countRulePolicies adds to policies, for each ruleId in v, the number of
+// policies of v that hold it.
+func countRulePolicies(v any, policies map[string]int) {
+	switch x := v.(type) {
+	case map[string]any:
+		if rules, ok := x["rules"].([]any); ok {
+			seen := map[string]bool{}
+			for _, rule := range rules {
+				object, _ := rule.(map[string]any)
+				if id, ok := object["ruleId"].(string); ok && !seen[strings.ToLower(id)] {
+					seen[strings.ToLower(id)] = true
+					policies[strings.ToLower(id)]++
+				}
+			}
+		}
+		for _, value := range x {
+			countRulePolicies(value, policies)
+		}
+	case []any:
+		for _, e := range x {
+			countRulePolicies(e, policies)
+		}
+	}
+}
+
+// mask returns body, the answer to a write, with duplicatingPolicy in place of
+// the policyId of every entry of a "duplicates in rules" list whose ruleId is
+// one of rules. The ruleId and the policySetId stay. A body with nothing to
+// mask is returned as it is.
+func (rules duplicatedRules) mask(body []byte) []byte {
+	if len(rules) == 0 || !strings.Contains(string(body), "duplicates in rules") {
+		return body
+	}
+	return duplicateRuleEntry.ReplaceAllFunc(body, func(entry []byte) []byte {
+		m := duplicateRuleEntry.FindSubmatch(entry)
+		if !rules[strings.ToLower(string(m[2]))] {
+			return entry
+		}
+		return append(slices.Clone(m[1]), duplicatingPolicy...)
+	})
+}
+
 // errorOutcome returns the golden shape of an error-class observation: the
 // status, and for a non-2xx answer its body, decoded when it is JSON, with
 // every top-level timestamp member removed, since it changes on every call.

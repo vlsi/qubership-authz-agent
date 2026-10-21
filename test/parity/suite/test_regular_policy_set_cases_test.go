@@ -208,6 +208,8 @@ func (s *ParitySuite) runRegularCases(cases []regularCase) {
 // A read and a raw read record their body with the ids the PAP generated for
 // the elements the steps write without one masked (generatedIDs); uploaded
 // holds the bodies the case sent before its steps, whose ids it wrote too.
+// The answer to a write records the policy of a rule that a body of the case
+// writes into more than one policy as duplicatingPolicy (duplicatedRules).
 func (s *ParitySuite) runSteps(group, resourceType string, steps []regularStep, uploaded []any) bool {
 	bodies := slices.Clone(uploaded)
 	for _, step := range steps {
@@ -216,8 +218,9 @@ func (s *ParitySuite) runSteps(group, resourceType string, steps []regularStep, 
 		}
 	}
 	ids := caseGeneratedIDs(bodies)
+	rules := caseDuplicatedRules(bodies)
 	for _, step := range steps {
-		if !s.runStep(group, resourceType, step, ids) {
+		if !s.runStep(group, resourceType, step, ids, rules) {
 			return false
 		}
 	}
@@ -227,7 +230,7 @@ func (s *ParitySuite) runSteps(group, resourceType string, steps []regularStep, 
 // runStep runs one step for runSteps, in the step's tenant when it names one,
 // and reports false when the step was refused and stops its case. The tenant
 // of the suite is the case's again when runStep returns, refused or not.
-func (s *ParitySuite) runStep(group, resourceType string, step regularStep, ids generatedIDs) bool {
+func (s *ParitySuite) runStep(group, resourceType string, step regularStep, ids generatedIDs, rules duplicatedRules) bool {
 	ctx := context.Background()
 	m2m := s.mustM2MToken()
 	if step.tenant != "" {
@@ -247,6 +250,7 @@ func (s *ParitySuite) runStep(group, resourceType string, step regularStep, ids 
 		var err error
 		status, body, err = HelperPAPCall(ctx, s.cfg, m2m, *step.call)
 		s.Require().NoError(err)
+		body = rules.mask(body)
 	}
 	refused := step.call != nil && (status < http.StatusOK || status >= http.StatusMultipleChoices)
 	subCase := group + "/" + step.name

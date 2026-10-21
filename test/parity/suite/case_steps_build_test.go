@@ -516,6 +516,71 @@ func TestGeneratedIDsMask(t *testing.T) {
 	}
 }
 
+// The PAP names, in a "duplicates in rules" refusal, whichever of the policies
+// with the rule it met second, which differs between stands; the refusal
+// records duplicatingPolicy in its place when a body of the case wrote the
+// rule into more than one policy, and keeps the ruleId and the policySetId.
+func TestDuplicatedRulesMask(t *testing.T) {
+	const (
+		set   = "00000000-0000-0000-0000-00000000000a"
+		p1    = "00000000-0000-0000-0000-0000000000b1"
+		p2    = "00000000-0000-0000-0000-0000000000b2"
+		rule  = "00000000-0000-0000-0000-0000000000c1"
+		other = "00000000-0000-0000-0000-0000000000c2"
+	)
+	policy := func(id string, rules ...string) string {
+		var list []string
+		for _, r := range rules {
+			list = append(list, `{"name": "r", "ruleId": "`+r+`"}`)
+		}
+		return `{"name": "` + id + `", "policyId": "` + id + `", "rules": [` + strings.Join(list, ", ") + `]}`
+	}
+	sets := func(policies ...string) string {
+		return `[{"name": "s", "policySetId": "` + set + `", "policies": [` + strings.Join(policies, ", ") + `]}]`
+	}
+	refusal := func(rule, policy string) string {
+		return `{"message": "Next duplicates were found:\nduplicates in rules: [\n\t{RuleId=` + rule +
+			`, policyId=` + policy + `, policySetId=` + set + `}]\n"}`
+	}
+	cases := []struct {
+		name string
+		sent []string
+		body string
+		want string
+	}{
+		{"a rule in two policies of one body",
+			[]string{sets(policy(p1, rule), policy(p2, rule))},
+			refusal(rule, p2), refusal(rule, duplicatingPolicy)},
+		{"a rule in upper case in the refusal",
+			[]string{sets(policy(p1, rule), policy(p2, rule))},
+			refusal(strings.ToUpper(rule), p1), refusal(strings.ToUpper(rule), duplicatingPolicy)},
+		{"a rule twice in one policy",
+			[]string{sets(policy(p1, rule, rule), policy(p2, other))},
+			refusal(rule, p1), refusal(rule, p1)},
+		{"a rule in one policy of each of two bodies",
+			[]string{sets(policy(p1, rule)), sets(policy(p2, rule))},
+			refusal(rule, p2), refusal(rule, p2)},
+		{"an entry of another rule",
+			[]string{sets(policy(p1, rule), policy(p2, rule))},
+			refusal(other, p2), refusal(other, p2)},
+		{"another message",
+			[]string{sets(policy(p1, rule), policy(p2, rule))},
+			`{"message": "{RuleId=` + rule + `, policyId=` + p2 + `}"}`,
+			`{"message": "{RuleId=` + rule + `, policyId=` + p2 + `}"}`},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			var bodies []any
+			for _, sent := range tc.sent {
+				bodies = append(bodies, json.RawMessage(sent))
+			}
+			if got := string(caseDuplicatedRules(bodies).mask([]byte(tc.body))); got != tc.want {
+				t.Errorf("mask(%s) after sending %v\n got %s\nwant %s", tc.body, tc.sent, got, tc.want)
+			}
+		})
+	}
+}
+
 // A case file of round 44 or later records the body of a 400 or 409 answer;
 // an earlier one, and a file outside a round directory, record the status
 // alone, so that its goldens stay as they were.
