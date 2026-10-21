@@ -176,18 +176,18 @@ func TestNormalizeComparable_FilterOutcomeWithPermutedTermsDiffsEmpty(t *testing
 	t.Parallel()
 	recorded := &model.FilterOutcome{Status: 200, Result: model.OldFilterEvaluationResult{
 		CalculationResult:      "USE_FILTER_CONDITION",
-		FilterCondition:        "(T.b.eq(2)).or(T.a.eq(1))",
-		MongodbFilterCondition: `{ "$or": [ {{ "b": 2 }}, {{ "a": 1 }} ] }`,
-		RsqlFilterCondition:    "b==2,a==1",
-		SqlFilterCondition:     "b=2 OR a=1",
+		FilterCondition:        model.FilterTextOf("(T.b.eq(2)).or(T.a.eq(1))"),
+		MongodbFilterCondition: model.FilterTextOf(`{ "$or": [ {{ "b": 2 }}, {{ "a": 1 }} ] }`),
+		RsqlFilterCondition:    model.FilterTextOf("b==2,a==1"),
+		SqlFilterCondition:     model.FilterTextOf("b=2 OR a=1"),
 		CustomFilterCondition:  json.RawMessage("{\n  \"logic\": {\n    \"op\": \"OR\",\n    \"apply\": [{\"path\": \"b\"}, {\"path\": \"a\"}]\n  }\n}"),
 	}}
 	answered := &model.FilterOutcome{Status: 200, Result: model.OldFilterEvaluationResult{
 		CalculationResult:      "USE_FILTER_CONDITION",
-		FilterCondition:        "(T.a.eq(1)).or(T.b.eq(2))",
-		MongodbFilterCondition: `{ "$or": [ {{ "a": 1 }}, {{ "b": 2 }} ] }`,
-		RsqlFilterCondition:    "a==1,b==2",
-		SqlFilterCondition:     "a=1 OR b=2",
+		FilterCondition:        model.FilterTextOf("(T.a.eq(1)).or(T.b.eq(2))"),
+		MongodbFilterCondition: model.FilterTextOf(`{ "$or": [ {{ "a": 1 }}, {{ "b": 2 }} ] }`),
+		RsqlFilterCondition:    model.FilterTextOf("a==1,b==2"),
+		SqlFilterCondition:     model.FilterTextOf("a=1 OR b=2"),
 		CustomFilterCondition:  json.RawMessage(`{"logic":{"op":"OR","apply":[{"path":"a"},{"path":"b"}]}}`),
 	}}
 
@@ -195,5 +195,65 @@ func TestNormalizeComparable_FilterOutcomeWithPermutedTermsDiffsEmpty(t *testing
 	got := normalizeComparable(PSUITE_ROW_6_CHECK_FILTER_V1_OUTCOME, "regular/x/filter", answered)
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("normalizeComparable() of two term orders differs (-recorded +answered):\n%s", diff)
+	}
+}
+
+// filterOutcomeWithRsql decodes a v1 filter outcome whose rsqlFilterCondition
+// member is the JSON text member, or absent when member is empty, the way the
+// comparator decodes a golden.
+func filterOutcomeWithRsql(t *testing.T, member string) *model.FilterOutcome {
+	t.Helper()
+	body := `{"status": 200, "result": {"calculationResult": "ALLOW"`
+	if member != "" {
+		body += `, "rsqlFilterCondition": ` + member
+	}
+	body += `}}`
+	var out model.FilterOutcome
+	if err := json.Unmarshal([]byte(body), &out); err != nil {
+		t.Fatalf("json.Unmarshal(%s): %v", body, err)
+	}
+	return &out
+}
+
+// A filter text recorded as "", as null, and with no member are three answers:
+// the comparator reports a difference between any two of them, and a golden
+// written back from the decoded answer keeps the form it was read in.
+func TestNormalizeComparable_FilterTextKeepsEmptyNullAndAbsentApart(t *testing.T) {
+	t.Parallel()
+	forms := []struct{ name, member, written string }{
+		{"empty string", `""`, `{"calculationResult":"ALLOW","rsqlFilterCondition":""}`},
+		{"null", `null`, `{"calculationResult":"ALLOW","rsqlFilterCondition":null}`},
+		{"absent", ``, `{"calculationResult":"ALLOW"}`},
+	}
+	for _, recorded := range forms {
+		for _, answered := range forms {
+			t.Run(recorded.name+" against "+answered.name, func(t *testing.T) {
+				want := normalizeComparable(PSUITE_ROW_6_CHECK_FILTER_V1_OUTCOME, "regular/x/filter", filterOutcomeWithRsql(t, recorded.member))
+				got := normalizeComparable(PSUITE_ROW_6_CHECK_FILTER_V1_OUTCOME, "regular/x/filter", filterOutcomeWithRsql(t, answered.member))
+				diff := cmp.Diff(want, got)
+				if same := recorded.name == answered.name; same != (diff == "") {
+					t.Errorf("cmp.Diff(%s, %s) = %q, want an empty diff exactly when the forms are the same", recorded.name, answered.name, diff)
+				}
+			})
+		}
+		t.Run(recorded.name+" written back", func(t *testing.T) {
+			b, err := json.Marshal(filterOutcomeWithRsql(t, recorded.member).Result)
+			if err != nil {
+				t.Fatalf("json.Marshal: %v", err)
+			}
+			if string(b) != recorded.written {
+				t.Errorf("json.Marshal(result with %s) = %s, want %s", recorded.name, b, recorded.written)
+			}
+		})
+	}
+}
+
+// A text member that is neither a string nor null fails the decoding of the
+// whole answer instead of being recorded as some string.
+func TestFilterText_ANumberIsRefused(t *testing.T) {
+	t.Parallel()
+	var out model.OldFilterEvaluationResult
+	if err := json.Unmarshal([]byte(`{"calculationResult": "ALLOW", "rsqlFilterCondition": 5}`), &out); err == nil {
+		t.Errorf("json.Unmarshal(rsqlFilterCondition 5) = nil error, result %+v, want an error", out)
 	}
 }

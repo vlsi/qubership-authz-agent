@@ -170,8 +170,8 @@ func runSmokePhase(ctx context.Context, cfg Config, tokens *TokenFactory, pipMoc
 		if err != nil {
 			return smokeStepErr(7, "v1 check/filter", err)
 		}
-		if filterStatus != http.StatusOK || filterResp.CalculationResult == "" || filterResp.RsqlFilterCondition == "" {
-			return smokeStepErr(7, "v1 check/filter", fmt.Errorf("status=%d calculationResult=%q rsql=%q", filterStatus, filterResp.CalculationResult, filterResp.RsqlFilterCondition))
+		if filterStatus != http.StatusOK || filterResp.CalculationResult == "" || filterResp.RsqlFilterCondition.String() == "" {
+			return smokeStepErr(7, "v1 check/filter", fmt.Errorf("status=%d calculationResult=%q rsql=%q", filterStatus, filterResp.CalculationResult, filterResp.RsqlFilterCondition.String()))
 		}
 		step++
 	}

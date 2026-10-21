@@ -53,10 +53,10 @@ func normalizeFilterOrder(v any) any {
 		return &clone
 	case *model.FilterResponse:
 		clone := *typed
-		clone.FilterCondition = canonicalMethodChain(clone.FilterCondition)
-		clone.MongodbFilterCondition = canonicalInfix(clone.MongodbFilterCondition, mongodbSeparators)
-		clone.RsqlFilterCondition = canonicalInfix(clone.RsqlFilterCondition, rsqlSeparators)
-		clone.SqlFilterCondition = canonicalInfix(clone.SqlFilterCondition, sqlSeparators)
+		clone.FilterCondition = clone.FilterCondition.Map(canonicalMethodChain)
+		clone.MongodbFilterCondition = clone.MongodbFilterCondition.Map(infixCanon(mongodbSeparators))
+		clone.RsqlFilterCondition = clone.RsqlFilterCondition.Map(infixCanon(rsqlSeparators))
+		clone.SqlFilterCondition = clone.SqlFilterCondition.Map(infixCanon(sqlSeparators))
 		clone.CustomFilterCondition = canonicalJSON(clone.CustomFilterCondition)
 		return &clone
 	default:
@@ -65,10 +65,10 @@ func normalizeFilterOrder(v any) any {
 }
 
 func normalizeOldFilterResultOrder(r *model.OldFilterEvaluationResult) {
-	r.FilterCondition = canonicalMethodChain(r.FilterCondition)
-	r.MongodbFilterCondition = canonicalInfix(r.MongodbFilterCondition, mongodbSeparators)
-	r.RsqlFilterCondition = canonicalInfix(r.RsqlFilterCondition, rsqlSeparators)
-	r.SqlFilterCondition = canonicalInfix(r.SqlFilterCondition, sqlSeparators)
+	r.FilterCondition = r.FilterCondition.Map(canonicalMethodChain)
+	r.MongodbFilterCondition = r.MongodbFilterCondition.Map(infixCanon(mongodbSeparators))
+	r.RsqlFilterCondition = r.RsqlFilterCondition.Map(infixCanon(rsqlSeparators))
+	r.SqlFilterCondition = r.SqlFilterCondition.Map(infixCanon(sqlSeparators))
 	r.CustomFilterCondition = canonicalJSON(r.CustomFilterCondition)
 }
 
@@ -106,6 +106,12 @@ func canonicalInfix(expr string, seps []string) string {
 	return rewriteBracketGroups(expr, func(inner string) string {
 		return canonicalInfix(strings.TrimSpace(inner), seps)
 	})
+}
+
+// infixCanon returns canonicalInfix with the separators seps, the form
+// [model.FilterText.Map] applies to a dialect's text.
+func infixCanon(seps []string) func(string) string {
+	return func(expr string) string { return canonicalInfix(expr, seps) }
 }
 
 // canonicalMethodChain sorts the operands of a chain of .and( ) or .or( ) calls,

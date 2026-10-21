@@ -320,11 +320,11 @@ func normalizeFilterTopLevelCommaTerms(v any) any {
 	switch typed := v.(type) {
 	case *model.OldFilterEvaluationResult:
 		clone := *typed
-		clone.RsqlFilterCondition = normalizeTopLevelCommaTerms(clone.RsqlFilterCondition)
+		clone.RsqlFilterCondition = clone.RsqlFilterCondition.Map(normalizeTopLevelCommaTerms)
 		return &clone
 	case *model.FilterResponse:
 		clone := *typed
-		clone.RsqlFilterCondition = normalizeTopLevelCommaTerms(clone.RsqlFilterCondition)
+		clone.RsqlFilterCondition = clone.RsqlFilterCondition.Map(normalizeTopLevelCommaTerms)
 		return &clone
 	default:
 		return v
@@ -335,11 +335,11 @@ func normalizeFilterInClauseElements(v any) any {
 	switch typed := v.(type) {
 	case *model.OldFilterEvaluationResult:
 		clone := *typed
-		clone.RsqlFilterCondition = normalizeRsqlInElements(clone.RsqlFilterCondition)
+		clone.RsqlFilterCondition = clone.RsqlFilterCondition.Map(normalizeRsqlInElements)
 		return &clone
 	case *model.FilterResponse:
 		clone := *typed
-		clone.RsqlFilterCondition = normalizeRsqlInElements(clone.RsqlFilterCondition)
+		clone.RsqlFilterCondition = clone.RsqlFilterCondition.Map(normalizeRsqlInElements)
 		return &clone
 	default:
 		return v
