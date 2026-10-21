@@ -1,0 +1,105 @@
+{
+ "about": "Inputs on which the specification and two second models, written apart from it, answer differently: each case is the smallest input found that keeps one such difference, with its single rule in the observation forms where it has one. Controls first and last must answer alike.",
+ "resourceTypePrefix": "PARITY_SUITE_R58_D2_",
+ "pins": {},
+ "pips": {
+  "parityr28h-3": {
+   "cacheable": false,
+   "defaultValue": "",
+   "header": "User-Agent",
+   "name": "subject.parityR28H",
+   "pipType": "HEADER",
+   "type": "UUID"
+  }
+ },
+ "cases": [
+  {
+   "id": "d2r58-f1-control-first-or",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit",
+         "target": "true",
+         "condition": "resource.x == 'v' OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "name": "a-n",
+     "resource": {
+      "x": "v",
+      "id": "obs",
+      "a": "n"
+     }
+    }
+   ]
+  },
+  {
+   "about": "HEADER over 'User-Agent', defaultValue '', request without it; the use: simplified",
+   "condition": "subject.parityR28H IS NOT NULL",
+   "id": "d2r58-ff01acca0f",
+   "pips": [
+    "parityr28h-3"
+   ],
+   "requests": [
+    {
+     "name": "a-n",
+     "resource": {
+      "id": "r28"
+     }
+    }
+   ],
+   "resourceType": "PARITY_SUITE_R28P_R28PIP_HEADER_USER_AGENT_EMPTY_DEFAULT_SIMPLIFIED_NONE"
+  },
+  {
+   "id": "d2r58-f1-control-last-or",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit",
+         "target": "true",
+         "condition": "resource.x == 'v' OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "name": "a-n",
+     "resource": {
+      "x": "v",
+      "id": "obs",
+      "a": "n"
+     }
+    }
+   ]
+  }
+ ],
+ "standVersion": true
+}

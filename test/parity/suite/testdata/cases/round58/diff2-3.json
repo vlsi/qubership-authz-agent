@@ -1,0 +1,126 @@
+{
+ "about": "Inputs on which the specification and two second models, written apart from it, answer differently: each case is the smallest input found that keeps one such difference, with its single rule in the observation forms where it has one. The control first must answer alike; a case here loads a set for every resource type, so the file has no control last.",
+ "resourceTypePrefix": "PARITY_SUITE_R58_D2_",
+ "pins": {},
+ "pips": {
+  "failing": {
+   "cacheable": false,
+   "httpMethod": "POST",
+   "name": "subject.parityR16Failing",
+   "pipType": "GENERAL",
+   "requestAttributes": {
+    "case": "subject.parityR16Failing"
+   },
+   "url": "http://pip-mock:8090/api/v1/pip/r16-failing"
+  }
+ },
+ "cases": [
+  {
+   "id": "d2r58-f2-control-first-or",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit",
+         "target": "true",
+         "condition": "resource.x == 'v' OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "name": "a-n",
+     "resource": {
+      "x": "v",
+      "id": "obs",
+      "a": "n"
+     }
+    }
+   ]
+  },
+  {
+   "id": "d2r58-5554977a26",
+   "pips": [
+    "failing"
+   ],
+   "requests": [
+    {
+     "name": "ry",
+     "resource": {
+      "id": "r16"
+     }
+    }
+   ],
+   "sets": [
+    {
+     "key": "s0",
+     "policies": [],
+     "sets": [
+      {
+       "key": "s0-s0",
+       "policies": [],
+       "sets": [
+        {
+         "algorithm": "PERMIT_OVERRIDES",
+         "key": "s0-s0-s0",
+         "policies": [
+          {
+           "algorithm": "DENY_OVERRIDES",
+           "key": "s0-s0-s0-p0",
+           "rules": [
+            {
+             "condition": "true",
+             "effect": "ALLOW",
+             "key": "s0-s0-s0-p0-r0",
+             "target": "true"
+            },
+            {
+             "condition": "true",
+             "effect": "ALLOW",
+             "key": "s0-s0-s0-p0-r1",
+             "target": "subject.permissionScope.region CONTAINS 'r1'"
+            }
+           ],
+           "target": "true"
+          },
+          {
+           "algorithm": "PERMIT_UNLESS_DENY",
+           "key": "s0-s0-s0-p1",
+           "rules": [
+            {
+             "condition": "subject.parityR16Failing == 'v'",
+             "effect": "ALLOW",
+             "key": "s0-s0-s0-p1-r1",
+             "target": "true"
+            }
+           ],
+           "target": "true"
+          }
+         ],
+         "sets": [],
+         "target": "true"
+        }
+       ],
+       "target": "true"
+      }
+     ],
+     "target": "true"
+    }
+   ],
+   "resourceType": "PARITY_SUITE_R16_D2SF1_72"
+  }
+ ],
+ "standVersion": true
+}

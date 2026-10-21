@@ -1,0 +1,223 @@
+{
+ "about": "Inputs on which the specification and two second models, written apart from it, answer differently: each case is the smallest input found that keeps one such difference, with its single rule in the observation forms where it has one. The control first must answer alike; a case here loads a set for every resource type, so the file has no control last.",
+ "resourceTypePrefix": "PARITY_SUITE_R58_D2_",
+ "pins": {},
+ "pips": {},
+ "cases": [
+  {
+   "id": "d2r58-f6-control-first-or",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit",
+         "target": "true",
+         "condition": "resource.x == 'v' OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "name": "a-n",
+     "resource": {
+      "x": "v",
+      "id": "obs",
+      "a": "n"
+     }
+    }
+   ]
+  },
+  {
+   "customize": [
+    {
+     "level": "CUSTOMER",
+     "name": "custom",
+     "requests": [
+      {
+       "bulkOperations": [
+        {
+         "id": "rp00",
+         "operations": [
+          "UPDATE"
+         ]
+        },
+        {
+         "id": "rp01",
+         "operations": [
+          "UPDATE"
+         ]
+        }
+       ],
+       "headers": {
+        "x-parity-r44-raw": "h1",
+        "x-parity-r44-raw-2": "h2"
+       },
+       "name": "after-q0",
+       "subject": "m2m"
+      },
+      {
+       "bulkOperations": [
+        {
+         "id": "rp10",
+         "operations": [
+          "READ",
+          "UPDATE"
+         ],
+         "resource": {
+          "a": "n",
+          "id": "rp10",
+          "obsMark": "n",
+          "obsNum": 1
+         }
+        },
+        {
+         "id": "rp11",
+         "operations": [
+          "READ",
+          "UPDATE"
+         ],
+         "resource": {
+          "a": "y",
+          "id": "rp11",
+          "obsMark": "y",
+          "obsNum": 7
+         }
+        }
+       ],
+       "headers": {
+        "x-parity-r44-raw": "h1",
+        "x-parity-r44-raw-2": "h2"
+       },
+       "name": "after-q1",
+       "subject": "m2m",
+       "userId": "parity-other"
+      }
+     ],
+     "sets": [
+      {
+       "key": "s1",
+       "policies": [
+        {
+         "key": "p2",
+         "target": "true"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "id": "d2r58-7c797001e6",
+   "pips": [],
+   "requests": [
+    {
+     "filter": true,
+     "headers": {
+      "x-parity-r44-raw": "h1"
+     },
+     "name": "q0",
+     "operation": "UPDATE",
+     "tenantId": ""
+    },
+    {
+     "filter": true,
+     "headers": {
+      "x-parity-r44-raw": "h1",
+      "x-parity-r44-raw-2": "h2"
+     },
+     "name": "q1",
+     "omitOperation": true,
+     "subject": "m2m",
+     "tenantId": "parity-mt-b",
+     "userId": "parity-other"
+    },
+    {
+     "bulkOperations": [
+      {
+       "id": "rp20",
+       "operations": [
+        "READ"
+       ],
+       "resource": {
+        "a": "y",
+        "id": "rp20",
+        "obsMark": "y",
+        "obsNum": 7
+       }
+      },
+      {
+       "id": "rp21",
+       "operations": [
+        "READ"
+       ],
+       "resource": {
+        "a": "n",
+        "id": "rp21",
+        "obsMark": "n",
+        "obsNum": 1
+       }
+      }
+     ],
+     "headers": {
+      "x-parity-r44-raw": "h1"
+     },
+     "name": "q2",
+     "subject": "m2m",
+     "tenantId": "parity-mt-b"
+    },
+    {
+     "filter": true,
+     "headers": {
+      "x-parity-r44-raw": "h1"
+     },
+     "name": "q3",
+     "operation": "LIST",
+     "subject": "m2m",
+     "tenantId": "parity-mt-b",
+     "userId": "parity-other"
+    },
+    {
+     "filter": true,
+     "headers": {
+      "x-parity-r44-raw": "h1",
+      "x-parity-r44-raw-2": "h2"
+     },
+     "name": "q4",
+     "operation": "LIST",
+     "subject": "user:parity-other",
+     "tenantId": "parity-mt-b"
+    }
+   ],
+   "sets": [
+    {
+     "algorithm": "PERMIT_OVERRIDES",
+     "key": "s1",
+     "policies": [],
+     "sets": [
+      {
+       "algorithm": "PERMIT_UNLESS_DENY",
+       "key": "s10",
+       "policies": [],
+       "sets": [],
+       "target": "subject.parityR44RawUntyped CONTAINS 'y'"
+      }
+     ],
+     "target": "true"
+    }
+   ],
+   "resourceType": "PARITY_SUITE_R44_RAW_RP44_005"
+  }
+ ],
+ "standVersion": true
+}

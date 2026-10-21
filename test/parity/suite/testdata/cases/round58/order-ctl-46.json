@@ -1,0 +1,248 @@
+{
+ "about": "The closing control of round 46 diff2-46 again, after the uploads of every case before it in that file. Sets with target true from those cases reach the control's resource type, and stands answered the control otherwise: which set a stand takes first is what changed. The control is classified by a marker read first in the control's own rule: whether the stand reached its own set. A control first must answer true.",
+ "resourceTypePrefix": "PARITY_SUITE_R58_ORDER_",
+ "pins": {
+  "/api/v1/pip/s44-sent": {
+   "body": [
+    "m"
+   ],
+   "statusCode": 200
+  },
+  "/api/v1/pip/r58order-seen": {
+   "statusCode": 200,
+   "body": [
+    "m"
+   ]
+  }
+ },
+ "pips": {
+  "s44-sent": {
+   "cacheable": false,
+   "httpMethod": "POST",
+   "name": "subject.parityS44Sent",
+   "pipType": "GENERAL",
+   "requestAttributes": {
+    "case": "s44-sent"
+   },
+   "url": "http://pip-mock:8090/api/v1/pip/s44-sent"
+  },
+  "r58-seen": {
+   "name": "subject.parityR58OrderSeen",
+   "pipType": "GENERAL",
+   "httpMethod": "POST",
+   "cacheable": false,
+   "url": "http://pip-mock:8090/api/v1/pip/r58order-seen",
+   "requestAttributes": {
+    "case": "r58order-seen"
+   }
+  }
+ },
+ "cases": [
+  {
+   "id": "r58ord-diff2-46-control-first",
+   "about": "Control: a DENY rule over a resource attribute that does not hold. True unless the stand answers every check with 400.",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "PERMIT_UNLESS_DENY",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "PERMIT_UNLESS_DENY",
+       "rules": [
+        {
+         "key": "deny",
+         "target": "true",
+         "condition": "resource.c == 'zz'",
+         "effect": "DENY"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "name": "read",
+     "resource": {
+      "id": "r33",
+      "c": "n"
+     }
+    }
+   ]
+  },
+  {
+   "id": "r58ord-f78051e156-ctl46",
+   "pips": [
+    "r58-seen",
+    "s44-sent"
+   ],
+   "requests": [],
+   "sets": [
+    {
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "key": "set",
+     "policies": [
+      {
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "key": "p",
+       "rules": [
+        {
+         "condition": "true",
+         "effect": "ALLOW",
+         "key": "r",
+         "predicates": {
+          "rsqlPredicate": "f==${subject.parityS44Sent}"
+         },
+         "target": "true"
+        }
+       ],
+       "target": "true"
+      }
+     ],
+     "sets": [],
+     "target": "true"
+    }
+   ],
+   "resourceType": "PARITY_SUITE_R44_SENT_NODES_SN44_FILTER_PREDICATE_T"
+  },
+  {
+   "customize": [
+    {
+     "level": "CUSTOMER",
+     "name": "custom",
+     "sets": [
+      {
+       "key": "s1",
+       "policies": [
+        {
+         "key": "p5",
+         "target": "true"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "id": "r58ord-f996afd0dd-ctl46",
+   "pips": [],
+   "requests": [],
+   "sets": [
+    {
+     "algorithm": "DENY_OVERRIDES",
+     "key": "s1",
+     "policies": [],
+     "sets": [],
+     "status": "INACTIVE",
+     "target": "true"
+    }
+   ],
+   "resourceType": "PARITY_SUITE_D2_RAW_RP44_POOL_104"
+  },
+  {
+   "id": "r58ord-fad2fd51b7-ctl46",
+   "requests": [],
+   "sets": [
+    {
+     "algorithm": "PERMIT_UNLESS_DENY",
+     "key": "set",
+     "policies": [
+      {
+       "algorithm": "PERMIT_UNLESS_DENY",
+       "key": "reader",
+       "rules": [
+        {
+         "condition": "true",
+         "effect": "DENY",
+         "fields": {
+          "target": " true "
+         },
+         "key": "deny",
+         "target": "true"
+        }
+       ],
+       "target": "true"
+      }
+     ],
+     "target": "true"
+    }
+   ],
+   "resourceType": "PARITY_SUITE_D2_SP_SP0_FIELDS_RULE_TARGET_EDGE_NBSP_DENY"
+  },
+  {
+   "id": "r58ord-ffb3d04d18-ctl46",
+   "requests": [],
+   "sets": [
+    {
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "key": "set",
+     "policies": [
+      {
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "key": "reader",
+       "rules": [
+        {
+         "condition": "true",
+         "effect": "ALLOW",
+         "fields": {
+          "target": " true "
+         },
+         "key": "permit",
+         "target": "true"
+        }
+       ],
+       "target": "true"
+      }
+     ],
+     "target": "true"
+    }
+   ],
+   "resourceType": "PARITY_SUITE_D2_SP_SP0_FIELDS_RULE_TARGET_EDGE_NBSP_OR"
+  },
+  {
+   "id": "r58ord-f45-control-last-or",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit",
+         "target": "true",
+         "condition": "subject.parityR58OrderSeen CONTAINS 'm' AND resource.x == 'v' OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "name": "a-n",
+     "resource": {
+      "x": "v",
+      "id": "obs",
+      "a": "n"
+     },
+     "classifyBy": "/api/v1/pip/r58order-seen"
+    }
+   ],
+   "resourceType": "PARITY_SUITE_R58_ORDER_R58ORD_F45_CONTROL_LAST_OR",
+   "pips": [
+    "r58-seen",
+    "s44-sent"
+   ],
+   "about": "The closing control of round 46 diff2-46, after the cases before it in that file (uploads only): stands answered it otherwise. Classified by a marker read first in the control's own rule: whether the stand reached its own set."
+  }
+ ],
+ "standVersion": true
+}

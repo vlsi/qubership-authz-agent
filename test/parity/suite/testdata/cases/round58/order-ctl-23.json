@@ -1,0 +1,157 @@
+{
+ "about": "The closing control of round 46 diff2-23 again, after the uploads of every case before it in that file. Sets with target true from those cases reach the control's resource type, and stands answered the control otherwise: which set a stand takes first is what changed. The control is classified by /api/v1/pip/r16-failing, which a failing child of a set with target true reads. A control first must answer true.",
+ "resourceTypePrefix": "PARITY_SUITE_R58_ORDER_",
+ "pins": {
+  "/api/v1/pip/r16-failing": {
+   "statusCode": 404,
+   "body": {
+    "error": "no route"
+   }
+  }
+ },
+ "pips": {
+  "failing": {
+   "cacheable": false,
+   "httpMethod": "POST",
+   "name": "subject.parityR16Failing",
+   "pipType": "GENERAL",
+   "requestAttributes": {
+    "case": "subject.parityR16Failing"
+   },
+   "url": "http://pip-mock:8090/api/v1/pip/r16-failing"
+  }
+ },
+ "cases": [
+  {
+   "id": "r58ord-diff2-23-control-first",
+   "about": "Control: a DENY rule over a resource attribute that does not hold. True unless the stand answers every check with 400.",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "PERMIT_UNLESS_DENY",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "PERMIT_UNLESS_DENY",
+       "rules": [
+        {
+         "key": "deny",
+         "target": "true",
+         "condition": "resource.c == 'zz'",
+         "effect": "DENY"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "name": "read",
+     "resource": {
+      "id": "r33",
+      "c": "n"
+     }
+    }
+   ]
+  },
+  {
+   "id": "r58ord-f9b46cd165-ctl23",
+   "pips": [
+    "failing"
+   ],
+   "requests": [],
+   "sets": [
+    {
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "key": "s0",
+     "policies": [
+      {
+       "algorithm": "PERMIT_UNLESS_DENY",
+       "key": "s0-p0",
+       "rules": [
+        {
+         "condition": "subject.parityR16Failing == 'v'",
+         "effect": "ALLOW",
+         "key": "s0-p0-r0",
+         "target": "true"
+        }
+       ],
+       "target": "resource.b == 'y'"
+      }
+     ],
+     "sets": [],
+     "target": "true"
+    },
+    {
+     "key": "s1",
+     "policies": [
+      {
+       "algorithm": "PERMIT_OVERRIDES",
+       "key": "s1-p0",
+       "rules": [
+        {
+         "condition": "true",
+         "effect": "ALLOW",
+         "key": "s1-p0-r0",
+         "target": "true"
+        },
+        {
+         "condition": "subject.parityR16Failing == 'v'",
+         "effect": "ALLOW",
+         "key": "s1-p0-r2",
+         "target": "true"
+        }
+       ],
+       "target": "true"
+      }
+     ],
+     "sets": [],
+     "target": "true"
+    }
+   ],
+   "resourceType": "PARITY_SUITE_MT_MT_12_X"
+  },
+  {
+   "id": "r58ord-f22-control-last-or",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit",
+         "target": "true",
+         "condition": "resource.x == 'v' OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "name": "a-n",
+     "resource": {
+      "x": "v",
+      "id": "obs",
+      "a": "n"
+     },
+     "classifyBy": "/api/v1/pip/r16-failing"
+    }
+   ],
+   "resourceType": "PARITY_SUITE_R58_ORDER_R58ORD_F22_CONTROL_LAST_OR",
+   "about": "The closing control of round 46 diff2-23, after the cases before it in that file (uploads only): stands answered it otherwise. Classified by /api/v1/pip/r16-failing, which a failing child of a set with target true reads."
+  }
+ ],
+ "standVersion": true
+}

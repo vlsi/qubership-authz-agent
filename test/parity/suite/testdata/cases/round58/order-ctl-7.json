@@ -1,0 +1,165 @@
+{
+ "about": "The closing control of round 46 diff2-7 again, after the uploads of every case before it in that file. Sets with target true from those cases reach the control's resource type, and stands answered the control otherwise: which set a stand takes first is what changed. The control is classified by a marker read first in the control's own rule: whether the stand reached its own set. A control first must answer true.",
+ "resourceTypePrefix": "PARITY_SUITE_R58_ORDER_",
+ "pins": {
+  "/api/v1/pip/r58order-seen": {
+   "statusCode": 200,
+   "body": [
+    "m"
+   ]
+  }
+ },
+ "pips": {
+  "r58-seen": {
+   "name": "subject.parityR58OrderSeen",
+   "pipType": "GENERAL",
+   "httpMethod": "POST",
+   "cacheable": false,
+   "url": "http://pip-mock:8090/api/v1/pip/r58order-seen",
+   "requestAttributes": {
+    "case": "r58order-seen"
+   }
+  }
+ },
+ "cases": [
+  {
+   "id": "r58ord-diff2-7-control-first",
+   "about": "Control: a DENY rule over a resource attribute that does not hold. True unless the stand answers every check with 400.",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "PERMIT_UNLESS_DENY",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "PERMIT_UNLESS_DENY",
+       "rules": [
+        {
+         "key": "deny",
+         "target": "true",
+         "condition": "resource.c == 'zz'",
+         "effect": "DENY"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "name": "read",
+     "resource": {
+      "id": "r33",
+      "c": "n"
+     }
+    }
+   ]
+  },
+  {
+   "customize": [
+    {
+     "level": "CUSTOMER",
+     "name": "custom",
+     "sets": [
+      {
+       "key": "s1",
+       "policies": [
+        {
+         "key": "p2",
+         "rules": [
+          {
+           "condition": "true",
+           "key": "r4"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "id": "r58ord-2954c2e27b-ctl7",
+   "pips": [],
+   "requests": [],
+   "sets": [
+    {
+     "algorithm": "PERMIT_OVERRIDES",
+     "key": "s1",
+     "policies": [
+      {
+       "key": "p2",
+       "rules": [
+        {
+         "condition": "true",
+         "effect": "USE_FILTER_CONDITION",
+         "key": "r4",
+         "target": "true"
+        }
+       ],
+       "target": "true"
+      }
+     ],
+     "sets": [
+      {
+       "algorithm": "PERMIT_UNLESS_DENY",
+       "iterate": {
+        "algorithm": null,
+        "foreach": "subject.permissionScope"
+       },
+       "key": "s10",
+       "policies": [],
+       "sets": [],
+       "target": "true"
+      }
+     ],
+     "target": "true"
+    }
+   ],
+   "resourceType": "PARITY_SUITE_D2_RAW_RP44_POOL_099"
+  },
+  {
+   "id": "r58ord-f6-control-last-or",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit",
+         "target": "true",
+         "condition": "subject.parityR58OrderSeen CONTAINS 'm' AND resource.x == 'v' OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "name": "a-n",
+     "resource": {
+      "x": "v",
+      "id": "obs",
+      "a": "n"
+     },
+     "classifyBy": "/api/v1/pip/r58order-seen"
+    }
+   ],
+   "resourceType": "PARITY_SUITE_R58_ORDER_R58ORD_F6_CONTROL_LAST_OR",
+   "pips": [
+    "r58-seen"
+   ],
+   "about": "The closing control of round 46 diff2-7, after the cases before it in that file (uploads only): stands answered it otherwise. Classified by a marker read first in the control's own rule: whether the stand reached its own set."
+  }
+ ],
+ "standVersion": true
+}

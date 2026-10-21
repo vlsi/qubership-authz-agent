@@ -1,0 +1,299 @@
+{
+ "about": "Raw values no generated case carries: a FILTERED PIP in a condition. Each case's upload status and decisions answer for the value as a whole. Control cases first and last: they must answer alike.",
+ "resourceTypePrefix": "PARITY_SUITE_R58_RAW_HEADS_",
+ "pins": {
+  "/api/v1/permission-scope/user/00000000-0000-0000-0000-000000000101/policies": {
+   "statusCode": 200,
+   "body": {
+    "permissionScope": [
+     {
+      "id": "00000000-0000-0000-0000-000000000101",
+      "isInherited": false,
+      "name": "parity-reader",
+      "type": "USER",
+      "policies": [
+       {
+        "scopeItems": [
+         {
+          "key": "region",
+          "values": [
+           {
+            "id": "r1"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  "/api/v1/pip/obs-failed": {
+   "statusCode": 404,
+   "body": {
+    "error": "parity observation wrapper"
+   }
+  },
+  "/api/v1/pip/r29-pairs-gen": {
+   "statusCode": 200,
+   "body": [
+    "x",
+    "y"
+   ]
+  },
+  "/api/v1/pip/r44-raw-untyped": {
+   "statusCode": 200,
+   "body": [
+    "y"
+   ]
+  },
+  "/api/v1/pip/raw-filtered": {
+   "statusCode": 200,
+   "body": [
+    "rpr46"
+   ]
+  }
+ },
+ "pips": {
+  "filtered": {
+   "name": "subject.parityRawIds.filtered",
+   "pipType": "FILTERED",
+   "resourceType": "{{resourceType}}",
+   "cacheable": false,
+   "url": "http://pip-mock:8090/api/v1/pip/raw-filtered"
+  },
+  "gen": {
+   "name": "subject.parityR29PairsGen",
+   "pipType": "GENERAL",
+   "httpMethod": "POST",
+   "cacheable": false,
+   "url": "http://pip-mock:8090/api/v1/pip/r29-pairs-gen",
+   "requestAttributes": {
+    "case": "r29-pairs-gen"
+   }
+  },
+  "hdr": {
+   "name": "subject.parityR29PairsHdr",
+   "type": "UUID",
+   "pipType": "HEADER",
+   "header": "x-parity-r29-pairs",
+   "cacheable": false
+  },
+  "map": {
+   "name": "subject.permissions.PARITY_R29_PAIRS",
+   "pipType": "MAPPING",
+   "type": "UUID",
+   "cacheable": false,
+   "customMapping": {
+    "subject.roles": {
+     "ROLE_PARITY_READER": [
+      "p1",
+      "p2"
+     ]
+    }
+   }
+  },
+  "obs-subject-parityobsfailed": {
+   "name": "subject.parityObsFailed",
+   "pipType": "GENERAL",
+   "httpMethod": "POST",
+   "cacheable": false,
+   "url": "http://pip-mock:8090/api/v1/pip/obs-failed",
+   "requestAttributes": {
+    "case": "obs-failed"
+   }
+  },
+  "scope": {
+   "name": "subject.permissionScope",
+   "pipType": "PERMISSION_SCOPE",
+   "url": "http://pip-mock:8090",
+   "cacheable": false,
+   "cachePeriod": 1
+  },
+  "tok": {
+   "name": "subject.parityR29PairsTok",
+   "type": "UUID",
+   "pipType": "TOKEN",
+   "claim": "department",
+   "cacheable": false
+  },
+  "untyped": {
+   "name": "subject.parityR44RawUntyped",
+   "httpMethod": "POST",
+   "cacheable": false,
+   "url": "http://pip-mock:8090/api/v1/pip/r44-raw-untyped",
+   "requestAttributes": {
+    "case": "r44-raw-untyped"
+   }
+  }
+ },
+ "cases": [
+  {
+   "pips": [
+    "filtered",
+    "gen",
+    "hdr",
+    "map",
+    "obs-subject-parityobsfailed",
+    "scope",
+    "tok",
+    "untyped"
+   ],
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit",
+         "target": "true",
+         "condition": "resource.obsMark == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "name": "ry",
+     "resource": {
+      "obsMark": "y",
+      "obsNum": 7,
+      "a": "y",
+      "id": "rpc"
+     }
+    },
+    {
+     "name": "rn",
+     "resource": {
+      "obsMark": "n",
+      "obsNum": 1,
+      "a": "n",
+      "id": "rpc"
+     }
+    }
+   ],
+   "id": "rp58-heads-control-first"
+  },
+  {
+   "id": "rp58-head-filtered-condition",
+   "pips": [
+    "filtered",
+    "gen",
+    "hdr",
+    "map",
+    "obs-subject-parityobsfailed",
+    "scope",
+    "tok",
+    "untyped"
+   ],
+   "requests": [
+    {
+     "name": "ry",
+     "resource": {
+      "obsMark": "y",
+      "obsNum": 7,
+      "a": "y",
+      "id": "rpr46"
+     }
+    },
+    {
+     "name": "rn",
+     "resource": {
+      "obsMark": "n",
+      "obsNum": 1,
+      "a": "n",
+      "id": "rpr46"
+     }
+    }
+   ],
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit",
+         "target": "true",
+         "condition": "resource.id IN subject.parityRawIds FILTERED 'READ' OR resource.obsMark == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "pips": [
+    "filtered",
+    "gen",
+    "hdr",
+    "map",
+    "obs-subject-parityobsfailed",
+    "scope",
+    "tok",
+    "untyped"
+   ],
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit",
+         "target": "true",
+         "condition": "resource.obsMark == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "name": "ry",
+     "resource": {
+      "obsMark": "y",
+      "obsNum": 7,
+      "a": "y",
+      "id": "rpc"
+     }
+    },
+    {
+     "name": "rn",
+     "resource": {
+      "obsMark": "n",
+      "obsNum": 1,
+      "a": "n",
+      "id": "rpc"
+     }
+    }
+   ],
+   "id": "rp58-heads-control-last"
+  }
+ ],
+ "standVersion": true
+}

@@ -1,0 +1,118 @@
+{
+ "about": "d2r46-e89a80050c of round 46 diff2-42 again, in a function of its own: stands answered filter otherwise. The request is not classified: alone, nothing before it reaches its type. A control first and last must answer true.",
+ "resourceTypePrefix": "PARITY_SUITE_R58_ORDER_",
+ "pins": {
+  "/api/v1/pip/idiom-gen": {
+   "statusCode": 404,
+   "body": {
+    "error": "no route"
+   }
+  }
+ },
+ "pips": {},
+ "cases": [
+  {
+   "id": "r58ord-e89a80050c-control-first",
+   "about": "Control: a DENY rule over a resource attribute that does not hold. True unless the stand answers every check with 400.",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "PERMIT_UNLESS_DENY",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "PERMIT_UNLESS_DENY",
+       "rules": [
+        {
+         "key": "deny",
+         "target": "true",
+         "condition": "resource.c == 'zz'",
+         "effect": "DENY"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "name": "read",
+     "resource": {
+      "id": "r33",
+      "c": "n"
+     }
+    }
+   ]
+  },
+  {
+   "id": "r58ord-e89a80050c",
+   "pips": [],
+   "requests": [
+    {
+     "filter": true,
+     "name": "filter"
+    }
+   ],
+   "sets": [
+    {
+     "algorithm": "DENY_OVERRIDES",
+     "key": "s1",
+     "policies": [],
+     "sets": [
+      {
+       "algorithm": "DENY_OVERRIDES",
+       "fields": {
+        "type": "SIMPLIFIED"
+       },
+       "key": "s1-s0",
+       "policies": [],
+       "sets": [],
+       "target": "true"
+      }
+     ],
+     "target": "resourceType == '{{resourceType}}'"
+    }
+   ],
+   "resourceType": "PARITY_SUITE_R16_D2SF0_18",
+   "about": "d2r46-e89a80050c of round 46 diff2-42, alone; its sets with target true name its resource type instead. Stands answered filter otherwise; here not classified: alone, nothing before it reaches its type."
+  },
+  {
+   "id": "r58ord-e89a80050c-control-last",
+   "about": "Control: a DENY rule over a resource attribute that does not hold. True unless the stand answers every check with 400.",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "PERMIT_UNLESS_DENY",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "PERMIT_UNLESS_DENY",
+       "rules": [
+        {
+         "key": "deny",
+         "target": "true",
+         "condition": "resource.c == 'zz'",
+         "effect": "DENY"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "name": "read",
+     "resource": {
+      "id": "r33",
+      "c": "n"
+     }
+    }
+   ]
+  }
+ ],
+ "standVersion": true
+}

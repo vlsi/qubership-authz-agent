@@ -1,0 +1,234 @@
+{
+ "about": "The closing control of round 46 diff2-2 again, after the uploads of every case before it in that file. Sets with target true from those cases reach the control's resource type, and stands answered the control otherwise: which set a stand takes first is what changed. The control is classified by a marker read first in the control's own rule: whether the stand reached its own set. A control first must answer true.",
+ "resourceTypePrefix": "PARITY_SUITE_R58_ORDER_",
+ "pins": {
+  "/api/v1/pip/fz-right-d2fz-294": {
+   "body": {
+    "k": "v"
+   },
+   "statusCode": 200
+  },
+  "/api/v1/pip/fz-right-d2fz-297": {
+   "body": [
+    "v",
+    "w"
+   ],
+   "statusCode": 200
+  },
+  "/api/v1/pip/fz-right-d2fz-298": {
+   "body": {
+    "k": "v"
+   },
+   "statusCode": 200
+  },
+  "/api/v1/pip/r58order-seen": {
+   "statusCode": 200,
+   "body": [
+    "m"
+   ]
+  }
+ },
+ "pips": {
+  "dash": {
+   "cacheable": false,
+   "header": "x-parity-r16s-dash",
+   "name": "subject.parityR16S-dash",
+   "pipType": "HEADER",
+   "type": "UUID"
+  },
+  "parityr23headers": {
+   "cacheable": false,
+   "headers": {
+    "X-B": "w"
+   },
+   "httpMethod": "POST",
+   "name": "subject.parityR23Headers",
+   "pipType": "GENERAL",
+   "requestAttributes": {
+    "case": "r23-headers"
+   },
+   "url": "http://pip-mock:8090/api/v1/pip/r23-headers"
+  },
+  "r58-seen": {
+   "name": "subject.parityR58OrderSeen",
+   "pipType": "GENERAL",
+   "httpMethod": "POST",
+   "cacheable": false,
+   "url": "http://pip-mock:8090/api/v1/pip/r58order-seen",
+   "requestAttributes": {
+    "case": "r58order-seen"
+   }
+  }
+ },
+ "cases": [
+  {
+   "id": "r58ord-diff2-2-control-first",
+   "about": "Control: a DENY rule over a resource attribute that does not hold. True unless the stand answers every check with 400.",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "PERMIT_UNLESS_DENY",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "PERMIT_UNLESS_DENY",
+       "rules": [
+        {
+         "key": "deny",
+         "target": "true",
+         "condition": "resource.c == 'zz'",
+         "effect": "DENY"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "name": "read",
+     "resource": {
+      "id": "r33",
+      "c": "n"
+     }
+    }
+   ]
+  },
+  {
+   "about": "Pins that the PAP refuses GENERAL PIP headers given as an object.",
+   "id": "r58ord-50e476344d-ctl2",
+   "pips": [
+    "dash",
+    "parityr23headers",
+    "r58-seen"
+   ],
+   "requests": [],
+   "resourceType": "PARITY_SUITE_R23P_S23_059_PAP_HEADERS_OBJECT_GENERAL"
+  },
+  {
+   "about": "The control of s16-pip-name-with-a-dash: the same declaration with a condition that does not read it, so the upload status shows whether the declaration alone is refused.",
+   "condition": "true",
+   "id": "r58ord-ee96235fa8-ctl2",
+   "pips": [
+    "dash",
+    "parityr23headers",
+    "r58-seen"
+   ],
+   "requests": [],
+   "resourceType": "PARITY_SUITE_R16S_S16_PIP_NAME_WITH_A_DASH_CONTROL"
+  },
+  {
+   "condition": "true",
+   "id": "r58ord-193fddb72c-ctl2",
+   "policy": {
+    "id": "1-1-1-1-1"
+   },
+   "requests": [],
+   "resourceType": "PARITY_SUITE_R44_IDIOM_ID44_UUID_TEXT_0"
+  },
+  {
+   "id": "r58ord-bf4ad52937-ctl2",
+   "requests": [],
+   "sets": [
+    {
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "key": "set",
+     "policies": [
+      {
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "fields": {
+        "combiningAlgorithm": ""
+       },
+       "key": "reader",
+       "rules": [],
+       "target": "true"
+      }
+     ],
+     "target": "true"
+    }
+   ],
+   "resourceType": "PARITY_SUITE_D2_SP_SP0_FIELDS_POLICY_COMBININGALGORITHM_EMPTY_STRING_OR"
+  },
+  {
+   "condition": "resource.items[*].x CONTAINS resource.o.y",
+   "id": "r58ord-eba6994e02-ctl2",
+   "pips": [],
+   "requests": [],
+   "resourceType": "PARITY_SUITE_FZ_D2FZ_238"
+  },
+  {
+   "id": "r58ord-f47de3f768-ctl2",
+   "requests": [],
+   "sets": [
+    {
+     "algorithm": "PERMIT_UNLESS_DENY",
+     "key": "set",
+     "policies": [
+      {
+       "algorithm": "PERMIT_UNLESS_DENY",
+       "key": "reader",
+       "rules": [
+        {
+         "condition": "true",
+         "effect": "DENY",
+         "fields": {
+          "target": "\ftrue\f"
+         },
+         "key": "deny",
+         "target": "true"
+        }
+       ],
+       "target": "true"
+      }
+     ],
+     "target": "true"
+    }
+   ],
+   "resourceType": "PARITY_SUITE_D2_SP_SP0_FIELDS_RULE_TARGET_EDGE_FF_DENY"
+  },
+  {
+   "id": "r58ord-f1-control-last-or",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit",
+         "target": "true",
+         "condition": "subject.parityR58OrderSeen CONTAINS 'm' AND resource.x == 'v' OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "name": "a-n",
+     "resource": {
+      "x": "v",
+      "id": "obs",
+      "a": "n"
+     },
+     "classifyBy": "/api/v1/pip/r58order-seen"
+    }
+   ],
+   "resourceType": "PARITY_SUITE_R58_ORDER_R58ORD_F1_CONTROL_LAST_OR",
+   "pips": [
+    "r58-seen"
+   ],
+   "about": "The closing control of round 46 diff2-2, after the cases before it in that file (uploads only): stands answered it otherwise. Classified by a marker read first in the control's own rule: whether the stand reached its own set."
+  }
+ ],
+ "standVersion": true
+}

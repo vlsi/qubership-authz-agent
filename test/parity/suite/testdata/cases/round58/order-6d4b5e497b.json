@@ -1,0 +1,205 @@
+{
+ "about": "d2r46-6d4b5e497b of round 46 diff2-27 again, in a function of its own: stands answered filter otherwise. The request is classified by a marker that is the whole condition of rule s1-p1-r1 (it was true). A control first and last must answer true.",
+ "resourceTypePrefix": "PARITY_SUITE_R58_ORDER_",
+ "pins": {
+  "/api/v1/permission-scope/user/00000000-0000-0000-0000-000000000101/policies": {
+   "body": {
+    "permissionScope": [
+     {
+      "id": "00000000-0000-0000-0000-000000000101",
+      "isInherited": false,
+      "name": "parity-reader",
+      "policies": [
+       {
+        "scopeItems": [
+         {
+          "key": "region",
+          "values": [
+           "r1",
+           "r2"
+          ]
+         }
+        ]
+       }
+      ],
+      "type": "USER"
+     }
+    ]
+   },
+   "statusCode": 200
+  },
+  "/api/v1/pip/r30gaps-on-behalf": {
+   "body": {
+    "error": "parity round 30 case"
+   },
+   "statusCode": 500
+  },
+  "/api/v1/pip/r58order-seen": {
+   "statusCode": 200,
+   "body": [
+    "m"
+   ]
+  }
+ },
+ "pips": {
+  "fail": {
+   "cacheable": false,
+   "httpMethod": "POST",
+   "name": "subject.parityR30OnBehalf",
+   "pipType": "GENERAL",
+   "requestAttributes": {
+    "case": "r30gaps-on-behalf"
+   },
+   "url": "http://pip-mock:8090/api/v1/pip/r30gaps-on-behalf"
+  },
+  "obs-subject-parityidiomblankclaim4": {
+   "cacheable": false,
+   "claim": " ",
+   "name": "subject.parityIdiomBlankClaim4",
+   "pipType": "TOKEN"
+  },
+  "obs-subject-parityidiomblankheader4": {
+   "cacheable": false,
+   "header": " ",
+   "name": "subject.parityIdiomBlankHeader4",
+   "pipType": "HEADER"
+  },
+  "scope": {
+   "cachePeriod": 1,
+   "cacheable": false,
+   "name": "subject.permissionScope",
+   "pipType": "PERMISSION_SCOPE",
+   "url": "http://pip-mock:8090"
+  },
+  "r58-seen": {
+   "name": "subject.parityR58OrderSeen",
+   "pipType": "GENERAL",
+   "httpMethod": "POST",
+   "cacheable": false,
+   "url": "http://pip-mock:8090/api/v1/pip/r58order-seen",
+   "requestAttributes": {
+    "case": "r58order-seen"
+   }
+  }
+ },
+ "cases": [
+  {
+   "id": "r58ord-6d4b5e497b-control-first",
+   "about": "Control: a DENY rule over a resource attribute that does not hold. True unless the stand answers every check with 400.",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "PERMIT_UNLESS_DENY",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "PERMIT_UNLESS_DENY",
+       "rules": [
+        {
+         "key": "deny",
+         "target": "true",
+         "condition": "resource.c == 'zz'",
+         "effect": "DENY"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "name": "read",
+     "resource": {
+      "id": "r33",
+      "c": "n"
+     }
+    }
+   ]
+  },
+  {
+   "id": "r58ord-6d4b5e497b",
+   "pips": [
+    "r58-seen"
+   ],
+   "requests": [
+    {
+     "filter": true,
+     "name": "filter",
+     "classifyBy": "/api/v1/pip/r58order-seen"
+    }
+   ],
+   "sets": [
+    {
+     "algorithm": "PERMIT_OVERRIDES",
+     "key": "s1",
+     "policies": [
+      {
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "key": "s1-p1",
+       "rules": [
+        {
+         "condition": "true",
+         "effect": "ALLOW",
+         "key": "s1-p1-r0",
+         "target": "true"
+        },
+        {
+         "condition": "subject.parityR58OrderSeen CONTAINS 'm'",
+         "effect": "DENY",
+         "key": "s1-p1-r1",
+         "predicates": {
+          "rsqlPredicate": "f==${subject.parityR16Failing}"
+         },
+         "target": "true"
+        }
+       ],
+       "target": "true"
+      }
+     ],
+     "sets": [],
+     "target": "resourceType == '{{resourceType}}'"
+    }
+   ],
+   "resourceType": "PARITY_SUITE_R16_D2SF1_25",
+   "about": "d2r46-6d4b5e497b of round 46 diff2-27, alone; its sets with target true name its resource type instead. Stands answered filter otherwise; here classified by a marker that is the whole condition of rule s1-p1-r1 (it was true)."
+  },
+  {
+   "id": "r58ord-6d4b5e497b-control-last",
+   "about": "Control: a DENY rule over a resource attribute that does not hold. True unless the stand answers every check with 400.",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "PERMIT_UNLESS_DENY",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "PERMIT_UNLESS_DENY",
+       "rules": [
+        {
+         "key": "deny",
+         "target": "true",
+         "condition": "resource.c == 'zz'",
+         "effect": "DENY"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "name": "read",
+     "resource": {
+      "id": "r33",
+      "c": "n"
+     }
+    }
+   ]
+  }
+ ],
+ "standVersion": true
+}

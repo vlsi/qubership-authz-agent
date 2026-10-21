@@ -1,0 +1,1458 @@
+{
+ "about": "Spellings of one value on the data side: a resource attribute, the body of a GENERAL PIP (subject.paritySpellGen, pinned per request) and a header value (subject.paritySpellHdr, X-Parity-Spell) carry 5 or 'v' as a JSON number, a JSON string, a number inside a string, a list of one, or with whitespace of each class at an end; each paired with the plain value or with its own text.",
+ "resourceTypePrefix": "PARITY_SUITE_R58_SPELL_DATA_",
+ "pins": {},
+ "pips": {
+  "obs-subject-parityspellgen": {
+   "name": "subject.paritySpellGen",
+   "pipType": "GENERAL",
+   "httpMethod": "POST",
+   "cacheable": false,
+   "url": "http://pip-mock:8090/api/v1/pip/spell-gen"
+  },
+  "obs-subject-parityspellhdr": {
+   "name": "subject.paritySpellHdr",
+   "pipType": "HEADER",
+   "header": "X-Parity-Spell",
+   "type": "UUID",
+   "cacheable": false
+  }
+ },
+ "cases": [
+  {
+   "id": "sp58-data-control-first-or",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit",
+         "target": "true",
+         "condition": "resource.x == 'v' OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "name": "a-n",
+     "resource": {
+      "x": "v",
+      "id": "obs",
+      "a": "n"
+     }
+    }
+   ]
+  },
+  {
+   "id": "sp58-data-ref-12-or",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit",
+         "target": "true",
+         "condition": "resource.x IS NOT NULL OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "name": "a-n",
+     "resource": {
+      "x": "v",
+      "id": "obs",
+      "a": "n"
+     }
+    }
+   ]
+  },
+  {
+   "id": "sp58-data-resource-more-object-or",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit",
+         "target": "true",
+         "condition": "resource.x IS NOT NULL OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "name": "a-n",
+     "resource": {
+      "x": {
+       "k": "v"
+      },
+      "id": "obs",
+      "a": "n"
+     }
+    }
+   ]
+  },
+  {
+   "id": "sp58-data-ref-13-or",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit",
+         "target": "true",
+         "condition": "subject.paritySpellGen IS NOT NULL OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "pins": {
+      "/api/v1/pip/spell-gen": {
+       "statusCode": 200,
+       "body": [
+        "v"
+       ]
+      }
+     },
+     "name": "a-n",
+     "resource": {
+      "id": "obs",
+      "a": "n"
+     }
+    }
+   ],
+   "pips": [
+    "obs-subject-parityspellgen",
+    "obs-subject-parityspellhdr"
+   ]
+  },
+  {
+   "id": "sp58-data-general-more-text-case-mapping-or",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit",
+         "target": "true",
+         "condition": "subject.paritySpellGen IS NOT NULL OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "pins": {
+      "/api/v1/pip/spell-gen": {
+       "statusCode": 200,
+       "body": [
+        "straße"
+       ]
+      }
+     },
+     "name": "a-n",
+     "resource": {
+      "id": "obs",
+      "a": "n"
+     }
+    }
+   ],
+   "pips": [
+    "obs-subject-parityspellgen",
+    "obs-subject-parityspellhdr"
+   ]
+  },
+  {
+   "id": "sp58-data-general-more-text-inner-cr-or",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit",
+         "target": "true",
+         "condition": "subject.paritySpellGen IS NOT NULL OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "pins": {
+      "/api/v1/pip/spell-gen": {
+       "statusCode": 200,
+       "body": [
+        "v\rw"
+       ]
+      }
+     },
+     "name": "a-n",
+     "resource": {
+      "id": "obs",
+      "a": "n"
+     }
+    }
+   ],
+   "pips": [
+    "obs-subject-parityspellgen",
+    "obs-subject-parityspellhdr"
+   ]
+  },
+  {
+   "id": "sp58-data-general-more-text-inner-ff-or",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit",
+         "target": "true",
+         "condition": "subject.paritySpellGen IS NOT NULL OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "pins": {
+      "/api/v1/pip/spell-gen": {
+       "statusCode": 200,
+       "body": [
+        "v\fw"
+       ]
+      }
+     },
+     "name": "a-n",
+     "resource": {
+      "id": "obs",
+      "a": "n"
+     }
+    }
+   ],
+   "pips": [
+    "obs-subject-parityspellgen",
+    "obs-subject-parityspellhdr"
+   ]
+  },
+  {
+   "id": "sp58-data-general-more-text-inner-lf-or",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit",
+         "target": "true",
+         "condition": "subject.paritySpellGen IS NOT NULL OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "pins": {
+      "/api/v1/pip/spell-gen": {
+       "statusCode": 200,
+       "body": [
+        "v\nw"
+       ]
+      }
+     },
+     "name": "a-n",
+     "resource": {
+      "id": "obs",
+      "a": "n"
+     }
+    }
+   ],
+   "pips": [
+    "obs-subject-parityspellgen",
+    "obs-subject-parityspellhdr"
+   ]
+  },
+  {
+   "id": "sp58-data-general-more-text-inner-lsep-or",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit",
+         "target": "true",
+         "condition": "subject.paritySpellGen IS NOT NULL OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "pins": {
+      "/api/v1/pip/spell-gen": {
+       "statusCode": 200,
+       "body": [
+        "v w"
+       ]
+      }
+     },
+     "name": "a-n",
+     "resource": {
+      "id": "obs",
+      "a": "n"
+     }
+    }
+   ],
+   "pips": [
+    "obs-subject-parityspellgen",
+    "obs-subject-parityspellhdr"
+   ]
+  },
+  {
+   "id": "sp58-data-general-more-text-inner-nbsp-or",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit",
+         "target": "true",
+         "condition": "subject.paritySpellGen IS NOT NULL OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "pins": {
+      "/api/v1/pip/spell-gen": {
+       "statusCode": 200,
+       "body": [
+        "v w"
+       ]
+      }
+     },
+     "name": "a-n",
+     "resource": {
+      "id": "obs",
+      "a": "n"
+     }
+    }
+   ],
+   "pips": [
+    "obs-subject-parityspellgen",
+    "obs-subject-parityspellhdr"
+   ]
+  },
+  {
+   "id": "sp58-data-general-more-text-inner-tab-or",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit",
+         "target": "true",
+         "condition": "subject.paritySpellGen IS NOT NULL OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "pins": {
+      "/api/v1/pip/spell-gen": {
+       "statusCode": 200,
+       "body": [
+        "v\tw"
+       ]
+      }
+     },
+     "name": "a-n",
+     "resource": {
+      "id": "obs",
+      "a": "n"
+     }
+    }
+   ],
+   "pips": [
+    "obs-subject-parityspellgen",
+    "obs-subject-parityspellhdr"
+   ]
+  },
+  {
+   "id": "sp58-data-general-more-text-inner-vt-or",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit",
+         "target": "true",
+         "condition": "subject.paritySpellGen IS NOT NULL OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "pins": {
+      "/api/v1/pip/spell-gen": {
+       "statusCode": 200,
+       "body": [
+        "v\u000bw"
+       ]
+      }
+     },
+     "name": "a-n",
+     "resource": {
+      "id": "obs",
+      "a": "n"
+     }
+    }
+   ],
+   "pips": [
+    "obs-subject-parityspellgen",
+    "obs-subject-parityspellhdr"
+   ]
+  },
+  {
+   "id": "sp58-data-general-more-text-long-or",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit",
+         "target": "true",
+         "condition": "subject.paritySpellGen IS NOT NULL OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "pins": {
+      "/api/v1/pip/spell-gen": {
+       "statusCode": 200,
+       "body": [
+        "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
+       ]
+      }
+     },
+     "name": "a-n",
+     "resource": {
+      "id": "obs",
+      "a": "n"
+     }
+    }
+   ],
+   "pips": [
+    "obs-subject-parityspellgen",
+    "obs-subject-parityspellhdr"
+   ]
+  },
+  {
+   "id": "sp58-data-general-more-num-beyond-2-53-or",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit",
+         "target": "true",
+         "condition": "subject.paritySpellGen IS NOT NULL OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "pins": {
+      "/api/v1/pip/spell-gen": {
+       "statusCode": 200,
+       "body": [
+        9007199254740993
+       ]
+      }
+     },
+     "name": "a-n",
+     "resource": {
+      "id": "obs",
+      "a": "n"
+     }
+    }
+   ],
+   "pips": [
+    "obs-subject-parityspellgen",
+    "obs-subject-parityspellhdr"
+   ]
+  },
+  {
+   "id": "sp58-data-general-more-num-beyond-double-or",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit",
+         "target": "true",
+         "condition": "subject.paritySpellGen IS NOT NULL OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "pins": {
+      "/api/v1/pip/spell-gen": {
+       "statusCode": 200,
+       "body": [
+        1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+       ]
+      }
+     },
+     "name": "a-n",
+     "resource": {
+      "id": "obs",
+      "a": "n"
+     }
+    }
+   ],
+   "pips": [
+    "obs-subject-parityspellgen",
+    "obs-subject-parityspellhdr"
+   ]
+  },
+  {
+   "id": "sp58-data-general-more-num-beyond-int64-or",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit",
+         "target": "true",
+         "condition": "subject.paritySpellGen IS NOT NULL OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "pins": {
+      "/api/v1/pip/spell-gen": {
+       "statusCode": 200,
+       "body": [
+        18446744073709551616
+       ]
+      }
+     },
+     "name": "a-n",
+     "resource": {
+      "id": "obs",
+      "a": "n"
+     }
+    }
+   ],
+   "pips": [
+    "obs-subject-parityspellgen",
+    "obs-subject-parityspellhdr"
+   ]
+  },
+  {
+   "id": "sp58-data-general-more-num-double-underflow-or",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit",
+         "target": "true",
+         "condition": "subject.paritySpellGen IS NOT NULL OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "pins": {
+      "/api/v1/pip/spell-gen": {
+       "statusCode": 200,
+       "body": [
+        0.0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001
+       ]
+      }
+     },
+     "name": "a-n",
+     "resource": {
+      "id": "obs",
+      "a": "n"
+     }
+    }
+   ],
+   "pips": [
+    "obs-subject-parityspellgen",
+    "obs-subject-parityspellhdr"
+   ]
+  },
+  {
+   "id": "sp58-data-general-more-num-int32-edge-or",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit",
+         "target": "true",
+         "condition": "subject.paritySpellGen IS NOT NULL OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "pins": {
+      "/api/v1/pip/spell-gen": {
+       "statusCode": 200,
+       "body": [
+        2147483648
+       ]
+      }
+     },
+     "name": "a-n",
+     "resource": {
+      "id": "obs",
+      "a": "n"
+     }
+    }
+   ],
+   "pips": [
+    "obs-subject-parityspellgen",
+    "obs-subject-parityspellhdr"
+   ]
+  },
+  {
+   "id": "sp58-data-general-more-list-one-nested-or",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit",
+         "target": "true",
+         "condition": "subject.paritySpellGen IS NOT NULL OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "pins": {
+      "/api/v1/pip/spell-gen": {
+       "statusCode": 200,
+       "body": [
+        [
+         "v"
+        ]
+       ]
+      }
+     },
+     "name": "a-n",
+     "resource": {
+      "id": "obs",
+      "a": "n"
+     }
+    }
+   ],
+   "pips": [
+    "obs-subject-parityspellgen",
+    "obs-subject-parityspellhdr"
+   ]
+  },
+  {
+   "id": "sp58-data-general-more-list-one-nested-deny",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "PERMIT_UNLESS_DENY",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "PERMIT_UNLESS_DENY",
+       "rules": [
+        {
+         "key": "deny",
+         "target": "true",
+         "condition": "subject.paritySpellGen IS NOT NULL",
+         "effect": "DENY"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "pins": {
+      "/api/v1/pip/spell-gen": {
+       "statusCode": 200,
+       "body": [
+        [
+         "v"
+        ]
+       ]
+      }
+     },
+     "name": "read",
+     "resource": {
+      "id": "obs",
+      "a": "n"
+     }
+    }
+   ],
+   "pips": [
+    "obs-subject-parityspellgen",
+    "obs-subject-parityspellhdr"
+   ]
+  },
+  {
+   "id": "sp58-data-general-more-object-or",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit",
+         "target": "true",
+         "condition": "subject.paritySpellGen IS NOT NULL OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "pins": {
+      "/api/v1/pip/spell-gen": {
+       "statusCode": 200,
+       "body": [
+        {
+         "k": "v"
+        }
+       ]
+      }
+     },
+     "name": "a-n",
+     "resource": {
+      "id": "obs",
+      "a": "n"
+     }
+    }
+   ],
+   "pips": [
+    "obs-subject-parityspellgen",
+    "obs-subject-parityspellhdr"
+   ]
+  },
+  {
+   "id": "sp58-data-general-more-object-deny",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "PERMIT_UNLESS_DENY",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "PERMIT_UNLESS_DENY",
+       "rules": [
+        {
+         "key": "deny",
+         "target": "true",
+         "condition": "subject.paritySpellGen IS NOT NULL",
+         "effect": "DENY"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "pins": {
+      "/api/v1/pip/spell-gen": {
+       "statusCode": 200,
+       "body": [
+        {
+         "k": "v"
+        }
+       ]
+      }
+     },
+     "name": "read",
+     "resource": {
+      "id": "obs",
+      "a": "n"
+     }
+    }
+   ],
+   "pips": [
+    "obs-subject-parityspellgen",
+    "obs-subject-parityspellhdr"
+   ]
+  },
+  {
+   "id": "sp58-data-ref-14-or",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit",
+         "target": "true",
+         "condition": "subject.paritySpellHdr IS NOT NULL OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "headers": {
+      "X-Parity-Spell": "v"
+     },
+     "name": "a-n",
+     "resource": {
+      "id": "obs",
+      "a": "n"
+     }
+    }
+   ],
+   "pips": [
+    "obs-subject-parityspellgen",
+    "obs-subject-parityspellhdr"
+   ]
+  },
+  {
+   "id": "sp58-data-header-more-text-backslash-or",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit",
+         "target": "true",
+         "condition": "subject.paritySpellHdr IS NOT NULL OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "headers": {
+      "X-Parity-Spell": "v\\w"
+     },
+     "name": "a-n",
+     "resource": {
+      "id": "obs",
+      "a": "n"
+     }
+    }
+   ],
+   "pips": [
+    "obs-subject-parityspellgen",
+    "obs-subject-parityspellhdr"
+   ]
+  },
+  {
+   "id": "sp58-data-header-more-text-bracket-or",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit",
+         "target": "true",
+         "condition": "subject.paritySpellHdr IS NOT NULL OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "headers": {
+      "X-Parity-Spell": "v[0]"
+     },
+     "name": "a-n",
+     "resource": {
+      "id": "obs",
+      "a": "n"
+     }
+    }
+   ],
+   "pips": [
+    "obs-subject-parityspellgen",
+    "obs-subject-parityspellhdr"
+   ]
+  },
+  {
+   "id": "sp58-data-header-more-text-case-mapping-or",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit",
+         "target": "true",
+         "condition": "subject.paritySpellHdr IS NOT NULL OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "headers": {
+      "X-Parity-Spell": "straße"
+     },
+     "name": "a-n",
+     "resource": {
+      "id": "obs",
+      "a": "n"
+     }
+    }
+   ],
+   "pips": [
+    "obs-subject-parityspellgen",
+    "obs-subject-parityspellhdr"
+   ]
+  },
+  {
+   "id": "sp58-data-header-more-text-dot-or",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit",
+         "target": "true",
+         "condition": "subject.paritySpellHdr IS NOT NULL OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "headers": {
+      "X-Parity-Spell": "v.w"
+     },
+     "name": "a-n",
+     "resource": {
+      "id": "obs",
+      "a": "n"
+     }
+    }
+   ],
+   "pips": [
+    "obs-subject-parityspellgen",
+    "obs-subject-parityspellhdr"
+   ]
+  },
+  {
+   "id": "sp58-data-header-more-text-double-quote-or",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit",
+         "target": "true",
+         "condition": "subject.paritySpellHdr IS NOT NULL OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "headers": {
+      "X-Parity-Spell": "v\"w"
+     },
+     "name": "a-n",
+     "resource": {
+      "id": "obs",
+      "a": "n"
+     }
+    }
+   ],
+   "pips": [
+    "obs-subject-parityspellgen",
+    "obs-subject-parityspellhdr"
+   ]
+  },
+  {
+   "id": "sp58-data-header-more-text-inner-lsep-or",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit",
+         "target": "true",
+         "condition": "subject.paritySpellHdr IS NOT NULL OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "headers": {
+      "X-Parity-Spell": "v w"
+     },
+     "name": "a-n",
+     "resource": {
+      "id": "obs",
+      "a": "n"
+     }
+    }
+   ],
+   "pips": [
+    "obs-subject-parityspellgen",
+    "obs-subject-parityspellhdr"
+   ]
+  },
+  {
+   "id": "sp58-data-header-more-text-jsonpath-char-or",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit",
+         "target": "true",
+         "condition": "subject.paritySpellHdr IS NOT NULL OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "headers": {
+      "X-Parity-Spell": "$.v"
+     },
+     "name": "a-n",
+     "resource": {
+      "id": "obs",
+      "a": "n"
+     }
+    }
+   ],
+   "pips": [
+    "obs-subject-parityspellgen",
+    "obs-subject-parityspellhdr"
+   ]
+  },
+  {
+   "id": "sp58-data-header-more-text-long-or",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit",
+         "target": "true",
+         "condition": "subject.paritySpellHdr IS NOT NULL OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "headers": {
+      "X-Parity-Spell": "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
+     },
+     "name": "a-n",
+     "resource": {
+      "id": "obs",
+      "a": "n"
+     }
+    }
+   ],
+   "pips": [
+    "obs-subject-parityspellgen",
+    "obs-subject-parityspellhdr"
+   ]
+  },
+  {
+   "id": "sp58-data-header-more-text-wildcard-char-or",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit",
+         "target": "true",
+         "condition": "subject.paritySpellHdr IS NOT NULL OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "headers": {
+      "X-Parity-Spell": "v*"
+     },
+     "name": "a-n",
+     "resource": {
+      "id": "obs",
+      "a": "n"
+     }
+    }
+   ],
+   "pips": [
+    "obs-subject-parityspellgen",
+    "obs-subject-parityspellhdr"
+   ]
+  },
+  {
+   "id": "sp58-data-control-last-or",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit",
+         "target": "true",
+         "condition": "resource.x == 'v' OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "name": "a-n",
+     "resource": {
+      "x": "v",
+      "id": "obs",
+      "a": "n"
+     }
+    }
+   ]
+  }
+ ],
+ "standVersion": true
+}

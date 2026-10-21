@@ -1,0 +1,178 @@
+{
+ "about": "d2r46-75222b7d72 of round 46 diff2-13 again, in a function of its own: stands answered ry otherwise. The request is classified by /api/v1/pip/r16-failing. A control first and last must answer true.",
+ "resourceTypePrefix": "PARITY_SUITE_R58_ORDER_",
+ "pins": {
+  "/api/v1/pip/r16-failing": {
+   "statusCode": 404,
+   "body": {
+    "error": "no route"
+   }
+  }
+ },
+ "pips": {
+  "failing": {
+   "cacheable": false,
+   "httpMethod": "POST",
+   "name": "subject.parityR16Failing",
+   "pipType": "GENERAL",
+   "requestAttributes": {
+    "case": "subject.parityR16Failing"
+   },
+   "url": "http://pip-mock:8090/api/v1/pip/r16-failing"
+  },
+  "scope": {
+   "cachePeriod": 1,
+   "cacheable": false,
+   "name": "subject.permissionScope",
+   "pipType": "PERMISSION_SCOPE",
+   "url": "http://pip-mock:8090"
+  }
+ },
+ "cases": [
+  {
+   "id": "r58ord-75222b7d72-control-first",
+   "about": "Control: a DENY rule over a resource attribute that does not hold. True unless the stand answers every check with 400.",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "PERMIT_UNLESS_DENY",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "PERMIT_UNLESS_DENY",
+       "rules": [
+        {
+         "key": "deny",
+         "target": "true",
+         "condition": "resource.c == 'zz'",
+         "effect": "DENY"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "name": "read",
+     "resource": {
+      "id": "r33",
+      "c": "n"
+     }
+    }
+   ]
+  },
+  {
+   "id": "r58ord-75222b7d72",
+   "pips": [
+    "failing",
+    "scope"
+   ],
+   "requests": [
+    {
+     "name": "ry",
+     "resource": {
+      "id": "r16"
+     },
+     "classifyBy": "/api/v1/pip/r16-failing"
+    }
+   ],
+   "sets": [
+    {
+     "key": "s0",
+     "policies": [],
+     "sets": [
+      {
+       "key": "s0-s0",
+       "policies": [],
+       "sets": [
+        {
+         "algorithm": "PERMIT_OVERRIDES",
+         "key": "s0-s0-s0",
+         "policies": [
+          {
+           "algorithm": "DENY_OVERRIDES",
+           "key": "s0-s0-s0-p0",
+           "rules": [
+            {
+             "condition": "true",
+             "effect": "ALLOW",
+             "key": "s0-s0-s0-p0-r0",
+             "target": "true"
+            },
+            {
+             "condition": "true",
+             "effect": "ALLOW",
+             "key": "s0-s0-s0-p0-r1",
+             "target": "subject.permissionScope.region CONTAINS 'r1'"
+            }
+           ],
+           "target": "true"
+          },
+          {
+           "algorithm": "PERMIT_UNLESS_DENY",
+           "key": "s0-s0-s0-p1",
+           "rules": [
+            {
+             "condition": "subject.parityR16Failing == 'v'",
+             "effect": "ALLOW",
+             "key": "s0-s0-s0-p1-r1",
+             "target": "true"
+            }
+           ],
+           "target": "true"
+          }
+         ],
+         "sets": [],
+         "target": "true"
+        }
+       ],
+       "target": "true"
+      }
+     ],
+     "target": "resourceType == '{{resourceType}}'"
+    }
+   ],
+   "resourceType": "PARITY_SUITE_R16_D2SF1_72",
+   "about": "d2r46-75222b7d72 of round 46 diff2-13, alone; its sets with target true name its resource type instead. Stands answered ry otherwise; here classified by /api/v1/pip/r16-failing."
+  },
+  {
+   "id": "r58ord-75222b7d72-control-last",
+   "about": "Control: a DENY rule over a resource attribute that does not hold. True unless the stand answers every check with 400.",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "PERMIT_UNLESS_DENY",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "PERMIT_UNLESS_DENY",
+       "rules": [
+        {
+         "key": "deny",
+         "target": "true",
+         "condition": "resource.c == 'zz'",
+         "effect": "DENY"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "name": "read",
+     "resource": {
+      "id": "r33",
+      "c": "n"
+     }
+    }
+   ]
+  }
+ ],
+ "standVersion": true
+}

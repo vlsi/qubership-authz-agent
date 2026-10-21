@@ -1,0 +1,165 @@
+{
+ "about": "The closing control of round 46 diff2-4 again, after the uploads of every case before it in that file. Sets with target true from those cases reach the control's resource type, and stands answered the control otherwise: which set a stand takes first is what changed. The control is classified by a marker read first in rule s0-s0-p1-r0 of r58ord-f060165599-ctl4, the failing child of a set with target true. A control first must answer true.",
+ "resourceTypePrefix": "PARITY_SUITE_R58_ORDER_",
+ "pins": {
+  "/api/v1/pip/r58order-seen": {
+   "statusCode": 200,
+   "body": [
+    "m"
+   ]
+  }
+ },
+ "pips": {
+  "scope": {
+   "cachePeriod": 1,
+   "cacheable": false,
+   "name": "subject.permissionScope",
+   "pipType": "PERMISSION_SCOPE",
+   "url": "http://pip-mock:8090"
+  },
+  "r58-seen": {
+   "name": "subject.parityR58OrderSeen",
+   "pipType": "GENERAL",
+   "httpMethod": "POST",
+   "cacheable": false,
+   "url": "http://pip-mock:8090/api/v1/pip/r58order-seen",
+   "requestAttributes": {
+    "case": "r58order-seen"
+   }
+  }
+ },
+ "cases": [
+  {
+   "id": "r58ord-diff2-4-control-first",
+   "about": "Control: a DENY rule over a resource attribute that does not hold. True unless the stand answers every check with 400.",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "PERMIT_UNLESS_DENY",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "PERMIT_UNLESS_DENY",
+       "rules": [
+        {
+         "key": "deny",
+         "target": "true",
+         "condition": "resource.c == 'zz'",
+         "effect": "DENY"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "name": "read",
+     "resource": {
+      "id": "r33",
+      "c": "n"
+     }
+    }
+   ]
+  },
+  {
+   "id": "r58ord-f060165599-ctl4",
+   "pips": [
+    "r58-seen",
+    "scope"
+   ],
+   "requests": [],
+   "sets": [
+    {
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "key": "s0",
+     "policies": [
+      {
+       "algorithm": "PERMIT_OVERRIDES",
+       "key": "s0-p0",
+       "rules": [
+        {
+         "condition": "true",
+         "effect": "ALLOW",
+         "key": "s0-p0-r0",
+         "target": "true"
+        }
+       ],
+       "target": "true"
+      }
+     ],
+     "sets": [
+      {
+       "algorithm": "PERMIT_UNLESS_DENY",
+       "key": "s0-s0",
+       "policies": [
+        {
+         "algorithm": "DENY_OVERRIDES",
+         "key": "s0-s0-p1",
+         "rules": [
+          {
+           "condition": "subject.parityR58OrderSeen CONTAINS 'm' AND subject.permissionScope.region CONTAINS 'r1'",
+           "effect": "ALLOW",
+           "key": "s0-s0-p1-r0",
+           "target": "true"
+          }
+         ],
+         "target": "true"
+        }
+       ],
+       "sets": [],
+       "target": "true"
+      }
+     ],
+     "target": "true"
+    }
+   ],
+   "resourceType": "PARITY_SUITE_R16_D2SF0_77"
+  },
+  {
+   "id": "r58ord-f3-control-last-or",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "DENY_UNLESS_PERMIT",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "DENY_UNLESS_PERMIT",
+       "rules": [
+        {
+         "key": "permit",
+         "target": "true",
+         "condition": "resource.x == 'v' OR resource.a == 'y'",
+         "effect": "ALLOW"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "name": "a-n",
+     "resource": {
+      "x": "v",
+      "id": "obs",
+      "a": "n"
+     },
+     "classifyBy": "/api/v1/pip/r58order-seen"
+    }
+   ],
+   "resourceType": "PARITY_SUITE_R58_ORDER_R58ORD_F3_CONTROL_LAST_OR",
+   "pips": [
+    "r58-seen",
+    "scope"
+   ],
+   "about": "The closing control of round 46 diff2-4, after the cases before it in that file (uploads only): stands answered it otherwise. Classified by a marker read first in rule s0-s0-p1-r0 of r58ord-f060165599-ctl4, the failing child of a set with target true."
+  }
+ ],
+ "standVersion": true
+}

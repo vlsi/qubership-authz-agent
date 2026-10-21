@@ -1,0 +1,3774 @@
+{
+ "about": "The four-state matrix of the body of POST /access/v1/permissions/assign: role, level, mapping, and a mapping element's permission and pipNames, each absent, null, \"\", blank, with whitespace at its ends, in another JSON type or as a list of one, in a tenant of its own per case. Each case declares its domain, writes a simplified policy that permits READ when subject.permissions holds the assigned permission, decides, assigns, decides again and reads the role's permissions back at level custom. A reference case with every field as documented comes first and last.",
+ "resourceTypePrefix": "PARITY_SUITE_R58_FIELDS_ASSIGN_",
+ "cases": [
+  {
+   "id": "sp58-assign-reference-first",
+   "about": "Reference: the assignment with every field as the documentation shows it (first).",
+   "resourceType": "PARITY_SUITE_SP58_ASSIGN_REFERENCE_FIRST",
+   "tenant": "parity-sp58-assign-reference-first",
+   "steps": [
+    {
+     "name": "declare-the-domain",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_REFERENCE_FIRST"
+     },
+     "body": [],
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "write-the-policy",
+     "op": "write-domain-policies",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_REFERENCE_FIRST"
+     },
+     "body": [
+      {
+       "component": "PARITY",
+       "reason": "sp58-assign-reference-first",
+       "resourceType": "PARITY_SUITE_SP58_ASSIGN_REFERENCE_FIRST",
+       "operation": "READ",
+       "roles": [
+        "ROLE_PARITY_READER"
+       ],
+       "applicableForFrontend": false,
+       "id": "ed823f54-7749-a893-b99f-8efb3a617a07",
+       "condition": "subject.permissions CONTAINS 'parity_r58_assigned'"
+      }
+     ],
+     "observe": [
+      "status",
+      "decide:before"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_REFERENCE_FIRST",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "before"
+      }
+     ]
+    },
+    {
+     "name": "assign",
+     "op": "assign-permissions",
+     "args": {},
+     "body": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom",
+      "mapping": [
+       {
+        "permission": "parity_r58_assigned",
+        "pipNames": [
+         "subject.permissions"
+        ]
+       }
+      ]
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:after"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_REFERENCE_FIRST",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "after"
+      }
+     ]
+    },
+    {
+     "name": "read",
+     "op": "read-permissions",
+     "args": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom"
+     },
+     "observe": [
+      "read:read-permissions"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sp58-assign-role-null",
+   "about": "The assignment with permissions-assign.body.role null: null.",
+   "resourceType": "PARITY_SUITE_SP58_ASSIGN_ROLE_NULL",
+   "tenant": "parity-sp58-assign-role-null",
+   "steps": [
+    {
+     "name": "declare-the-domain",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_ROLE_NULL"
+     },
+     "body": [],
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "write-the-policy",
+     "op": "write-domain-policies",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_ROLE_NULL"
+     },
+     "body": [
+      {
+       "component": "PARITY",
+       "reason": "sp58-assign-role-null",
+       "resourceType": "PARITY_SUITE_SP58_ASSIGN_ROLE_NULL",
+       "operation": "READ",
+       "roles": [
+        "ROLE_PARITY_READER"
+       ],
+       "applicableForFrontend": false,
+       "id": "172f2753-3528-28b4-a64b-e1173364750c",
+       "condition": "subject.permissions CONTAINS 'parity_r58_assigned'"
+      }
+     ],
+     "observe": [
+      "status",
+      "decide:before"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_ROLE_NULL",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "before"
+      }
+     ]
+    },
+    {
+     "name": "assign",
+     "op": "assign-permissions",
+     "args": {},
+     "body": {
+      "role": null,
+      "level": "custom",
+      "mapping": [
+       {
+        "permission": "parity_r58_assigned",
+        "pipNames": [
+         "subject.permissions"
+        ]
+       }
+      ]
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:after"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_ROLE_NULL",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "after"
+      }
+     ]
+    },
+    {
+     "name": "read",
+     "op": "read-permissions",
+     "args": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom"
+     },
+     "observe": [
+      "read:read-permissions"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sp58-assign-role-empty-string",
+   "about": "The assignment with permissions-assign.body.role empty-string: \"\".",
+   "resourceType": "PARITY_SUITE_SP58_ASSIGN_ROLE_EMPTY_STRING",
+   "tenant": "parity-sp58-assign-role-empty-string",
+   "steps": [
+    {
+     "name": "declare-the-domain",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_ROLE_EMPTY_STRING"
+     },
+     "body": [],
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "write-the-policy",
+     "op": "write-domain-policies",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_ROLE_EMPTY_STRING"
+     },
+     "body": [
+      {
+       "component": "PARITY",
+       "reason": "sp58-assign-role-empty-string",
+       "resourceType": "PARITY_SUITE_SP58_ASSIGN_ROLE_EMPTY_STRING",
+       "operation": "READ",
+       "roles": [
+        "ROLE_PARITY_READER"
+       ],
+       "applicableForFrontend": false,
+       "id": "e7de71ed-36dc-23ae-8ea5-dc8b23c51b93",
+       "condition": "subject.permissions CONTAINS 'parity_r58_assigned'"
+      }
+     ],
+     "observe": [
+      "status",
+      "decide:before"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_ROLE_EMPTY_STRING",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "before"
+      }
+     ]
+    },
+    {
+     "name": "assign",
+     "op": "assign-permissions",
+     "args": {},
+     "body": {
+      "role": "",
+      "level": "custom",
+      "mapping": [
+       {
+        "permission": "parity_r58_assigned",
+        "pipNames": [
+         "subject.permissions"
+        ]
+       }
+      ]
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:after"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_ROLE_EMPTY_STRING",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "after"
+      }
+     ]
+    },
+    {
+     "name": "read",
+     "op": "read-permissions",
+     "args": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom"
+     },
+     "observe": [
+      "read:read-permissions"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sp58-assign-role-blank-space",
+   "about": "The assignment with permissions-assign.body.role blank-space: \" \".",
+   "resourceType": "PARITY_SUITE_SP58_ASSIGN_ROLE_BLANK_SPACE",
+   "tenant": "parity-sp58-assign-role-blank-space",
+   "steps": [
+    {
+     "name": "declare-the-domain",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_ROLE_BLANK_SPACE"
+     },
+     "body": [],
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "write-the-policy",
+     "op": "write-domain-policies",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_ROLE_BLANK_SPACE"
+     },
+     "body": [
+      {
+       "component": "PARITY",
+       "reason": "sp58-assign-role-blank-space",
+       "resourceType": "PARITY_SUITE_SP58_ASSIGN_ROLE_BLANK_SPACE",
+       "operation": "READ",
+       "roles": [
+        "ROLE_PARITY_READER"
+       ],
+       "applicableForFrontend": false,
+       "id": "df625bec-1de1-a48f-6957-c366b14aa47c",
+       "condition": "subject.permissions CONTAINS 'parity_r58_assigned'"
+      }
+     ],
+     "observe": [
+      "status",
+      "decide:before"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_ROLE_BLANK_SPACE",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "before"
+      }
+     ]
+    },
+    {
+     "name": "assign",
+     "op": "assign-permissions",
+     "args": {},
+     "body": {
+      "role": " ",
+      "level": "custom",
+      "mapping": [
+       {
+        "permission": "parity_r58_assigned",
+        "pipNames": [
+         "subject.permissions"
+        ]
+       }
+      ]
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:after"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_ROLE_BLANK_SPACE",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "after"
+      }
+     ]
+    },
+    {
+     "name": "read",
+     "op": "read-permissions",
+     "args": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom"
+     },
+     "observe": [
+      "read:read-permissions"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sp58-assign-role-edge-space",
+   "about": "The assignment with permissions-assign.body.role edge-space: \" ROLE_PARITY_READER \".",
+   "resourceType": "PARITY_SUITE_SP58_ASSIGN_ROLE_EDGE_SPACE",
+   "tenant": "parity-sp58-assign-role-edge-space",
+   "steps": [
+    {
+     "name": "declare-the-domain",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_ROLE_EDGE_SPACE"
+     },
+     "body": [],
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "write-the-policy",
+     "op": "write-domain-policies",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_ROLE_EDGE_SPACE"
+     },
+     "body": [
+      {
+       "component": "PARITY",
+       "reason": "sp58-assign-role-edge-space",
+       "resourceType": "PARITY_SUITE_SP58_ASSIGN_ROLE_EDGE_SPACE",
+       "operation": "READ",
+       "roles": [
+        "ROLE_PARITY_READER"
+       ],
+       "applicableForFrontend": false,
+       "id": "43be7282-b281-7058-d6c4-233df53acfb0",
+       "condition": "subject.permissions CONTAINS 'parity_r58_assigned'"
+      }
+     ],
+     "observe": [
+      "status",
+      "decide:before"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_ROLE_EDGE_SPACE",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "before"
+      }
+     ]
+    },
+    {
+     "name": "assign",
+     "op": "assign-permissions",
+     "args": {},
+     "body": {
+      "role": " ROLE_PARITY_READER ",
+      "level": "custom",
+      "mapping": [
+       {
+        "permission": "parity_r58_assigned",
+        "pipNames": [
+         "subject.permissions"
+        ]
+       }
+      ]
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:after"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_ROLE_EDGE_SPACE",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "after"
+      }
+     ]
+    },
+    {
+     "name": "read",
+     "op": "read-permissions",
+     "args": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom"
+     },
+     "observe": [
+      "read:read-permissions"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sp58-assign-role-edge-tab",
+   "about": "The assignment with permissions-assign.body.role edge-tab: \"\\tROLE_PARITY_READER\\t\".",
+   "resourceType": "PARITY_SUITE_SP58_ASSIGN_ROLE_EDGE_TAB",
+   "tenant": "parity-sp58-assign-role-edge-tab",
+   "steps": [
+    {
+     "name": "declare-the-domain",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_ROLE_EDGE_TAB"
+     },
+     "body": [],
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "write-the-policy",
+     "op": "write-domain-policies",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_ROLE_EDGE_TAB"
+     },
+     "body": [
+      {
+       "component": "PARITY",
+       "reason": "sp58-assign-role-edge-tab",
+       "resourceType": "PARITY_SUITE_SP58_ASSIGN_ROLE_EDGE_TAB",
+       "operation": "READ",
+       "roles": [
+        "ROLE_PARITY_READER"
+       ],
+       "applicableForFrontend": false,
+       "id": "79060929-82cf-186e-797a-d07a4f58939c",
+       "condition": "subject.permissions CONTAINS 'parity_r58_assigned'"
+      }
+     ],
+     "observe": [
+      "status",
+      "decide:before"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_ROLE_EDGE_TAB",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "before"
+      }
+     ]
+    },
+    {
+     "name": "assign",
+     "op": "assign-permissions",
+     "args": {},
+     "body": {
+      "role": "\tROLE_PARITY_READER\t",
+      "level": "custom",
+      "mapping": [
+       {
+        "permission": "parity_r58_assigned",
+        "pipNames": [
+         "subject.permissions"
+        ]
+       }
+      ]
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:after"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_ROLE_EDGE_TAB",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "after"
+      }
+     ]
+    },
+    {
+     "name": "read",
+     "op": "read-permissions",
+     "args": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom"
+     },
+     "observe": [
+      "read:read-permissions"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sp58-assign-role-edge-lf",
+   "about": "The assignment with permissions-assign.body.role edge-lf: \"\\nROLE_PARITY_READER\\n\".",
+   "resourceType": "PARITY_SUITE_SP58_ASSIGN_ROLE_EDGE_LF",
+   "tenant": "parity-sp58-assign-role-edge-lf",
+   "steps": [
+    {
+     "name": "declare-the-domain",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_ROLE_EDGE_LF"
+     },
+     "body": [],
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "write-the-policy",
+     "op": "write-domain-policies",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_ROLE_EDGE_LF"
+     },
+     "body": [
+      {
+       "component": "PARITY",
+       "reason": "sp58-assign-role-edge-lf",
+       "resourceType": "PARITY_SUITE_SP58_ASSIGN_ROLE_EDGE_LF",
+       "operation": "READ",
+       "roles": [
+        "ROLE_PARITY_READER"
+       ],
+       "applicableForFrontend": false,
+       "id": "d82efa6a-82ac-7ba7-b737-ead05dc2138c",
+       "condition": "subject.permissions CONTAINS 'parity_r58_assigned'"
+      }
+     ],
+     "observe": [
+      "status",
+      "decide:before"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_ROLE_EDGE_LF",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "before"
+      }
+     ]
+    },
+    {
+     "name": "assign",
+     "op": "assign-permissions",
+     "args": {},
+     "body": {
+      "role": "\nROLE_PARITY_READER\n",
+      "level": "custom",
+      "mapping": [
+       {
+        "permission": "parity_r58_assigned",
+        "pipNames": [
+         "subject.permissions"
+        ]
+       }
+      ]
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:after"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_ROLE_EDGE_LF",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "after"
+      }
+     ]
+    },
+    {
+     "name": "read",
+     "op": "read-permissions",
+     "args": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom"
+     },
+     "observe": [
+      "read:read-permissions"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sp58-assign-role-edge-nbsp",
+   "about": "The assignment with permissions-assign.body.role edge-nbsp: \" ROLE_PARITY_READER \".",
+   "resourceType": "PARITY_SUITE_SP58_ASSIGN_ROLE_EDGE_NBSP",
+   "tenant": "parity-sp58-assign-role-edge-nbsp",
+   "steps": [
+    {
+     "name": "declare-the-domain",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_ROLE_EDGE_NBSP"
+     },
+     "body": [],
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "write-the-policy",
+     "op": "write-domain-policies",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_ROLE_EDGE_NBSP"
+     },
+     "body": [
+      {
+       "component": "PARITY",
+       "reason": "sp58-assign-role-edge-nbsp",
+       "resourceType": "PARITY_SUITE_SP58_ASSIGN_ROLE_EDGE_NBSP",
+       "operation": "READ",
+       "roles": [
+        "ROLE_PARITY_READER"
+       ],
+       "applicableForFrontend": false,
+       "id": "19870a6c-06e2-f5fd-7f3c-65b48f9fbc0e",
+       "condition": "subject.permissions CONTAINS 'parity_r58_assigned'"
+      }
+     ],
+     "observe": [
+      "status",
+      "decide:before"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_ROLE_EDGE_NBSP",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "before"
+      }
+     ]
+    },
+    {
+     "name": "assign",
+     "op": "assign-permissions",
+     "args": {},
+     "body": {
+      "role": " ROLE_PARITY_READER ",
+      "level": "custom",
+      "mapping": [
+       {
+        "permission": "parity_r58_assigned",
+        "pipNames": [
+         "subject.permissions"
+        ]
+       }
+      ]
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:after"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_ROLE_EDGE_NBSP",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "after"
+      }
+     ]
+    },
+    {
+     "name": "read",
+     "op": "read-permissions",
+     "args": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom"
+     },
+     "observe": [
+      "read:read-permissions"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sp58-assign-role-other-type",
+   "about": "The assignment with permissions-assign.body.role other-type: \"5\".",
+   "resourceType": "PARITY_SUITE_SP58_ASSIGN_ROLE_OTHER_TYPE",
+   "tenant": "parity-sp58-assign-role-other-type",
+   "steps": [
+    {
+     "name": "declare-the-domain",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_ROLE_OTHER_TYPE"
+     },
+     "body": [],
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "write-the-policy",
+     "op": "write-domain-policies",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_ROLE_OTHER_TYPE"
+     },
+     "body": [
+      {
+       "component": "PARITY",
+       "reason": "sp58-assign-role-other-type",
+       "resourceType": "PARITY_SUITE_SP58_ASSIGN_ROLE_OTHER_TYPE",
+       "operation": "READ",
+       "roles": [
+        "ROLE_PARITY_READER"
+       ],
+       "applicableForFrontend": false,
+       "id": "1f6cb1ea-2c8c-a5b2-38c2-cf74292a682a",
+       "condition": "subject.permissions CONTAINS 'parity_r58_assigned'"
+      }
+     ],
+     "observe": [
+      "status",
+      "decide:before"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_ROLE_OTHER_TYPE",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "before"
+      }
+     ]
+    },
+    {
+     "name": "assign",
+     "op": "assign-permissions",
+     "args": {},
+     "body": {
+      "role": "5",
+      "level": "custom",
+      "mapping": [
+       {
+        "permission": "parity_r58_assigned",
+        "pipNames": [
+         "subject.permissions"
+        ]
+       }
+      ]
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:after"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_ROLE_OTHER_TYPE",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "after"
+      }
+     ]
+    },
+    {
+     "name": "read",
+     "op": "read-permissions",
+     "args": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom"
+     },
+     "observe": [
+      "read:read-permissions"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sp58-assign-role-one-element-list",
+   "about": "The assignment with permissions-assign.body.role one-element-list: [\"ROLE_PARITY_READER\"].",
+   "resourceType": "PARITY_SUITE_SP58_ASSIGN_ROLE_ONE_ELEMENT_LIST",
+   "tenant": "parity-sp58-assign-role-one-element-list",
+   "steps": [
+    {
+     "name": "declare-the-domain",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_ROLE_ONE_ELEMENT_LIST"
+     },
+     "body": [],
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "write-the-policy",
+     "op": "write-domain-policies",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_ROLE_ONE_ELEMENT_LIST"
+     },
+     "body": [
+      {
+       "component": "PARITY",
+       "reason": "sp58-assign-role-one-element-list",
+       "resourceType": "PARITY_SUITE_SP58_ASSIGN_ROLE_ONE_ELEMENT_LIST",
+       "operation": "READ",
+       "roles": [
+        "ROLE_PARITY_READER"
+       ],
+       "applicableForFrontend": false,
+       "id": "7be9aaa3-3be1-1788-6129-ff1ec2ac67ce",
+       "condition": "subject.permissions CONTAINS 'parity_r58_assigned'"
+      }
+     ],
+     "observe": [
+      "status",
+      "decide:before"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_ROLE_ONE_ELEMENT_LIST",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "before"
+      }
+     ]
+    },
+    {
+     "name": "assign",
+     "op": "assign-permissions",
+     "args": {},
+     "body": {
+      "role": [
+       "ROLE_PARITY_READER"
+      ],
+      "level": "custom",
+      "mapping": [
+       {
+        "permission": "parity_r58_assigned",
+        "pipNames": [
+         "subject.permissions"
+        ]
+       }
+      ]
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:after"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_ROLE_ONE_ELEMENT_LIST",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "after"
+      }
+     ]
+    },
+    {
+     "name": "read",
+     "op": "read-permissions",
+     "args": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom"
+     },
+     "observe": [
+      "read:read-permissions"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sp58-assign-level-null",
+   "about": "The assignment with permissions-assign.body.level null: null.",
+   "resourceType": "PARITY_SUITE_SP58_ASSIGN_LEVEL_NULL",
+   "tenant": "parity-sp58-assign-level-null",
+   "steps": [
+    {
+     "name": "declare-the-domain",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_LEVEL_NULL"
+     },
+     "body": [],
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "write-the-policy",
+     "op": "write-domain-policies",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_LEVEL_NULL"
+     },
+     "body": [
+      {
+       "component": "PARITY",
+       "reason": "sp58-assign-level-null",
+       "resourceType": "PARITY_SUITE_SP58_ASSIGN_LEVEL_NULL",
+       "operation": "READ",
+       "roles": [
+        "ROLE_PARITY_READER"
+       ],
+       "applicableForFrontend": false,
+       "id": "b15392c3-48e4-6e51-636e-3c1bf029fe30",
+       "condition": "subject.permissions CONTAINS 'parity_r58_assigned'"
+      }
+     ],
+     "observe": [
+      "status",
+      "decide:before"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_LEVEL_NULL",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "before"
+      }
+     ]
+    },
+    {
+     "name": "assign",
+     "op": "assign-permissions",
+     "args": {},
+     "body": {
+      "role": "ROLE_PARITY_READER",
+      "level": null,
+      "mapping": [
+       {
+        "permission": "parity_r58_assigned",
+        "pipNames": [
+         "subject.permissions"
+        ]
+       }
+      ]
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:after"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_LEVEL_NULL",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "after"
+      }
+     ]
+    },
+    {
+     "name": "read",
+     "op": "read-permissions",
+     "args": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom"
+     },
+     "observe": [
+      "read:read-permissions"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sp58-assign-level-empty-string",
+   "about": "The assignment with permissions-assign.body.level empty-string: \"\".",
+   "resourceType": "PARITY_SUITE_SP58_ASSIGN_LEVEL_EMPTY_STRING",
+   "tenant": "parity-sp58-assign-level-empty-string",
+   "steps": [
+    {
+     "name": "declare-the-domain",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_LEVEL_EMPTY_STRING"
+     },
+     "body": [],
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "write-the-policy",
+     "op": "write-domain-policies",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_LEVEL_EMPTY_STRING"
+     },
+     "body": [
+      {
+       "component": "PARITY",
+       "reason": "sp58-assign-level-empty-string",
+       "resourceType": "PARITY_SUITE_SP58_ASSIGN_LEVEL_EMPTY_STRING",
+       "operation": "READ",
+       "roles": [
+        "ROLE_PARITY_READER"
+       ],
+       "applicableForFrontend": false,
+       "id": "aa24d584-bcf5-0691-0859-d51181c75c90",
+       "condition": "subject.permissions CONTAINS 'parity_r58_assigned'"
+      }
+     ],
+     "observe": [
+      "status",
+      "decide:before"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_LEVEL_EMPTY_STRING",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "before"
+      }
+     ]
+    },
+    {
+     "name": "assign",
+     "op": "assign-permissions",
+     "args": {},
+     "body": {
+      "role": "ROLE_PARITY_READER",
+      "level": "",
+      "mapping": [
+       {
+        "permission": "parity_r58_assigned",
+        "pipNames": [
+         "subject.permissions"
+        ]
+       }
+      ]
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:after"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_LEVEL_EMPTY_STRING",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "after"
+      }
+     ]
+    },
+    {
+     "name": "read",
+     "op": "read-permissions",
+     "args": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom"
+     },
+     "observe": [
+      "read:read-permissions"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sp58-assign-level-blank-space",
+   "about": "The assignment with permissions-assign.body.level blank-space: \" \".",
+   "resourceType": "PARITY_SUITE_SP58_ASSIGN_LEVEL_BLANK_SPACE",
+   "tenant": "parity-sp58-assign-level-blank-space",
+   "steps": [
+    {
+     "name": "declare-the-domain",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_LEVEL_BLANK_SPACE"
+     },
+     "body": [],
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "write-the-policy",
+     "op": "write-domain-policies",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_LEVEL_BLANK_SPACE"
+     },
+     "body": [
+      {
+       "component": "PARITY",
+       "reason": "sp58-assign-level-blank-space",
+       "resourceType": "PARITY_SUITE_SP58_ASSIGN_LEVEL_BLANK_SPACE",
+       "operation": "READ",
+       "roles": [
+        "ROLE_PARITY_READER"
+       ],
+       "applicableForFrontend": false,
+       "id": "61bbaef4-88f7-d505-5478-3fcb9e514487",
+       "condition": "subject.permissions CONTAINS 'parity_r58_assigned'"
+      }
+     ],
+     "observe": [
+      "status",
+      "decide:before"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_LEVEL_BLANK_SPACE",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "before"
+      }
+     ]
+    },
+    {
+     "name": "assign",
+     "op": "assign-permissions",
+     "args": {},
+     "body": {
+      "role": "ROLE_PARITY_READER",
+      "level": " ",
+      "mapping": [
+       {
+        "permission": "parity_r58_assigned",
+        "pipNames": [
+         "subject.permissions"
+        ]
+       }
+      ]
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:after"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_LEVEL_BLANK_SPACE",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "after"
+      }
+     ]
+    },
+    {
+     "name": "read",
+     "op": "read-permissions",
+     "args": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom"
+     },
+     "observe": [
+      "read:read-permissions"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sp58-assign-level-edge-space",
+   "about": "The assignment with permissions-assign.body.level edge-space: \" custom \".",
+   "resourceType": "PARITY_SUITE_SP58_ASSIGN_LEVEL_EDGE_SPACE",
+   "tenant": "parity-sp58-assign-level-edge-space",
+   "steps": [
+    {
+     "name": "declare-the-domain",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_LEVEL_EDGE_SPACE"
+     },
+     "body": [],
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "write-the-policy",
+     "op": "write-domain-policies",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_LEVEL_EDGE_SPACE"
+     },
+     "body": [
+      {
+       "component": "PARITY",
+       "reason": "sp58-assign-level-edge-space",
+       "resourceType": "PARITY_SUITE_SP58_ASSIGN_LEVEL_EDGE_SPACE",
+       "operation": "READ",
+       "roles": [
+        "ROLE_PARITY_READER"
+       ],
+       "applicableForFrontend": false,
+       "id": "59ca514d-6cab-3edb-3475-ff0d96c20415",
+       "condition": "subject.permissions CONTAINS 'parity_r58_assigned'"
+      }
+     ],
+     "observe": [
+      "status",
+      "decide:before"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_LEVEL_EDGE_SPACE",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "before"
+      }
+     ]
+    },
+    {
+     "name": "assign",
+     "op": "assign-permissions",
+     "args": {},
+     "body": {
+      "role": "ROLE_PARITY_READER",
+      "level": " custom ",
+      "mapping": [
+       {
+        "permission": "parity_r58_assigned",
+        "pipNames": [
+         "subject.permissions"
+        ]
+       }
+      ]
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:after"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_LEVEL_EDGE_SPACE",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "after"
+      }
+     ]
+    },
+    {
+     "name": "read",
+     "op": "read-permissions",
+     "args": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom"
+     },
+     "observe": [
+      "read:read-permissions"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sp58-assign-level-edge-tab",
+   "about": "The assignment with permissions-assign.body.level edge-tab: \"\\tcustom\\t\".",
+   "resourceType": "PARITY_SUITE_SP58_ASSIGN_LEVEL_EDGE_TAB",
+   "tenant": "parity-sp58-assign-level-edge-tab",
+   "steps": [
+    {
+     "name": "declare-the-domain",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_LEVEL_EDGE_TAB"
+     },
+     "body": [],
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "write-the-policy",
+     "op": "write-domain-policies",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_LEVEL_EDGE_TAB"
+     },
+     "body": [
+      {
+       "component": "PARITY",
+       "reason": "sp58-assign-level-edge-tab",
+       "resourceType": "PARITY_SUITE_SP58_ASSIGN_LEVEL_EDGE_TAB",
+       "operation": "READ",
+       "roles": [
+        "ROLE_PARITY_READER"
+       ],
+       "applicableForFrontend": false,
+       "id": "7012c0da-aef1-d5c2-912d-34d5b65dc240",
+       "condition": "subject.permissions CONTAINS 'parity_r58_assigned'"
+      }
+     ],
+     "observe": [
+      "status",
+      "decide:before"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_LEVEL_EDGE_TAB",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "before"
+      }
+     ]
+    },
+    {
+     "name": "assign",
+     "op": "assign-permissions",
+     "args": {},
+     "body": {
+      "role": "ROLE_PARITY_READER",
+      "level": "\tcustom\t",
+      "mapping": [
+       {
+        "permission": "parity_r58_assigned",
+        "pipNames": [
+         "subject.permissions"
+        ]
+       }
+      ]
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:after"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_LEVEL_EDGE_TAB",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "after"
+      }
+     ]
+    },
+    {
+     "name": "read",
+     "op": "read-permissions",
+     "args": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom"
+     },
+     "observe": [
+      "read:read-permissions"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sp58-assign-level-edge-lf",
+   "about": "The assignment with permissions-assign.body.level edge-lf: \"\\ncustom\\n\".",
+   "resourceType": "PARITY_SUITE_SP58_ASSIGN_LEVEL_EDGE_LF",
+   "tenant": "parity-sp58-assign-level-edge-lf",
+   "steps": [
+    {
+     "name": "declare-the-domain",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_LEVEL_EDGE_LF"
+     },
+     "body": [],
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "write-the-policy",
+     "op": "write-domain-policies",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_LEVEL_EDGE_LF"
+     },
+     "body": [
+      {
+       "component": "PARITY",
+       "reason": "sp58-assign-level-edge-lf",
+       "resourceType": "PARITY_SUITE_SP58_ASSIGN_LEVEL_EDGE_LF",
+       "operation": "READ",
+       "roles": [
+        "ROLE_PARITY_READER"
+       ],
+       "applicableForFrontend": false,
+       "id": "21644d5e-6f16-f27d-2886-4efb89b3b7e6",
+       "condition": "subject.permissions CONTAINS 'parity_r58_assigned'"
+      }
+     ],
+     "observe": [
+      "status",
+      "decide:before"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_LEVEL_EDGE_LF",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "before"
+      }
+     ]
+    },
+    {
+     "name": "assign",
+     "op": "assign-permissions",
+     "args": {},
+     "body": {
+      "role": "ROLE_PARITY_READER",
+      "level": "\ncustom\n",
+      "mapping": [
+       {
+        "permission": "parity_r58_assigned",
+        "pipNames": [
+         "subject.permissions"
+        ]
+       }
+      ]
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:after"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_LEVEL_EDGE_LF",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "after"
+      }
+     ]
+    },
+    {
+     "name": "read",
+     "op": "read-permissions",
+     "args": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom"
+     },
+     "observe": [
+      "read:read-permissions"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sp58-assign-level-edge-nbsp",
+   "about": "The assignment with permissions-assign.body.level edge-nbsp: \" custom \".",
+   "resourceType": "PARITY_SUITE_SP58_ASSIGN_LEVEL_EDGE_NBSP",
+   "tenant": "parity-sp58-assign-level-edge-nbsp",
+   "steps": [
+    {
+     "name": "declare-the-domain",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_LEVEL_EDGE_NBSP"
+     },
+     "body": [],
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "write-the-policy",
+     "op": "write-domain-policies",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_LEVEL_EDGE_NBSP"
+     },
+     "body": [
+      {
+       "component": "PARITY",
+       "reason": "sp58-assign-level-edge-nbsp",
+       "resourceType": "PARITY_SUITE_SP58_ASSIGN_LEVEL_EDGE_NBSP",
+       "operation": "READ",
+       "roles": [
+        "ROLE_PARITY_READER"
+       ],
+       "applicableForFrontend": false,
+       "id": "5fe49377-5c66-d5fa-8495-10bb38b07c09",
+       "condition": "subject.permissions CONTAINS 'parity_r58_assigned'"
+      }
+     ],
+     "observe": [
+      "status",
+      "decide:before"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_LEVEL_EDGE_NBSP",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "before"
+      }
+     ]
+    },
+    {
+     "name": "assign",
+     "op": "assign-permissions",
+     "args": {},
+     "body": {
+      "role": "ROLE_PARITY_READER",
+      "level": " custom ",
+      "mapping": [
+       {
+        "permission": "parity_r58_assigned",
+        "pipNames": [
+         "subject.permissions"
+        ]
+       }
+      ]
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:after"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_LEVEL_EDGE_NBSP",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "after"
+      }
+     ]
+    },
+    {
+     "name": "read",
+     "op": "read-permissions",
+     "args": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom"
+     },
+     "observe": [
+      "read:read-permissions"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sp58-assign-level-other-type",
+   "about": "The assignment with permissions-assign.body.level other-type: \"5\".",
+   "resourceType": "PARITY_SUITE_SP58_ASSIGN_LEVEL_OTHER_TYPE",
+   "tenant": "parity-sp58-assign-level-other-type",
+   "steps": [
+    {
+     "name": "declare-the-domain",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_LEVEL_OTHER_TYPE"
+     },
+     "body": [],
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "write-the-policy",
+     "op": "write-domain-policies",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_LEVEL_OTHER_TYPE"
+     },
+     "body": [
+      {
+       "component": "PARITY",
+       "reason": "sp58-assign-level-other-type",
+       "resourceType": "PARITY_SUITE_SP58_ASSIGN_LEVEL_OTHER_TYPE",
+       "operation": "READ",
+       "roles": [
+        "ROLE_PARITY_READER"
+       ],
+       "applicableForFrontend": false,
+       "id": "1fdc1680-6715-b7e0-67db-6c196c35a7bf",
+       "condition": "subject.permissions CONTAINS 'parity_r58_assigned'"
+      }
+     ],
+     "observe": [
+      "status",
+      "decide:before"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_LEVEL_OTHER_TYPE",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "before"
+      }
+     ]
+    },
+    {
+     "name": "assign",
+     "op": "assign-permissions",
+     "args": {},
+     "body": {
+      "role": "ROLE_PARITY_READER",
+      "level": "5",
+      "mapping": [
+       {
+        "permission": "parity_r58_assigned",
+        "pipNames": [
+         "subject.permissions"
+        ]
+       }
+      ]
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:after"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_LEVEL_OTHER_TYPE",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "after"
+      }
+     ]
+    },
+    {
+     "name": "read",
+     "op": "read-permissions",
+     "args": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom"
+     },
+     "observe": [
+      "read:read-permissions"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sp58-assign-level-one-element-list",
+   "about": "The assignment with permissions-assign.body.level one-element-list: [\"custom\"].",
+   "resourceType": "PARITY_SUITE_SP58_ASSIGN_LEVEL_ONE_ELEMENT_LIST",
+   "tenant": "parity-sp58-assign-level-one-element-list",
+   "steps": [
+    {
+     "name": "declare-the-domain",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_LEVEL_ONE_ELEMENT_LIST"
+     },
+     "body": [],
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "write-the-policy",
+     "op": "write-domain-policies",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_LEVEL_ONE_ELEMENT_LIST"
+     },
+     "body": [
+      {
+       "component": "PARITY",
+       "reason": "sp58-assign-level-one-element-list",
+       "resourceType": "PARITY_SUITE_SP58_ASSIGN_LEVEL_ONE_ELEMENT_LIST",
+       "operation": "READ",
+       "roles": [
+        "ROLE_PARITY_READER"
+       ],
+       "applicableForFrontend": false,
+       "id": "3f8fc32b-91c6-3145-aa20-7e7fb6501ff9",
+       "condition": "subject.permissions CONTAINS 'parity_r58_assigned'"
+      }
+     ],
+     "observe": [
+      "status",
+      "decide:before"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_LEVEL_ONE_ELEMENT_LIST",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "before"
+      }
+     ]
+    },
+    {
+     "name": "assign",
+     "op": "assign-permissions",
+     "args": {},
+     "body": {
+      "role": "ROLE_PARITY_READER",
+      "level": [
+       "custom"
+      ],
+      "mapping": [
+       {
+        "permission": "parity_r58_assigned",
+        "pipNames": [
+         "subject.permissions"
+        ]
+       }
+      ]
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:after"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_LEVEL_ONE_ELEMENT_LIST",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "after"
+      }
+     ]
+    },
+    {
+     "name": "read",
+     "op": "read-permissions",
+     "args": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom"
+     },
+     "observe": [
+      "read:read-permissions"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sp58-assign-mapping-absent",
+   "about": "The assignment with permissions-assign.body.mapping absent: absent.",
+   "resourceType": "PARITY_SUITE_SP58_ASSIGN_MAPPING_ABSENT",
+   "tenant": "parity-sp58-assign-mapping-absent",
+   "steps": [
+    {
+     "name": "declare-the-domain",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_MAPPING_ABSENT"
+     },
+     "body": [],
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "write-the-policy",
+     "op": "write-domain-policies",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_MAPPING_ABSENT"
+     },
+     "body": [
+      {
+       "component": "PARITY",
+       "reason": "sp58-assign-mapping-absent",
+       "resourceType": "PARITY_SUITE_SP58_ASSIGN_MAPPING_ABSENT",
+       "operation": "READ",
+       "roles": [
+        "ROLE_PARITY_READER"
+       ],
+       "applicableForFrontend": false,
+       "id": "522272ec-631d-3005-b641-5b96323d4545",
+       "condition": "subject.permissions CONTAINS 'parity_r58_assigned'"
+      }
+     ],
+     "observe": [
+      "status",
+      "decide:before"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_MAPPING_ABSENT",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "before"
+      }
+     ]
+    },
+    {
+     "name": "assign",
+     "op": "assign-permissions",
+     "args": {},
+     "body": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom"
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:after"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_MAPPING_ABSENT",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "after"
+      }
+     ]
+    },
+    {
+     "name": "read",
+     "op": "read-permissions",
+     "args": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom"
+     },
+     "observe": [
+      "read:read-permissions"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sp58-assign-mapping-null",
+   "about": "The assignment with permissions-assign.body.mapping null: null.",
+   "resourceType": "PARITY_SUITE_SP58_ASSIGN_MAPPING_NULL",
+   "tenant": "parity-sp58-assign-mapping-null",
+   "steps": [
+    {
+     "name": "declare-the-domain",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_MAPPING_NULL"
+     },
+     "body": [],
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "write-the-policy",
+     "op": "write-domain-policies",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_MAPPING_NULL"
+     },
+     "body": [
+      {
+       "component": "PARITY",
+       "reason": "sp58-assign-mapping-null",
+       "resourceType": "PARITY_SUITE_SP58_ASSIGN_MAPPING_NULL",
+       "operation": "READ",
+       "roles": [
+        "ROLE_PARITY_READER"
+       ],
+       "applicableForFrontend": false,
+       "id": "5355220d-58a9-cff1-1cb7-1e4b2357bdd6",
+       "condition": "subject.permissions CONTAINS 'parity_r58_assigned'"
+      }
+     ],
+     "observe": [
+      "status",
+      "decide:before"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_MAPPING_NULL",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "before"
+      }
+     ]
+    },
+    {
+     "name": "assign",
+     "op": "assign-permissions",
+     "args": {},
+     "body": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom",
+      "mapping": null
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:after"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_MAPPING_NULL",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "after"
+      }
+     ]
+    },
+    {
+     "name": "read",
+     "op": "read-permissions",
+     "args": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom"
+     },
+     "observe": [
+      "read:read-permissions"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sp58-assign-mapping-empty-string",
+   "about": "The assignment with permissions-assign.body.mapping empty-string: \"\".",
+   "resourceType": "PARITY_SUITE_SP58_ASSIGN_MAPPING_EMPTY_STRING",
+   "tenant": "parity-sp58-assign-mapping-empty-string",
+   "steps": [
+    {
+     "name": "declare-the-domain",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_MAPPING_EMPTY_STRING"
+     },
+     "body": [],
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "write-the-policy",
+     "op": "write-domain-policies",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_MAPPING_EMPTY_STRING"
+     },
+     "body": [
+      {
+       "component": "PARITY",
+       "reason": "sp58-assign-mapping-empty-string",
+       "resourceType": "PARITY_SUITE_SP58_ASSIGN_MAPPING_EMPTY_STRING",
+       "operation": "READ",
+       "roles": [
+        "ROLE_PARITY_READER"
+       ],
+       "applicableForFrontend": false,
+       "id": "1daa208a-b7cd-a6aa-c7ea-7de024635f20",
+       "condition": "subject.permissions CONTAINS 'parity_r58_assigned'"
+      }
+     ],
+     "observe": [
+      "status",
+      "decide:before"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_MAPPING_EMPTY_STRING",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "before"
+      }
+     ]
+    },
+    {
+     "name": "assign",
+     "op": "assign-permissions",
+     "args": {},
+     "body": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom",
+      "mapping": ""
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:after"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_MAPPING_EMPTY_STRING",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "after"
+      }
+     ]
+    },
+    {
+     "name": "read",
+     "op": "read-permissions",
+     "args": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom"
+     },
+     "observe": [
+      "read:read-permissions"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sp58-assign-mapping-blank-space",
+   "about": "The assignment with permissions-assign.body.mapping blank-space: \" \".",
+   "resourceType": "PARITY_SUITE_SP58_ASSIGN_MAPPING_BLANK_SPACE",
+   "tenant": "parity-sp58-assign-mapping-blank-space",
+   "steps": [
+    {
+     "name": "declare-the-domain",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_MAPPING_BLANK_SPACE"
+     },
+     "body": [],
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "write-the-policy",
+     "op": "write-domain-policies",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_MAPPING_BLANK_SPACE"
+     },
+     "body": [
+      {
+       "component": "PARITY",
+       "reason": "sp58-assign-mapping-blank-space",
+       "resourceType": "PARITY_SUITE_SP58_ASSIGN_MAPPING_BLANK_SPACE",
+       "operation": "READ",
+       "roles": [
+        "ROLE_PARITY_READER"
+       ],
+       "applicableForFrontend": false,
+       "id": "d6f54d04-74c7-64ed-4045-0a7ff13a3b73",
+       "condition": "subject.permissions CONTAINS 'parity_r58_assigned'"
+      }
+     ],
+     "observe": [
+      "status",
+      "decide:before"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_MAPPING_BLANK_SPACE",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "before"
+      }
+     ]
+    },
+    {
+     "name": "assign",
+     "op": "assign-permissions",
+     "args": {},
+     "body": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom",
+      "mapping": " "
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:after"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_MAPPING_BLANK_SPACE",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "after"
+      }
+     ]
+    },
+    {
+     "name": "read",
+     "op": "read-permissions",
+     "args": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom"
+     },
+     "observe": [
+      "read:read-permissions"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sp58-assign-permission-absent",
+   "about": "The assignment with assign.mapping.permission absent: absent.",
+   "resourceType": "PARITY_SUITE_SP58_ASSIGN_PERMISSION_ABSENT",
+   "tenant": "parity-sp58-assign-permission-absent",
+   "steps": [
+    {
+     "name": "declare-the-domain",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_PERMISSION_ABSENT"
+     },
+     "body": [],
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "write-the-policy",
+     "op": "write-domain-policies",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_PERMISSION_ABSENT"
+     },
+     "body": [
+      {
+       "component": "PARITY",
+       "reason": "sp58-assign-permission-absent",
+       "resourceType": "PARITY_SUITE_SP58_ASSIGN_PERMISSION_ABSENT",
+       "operation": "READ",
+       "roles": [
+        "ROLE_PARITY_READER"
+       ],
+       "applicableForFrontend": false,
+       "id": "478cee98-f9ff-371e-553e-e008a6404c1d",
+       "condition": "subject.permissions CONTAINS 'parity_r58_assigned'"
+      }
+     ],
+     "observe": [
+      "status",
+      "decide:before"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_PERMISSION_ABSENT",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "before"
+      }
+     ]
+    },
+    {
+     "name": "assign",
+     "op": "assign-permissions",
+     "args": {},
+     "body": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom",
+      "mapping": [
+       {
+        "pipNames": [
+         "subject.permissions"
+        ]
+       }
+      ]
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:after"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_PERMISSION_ABSENT",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "after"
+      }
+     ]
+    },
+    {
+     "name": "read",
+     "op": "read-permissions",
+     "args": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom"
+     },
+     "observe": [
+      "read:read-permissions"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sp58-assign-permission-null",
+   "about": "The assignment with assign.mapping.permission null: null.",
+   "resourceType": "PARITY_SUITE_SP58_ASSIGN_PERMISSION_NULL",
+   "tenant": "parity-sp58-assign-permission-null",
+   "steps": [
+    {
+     "name": "declare-the-domain",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_PERMISSION_NULL"
+     },
+     "body": [],
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "write-the-policy",
+     "op": "write-domain-policies",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_PERMISSION_NULL"
+     },
+     "body": [
+      {
+       "component": "PARITY",
+       "reason": "sp58-assign-permission-null",
+       "resourceType": "PARITY_SUITE_SP58_ASSIGN_PERMISSION_NULL",
+       "operation": "READ",
+       "roles": [
+        "ROLE_PARITY_READER"
+       ],
+       "applicableForFrontend": false,
+       "id": "be13b8b4-93e6-e8ce-7527-4c7136c71437",
+       "condition": "subject.permissions CONTAINS 'parity_r58_assigned'"
+      }
+     ],
+     "observe": [
+      "status",
+      "decide:before"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_PERMISSION_NULL",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "before"
+      }
+     ]
+    },
+    {
+     "name": "assign",
+     "op": "assign-permissions",
+     "args": {},
+     "body": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom",
+      "mapping": [
+       {
+        "permission": null,
+        "pipNames": [
+         "subject.permissions"
+        ]
+       }
+      ]
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:after"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_PERMISSION_NULL",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "after"
+      }
+     ]
+    },
+    {
+     "name": "read",
+     "op": "read-permissions",
+     "args": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom"
+     },
+     "observe": [
+      "read:read-permissions"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sp58-assign-permission-empty-string",
+   "about": "The assignment with assign.mapping.permission empty-string: \"\".",
+   "resourceType": "PARITY_SUITE_SP58_ASSIGN_PERMISSION_EMPTY_STRING",
+   "tenant": "parity-sp58-assign-permission-empty-string",
+   "steps": [
+    {
+     "name": "declare-the-domain",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_PERMISSION_EMPTY_STRING"
+     },
+     "body": [],
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "write-the-policy",
+     "op": "write-domain-policies",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_PERMISSION_EMPTY_STRING"
+     },
+     "body": [
+      {
+       "component": "PARITY",
+       "reason": "sp58-assign-permission-empty-string",
+       "resourceType": "PARITY_SUITE_SP58_ASSIGN_PERMISSION_EMPTY_STRING",
+       "operation": "READ",
+       "roles": [
+        "ROLE_PARITY_READER"
+       ],
+       "applicableForFrontend": false,
+       "id": "eadfd9f7-a617-67b7-6a4c-f9257c6fa1f3",
+       "condition": "subject.permissions CONTAINS 'parity_r58_assigned'"
+      }
+     ],
+     "observe": [
+      "status",
+      "decide:before"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_PERMISSION_EMPTY_STRING",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "before"
+      }
+     ]
+    },
+    {
+     "name": "assign",
+     "op": "assign-permissions",
+     "args": {},
+     "body": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom",
+      "mapping": [
+       {
+        "permission": "",
+        "pipNames": [
+         "subject.permissions"
+        ]
+       }
+      ]
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:after"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_PERMISSION_EMPTY_STRING",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "after"
+      }
+     ]
+    },
+    {
+     "name": "read",
+     "op": "read-permissions",
+     "args": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom"
+     },
+     "observe": [
+      "read:read-permissions"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sp58-assign-permission-blank-space",
+   "about": "The assignment with assign.mapping.permission blank-space: \" \".",
+   "resourceType": "PARITY_SUITE_SP58_ASSIGN_PERMISSION_BLANK_SPACE",
+   "tenant": "parity-sp58-assign-permission-blank-space",
+   "steps": [
+    {
+     "name": "declare-the-domain",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_PERMISSION_BLANK_SPACE"
+     },
+     "body": [],
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "write-the-policy",
+     "op": "write-domain-policies",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_PERMISSION_BLANK_SPACE"
+     },
+     "body": [
+      {
+       "component": "PARITY",
+       "reason": "sp58-assign-permission-blank-space",
+       "resourceType": "PARITY_SUITE_SP58_ASSIGN_PERMISSION_BLANK_SPACE",
+       "operation": "READ",
+       "roles": [
+        "ROLE_PARITY_READER"
+       ],
+       "applicableForFrontend": false,
+       "id": "2adcd83d-d858-dff4-0ff6-f30c4bdc98a4",
+       "condition": "subject.permissions CONTAINS 'parity_r58_assigned'"
+      }
+     ],
+     "observe": [
+      "status",
+      "decide:before"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_PERMISSION_BLANK_SPACE",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "before"
+      }
+     ]
+    },
+    {
+     "name": "assign",
+     "op": "assign-permissions",
+     "args": {},
+     "body": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom",
+      "mapping": [
+       {
+        "permission": " ",
+        "pipNames": [
+         "subject.permissions"
+        ]
+       }
+      ]
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:after"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_PERMISSION_BLANK_SPACE",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "after"
+      }
+     ]
+    },
+    {
+     "name": "read",
+     "op": "read-permissions",
+     "args": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom"
+     },
+     "observe": [
+      "read:read-permissions"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sp58-assign-permission-edge-space",
+   "about": "The assignment with assign.mapping.permission edge-space: \" parity_r58_assigned \".",
+   "resourceType": "PARITY_SUITE_SP58_ASSIGN_PERMISSION_EDGE_SPACE",
+   "tenant": "parity-sp58-assign-permission-edge-space",
+   "steps": [
+    {
+     "name": "declare-the-domain",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_PERMISSION_EDGE_SPACE"
+     },
+     "body": [],
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "write-the-policy",
+     "op": "write-domain-policies",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_PERMISSION_EDGE_SPACE"
+     },
+     "body": [
+      {
+       "component": "PARITY",
+       "reason": "sp58-assign-permission-edge-space",
+       "resourceType": "PARITY_SUITE_SP58_ASSIGN_PERMISSION_EDGE_SPACE",
+       "operation": "READ",
+       "roles": [
+        "ROLE_PARITY_READER"
+       ],
+       "applicableForFrontend": false,
+       "id": "29be4d73-886d-00b3-ed12-1597b419f916",
+       "condition": "subject.permissions CONTAINS 'parity_r58_assigned'"
+      }
+     ],
+     "observe": [
+      "status",
+      "decide:before"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_PERMISSION_EDGE_SPACE",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "before"
+      }
+     ]
+    },
+    {
+     "name": "assign",
+     "op": "assign-permissions",
+     "args": {},
+     "body": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom",
+      "mapping": [
+       {
+        "permission": " parity_r58_assigned ",
+        "pipNames": [
+         "subject.permissions"
+        ]
+       }
+      ]
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:after"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_PERMISSION_EDGE_SPACE",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "after"
+      }
+     ]
+    },
+    {
+     "name": "read",
+     "op": "read-permissions",
+     "args": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom"
+     },
+     "observe": [
+      "read:read-permissions"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sp58-assign-permission-edge-tab",
+   "about": "The assignment with assign.mapping.permission edge-tab: \"\\tparity_r58_assigned\\t\".",
+   "resourceType": "PARITY_SUITE_SP58_ASSIGN_PERMISSION_EDGE_TAB",
+   "tenant": "parity-sp58-assign-permission-edge-tab",
+   "steps": [
+    {
+     "name": "declare-the-domain",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_PERMISSION_EDGE_TAB"
+     },
+     "body": [],
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "write-the-policy",
+     "op": "write-domain-policies",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_PERMISSION_EDGE_TAB"
+     },
+     "body": [
+      {
+       "component": "PARITY",
+       "reason": "sp58-assign-permission-edge-tab",
+       "resourceType": "PARITY_SUITE_SP58_ASSIGN_PERMISSION_EDGE_TAB",
+       "operation": "READ",
+       "roles": [
+        "ROLE_PARITY_READER"
+       ],
+       "applicableForFrontend": false,
+       "id": "0307f835-ac06-0e77-34c0-1b67924b9f21",
+       "condition": "subject.permissions CONTAINS 'parity_r58_assigned'"
+      }
+     ],
+     "observe": [
+      "status",
+      "decide:before"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_PERMISSION_EDGE_TAB",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "before"
+      }
+     ]
+    },
+    {
+     "name": "assign",
+     "op": "assign-permissions",
+     "args": {},
+     "body": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom",
+      "mapping": [
+       {
+        "permission": "\tparity_r58_assigned\t",
+        "pipNames": [
+         "subject.permissions"
+        ]
+       }
+      ]
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:after"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_PERMISSION_EDGE_TAB",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "after"
+      }
+     ]
+    },
+    {
+     "name": "read",
+     "op": "read-permissions",
+     "args": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom"
+     },
+     "observe": [
+      "read:read-permissions"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sp58-assign-permission-edge-lf",
+   "about": "The assignment with assign.mapping.permission edge-lf: \"\\nparity_r58_assigned\\n\".",
+   "resourceType": "PARITY_SUITE_SP58_ASSIGN_PERMISSION_EDGE_LF",
+   "tenant": "parity-sp58-assign-permission-edge-lf",
+   "steps": [
+    {
+     "name": "declare-the-domain",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_PERMISSION_EDGE_LF"
+     },
+     "body": [],
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "write-the-policy",
+     "op": "write-domain-policies",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_PERMISSION_EDGE_LF"
+     },
+     "body": [
+      {
+       "component": "PARITY",
+       "reason": "sp58-assign-permission-edge-lf",
+       "resourceType": "PARITY_SUITE_SP58_ASSIGN_PERMISSION_EDGE_LF",
+       "operation": "READ",
+       "roles": [
+        "ROLE_PARITY_READER"
+       ],
+       "applicableForFrontend": false,
+       "id": "cb709173-7b84-5400-8943-ecbc3e130871",
+       "condition": "subject.permissions CONTAINS 'parity_r58_assigned'"
+      }
+     ],
+     "observe": [
+      "status",
+      "decide:before"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_PERMISSION_EDGE_LF",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "before"
+      }
+     ]
+    },
+    {
+     "name": "assign",
+     "op": "assign-permissions",
+     "args": {},
+     "body": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom",
+      "mapping": [
+       {
+        "permission": "\nparity_r58_assigned\n",
+        "pipNames": [
+         "subject.permissions"
+        ]
+       }
+      ]
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:after"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_PERMISSION_EDGE_LF",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "after"
+      }
+     ]
+    },
+    {
+     "name": "read",
+     "op": "read-permissions",
+     "args": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom"
+     },
+     "observe": [
+      "read:read-permissions"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sp58-assign-permission-edge-nbsp",
+   "about": "The assignment with assign.mapping.permission edge-nbsp: \" parity_r58_assigned \".",
+   "resourceType": "PARITY_SUITE_SP58_ASSIGN_PERMISSION_EDGE_NBSP",
+   "tenant": "parity-sp58-assign-permission-edge-nbsp",
+   "steps": [
+    {
+     "name": "declare-the-domain",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_PERMISSION_EDGE_NBSP"
+     },
+     "body": [],
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "write-the-policy",
+     "op": "write-domain-policies",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_PERMISSION_EDGE_NBSP"
+     },
+     "body": [
+      {
+       "component": "PARITY",
+       "reason": "sp58-assign-permission-edge-nbsp",
+       "resourceType": "PARITY_SUITE_SP58_ASSIGN_PERMISSION_EDGE_NBSP",
+       "operation": "READ",
+       "roles": [
+        "ROLE_PARITY_READER"
+       ],
+       "applicableForFrontend": false,
+       "id": "375be69b-7d32-9d15-e50a-fea8efd4cd33",
+       "condition": "subject.permissions CONTAINS 'parity_r58_assigned'"
+      }
+     ],
+     "observe": [
+      "status",
+      "decide:before"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_PERMISSION_EDGE_NBSP",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "before"
+      }
+     ]
+    },
+    {
+     "name": "assign",
+     "op": "assign-permissions",
+     "args": {},
+     "body": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom",
+      "mapping": [
+       {
+        "permission": " parity_r58_assigned ",
+        "pipNames": [
+         "subject.permissions"
+        ]
+       }
+      ]
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:after"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_PERMISSION_EDGE_NBSP",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "after"
+      }
+     ]
+    },
+    {
+     "name": "read",
+     "op": "read-permissions",
+     "args": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom"
+     },
+     "observe": [
+      "read:read-permissions"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sp58-assign-permission-other-type",
+   "about": "The assignment with assign.mapping.permission other-type: \"5\".",
+   "resourceType": "PARITY_SUITE_SP58_ASSIGN_PERMISSION_OTHER_TYPE",
+   "tenant": "parity-sp58-assign-permission-other-type",
+   "steps": [
+    {
+     "name": "declare-the-domain",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_PERMISSION_OTHER_TYPE"
+     },
+     "body": [],
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "write-the-policy",
+     "op": "write-domain-policies",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_PERMISSION_OTHER_TYPE"
+     },
+     "body": [
+      {
+       "component": "PARITY",
+       "reason": "sp58-assign-permission-other-type",
+       "resourceType": "PARITY_SUITE_SP58_ASSIGN_PERMISSION_OTHER_TYPE",
+       "operation": "READ",
+       "roles": [
+        "ROLE_PARITY_READER"
+       ],
+       "applicableForFrontend": false,
+       "id": "9492dd60-d856-ddf7-9b29-cd41f66fa248",
+       "condition": "subject.permissions CONTAINS 'parity_r58_assigned'"
+      }
+     ],
+     "observe": [
+      "status",
+      "decide:before"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_PERMISSION_OTHER_TYPE",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "before"
+      }
+     ]
+    },
+    {
+     "name": "assign",
+     "op": "assign-permissions",
+     "args": {},
+     "body": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom",
+      "mapping": [
+       {
+        "permission": "5",
+        "pipNames": [
+         "subject.permissions"
+        ]
+       }
+      ]
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:after"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_PERMISSION_OTHER_TYPE",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "after"
+      }
+     ]
+    },
+    {
+     "name": "read",
+     "op": "read-permissions",
+     "args": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom"
+     },
+     "observe": [
+      "read:read-permissions"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sp58-assign-permission-one-element-list",
+   "about": "The assignment with assign.mapping.permission one-element-list: [\"parity_r58_assigned\"].",
+   "resourceType": "PARITY_SUITE_SP58_ASSIGN_PERMISSION_ONE_ELEMENT_LIST",
+   "tenant": "parity-sp58-assign-permission-one-element-list",
+   "steps": [
+    {
+     "name": "declare-the-domain",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_PERMISSION_ONE_ELEMENT_LIST"
+     },
+     "body": [],
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "write-the-policy",
+     "op": "write-domain-policies",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_PERMISSION_ONE_ELEMENT_LIST"
+     },
+     "body": [
+      {
+       "component": "PARITY",
+       "reason": "sp58-assign-permission-one-element-list",
+       "resourceType": "PARITY_SUITE_SP58_ASSIGN_PERMISSION_ONE_ELEMENT_LIST",
+       "operation": "READ",
+       "roles": [
+        "ROLE_PARITY_READER"
+       ],
+       "applicableForFrontend": false,
+       "id": "7646751b-a1eb-289f-dedf-d12db9910961",
+       "condition": "subject.permissions CONTAINS 'parity_r58_assigned'"
+      }
+     ],
+     "observe": [
+      "status",
+      "decide:before"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_PERMISSION_ONE_ELEMENT_LIST",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "before"
+      }
+     ]
+    },
+    {
+     "name": "assign",
+     "op": "assign-permissions",
+     "args": {},
+     "body": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom",
+      "mapping": [
+       {
+        "permission": [
+         "parity_r58_assigned"
+        ],
+        "pipNames": [
+         "subject.permissions"
+        ]
+       }
+      ]
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:after"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_PERMISSION_ONE_ELEMENT_LIST",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "after"
+      }
+     ]
+    },
+    {
+     "name": "read",
+     "op": "read-permissions",
+     "args": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom"
+     },
+     "observe": [
+      "read:read-permissions"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sp58-assign-pipnames-null",
+   "about": "The assignment with assign.mapping.pipNames null: null.",
+   "resourceType": "PARITY_SUITE_SP58_ASSIGN_PIPNAMES_NULL",
+   "tenant": "parity-sp58-assign-pipnames-null",
+   "steps": [
+    {
+     "name": "declare-the-domain",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_PIPNAMES_NULL"
+     },
+     "body": [],
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "write-the-policy",
+     "op": "write-domain-policies",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_PIPNAMES_NULL"
+     },
+     "body": [
+      {
+       "component": "PARITY",
+       "reason": "sp58-assign-pipnames-null",
+       "resourceType": "PARITY_SUITE_SP58_ASSIGN_PIPNAMES_NULL",
+       "operation": "READ",
+       "roles": [
+        "ROLE_PARITY_READER"
+       ],
+       "applicableForFrontend": false,
+       "id": "c3e0ff7b-ecbe-26f7-26bf-dc5b48e90f36",
+       "condition": "subject.permissions CONTAINS 'parity_r58_assigned'"
+      }
+     ],
+     "observe": [
+      "status",
+      "decide:before"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_PIPNAMES_NULL",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "before"
+      }
+     ]
+    },
+    {
+     "name": "assign",
+     "op": "assign-permissions",
+     "args": {},
+     "body": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom",
+      "mapping": [
+       {
+        "permission": "parity_r58_assigned",
+        "pipNames": null
+       }
+      ]
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:after"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_PIPNAMES_NULL",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "after"
+      }
+     ]
+    },
+    {
+     "name": "read",
+     "op": "read-permissions",
+     "args": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom"
+     },
+     "observe": [
+      "read:read-permissions"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sp58-assign-pipnames-empty-string",
+   "about": "The assignment with assign.mapping.pipNames empty-string: \"\".",
+   "resourceType": "PARITY_SUITE_SP58_ASSIGN_PIPNAMES_EMPTY_STRING",
+   "tenant": "parity-sp58-assign-pipnames-empty-string",
+   "steps": [
+    {
+     "name": "declare-the-domain",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_PIPNAMES_EMPTY_STRING"
+     },
+     "body": [],
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "write-the-policy",
+     "op": "write-domain-policies",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_PIPNAMES_EMPTY_STRING"
+     },
+     "body": [
+      {
+       "component": "PARITY",
+       "reason": "sp58-assign-pipnames-empty-string",
+       "resourceType": "PARITY_SUITE_SP58_ASSIGN_PIPNAMES_EMPTY_STRING",
+       "operation": "READ",
+       "roles": [
+        "ROLE_PARITY_READER"
+       ],
+       "applicableForFrontend": false,
+       "id": "7b2cadbf-89fc-55c3-8033-e76ae091b536",
+       "condition": "subject.permissions CONTAINS 'parity_r58_assigned'"
+      }
+     ],
+     "observe": [
+      "status",
+      "decide:before"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_PIPNAMES_EMPTY_STRING",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "before"
+      }
+     ]
+    },
+    {
+     "name": "assign",
+     "op": "assign-permissions",
+     "args": {},
+     "body": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom",
+      "mapping": [
+       {
+        "permission": "parity_r58_assigned",
+        "pipNames": ""
+       }
+      ]
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:after"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_PIPNAMES_EMPTY_STRING",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "after"
+      }
+     ]
+    },
+    {
+     "name": "read",
+     "op": "read-permissions",
+     "args": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom"
+     },
+     "observe": [
+      "read:read-permissions"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sp58-assign-pipnames-blank-space",
+   "about": "The assignment with assign.mapping.pipNames blank-space: \" \".",
+   "resourceType": "PARITY_SUITE_SP58_ASSIGN_PIPNAMES_BLANK_SPACE",
+   "tenant": "parity-sp58-assign-pipnames-blank-space",
+   "steps": [
+    {
+     "name": "declare-the-domain",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_PIPNAMES_BLANK_SPACE"
+     },
+     "body": [],
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "write-the-policy",
+     "op": "write-domain-policies",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_PIPNAMES_BLANK_SPACE"
+     },
+     "body": [
+      {
+       "component": "PARITY",
+       "reason": "sp58-assign-pipnames-blank-space",
+       "resourceType": "PARITY_SUITE_SP58_ASSIGN_PIPNAMES_BLANK_SPACE",
+       "operation": "READ",
+       "roles": [
+        "ROLE_PARITY_READER"
+       ],
+       "applicableForFrontend": false,
+       "id": "a4afc49c-9333-0de3-7143-1c6e8b8248f2",
+       "condition": "subject.permissions CONTAINS 'parity_r58_assigned'"
+      }
+     ],
+     "observe": [
+      "status",
+      "decide:before"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_PIPNAMES_BLANK_SPACE",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "before"
+      }
+     ]
+    },
+    {
+     "name": "assign",
+     "op": "assign-permissions",
+     "args": {},
+     "body": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom",
+      "mapping": [
+       {
+        "permission": "parity_r58_assigned",
+        "pipNames": " "
+       }
+      ]
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:after"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_PIPNAMES_BLANK_SPACE",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "after"
+      }
+     ]
+    },
+    {
+     "name": "read",
+     "op": "read-permissions",
+     "args": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom"
+     },
+     "observe": [
+      "read:read-permissions"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sp58-assign-pipnames-other-type",
+   "about": "The assignment with assign.mapping.pipNames other-type: \"subject.permissions\".",
+   "resourceType": "PARITY_SUITE_SP58_ASSIGN_PIPNAMES_OTHER_TYPE",
+   "tenant": "parity-sp58-assign-pipnames-other-type",
+   "steps": [
+    {
+     "name": "declare-the-domain",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_PIPNAMES_OTHER_TYPE"
+     },
+     "body": [],
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "write-the-policy",
+     "op": "write-domain-policies",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_PIPNAMES_OTHER_TYPE"
+     },
+     "body": [
+      {
+       "component": "PARITY",
+       "reason": "sp58-assign-pipnames-other-type",
+       "resourceType": "PARITY_SUITE_SP58_ASSIGN_PIPNAMES_OTHER_TYPE",
+       "operation": "READ",
+       "roles": [
+        "ROLE_PARITY_READER"
+       ],
+       "applicableForFrontend": false,
+       "id": "a625f5cb-2f53-6af4-d7cd-135bfa4b76fe",
+       "condition": "subject.permissions CONTAINS 'parity_r58_assigned'"
+      }
+     ],
+     "observe": [
+      "status",
+      "decide:before"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_PIPNAMES_OTHER_TYPE",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "before"
+      }
+     ]
+    },
+    {
+     "name": "assign",
+     "op": "assign-permissions",
+     "args": {},
+     "body": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom",
+      "mapping": [
+       {
+        "permission": "parity_r58_assigned",
+        "pipNames": "subject.permissions"
+       }
+      ]
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:after"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_PIPNAMES_OTHER_TYPE",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "after"
+      }
+     ]
+    },
+    {
+     "name": "read",
+     "op": "read-permissions",
+     "args": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom"
+     },
+     "observe": [
+      "read:read-permissions"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sp58-assign-reference-last",
+   "about": "Reference: the assignment with every field as the documentation shows it (last).",
+   "resourceType": "PARITY_SUITE_SP58_ASSIGN_REFERENCE_LAST",
+   "tenant": "parity-sp58-assign-reference-last",
+   "steps": [
+    {
+     "name": "declare-the-domain",
+     "op": "write-domain-pips",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_REFERENCE_LAST"
+     },
+     "body": [],
+     "observe": [
+      "status"
+     ],
+     "onRefusal": "continue"
+    },
+    {
+     "name": "write-the-policy",
+     "op": "write-domain-policies",
+     "args": {
+      "domain": "PARITY_SP58_ASSIGN_REFERENCE_LAST"
+     },
+     "body": [
+      {
+       "component": "PARITY",
+       "reason": "sp58-assign-reference-last",
+       "resourceType": "PARITY_SUITE_SP58_ASSIGN_REFERENCE_LAST",
+       "operation": "READ",
+       "roles": [
+        "ROLE_PARITY_READER"
+       ],
+       "applicableForFrontend": false,
+       "id": "0bd956d5-3c2b-5ab5-5e35-e3b4b1707036",
+       "condition": "subject.permissions CONTAINS 'parity_r58_assigned'"
+      }
+     ],
+     "observe": [
+      "status",
+      "decide:before"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_REFERENCE_LAST",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "before"
+      }
+     ]
+    },
+    {
+     "name": "assign",
+     "op": "assign-permissions",
+     "args": {},
+     "body": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom",
+      "mapping": [
+       {
+        "permission": "parity_r58_assigned",
+        "pipNames": [
+         "subject.permissions"
+        ]
+       }
+      ]
+     },
+     "observe": [
+      "status",
+      "error-class",
+      "decide:after"
+     ],
+     "onRefusal": "continue",
+     "requests": [
+      {
+       "type": "PARITY_SUITE_SP58_ASSIGN_REFERENCE_LAST",
+       "operation": "READ",
+       "resource": {
+        "id": "r58"
+       },
+       "name": "after"
+      }
+     ]
+    },
+    {
+     "name": "read",
+     "op": "read-permissions",
+     "args": {
+      "role": "ROLE_PARITY_READER",
+      "level": "custom"
+     },
+     "observe": [
+      "read:read-permissions"
+     ]
+    }
+   ]
+  }
+ ]
+}

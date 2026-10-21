@@ -1,0 +1,194 @@
+{
+ "about": "d2r46-88a321f61d of round 46 diff2-22 again, in a function of its own: stands answered filter otherwise. The request is not classified: alone, nothing before it reaches its type. A control first and last must answer true.",
+ "resourceTypePrefix": "PARITY_SUITE_R58_ORDER_",
+ "pins": {
+  "/api/v1/pip/r29-pairs-gen": {
+   "body": [
+    "x",
+    "y"
+   ],
+   "statusCode": 200
+  }
+ },
+ "pips": {
+  "gen": {
+   "cacheable": false,
+   "httpMethod": "POST",
+   "name": "subject.parityR29PairsGen",
+   "pipType": "GENERAL",
+   "requestAttributes": {
+    "case": "r29-pairs-gen"
+   },
+   "url": "http://pip-mock:8090/api/v1/pip/r29-pairs-gen"
+  },
+  "hdr": {
+   "cacheable": false,
+   "header": "x-parity-r29-pairs",
+   "name": "subject.parityR29PairsHdr",
+   "pipType": "HEADER",
+   "type": "UUID"
+  },
+  "map": {
+   "cacheable": false,
+   "customMapping": {
+    "subject.roles": {
+     "ROLE_PARITY_READER": [
+      "p1",
+      "p2"
+     ]
+    }
+   },
+   "name": "subject.permissions.PARITY_R29_PAIRS",
+   "pipType": "MAPPING",
+   "type": "UUID"
+  },
+  "tok": {
+   "cacheable": false,
+   "claim": "department",
+   "name": "subject.parityR29PairsTok",
+   "pipType": "TOKEN",
+   "type": "UUID"
+  }
+ },
+ "cases": [
+  {
+   "id": "r58ord-88a321f61d-control-first",
+   "about": "Control: a DENY rule over a resource attribute that does not hold. True unless the stand answers every check with 400.",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "PERMIT_UNLESS_DENY",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "PERMIT_UNLESS_DENY",
+       "rules": [
+        {
+         "key": "deny",
+         "target": "true",
+         "condition": "resource.c == 'zz'",
+         "effect": "DENY"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "name": "read",
+     "resource": {
+      "id": "r33",
+      "c": "n"
+     }
+    }
+   ]
+  },
+  {
+   "about": "d2r46-88a321f61d of round 46 diff2-22, alone; its sets with target true name its resource type instead. Stands answered filter otherwise; here not classified: alone, nothing before it reaches its type.",
+   "id": "r58ord-88a321f61d",
+   "requests": [
+    {
+     "filter": true,
+     "headers": {
+      "x-parity-r29-pairs": "h1,h2"
+     },
+     "name": "filter",
+     "operation": "READ"
+    }
+   ],
+   "sets": [
+    {
+     "key": "s0",
+     "policies": [],
+     "sets": [
+      {
+       "key": "s0n2",
+       "omitStatus": true,
+       "policies": [],
+       "sets": [
+        {
+         "algorithm": "DENY_OVERRIDES",
+         "key": "s0n2n2",
+         "omitStatus": true,
+         "policies": [
+          {
+           "algorithm": "DENY_OVERRIDES",
+           "key": "s0n2n2p2",
+           "rules": [
+            {
+             "condition": "resource.f17a == '{{resourceType}}' AND resource.f17b == 'v1' OR resource.f17c == 'v2'",
+             "effect": "DENY",
+             "key": "r17",
+             "predicates": {
+              "rsqlPredicate": "f17a==${resourceType};f17b==v1,f17c==v2"
+             },
+             "target": "true"
+            },
+            {
+             "condition": "resource.f19a IN subject.permissions OR resource.f19b == 'v1'",
+             "effect": "DENY",
+             "key": "r19",
+             "predicates": {
+              "mongodbPredicate": "{ \"$or\": [ { \"f19a\": { \"$in\": ${subject.permissions} } }, { \"f19b\": \"v1\" } ] }",
+              "predicate": "(${resourceType}.f19a.in(${subject.permissions})).or(${resourceType}.f19b.eq(\"v1\"))",
+              "rsqlPredicate": "f19a=in=(${subject.permissions}),f19b==v1",
+              "sqlPredicate": "f19a IN (${subject.permissions}) OR f19b='v1'"
+             },
+             "target": "true"
+            }
+           ],
+           "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'"
+          }
+         ],
+         "target": "true"
+        }
+       ],
+       "target": "true"
+      }
+     ],
+     "target": "resourceType == '{{resourceType}}'"
+    }
+   ],
+   "resourceType": "PARITY_SUITE_R29P_R29PAIRS_Q_003"
+  },
+  {
+   "id": "r58ord-88a321f61d-control-last",
+   "about": "Control: a DENY rule over a resource attribute that does not hold. True unless the stand answers every check with 400.",
+   "sets": [
+    {
+     "key": "set",
+     "target": "resourceType == '{{resourceType}}'",
+     "algorithm": "PERMIT_UNLESS_DENY",
+     "policies": [
+      {
+       "key": "reader",
+       "target": "subject.roles CONTAINS 'ROLE_PARITY_READER'",
+       "algorithm": "PERMIT_UNLESS_DENY",
+       "rules": [
+        {
+         "key": "deny",
+         "target": "true",
+         "condition": "resource.c == 'zz'",
+         "effect": "DENY"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "requests": [
+    {
+     "name": "read",
+     "resource": {
+      "id": "r33",
+      "c": "n"
+     }
+    }
+   ]
+  }
+ ],
+ "standVersion": true
+}
