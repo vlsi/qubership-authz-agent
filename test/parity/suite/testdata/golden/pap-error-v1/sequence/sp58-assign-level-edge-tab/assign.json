@@ -1,0 +1,6 @@
+{
+  "status": 400,
+  "body": {
+    "message": "Provided level '\tcustom\t' is incorrect"
+  }
+}

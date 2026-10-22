@@ -1,0 +1,6 @@
+{
+  "status": 400,
+  "body": {
+    "message": "Provided level '\ncustom\n' is incorrect"
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "specs": [
+    {
+      "specRootUrl": "/access",
+      "major": 4,
+      "minor": 0,
+      "supportedMajors": [
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "specRootUrl": "/api",
+      "major": 1,
+      "minor": 1,
+      "supportedMajors": [
+        1
+      ]
+    },
+    {
+      "specRootUrl": "/template",
+      "major": 1,
+      "minor": 0,
+      "supportedMajors": [
+        1
+      ]
+    },
+    {
+      "specRootUrl": "/preview",
+      "major": 2,
+      "minor": 0,
+      "supportedMajors": [
+        1,
+        2
+      ]
+    }
+  ]
+}

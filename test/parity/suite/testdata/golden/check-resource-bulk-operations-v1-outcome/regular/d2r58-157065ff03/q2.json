@@ -1,0 +1,11 @@
+{
+  "status": 200,
+  "decision": {
+    "READ": [
+      "rp21"
+    ],
+    "UPDATE": [
+      "rp21"
+    ]
+  }
+}

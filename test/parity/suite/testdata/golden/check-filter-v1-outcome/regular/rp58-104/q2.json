@@ -1,0 +1,11 @@
+{
+  "status": 200,
+  "result": {
+    "calculationResult": "DENY",
+    "filterCondition": "",
+    "mongodbFilterCondition": "",
+    "rsqlFilterCondition": "",
+    "sqlFilterCondition": "",
+    "customFilterCondition": null
+  }
+}

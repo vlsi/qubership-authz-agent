@@ -1,0 +1,9 @@
+{
+  "status": 400,
+  "message": [
+    {
+      "message": "Cannot find referenced item. Policy Set with '8a917d1a-8a30-841f-e410-6147ed2407ac' id is absent on 'PROJECT' level.",
+      "priority": "ERROR"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "status": 400,
+  "decision": false,
+  "message": {
+    "message": "The request 'operation' cannot be empty"
+  }
+}

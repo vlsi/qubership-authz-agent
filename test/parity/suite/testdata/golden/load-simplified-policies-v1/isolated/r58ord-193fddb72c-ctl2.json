@@ -1,0 +1,6 @@
+{
+  "status": 400,
+  "message": {
+    "message": "Simplified policy id=1-1-1-1-1 must be a valid UUID"
+  }
+}

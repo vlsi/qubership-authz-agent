@@ -1,0 +1,6 @@
+{
+  "status": 400,
+  "message": {
+    "message": "Provided level ' ' is incorrect"
+  }
+}
