@@ -1,0 +1,138 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Leaf-outcome tables of the policy language specification",
+  "description": "The export the Rego generator reads. This schema checks the shape of the document. The Go loader (load.go) also checks what the schema cannot: every kind has a domain; a cell's state and class lie in its kind's domain; outcomes is present exactly when outcome is by_value; pattern appears only on the right of MATCH and NOT_MATCH; and every combination of operator and operand kinds is answered at every point exactly once. See doc.go.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "spec_tag", "profiles"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "spec_tag": {"type": "string", "minLength": 1, "description": "Tag of the specification commit the tables were computed from, such as r65."},
+    "profiles": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["legacy", "agent"],
+      "properties": {
+        "legacy": {"$ref": "#/$defs/legacyProfile"},
+        "agent": {"$ref": "#/$defs/agentProfile"}
+      }
+    }
+  },
+  "$defs": {
+    "operator": {
+      "enum": ["EQ", "NE", "LT", "LE", "GT", "GE", "IS_NULL", "IS_NOT_NULL", "IS_EMPTY", "IS_NOT_EMPTY",
+               "IN", "NOT_IN", "CONTAINS", "NOT_CONTAINS", "CONTAINS_ANY", "NOT_CONTAINS_ANY",
+               "IS_SUBSET", "IS_NOT_SUBSET", "MATCH", "NOT_MATCH"]
+    },
+    "unaryOperator": {"enum": ["IS_NULL", "IS_NOT_NULL", "IS_EMPTY", "IS_NOT_EMPTY"]},
+    "kind": {
+      "enum": ["operation", "resourceType",
+               "resource", "res:path", "res:nested", "res:jsonpath",
+               "subj.id", "subj.name", "subj.type", "subj.serviceAccount", "subj.roles", "subj.scopes",
+               "subj.permissions", "subj.permissionScope", "subj.isM2M",
+               "pip:TOKEN", "pip:HEADER", "pip:GENERAL", "pip:FILTERED", "pip:MAPPING",
+               "ent",
+               "lit:str", "lit:num", "lit:bool", "null",
+               "list:str1", "list:strn", "list:num1", "list:numn",
+               "pattern"]
+    },
+    "state": {
+      "enum": ["VALUE", "ABSENT", "NULL", "PIP_EMPTY", "EMPTY_COLL", "EMPTY_SEL", "INDEX_OOB", "PIP_NULL", "ERROR",
+               "SINGLE_ODD", "SCALAR_ODD", "SCOPE_OUTSIDE"]
+    },
+    "class": {"enum": ["s", "n", "l", "hl", "x"]},
+    "place": {"enum": ["simplified", "rule_condition", "rule_target", "policy_target", "set_target"]},
+    "effect": {"enum": ["ALLOW", "DENY"]},
+    "legacyOutcome": {"enum": ["T", "F", "ABORT", "ERR", "bad_request", "unsupported", "by_value"]},
+    "agentOutcome": {"enum": ["T", "F", "U", "bad_request", "unsupported", "by_value"]},
+    "legacyValueOutcome": {"enum": ["T", "F", "ABORT", "ERR"]},
+    "agentValueOutcome": {"enum": ["T", "F", "U"]},
+    "knobs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fold", "eq_numeric", "list_eq_by_value", "subset_fold"],
+      "properties": {"fold": {}, "eq_numeric": {}, "list_eq_by_value": {}, "subset_fold": {}},
+      "description": "Specification settings keyed by their name in the specification, with that profile's values."
+    },
+    "domain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["states"],
+      "properties": {
+        "states": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/state"}},
+        "classes": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/class"},
+                    "description": "Required and non-empty exactly when states lists VALUE."}
+      }
+    },
+    "kinds": {
+      "type": "object",
+      "propertyNames": {"$ref": "#/$defs/kind"},
+      "additionalProperties": {"$ref": "#/$defs/domain"},
+      "description": "Every kind of #/$defs/kind is required."
+    },
+    "side": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": {
+        "kind": {"$ref": "#/$defs/kind"},
+        "state": {"$ref": "#/$defs/state", "description": "Omitted: every state of the kind's domain."},
+        "class": {"$ref": "#/$defs/class", "description": "Allowed only with state VALUE. Omitted: every class."}
+      }
+    },
+    "cell": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["op", "left", "outcome"],
+      "properties": {
+        "op": {"$ref": "#/$defs/operator"},
+        "left": {"$ref": "#/$defs/side"},
+        "right": {"$ref": "#/$defs/side", "description": "Present exactly when op is binary."},
+        "place": {"$ref": "#/$defs/place", "description": "Omitted: every place."},
+        "effect": {"$ref": "#/$defs/effect", "description": "Omitted: every effect."},
+        "disjunction": {"type": "boolean", "description": "Whether the condition contains OR. Omitted: both."},
+        "in_iterate": {"type": "boolean", "description": "Whether the leaf is evaluated in a pass of iterate. Omitted: both."},
+        "outcome": {"type": "string"},
+        "outcomes": {"type": "array", "minItems": 2, "uniqueItems": true,
+                     "description": "Present exactly when outcome is by_value."}
+      },
+      "if": {"properties": {"op": {"$ref": "#/$defs/unaryOperator"}}},
+      "then": {"not": {"required": ["right"]}},
+      "else": {"required": ["right"]}
+    },
+    "legacyCell": {
+      "allOf": [{"$ref": "#/$defs/cell"}],
+      "properties": {
+        "outcome": {"$ref": "#/$defs/legacyOutcome"},
+        "outcomes": {"items": {"$ref": "#/$defs/legacyValueOutcome"}}
+      }
+    },
+    "agentCell": {
+      "allOf": [{"$ref": "#/$defs/cell"}],
+      "properties": {
+        "outcome": {"$ref": "#/$defs/agentOutcome"},
+        "outcomes": {"items": {"$ref": "#/$defs/agentValueOutcome"}}
+      }
+    },
+    "legacyProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["knobs", "kinds", "cells"],
+      "properties": {
+        "knobs": {"$ref": "#/$defs/knobs"},
+        "kinds": {"$ref": "#/$defs/kinds"},
+        "cells": {"type": "array", "items": {"$ref": "#/$defs/legacyCell"}}
+      }
+    },
+    "agentProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["knobs", "kinds", "cells"],
+      "properties": {
+        "knobs": {"$ref": "#/$defs/knobs"},
+        "kinds": {"$ref": "#/$defs/kinds"},
+        "cells": {"type": "array", "items": {"$ref": "#/$defs/agentCell"}}
+      }
+    }
+  }
+}
