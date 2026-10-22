@@ -214,7 +214,7 @@ parity-export-legacy-harness: test-stand-files
 
 parity-export-legacy-suite:
 	$(PARITY_EXPORT_STAND)
-	$(call run-suite,$(PARITY_KUBECTL),$(PARITY_HELM),parity-export,1h30m)
+	$(call run-suite,$(PARITY_KUBECTL),$(PARITY_HELM),parity-export,2h10m)
 
 # The parity counterpart of e2e-restart, for the same reason.
 PARITY_LOCAL_DEPLOYMENTS := authz-agent authz-policy-admin pip-mock entitlements-mock user-management-mock

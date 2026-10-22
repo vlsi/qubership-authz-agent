@@ -5,13 +5,15 @@
 # case files and goldens that test reads and no export bundle.
 suite:
   imageRepository: local/authz-parity-suite
-  # Each point mounts an export and waits for a pull of about two seconds;
-  # the recorded raw reads give a few dozen points.
+  # Each point mounts an export and waits for one or two pulls, a second
+  # apart. The raw reads recorded so far give about 700 points; at a few
+  # seconds each the run takes under an hour, and the limits leave twice that,
+  # because the report is printed only when the test ends.
   args:
     - ./parity.test
     - -test.v
     - -test.timeout
-    - 3600s
+    - 7200s
     - -test.run
     - ^TestExportFedLegacyAgent$
-  activeDeadlineSeconds: 4500
+  activeDeadlineSeconds: 7500
