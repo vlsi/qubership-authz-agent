@@ -124,20 +124,10 @@ func TestExportFedLegacyAgent(t *testing.T) {
 // the cases of legacyExportCases, those whose every decision is uncompared
 // included.
 func allLegacyExportCases(goldenRoot string) ([]legacyExportCase, error) {
-	root := filepath.Join("testdata", "cases")
-	var names []string
-	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
-		if err != nil || d.IsDir() || filepath.Ext(path) != ".json" {
-			return err
-		}
-		name, _ := filepath.Rel(root, path)
-		names = append(names, filepath.ToSlash(name))
-		return nil
-	})
+	names, err := caseFileNames()
 	if err != nil {
 		return nil, err
 	}
-	slices.Sort(names)
 	var out []legacyExportCase
 	for _, name := range names {
 		f, err := readCaseFile(name)
@@ -151,6 +141,23 @@ func allLegacyExportCases(goldenRoot string) ([]legacyExportCase, error) {
 		out = append(out, cases...)
 	}
 	return out, nil
+}
+
+// caseFileNames returns the names of the case files under testdata/cases,
+// relative to it and sorted, as readCaseFile takes them.
+func caseFileNames() ([]string, error) {
+	root := filepath.Join("testdata", "cases")
+	var names []string
+	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+		if err != nil || d.IsDir() || filepath.Ext(path) != ".json" {
+			return err
+		}
+		name, _ := filepath.Rel(root, path)
+		names = append(names, filepath.ToSlash(name))
+		return nil
+	})
+	slices.Sort(names)
+	return names, err
 }
 
 // legacyCanaryAllowed checks the canary type for parity-reader and reports

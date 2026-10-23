@@ -125,6 +125,23 @@ when the point has none. The report counts the verdicts per family and the diffe
 allows, where the agent allows what the golden denies, before the other differences. `PARITY_EXPORT_RUN` selects the
 cases whose `<case file>/<case id>` it matches.
 
+### Forms legacy accepts and fails every decision on
+
+`make parity-export-owner-decisions` runs `TestExportFedOwnerDecisions` on the same stand, also with no bundle. Legacy
+access-control accepts two forms into its configuration and then fails every decision that depends on them: an
+`iterate` block whose `foreach` is not `subject.permissionScope` or that has no `combiningAlgorithm` (legacy answers
+500), and a target or condition that reads `subject.<attribute>` with no PIP of that name declared (legacy answers 400
+to every check). The agent treats the policy set that holds such a form as a source that always fails: it accepts the
+export, its `/health` names the set, and it answers each decision that legacy failed because of the form with 200 and
+nothing allowed.
+
+The test builds an export for each regular case whose upload legacy accepted and whose sets hold such a form, and for
+each point of the legacy exports whose raw reads hold one. A set that reads an undeclared PIP counts only when legacy
+refused a check of the case with 400, because legacy resolves some attributes without a PIP. Each export is mounted
+with the canary of the legacy exports, and the test fails separately when the canary is denied (the agent refused the
+export), when `/health` does not name the set, and for each decision the agent does not answer with 200 and nothing
+allowed. `PARITY_EXPORT_RUN` selects the cases whose `<case file>/<case id>` it matches.
+
 The bundle also checks the specification's model of the agent's conversion. Without a stand, from the repository
 root:
 

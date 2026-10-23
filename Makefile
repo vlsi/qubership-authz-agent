@@ -216,6 +216,25 @@ parity-export-legacy-suite:
 	$(PARITY_EXPORT_STAND)
 	$(call run-suite,$(PARITY_KUBECTL),$(PARITY_HELM),parity-export,2h10m)
 
+# The owner-decisions check of the export-fed profile:
+# TestExportFedOwnerDecisions mounts the exports that hold a form legacy
+# access-control accepts and then fails every decision on (an iterate block it
+# never evaluates, a condition that reads an undeclared PIP), and checks that
+# the agent takes the export, names the set in /health, and refuses the
+# decisions with 200. Like part A it reads the goldens of the parity suite
+# image and needs no bundle. PARITY_EXPORT_RUN selects the cases by name.
+parity-export-owner-decisions-harness parity-export-owner-decisions-suite: PARITY_EXPORT_EXTRA_VALUES = -f test/k8s/parity/test-stand-values-export-owner-decisions.yaml
+
+parity-export-owner-decisions: e2e-cluster e2e-images parity-export-owner-decisions-harness parity-export-install parity-export-owner-decisions-suite
+
+parity-export-owner-decisions-harness: test-stand-files
+	$(PARITY_EXPORT_STAND)
+	$(PARITY_EXPORT_SEED)
+
+parity-export-owner-decisions-suite:
+	$(PARITY_EXPORT_STAND)
+	$(call run-suite,$(PARITY_KUBECTL),$(PARITY_HELM),parity-export,40m)
+
 # The parity counterpart of e2e-restart, for the same reason.
 PARITY_LOCAL_DEPLOYMENTS := authz-agent authz-policy-admin pip-mock entitlements-mock user-management-mock
 parity-restart:
@@ -237,4 +256,4 @@ parity-logs:
 	$(PARITY_KUBECTL) get events --sort-by=.lastTimestamp > $(E2E_ARTIFACTS)/parity/events.txt
 	-$(PARITY_KUBECTL) exec deploy/pip-mock -- wget -qO- http://authz-agent:8080/internal/v1/decision-logs > $(E2E_ARTIFACTS)/parity/decision-logs.jsonl
 
-.PHONY: lint install-hooks e2e e2e-cluster e2e-images test-stand-files e2e-harness e2e-install e2e-suite e2e-restart e2e-logs e2e-down parity parity-harness parity-install parity-suite parity-export parity-export-image parity-export-harness parity-export-install parity-export-suite parity-export-legacy parity-export-legacy-harness parity-export-legacy-suite parity-restart parity-export-restart parity-logs
+.PHONY: lint install-hooks e2e e2e-cluster e2e-images test-stand-files e2e-harness e2e-install e2e-suite e2e-restart e2e-logs e2e-down parity parity-harness parity-install parity-suite parity-export parity-export-image parity-export-harness parity-export-install parity-export-suite parity-export-legacy parity-export-legacy-harness parity-export-legacy-suite parity-export-owner-decisions parity-export-owner-decisions-harness parity-export-owner-decisions-suite parity-restart parity-export-restart parity-logs

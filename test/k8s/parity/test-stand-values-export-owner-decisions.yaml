@@ -1,0 +1,19 @@
+# Values of the authz-test-stand chart for the owner-decisions check of the
+# export-fed parity profile (`make parity-export-owner-decisions`), layered
+# over test-stand-values.yaml and test-stand-values-export.yaml: the same
+# stand, with the Job running TestExportFedOwnerDecisions from the parity
+# suite's own image, which carries the case files and goldens that test reads
+# and no export bundle.
+suite:
+  imageRepository: local/authz-parity-suite
+  # The goldens give about 80 exports, each mounted once and waited on for one
+  # or two pulls a second apart, so the run takes minutes; the limits leave
+  # room for a slow pull on every export.
+  args:
+    - ./parity.test
+    - -test.v
+    - -test.timeout
+    - 1800s
+    - -test.run
+    - ^TestExportFedOwnerDecisions$
+  activeDeadlineSeconds: 2100
