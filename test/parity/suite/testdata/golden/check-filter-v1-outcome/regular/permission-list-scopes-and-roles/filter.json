@@ -2,8 +2,8 @@
   "status": 200,
   "result": {
     "calculationResult": "USE_FILTER_CONDITION",
-    "filterCondition": "",
-    "mongodbFilterCondition": "",
+    "filterCondition": null,
+    "mongodbFilterCondition": null,
     "rsqlFilterCondition": "scopes=in=(\"openid\", \"profile\", \"email\")",
     "sqlFilterCondition": "roles IN ('ROLE_PARITY_READER')",
     "customFilterCondition": null

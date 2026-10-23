@@ -2,10 +2,10 @@
   "status": 200,
   "result": {
     "calculationResult": "USE_FILTER_CONDITION",
-    "filterCondition": "",
-    "mongodbFilterCondition": "",
+    "filterCondition": null,
+    "mongodbFilterCondition": null,
     "rsqlFilterCondition": "f1a=in=(\"x\", \"y\");f1b==v1;f1c==",
-    "sqlFilterCondition": "",
+    "sqlFilterCondition": null,
     "customFilterCondition": null
   }
 }

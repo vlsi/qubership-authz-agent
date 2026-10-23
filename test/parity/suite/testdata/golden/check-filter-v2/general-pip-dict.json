@@ -1,8 +1,8 @@
 {
   "calculationResult": "USE_FILTER_CONDITION",
-  "filterCondition": "",
-  "mongodbFilterCondition": "",
+  "filterCondition": null,
+  "mongodbFilterCondition": null,
   "rsqlFilterCondition": "id=in=(\"row10-dict-2\", \"row10-dict-1\");amount=le=\"1000\"",
-  "sqlFilterCondition": "",
+  "sqlFilterCondition": null,
   "customFilterCondition": null
 }

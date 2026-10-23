@@ -2,10 +2,10 @@
   "status": 200,
   "result": {
     "calculationResult": "USE_FILTER_CONDITION",
-    "filterCondition": "((PARITY_SUITE_REG_DENY_PREDICATES_UNDER_DENY_OVERRIDES.b.eq(2)).or(PARITY_SUITE_REG_DENY_PREDICATES_UNDER_DENY_OVERRIDES.a.eq(1))).and((PARITY_SUITE_REG_DENY_PREDICATES_UNDER_DENY_OVERRIDES.c.eq(3)).not()).and((PARITY_SUITE_REG_DENY_PREDICATES_UNDER_DENY_OVERRIDES.d.eq(4)).not())",
-    "mongodbFilterCondition": "{ \"$and\": [ { \"$or\": [ {{ \"b\": 2 }}, {{ \"a\": 1 }} ] }, {{ \"c\": 3 }}, {{ \"d\": 4 }} ] }",
-    "rsqlFilterCondition": "(b==2,a==1);c!=3;d!=4",
-    "sqlFilterCondition": "(b=2 OR a=1) AND NOT (c=3) AND NOT (d=4)",
+    "filterCondition": "((PARITY_SUITE_REG_DENY_PREDICATES_UNDER_DENY_OVERRIDES.a.eq(1)).or(PARITY_SUITE_REG_DENY_PREDICATES_UNDER_DENY_OVERRIDES.b.eq(2))).and((PARITY_SUITE_REG_DENY_PREDICATES_UNDER_DENY_OVERRIDES.c.eq(3)).not()).and((PARITY_SUITE_REG_DENY_PREDICATES_UNDER_DENY_OVERRIDES.d.eq(4)).not())",
+    "mongodbFilterCondition": "{ \"$and\": [ { \"$or\": [ {{ \"a\": 1 }}, {{ \"b\": 2 }} ] }, {{ \"c\": 3 }}, {{ \"d\": 4 }} ] }",
+    "rsqlFilterCondition": "(a==1,b==2);c!=3;d!=4",
+    "sqlFilterCondition": "(a=1 OR b=2) AND NOT (c=3) AND NOT (d=4)",
     "customFilterCondition": {
       "logic": {
         "op": "AND",
@@ -14,10 +14,10 @@
             "op": "OR",
             "apply": [
               {
-                "path": "9c930d28-8548-917e-152d-0504745dc30a"
+                "path": "f5e8c3d8-283a-d90f-f949-2861811d14c0"
               },
               {
-                "path": "f5e8c3d8-283a-d90f-f949-2861811d14c0"
+                "path": "9c930d28-8548-917e-152d-0504745dc30a"
               }
             ]
           },

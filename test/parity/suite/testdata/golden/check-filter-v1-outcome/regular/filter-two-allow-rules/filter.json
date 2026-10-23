@@ -2,10 +2,10 @@
   "status": 200,
   "result": {
     "calculationResult": "USE_FILTER_CONDITION",
-    "filterCondition": "(PARITY_SUITE_REG_FILTER_TWO_ALLOW_RULES.b.eq(\"1\")).or(PARITY_SUITE_REG_FILTER_TWO_ALLOW_RULES.a.eq(\"1\"))",
-    "mongodbFilterCondition": "{ \"$or\": [ {{ \"b\": 1 }}, {{ \"a\": 1 }} ] }",
-    "rsqlFilterCondition": "b==1,a==1",
-    "sqlFilterCondition": "b=1 OR a=1",
+    "filterCondition": "(PARITY_SUITE_REG_FILTER_TWO_ALLOW_RULES.a.eq(\"1\")).or(PARITY_SUITE_REG_FILTER_TWO_ALLOW_RULES.b.eq(\"1\"))",
+    "mongodbFilterCondition": "{ \"$or\": [ {{ \"a\": 1 }}, {{ \"b\": 1 }} ] }",
+    "rsqlFilterCondition": "a==1,b==1",
+    "sqlFilterCondition": "a=1 OR b=1",
     "customFilterCondition": null
   }
 }

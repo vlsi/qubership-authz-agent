@@ -1,8 +1,8 @@
 {
   "calculationResult": "USE_FILTER_CONDITION",
-  "filterCondition": "",
-  "mongodbFilterCondition": "",
+  "filterCondition": null,
+  "mongodbFilterCondition": null,
   "rsqlFilterCondition": "ownerId==00000000-0000-0000-0000-000000000101",
-  "sqlFilterCondition": "",
+  "sqlFilterCondition": null,
   "customFilterCondition": null
 }

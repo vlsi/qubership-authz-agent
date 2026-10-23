@@ -2,10 +2,10 @@
   "status": 200,
   "result": {
     "calculationResult": "USE_FILTER_CONDITION",
-    "filterCondition": "",
+    "filterCondition": null,
     "mongodbFilterCondition": "{ { \"f4\": { \"$in\": ${subject.parityR35Number} } } }",
     "rsqlFilterCondition": "f4=in=(${subject.parityR35Number})",
-    "sqlFilterCondition": "",
+    "sqlFilterCondition": null,
     "customFilterCondition": null
   }
 }

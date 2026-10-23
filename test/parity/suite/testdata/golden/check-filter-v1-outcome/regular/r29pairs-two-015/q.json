@@ -4,8 +4,8 @@
     "calculationResult": "USE_FILTER_CONDITION",
     "filterCondition": "(((PARITY_SUITE_R29P_R29PAIRS_TWO_015_S.f8a.in(\"x\", \"y\")).or(PARITY_SUITE_R29P_R29PAIRS_TWO_015_S.f8b.eq(\"v1\"))).and(PARITY_SUITE_R29P_R29PAIRS_TWO_015_S.f8c.eq(\"v2\"))).or(((PARITY_SUITE_R29P_R29PAIRS_TWO_015_S.f8a.in(\"x\", \"y\")).or(PARITY_SUITE_R29P_R29PAIRS_TWO_015_S.f8b.eq(\"v1\"))).and(PARITY_SUITE_R29P_R29PAIRS_TWO_015_S.f8c.eq(\"v2\")))",
     "mongodbFilterCondition": "{ \"$or\": [ { { \"$and\": [ { \"f7a\": [ { \"$uuid\": \"finance\" } ] }, { \"f7b\": \"v1\" } ] } },{ { \"$and\": [ { \"f7a\": [ { \"$uuid\": \"finance\" } ] }, { \"f7b\": \"v1\" } ] } } ] }",
-    "rsqlFilterCondition": "",
-    "sqlFilterCondition": "",
+    "rsqlFilterCondition": null,
+    "sqlFilterCondition": null,
     "customFilterCondition": null
   }
 }

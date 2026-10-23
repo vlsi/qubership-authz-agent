@@ -3,9 +3,9 @@
   "result": {
     "calculationResult": "USE_FILTER_CONDITION",
     "filterCondition": "(PARITY_SUITE_R29P_R29PAIRS_NONE_010_S.f4a.eq().not()",
-    "mongodbFilterCondition": "",
-    "rsqlFilterCondition": "",
-    "sqlFilterCondition": "NOT (f5a = = 'v0') AND NOT (f6a = = 'v0')",
+    "mongodbFilterCondition": null,
+    "rsqlFilterCondition": null,
+    "sqlFilterCondition": "NOT (f6a = = 'v0') AND NOT (f5a = = 'v0')",
     "customFilterCondition": null
   }
 }

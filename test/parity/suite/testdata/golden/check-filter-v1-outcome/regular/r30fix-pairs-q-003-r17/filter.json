@@ -2,10 +2,10 @@
   "status": 200,
   "result": {
     "calculationResult": "USE_FILTER_CONDITION",
-    "filterCondition": "",
-    "mongodbFilterCondition": "",
+    "filterCondition": null,
+    "mongodbFilterCondition": null,
     "rsqlFilterCondition": "f17a!=PARITY_SUITE_R30X_R30FIX_PAIRS_Q_003_R17,f17b!=v1;f17c!=v2",
-    "sqlFilterCondition": "",
+    "sqlFilterCondition": null,
     "customFilterCondition": null
   }
 }

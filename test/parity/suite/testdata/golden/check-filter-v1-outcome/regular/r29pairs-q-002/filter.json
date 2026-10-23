@@ -2,9 +2,9 @@
   "status": 200,
   "result": {
     "calculationResult": "USE_FILTER_CONDITION",
-    "filterCondition": "",
-    "mongodbFilterCondition": "",
-    "rsqlFilterCondition": "",
+    "filterCondition": null,
+    "mongodbFilterCondition": null,
+    "rsqlFilterCondition": null,
     "sqlFilterCondition": "(fa='v0' OR fb='v1') AND NOT (fc='v2')",
     "customFilterCondition": null
   }

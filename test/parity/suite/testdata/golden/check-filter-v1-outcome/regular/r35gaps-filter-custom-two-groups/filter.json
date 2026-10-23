@@ -2,17 +2,14 @@
   "status": 200,
   "result": {
     "calculationResult": "USE_FILTER_CONDITION",
-    "filterCondition": "",
-    "mongodbFilterCondition": "",
-    "rsqlFilterCondition": "",
-    "sqlFilterCondition": "",
+    "filterCondition": null,
+    "mongodbFilterCondition": null,
+    "rsqlFilterCondition": null,
+    "sqlFilterCondition": null,
     "customFilterCondition": {
       "logic": {
         "op": "OR",
         "apply": [
-          {
-            "path": "9e4a1375-6cce-f0a5-0731-7ece2facabb1"
-          },
           {
             "op": "OR",
             "apply": [
@@ -23,6 +20,9 @@
                 "path": "a965b191-9561-1682-4ca0-3ec37e8c848a"
               }
             ]
+          },
+          {
+            "path": "9e4a1375-6cce-f0a5-0731-7ece2facabb1"
           }
         ]
       },

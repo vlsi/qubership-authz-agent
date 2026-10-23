@@ -1,8 +1,8 @@
 {
   "calculationResult": "USE_FILTER_CONDITION",
-  "filterCondition": "",
-  "mongodbFilterCondition": "",
+  "filterCondition": null,
+  "mongodbFilterCondition": null,
   "rsqlFilterCondition": "tier==\"gold\";amount=lt=\"1000\"",
-  "sqlFilterCondition": "",
+  "sqlFilterCondition": null,
   "customFilterCondition": null
 }

@@ -2,8 +2,8 @@
   "status": 200,
   "result": {
     "calculationResult": "USE_FILTER_CONDITION",
-    "filterCondition": "",
-    "mongodbFilterCondition": "",
+    "filterCondition": null,
+    "mongodbFilterCondition": null,
     "rsqlFilterCondition": "perms=in=(\"parity_permission\")",
     "sqlFilterCondition": "perms IN ('parity_permission')",
     "customFilterCondition": null

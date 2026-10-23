@@ -2,10 +2,10 @@
   "status": 200,
   "result": {
     "calculationResult": "USE_FILTER_CONDITION",
-    "filterCondition": "",
-    "mongodbFilterCondition": "",
-    "rsqlFilterCondition": "(regular1==1),(simplified1==1,simplified2==2),(regular2==2)",
-    "sqlFilterCondition": "",
+    "filterCondition": null,
+    "mongodbFilterCondition": null,
+    "rsqlFilterCondition": "(simplified1==1,simplified2==2),(regular2==2),(regular1==1)",
+    "sqlFilterCondition": null,
     "customFilterCondition": null
   }
 }

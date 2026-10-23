@@ -2,10 +2,10 @@
   "status": 200,
   "result": {
     "calculationResult": "USE_FILTER_CONDITION",
-    "filterCondition": "",
-    "mongodbFilterCondition": "{ \"$or\": [ {{ \"e\": \"2\" }}, {{ \"d\": \"1\" }},{ { \"f\": \"3\" } } ] }",
-    "rsqlFilterCondition": "",
-    "sqlFilterCondition": "",
+    "filterCondition": null,
+    "mongodbFilterCondition": "{ \"$or\": [ { { \"f\": \"3\" } },{{ \"e\": \"2\" }}, {{ \"d\": \"1\" }} ] }",
+    "rsqlFilterCondition": null,
+    "sqlFilterCondition": null,
     "customFilterCondition": null
   }
 }

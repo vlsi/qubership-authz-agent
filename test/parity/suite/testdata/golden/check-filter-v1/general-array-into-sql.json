@@ -1,8 +1,8 @@
 {
   "calculationResult": "ALLOW",
-  "filterCondition": "",
-  "mongodbFilterCondition": "",
-  "rsqlFilterCondition": "",
-  "sqlFilterCondition": "",
+  "filterCondition": null,
+  "mongodbFilterCondition": null,
+  "rsqlFilterCondition": null,
+  "sqlFilterCondition": null,
   "customFilterCondition": null
 }

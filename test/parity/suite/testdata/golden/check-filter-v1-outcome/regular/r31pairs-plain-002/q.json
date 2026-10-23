@@ -3,9 +3,9 @@
   "result": {
     "calculationResult": "USE_FILTER_CONDITION",
     "filterCondition": "((PARITY_SUITE_R29P_R31PAIRS_PLAIN_002_S.f2a.in(\"h1\", \"h2\")).or(PARITY_SUITE_R29P_R31PAIRS_PLAIN_002_S.f2b.eq(\"v1\"))).and(PARITY_SUITE_R29P_R31PAIRS_PLAIN_002_S.f2c.eq(\"v2\"))",
-    "mongodbFilterCondition": "",
-    "rsqlFilterCondition": "",
-    "sqlFilterCondition": "",
+    "mongodbFilterCondition": null,
+    "rsqlFilterCondition": null,
+    "sqlFilterCondition": null,
     "customFilterCondition": null
   }
 }

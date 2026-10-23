@@ -3,7 +3,7 @@
   "result": {
     "calculationResult": "USE_FILTER_CONDITION",
     "filterCondition": "PARITY_SUITE_R16_D2SF1_30.k.in(\"x\", \"y\")",
-    "mongodbFilterCondition": "",
+    "mongodbFilterCondition": null,
     "rsqlFilterCondition": "(k=in=(x,y)),((g1==1,g2==2);g3==3)",
     "sqlFilterCondition": "k IN ('x', 'y')",
     "customFilterCondition": null

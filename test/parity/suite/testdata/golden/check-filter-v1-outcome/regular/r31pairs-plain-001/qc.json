@@ -2,10 +2,10 @@
   "status": 200,
   "result": {
     "calculationResult": "USE_FILTER_CONDITION",
-    "filterCondition": "",
+    "filterCondition": null,
     "mongodbFilterCondition": "{ { \"$and\": [ { \"$or\": [ { \"f10a\": { \"$in\": [ \"ROLE_PARITY_READER\" ] } }, { \"f10b\": \"v1\" } ] }, { \"f10c\": \"v2\" } ] } }",
-    "rsqlFilterCondition": "",
-    "sqlFilterCondition": "",
+    "rsqlFilterCondition": null,
+    "sqlFilterCondition": null,
     "customFilterCondition": null
   }
 }

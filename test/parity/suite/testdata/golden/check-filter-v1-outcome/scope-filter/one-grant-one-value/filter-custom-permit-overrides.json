@@ -2,10 +2,10 @@
   "status": 200,
   "result": {
     "calculationResult": "USE_FILTER_CONDITION",
-    "filterCondition": "",
-    "mongodbFilterCondition": "",
-    "rsqlFilterCondition": "",
-    "sqlFilterCondition": "",
+    "filterCondition": null,
+    "mongodbFilterCondition": null,
+    "rsqlFilterCondition": null,
+    "sqlFilterCondition": null,
     "customFilterCondition": {
       "logic": {
         "path": "fcfd7503-74d3-a7ba-c3b5-74421c8b83e1_0_b20ec7e4-3404-6ebc-476e-ffdd32a380ca"
