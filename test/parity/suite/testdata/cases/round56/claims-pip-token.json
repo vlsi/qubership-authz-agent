@@ -83,7 +83,7 @@
   },
   {
    "id": "p56c-pip-call-token",
-   "about": "A rule that reads a GENERAL PIP, checked for parity-reader. The pip-call golden records the call's Authorization against the request's tokens, whose token it is by its claims (a service account, the request's user, another user), its Tenant against the request's tenant_id, and whether it carried Incoming-Token.",
+   "about": "A rule that reads a GENERAL PIP, checked for parity-reader. The pip-call golden records the call's Authorization against the request's tokens, whose token it is by its claims (a service account, the request's user, another user), who issued it (the stand's IdP, Kubernetes, another issuer; added after the round was recorded), its Tenant against the request's tenant_id, and whether it carried Incoming-Token.",
    "resourceType": "PARITY_SUITE_P56C_PIP_CALL_TOKEN",
    "tenant": "parity-p56c-pip-call-token",
    "steps": [
@@ -158,6 +158,7 @@
        "pipHeaders": [
         "authorization",
         "authorization:subject",
+        "authorization:issuer",
         "tenant",
         "incoming-token"
        ]

@@ -313,9 +313,10 @@ type requestSpec struct {
 	// as a pip-call golden under the request's own name.
 	PIPCalls string `json:"pipCalls"`
 	// PIPHeaders names headers, beside PIPCalls, whose values in the first call
-	// on the route the pip-call golden records; see forwardedHeaders. The name
-	// authorization:subject, which no header can have, records whose token the
-	// call's Authorization is; see tokenSubject.
+	// on the route the pip-call golden records; see forwardedHeaders. The names
+	// authorization:subject and authorization:issuer, which no header can have,
+	// record whose token the call's Authorization is and who issued it; see
+	// tokenSubject and tokenIssuer.
 	PIPHeaders []string `json:"pipHeaders"`
 	// UserID is sent as the userId query parameter of the check, the filter,
 	// or the bulk request; "" sends it with an empty value.
@@ -715,6 +716,11 @@ func sentHeaders(tokens TokenBundle, opts PerCallOptions) map[string]string {
 // is a token of RFC 9110, which admits no colon, so no header has this name.
 const authorizationSubject = "authorization:subject"
 
+// authorizationIssuer is the name in pipHeaders, and the member of a
+// user-management-call golden's headers, that records who issued the
+// Authorization of a call; see tokenIssuer.
+const authorizationIssuer = "authorization:issuer"
+
 // forwardedHeaders returns the headers named in names that the first call to
 // route in calls carried, keyed by lower-case name, as a pip-call golden
 // records them. sent holds the headers of the request that caused the call,
@@ -722,9 +728,10 @@ const authorizationSubject = "authorization:subject"
 // not carry is null. A value equal to the request's Authorization or
 // Incoming-Token, either one with or without Bearer, is the label <m2m token>
 // or <user token>; any other authorization value is <other token>; a tenant
-// value is <tenant_id> when it equals tenant and <other> otherwise. The name
-// authorizationSubject records the call's Authorization as tokenSubject classes
-// it. Any other value is recorded as it is.
+// value is <tenant_id> when it equals tenant and <other> otherwise. The names
+// authorizationSubject and authorizationIssuer record the call's Authorization
+// as tokenSubject and tokenIssuer class it. Any other value is recorded as it
+// is.
 func forwardedHeaders(calls []PipStubCall, route string, names []string, sent map[string]string, tenant string) map[string]any {
 	var first *PipStubCall
 	for i := range calls {
@@ -737,7 +744,7 @@ func forwardedHeaders(calls []PipStubCall, route string, names []string, sent ma
 	for _, n := range names {
 		name := strings.ToLower(n)
 		header := name
-		if name == authorizationSubject {
+		if name == authorizationSubject || name == authorizationIssuer {
 			header = "authorization"
 		}
 		value, carried := "", false
@@ -749,6 +756,8 @@ func forwardedHeaders(calls []PipStubCall, route string, names []string, sent ma
 			out[name] = nil
 		case name == authorizationSubject:
 			out[name] = tokenSubject(value, sent["incoming-token"])
+		case name == authorizationIssuer:
+			out[name] = tokenIssuer(value)
 		case sent["authorization"] != "" && withoutBearer(value) == withoutBearer(sent["authorization"]):
 			out[name] = "<m2m token>"
 		case sent["incoming-token"] != "" && withoutBearer(value) == withoutBearer(sent["incoming-token"]):
@@ -787,6 +796,29 @@ func tokenSubject(value, incoming string) string {
 	return "<another user>"
 }
 
+// tokenIssuer returns who issued value, by its claims and never by the token
+// itself: <kubernetes> when its payload has a kubernetes.io member, as a
+// projected service account token of a pod does; <idp> when its iss is a
+// Keycloak realm, ending in /realms/<name>, as the tokens of the stand's IdP
+// are; <other> for any other JWT; and <not a token> when value, with or without
+// Bearer, is no JWT. The host of iss is not compared, because access-control
+// reaches the IdP by an address inside the cluster, which the suite does not
+// see.
+func tokenIssuer(value string) string {
+	claims := jwtClaims(withoutBearer(value))
+	if claims == nil {
+		return "<not a token>"
+	}
+	if _, ok := claims["kubernetes.io"]; ok {
+		return "<kubernetes>"
+	}
+	iss, _ := claims["iss"].(string)
+	if _, realm, ok := strings.Cut(iss, "/realms/"); ok && realm != "" && !strings.Contains(realm, "/") {
+		return "<idp>"
+	}
+	return "<other>"
+}
+
 // userManagementCallOutcome returns calls, the call log of user-management-
 // mock over one request, as a user-management-call golden records it. sent
 // holds the headers of the request, as sentHeaders returns them, tenant its
@@ -794,7 +826,8 @@ func tokenSubject(value, incoming string) string {
 // call, the golden holds the value of authorization, incoming-token, tenant,
 // accept, and content-type only, since another header may carry a value that
 // differs from run to run. A token is the label userManagementTokenLabel gives
-// it; a tenant equal to tenant is <tenant_id>.
+// it; a tenant equal to tenant is <tenant_id>. A call with an authorization also
+// records its issuer under authorizationIssuer, as tokenIssuer classes it.
 func userManagementCallOutcome(calls []PipStubCall, sent map[string]string, tenant string, userID *string) *model.UserManagementCallOutcome {
 	outcome := &model.UserManagementCallOutcome{Calls: []model.UserManagementCall{}}
 	for _, call := range calls {
@@ -805,6 +838,9 @@ func userManagementCallOutcome(calls []PipStubCall, sent map[string]string, tena
 			switch name {
 			case "authorization", "incoming-token":
 				headers[name] = userManagementTokenLabel(value, sent, userID)
+				if name == "authorization" {
+					headers[authorizationIssuer] = tokenIssuer(value)
+				}
 			case "tenant":
 				if value == tenant {
 					headers[name] = "<tenant_id>"
@@ -1237,8 +1273,9 @@ func requestProblems(c caseSpec, r requestSpec, pinned map[string]bool, rt strin
 		report("sets pipHeaders without pipCalls, whose golden records them")
 	}
 	for _, name := range r.PIPHeaders {
-		if strings.Contains(name, ":") && strings.ToLower(name) != authorizationSubject {
-			report("names %q in pipHeaders, which no header has, and which is not %s", name, authorizationSubject)
+		if lower := strings.ToLower(name); strings.Contains(name, ":") && lower != authorizationSubject && lower != authorizationIssuer {
+			report("names %q in pipHeaders, which no header has, and which is neither %s nor %s", name, authorizationSubject,
+				authorizationIssuer)
 		}
 	}
 	if r.ClassifyBy != "" {

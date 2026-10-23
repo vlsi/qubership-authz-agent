@@ -236,10 +236,11 @@ func TestUserManagementCallOutcome(t *testing.T) {
 	userID := "u 1"
 	calls := []PipStubCall{
 		{Method: "GET", Path: "/users/u 1", RequestURI: "/users/u%201?expand=roles", BodyRaw: "", Headers: map[string]string{
-			"authorization": jwt(map[string]any{"preferred_username": "service-account-ac", "sub": "s"}),
-			"tenant":        "default",
-			"accept":        "application/json",
-			"x-request-id":  "differs on every run",
+			"authorization": jwt(map[string]any{"preferred_username": "service-account-ac", "sub": "s",
+				"iss": "http://idp.parity.svc/auth/realms/parity"}),
+			"tenant":       "default",
+			"accept":       "application/json",
+			"x-request-id": "differs on every run",
 		}},
 		{Method: "POST", Path: "/users", RequestURI: "/users", BodyRaw: `{"id":"u 1"}`, Headers: map[string]string{
 			"incoming-token": "Bearer user-token",
@@ -251,7 +252,8 @@ func TestUserManagementCallOutcome(t *testing.T) {
 	want := &model.UserManagementCallOutcome{Calls: []model.UserManagementCall{
 		{Method: "GET", RequestURI: "/users/u%201?expand=roles",
 			HeaderNames: []string{"accept", "authorization", "tenant", "x-request-id"},
-			Headers:     map[string]any{"accept": "application/json", "authorization": "<service account>", "tenant": "<tenant_id>"}},
+			Headers: map[string]any{"accept": "application/json", "authorization": "<service account>",
+				"authorization:issuer": "<idp>", "tenant": "<tenant_id>"}},
 		{Method: "POST", RequestURI: "/users", Body: `{"id":"u 1"}`,
 			HeaderNames: []string{"content-type", "incoming-token", "tenant"},
 			Headers:     map[string]any{"content-type": "application/json", "incoming-token": "<user token>", "tenant": "tenant-b"}},
@@ -303,6 +305,55 @@ func TestForwardedHeaders_LabelsAnotherTokenAndAnotherTenant(t *testing.T) {
 	want := map[string]any{"authorization": "<other token>", "tenant": "<other>"}
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("forwardedHeaders mismatch (-want +got):\n%s", diff)
+	}
+}
+
+// tokenIssuer classes a token by its claims: a kubernetes.io member marks a
+// pod's projected service account token, an iss that names a Keycloak realm
+// the stand's IdP, and any other JWT is <other>.
+func TestTokenIssuer(t *testing.T) {
+	for _, tc := range []struct {
+		name, value, want string
+	}{
+		{"a pod's projected token", jwt(map[string]any{"iss": "https://kubernetes.default.svc.cluster.local",
+			"kubernetes.io": map[string]any{"namespace": "parity"}}), "<kubernetes>"},
+		{"a kubernetes.io member beside a realm issuer", jwt(map[string]any{"iss": "http://idp/auth/realms/parity",
+			"kubernetes.io": map[string]any{}}), "<kubernetes>"},
+		{"a realm of the IdP", jwt(map[string]any{"iss": "http://idp.parity.svc/auth/realms/parity"}), "<idp>"},
+		{"another realm of the IdP", jwt(map[string]any{"iss": "https://idp.example/realms/parity-mt-b"}), "<idp>"},
+		{"a path below a realm", jwt(map[string]any{"iss": "http://idp/auth/realms/parity/protocol"}), "<other>"},
+		{"a realm without a name", jwt(map[string]any{"iss": "http://idp/auth/realms/"}), "<other>"},
+		{"an issuer that is no realm", jwt(map[string]any{"iss": "https://issuer.example/oauth2"}), "<other>"},
+		{"a JWT without iss", jwt(map[string]any{"sub": "s"}), "<other>"},
+		{"no JWT", "Bearer opaque", "<not a token>"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := tokenIssuer(tc.value); got != tc.want {
+				t.Errorf("tokenIssuer(%q) = %q, want %q", tc.value, got, tc.want)
+			}
+		})
+	}
+}
+
+// The pseudo-header authorization:issuer records the issuer of the call's
+// Authorization, and null when the call carried none.
+func TestForwardedHeaders_ClassesTheIssuerOfTheToken(t *testing.T) {
+	pod := jwt(map[string]any{"iss": "https://kubernetes.default.svc", "kubernetes.io": map[string]any{}})
+	for _, tc := range []struct {
+		name    string
+		headers map[string]string
+		want    any
+	}{
+		{"a call with a pod's token", map[string]string{"authorization": pod}, "<kubernetes>"},
+		{"a call without Authorization", map[string]string{}, nil},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			calls := []PipStubCall{{Path: "/pip", Headers: tc.headers}}
+			got := forwardedHeaders(calls, "/pip", []string{"Authorization:Issuer"}, map[string]string{}, "default")
+			if diff := cmp.Diff(map[string]any{"authorization:issuer": tc.want}, got); diff != "" {
+				t.Errorf("forwardedHeaders mismatch (-want +got):\n%s", diff)
+			}
+		})
 	}
 }
 
@@ -510,10 +561,14 @@ func TestCaseFileProblems(t *testing.T) {
 			f.Cases[0].Requests[0].PIPCalls = "/pip"
 			f.Cases[0].Requests[0].PIPHeaders = []string{"Authorization:Subject", "tenant"}
 		}, ""},
+		{"pipHeaders with authorization:issuer", func(f *caseFile) {
+			f.Cases[0].Requests[0].PIPCalls = "/pip"
+			f.Cases[0].Requests[0].PIPHeaders = []string{"Authorization:Issuer"}
+		}, ""},
 		{"pipHeaders with another name holding a colon", func(f *caseFile) {
 			f.Cases[0].Requests[0].PIPCalls = "/pip"
 			f.Cases[0].Requests[0].PIPHeaders = []string{"authorization:claims"}
-		}, `case iso request read names "authorization:claims" in pipHeaders, which no header has, and which is not authorization:subject`},
+		}, `case iso request read names "authorization:claims" in pipHeaders, which no header has, and which is neither authorization:subject nor authorization:issuer`},
 		{"emptyOperation beside operation", func(f *caseFile) {
 			f.Cases[0].Requests[0].EmptyOperation = true
 			f.Cases[0].Requests[0].Operation = "READ"
