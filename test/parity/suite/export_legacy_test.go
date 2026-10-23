@@ -26,6 +26,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"slices"
 	"sort"
 	"strings"
@@ -403,8 +404,8 @@ func legacyPoints(events []legacyEvent, lc legacyExportCase, shared map[string]b
 			lastKey = ""
 			continue
 		}
-		p.features = exportFeatures(p.policySets, p.pips, events[:i])
-		if key.String() == lastKey && len(points) > 0 {
+		p.features = exportFeatures(p.policySets, p.pips, events[:i], requestTenant(e))
+		if key.String() == lastKey && len(points) > 0 && slices.Equal(points[len(points)-1].features, p.features) {
 			last := &points[len(points)-1]
 			last.decisions = append(last.decisions, e.dec)
 			continue
@@ -475,9 +476,12 @@ func seededUUID(seed string) string {
 }
 
 // exportFeatures lists the features of an export the agent's conversion
-// drops or ignores, as internal/acconfig documents it, and the customizations
-// and status changes the accepted writes before the point made. The order is
-// the order a difference is classified in.
+// drops or ignores, as internal/acconfig documents it, the customizations
+// and status changes the accepted writes before the point made, and the
+// features of the export that the agent evaluates differently from legacy
+// by decision. request is the tenant the decision's request names, as
+// requestTenant returns it. The order is the order a difference is
+// classified in.
 //
 //   - set-type:<type>: a policy set whose type is not SIMPLIFIED, at any
 //     depth; "none" for a set with no type;
@@ -486,11 +490,16 @@ func seededUUID(seed string) string {
 //   - rule-effect:DENY: a DENY rule of a SIMPLIFIED set;
 //   - customization:<level>: a set or PIP customization, or its delete, at
 //     that level;
-//   - tenant: elements of more than one tenant;
+//   - tenant: elements of more than one tenant, or of a tenant other than
+//     the one request names;
 //   - pip-kind:<kind>: a PIP of a kind the conversion drops: MAPPING,
 //     FILTERED, PERMISSION_SCOPE, ENTITLEMENT, GENERAL with a beanName, or no
-//     pipType ("none").
-func exportFeatures(policySets, pips []any, before []legacyEvent) []string {
+//     pipType ("none");
+//   - undeclared-pip:<attribute>: a target or condition of a SIMPLIFIED set
+//     reads subject.<attribute>, which is neither in
+//     subjectAttributesWithoutPIP nor the first segment of a PIP name of the
+//     export.
+func exportFeatures(policySets, pips []any, before []legacyEvent, request string) []string {
 	seen := map[string]bool{}
 	var out []string
 	add := func(f string) {
@@ -501,7 +510,7 @@ func exportFeatures(policySets, pips []any, before []legacyEvent) []string {
 	}
 	tenants := map[string]bool{}
 	var sets func(list []any, depth string)
-	var statuses, effects []string
+	var statuses, effects, reads []string
 	var types []string
 	sets = func(list []any, depth string) {
 		for _, v := range list {
@@ -522,10 +531,13 @@ func exportFeatures(policySets, pips []any, before []legacyEvent) []string {
 			if typ == "SIMPLIFIED" {
 				for _, pv := range asList(set["policies"]) {
 					policy, _ := pv.(map[string]any)
+					reads = append(reads, subjectAttributes(policy)...)
 					for _, rv := range asList(policy["rules"]) {
-						if rule, _ := rv.(map[string]any); rule != nil && rule["effect"] == "DENY" {
+						rule, _ := rv.(map[string]any)
+						if rule["effect"] == "DENY" {
 							effects = append(effects, "rule-effect:DENY")
 						}
+						reads = append(reads, subjectAttributes(rule)...)
 					}
 				}
 			}
@@ -554,6 +566,7 @@ func exportFeatures(policySets, pips []any, before []legacyEvent) []string {
 		}
 	}
 	var kinds []string
+	declared := maps.Clone(subjectAttributesWithoutPIP)
 	for _, v := range pips {
 		pip, _ := v.(map[string]any)
 		if pip == nil {
@@ -561,6 +574,10 @@ func exportFeatures(policySets, pips []any, before []legacyEvent) []string {
 		}
 		if t, ok := pip["tenantId"].(string); ok {
 			tenants[t] = true
+		}
+		if name, ok := strings.CutPrefix(asString(pip["name"]), "subject."); ok {
+			alias, _, _ := strings.Cut(name, ".")
+			declared[alias] = true
 		}
 		kind, _ := pip["pipType"].(string)
 		switch {
@@ -572,13 +589,59 @@ func exportFeatures(policySets, pips []any, before []legacyEvent) []string {
 			kinds = append(kinds, "pip-kind:GENERAL-beanName")
 		}
 	}
-	if len(tenants) > 1 {
+	otherTenant := len(tenants) > 1
+	if request != "\x00" {
+		for t := range tenants {
+			otherTenant = otherTenant || t != request
+		}
+	}
+	if otherTenant {
 		add("tenant")
 	}
 	for _, f := range kinds {
 		add(f)
 	}
+	for _, a := range reads {
+		if !declared[a] {
+			add("undeclared-pip:" + a)
+		}
+	}
 	return out
+}
+
+// subjectAttributesWithoutPIP holds the attributes of the subject the agent
+// resolves with no PIP of the export: the claims of the token, and the
+// entitlements the agent's own configuration declares.
+var subjectAttributesWithoutPIP = map[string]bool{
+	"id": true, "name": true, "type": true, "roles": true, "scopes": true, "entitledResources": true,
+}
+
+var (
+	subjectPlaceholder = regexp.MustCompile(`\$\{subject\.([^}.]+)`)
+	quotedLiteral      = regexp.MustCompile(`'(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"`)
+	subjectReference   = regexp.MustCompile(`(?:^|[^\w.$])subject\.([^\s()=!<>,'".]+)`)
+)
+
+// subjectAttributes returns the first segment of every subject.<attribute>
+// that the target or the condition of element reads: a reference outside a
+// quoted literal, or a ${subject.<attribute>} placeholder anywhere.
+func subjectAttributes(element map[string]any) []string {
+	var out []string
+	for _, field := range []string{"target", "condition"} {
+		text := asString(element[field])
+		for _, m := range subjectPlaceholder.FindAllStringSubmatch(text, -1) {
+			out = append(out, m[1])
+		}
+		for _, m := range subjectReference.FindAllStringSubmatch(quotedLiteral.ReplaceAllString(text, "''"), -1) {
+			out = append(out, m[1])
+		}
+	}
+	return out
+}
+
+func asString(v any) string {
+	s, _ := v.(string)
+	return s
 }
 
 func cmpOr(s, fallback string) string {
@@ -635,15 +698,15 @@ func legacyClass(p legacyExportPoint, loaded bool) string {
 
 // acceptedLegacyDifference returns the entry of acceptedExportDivergences
 // that covers a difference of class at a point of part A, keyed by the kind
-// of the class (set-type for set-type:DEFAULT). A wrong allow is never
-// covered.
+// of the class (set-type for set-type:DEFAULT). A wrong allow is covered only
+// by an entry whose AllowsMore is set.
 func acceptedLegacyDifference(class string, wrongAllow bool) (AcceptedDivergence, bool) {
-	if wrongAllow {
-		return AcceptedDivergence{}, false
-	}
 	kind, _, _ := strings.Cut(class, ":")
 	accepted, ok := acceptedExportDivergences[kind]
-	return accepted, ok
+	if !ok || wrongAllow && !accepted.AllowsMore {
+		return AcceptedDivergence{}, false
+	}
+	return accepted, true
 }
 
 // legacyCanaryType is the resource type of the canary set mounted beside the
@@ -737,7 +800,7 @@ func legacyExportReport(results []legacyResult, uncompared map[string]string) st
 			}
 			classes[r.Class] = c
 		}
-		if r.Verdict == verdictDiffers || r.WrongAllow {
+		if r.Verdict == verdictDiffers {
 			differs = append(differs, r)
 		}
 	}

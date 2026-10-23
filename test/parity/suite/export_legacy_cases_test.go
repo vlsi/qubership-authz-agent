@@ -369,6 +369,25 @@ func TestLegacyExportCases_AnUncomparedDecisionSplitsAPoint(t *testing.T) {
 	}
 }
 
+// A request that names a tenant the export's elements do not belong to gets
+// the feature tenant, and a point of its own apart from the decisions of the
+// case's tenant, which do not.
+func TestLegacyExportCases_ARequestOfATenantTheExportDoesNotHoldIsAPointWithTheTenantFeature(t *testing.T) {
+	fx := newLegacyFixture(t)
+	fx.status("write-domain-policies", "write", 201)
+	fx.rawSets("write", map[string]any{"type": "SIMPLIFIED", "status": "ACTIVE", "tenantId": "parity-legacy-case"})
+	lc := fx.legacyCase(`[{"name":"write","op":"write-domain-policies","args":{"domain":"D"},"body":[],
+		"observe":["status","read-raw:read-config-sets","decide:home","decide:spelled"],"onRefusal":"continue",
+		"requests":[{"name":"home","operation":"READ"},{"name":"spelled","operation":"READ","tenantId":"PARITY-LEGACY-CASE"}]}]`)
+	want := [][]string{{"sequence/legacy-case/home"}, {"sequence/legacy-case/spelled"}}
+	if diff := cmp.Diff(want, pointPaths(lc)); diff != "" {
+		t.Fatalf("points (-want +got):\n%s\nuncompared: %v", diff, lc.uncompared)
+	}
+	if diff := cmp.Diff([][]string{nil, {"tenant"}}, [][]string{lc.points[0].features, lc.points[1].features}); diff != "" {
+		t.Errorf("features of the points (-want +got):\n%s", diff)
+	}
+}
+
 func TestLegacyExportCases_ACaseThatReadsNoExportLeavesEveryDecisionUncompared(t *testing.T) {
 	fx := newLegacyFixture(t)
 	lc := fx.legacyCase(`[{"name":"probe","op":"read-domain-pips","args":{"domain":"D"},"observe":["read-raw:read-domain-pips","decide:check"],
@@ -381,7 +400,7 @@ func TestLegacyExportCases_ACaseThatReadsNoExportLeavesEveryDecisionUncompared(t
 func TestExportFeatures_ListWhatTheConversionDropsInClassOrder(t *testing.T) {
 	sets := []any{
 		map[string]any{"type": "SIMPLIFIED", "status": "ACTIVE", "tenantId": "a", "policies": []any{
-			map[string]any{"rules": []any{map[string]any{"effect": "DENY"}}},
+			map[string]any{"rules": []any{map[string]any{"effect": "DENY", "condition": "subject.parityX == 'v'"}}},
 		}},
 		map[string]any{"type": "DEFAULT", "status": "ACTIVE", "tenantId": "a", "policySets": []any{
 			map[string]any{"status": "INACTIVE"},
@@ -395,8 +414,9 @@ func TestExportFeatures_ListWhatTheConversionDropsInClassOrder(t *testing.T) {
 	}
 	before := []legacyEvent{{kind: "write", op: "customize-pips", args: map[string]any{"level": "PROJECT"}}}
 	want := []string{"set-type:DEFAULT", "set-type:none", "status:nested:INACTIVE", "rule-effect:DENY",
-		"customization:PROJECT", "tenant", "pip-kind:MAPPING", "pip-kind:GENERAL-beanName", "pip-kind:none"}
-	if diff := cmp.Diff(want, exportFeatures(sets, pips, before)); diff != "" {
+		"customization:PROJECT", "tenant", "pip-kind:MAPPING", "pip-kind:GENERAL-beanName", "pip-kind:none",
+		"undeclared-pip:parityX"}
+	if diff := cmp.Diff(want, exportFeatures(sets, pips, before, "\x00")); diff != "" {
 		t.Errorf("exportFeatures (-want +got):\n%s", diff)
 	}
 }
@@ -406,11 +426,112 @@ func TestExportFeatures_AnActiveSimplifiedExportOfOneTenantHasNone(t *testing.T)
 		map[string]any{"rules": []any{map[string]any{"effect": "ALLOW"}}},
 	}}}
 	pips := []any{map[string]any{"pipType": "TOKEN", "tenantId": "a"}}
-	if got := exportFeatures(sets, pips, nil); len(got) != 0 {
+	if got := exportFeatures(sets, pips, nil, "a"); len(got) != 0 {
 		t.Errorf("exportFeatures = %v, want none", got)
 	}
 	if diff := cmp.Diff([]string{"simplified"}, featureFamilies(nil)); diff != "" {
 		t.Errorf("featureFamilies(nil) (-want +got):\n%s", diff)
+	}
+}
+
+// A request that names a tenant gets the feature tenant when an element of
+// the export belongs to another tenant, its spelling in another case
+// included; the agent does not read the tenant of the request.
+func TestExportFeatures_ATenantOfTheRequestOtherThanTheExportsIsTheTenantFeature(t *testing.T) {
+	sets := []any{map[string]any{"type": "SIMPLIFIED", "status": "ACTIVE", "tenantId": "parity-t"}}
+	for _, tc := range []struct {
+		name    string
+		request string
+		want    []string
+	}{
+		{"the export's tenant", "parity-t", nil},
+		{"no tenant of its own", "\x00", nil},
+		{"the export's tenant in upper case", "PARITY-T", []string{"tenant"}},
+		{"the export's tenant with a trailing space", "parity-t ", []string{"tenant"}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if diff := cmp.Diff(tc.want, exportFeatures(sets, nil, nil, tc.request)); diff != "" {
+				t.Errorf("exportFeatures(request %q) (-want +got):\n%s", tc.request, diff)
+			}
+		})
+	}
+}
+
+// policyReading is an ACTIVE SIMPLIFIED set of one policy whose rule has the
+// target target and the condition condition.
+func policyReading(target, condition string) []any {
+	return []any{map[string]any{"type": "SIMPLIFIED", "status": "ACTIVE", "tenantId": "a", "policies": []any{
+		map[string]any{"target": "operation == 'READ'", "rules": []any{
+			map[string]any{"effect": "ALLOW", "target": target, "condition": condition},
+		}},
+	}}}
+}
+
+// A rule that reads a subject attribute which is neither one the agent
+// resolves on its own (a token claim, the entitlements) nor named by a PIP of
+// the export gets the feature undeclared-pip with that
+// attribute; a PIP whose name starts with subject.<attribute> declares it.
+func TestExportFeatures_ASubjectAttributeNoPIPDeclaresIsUndeclaredPIP(t *testing.T) {
+	const roles = "subject.roles CONTAINS ANY 'ROLE_PARITY_READER'"
+	for _, tc := range []struct {
+		name              string
+		target, condition string
+		pips              []any
+		want              []string
+	}{
+		{"an attribute with no PIP", roles, "subject.parityX == 'v' OR resource.a == 'y'", nil,
+			[]string{"undeclared-pip:parityX"}},
+		{"an attribute a PIP declares", roles, "subject.parityX == 'v' OR resource.a == 'y'",
+			[]any{map[string]any{"name": "subject.parityX", "pipType": "TOKEN"}}, nil},
+		{"a PIP of another attribute", roles, "subject.parityX == 'v'",
+			[]any{map[string]any{"name": "subject.parityY", "pipType": "TOKEN"}}, []string{"undeclared-pip:parityX"}},
+		{"a name with a dash", roles, "subject.parityR16S-dash == 'v'", nil, []string{"undeclared-pip:parityR16S-dash"}},
+		{"a name that starts with a digit", roles, "subject.1parity == 'v'", nil, []string{"undeclared-pip:1parity"}},
+		{"permissions with no MAPPING", roles, "subject.permissions CONTAINS 'P'", nil,
+			[]string{"undeclared-pip:permissions"}},
+		{"permissions with a PIP of a nested name", roles, "subject.permissions CONTAINS 'P'",
+			[]any{map[string]any{"name": "subject.permissions.parity", "pipType": "TOKEN"}}, nil},
+		{"the token claims", roles, "subject.id == resource.owner AND subject.name == 'n'", nil, nil},
+		{"the entitlements", roles, "resource.id IN subject.entitledResources.of('R').as('id')", nil, nil},
+		{"an attribute in a quoted literal", roles, "resource.a == 'subject.parityX'", nil, nil},
+		{"an attribute in a double-quoted literal", roles, `resource.a == "subject.parityX"`, nil, nil},
+		{"a resource path that contains subject", roles, "resource.subject.parityX == 'v'", nil, nil},
+		{"a placeholder in a quoted literal", roles, "resource.owner == '${subject.parityX}'", nil,
+			[]string{"undeclared-pip:parityX"}},
+		{"an attribute in the target", "subject.parityX == 'v'", "", nil, []string{"undeclared-pip:parityX"}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if diff := cmp.Diff(tc.want, exportFeatures(policyReading(tc.target, tc.condition), tc.pips, nil, "a")); diff != "" {
+				t.Errorf("exportFeatures(condition %q) (-want +got):\n%s", tc.condition, diff)
+			}
+		})
+	}
+}
+
+// The reads that count are those of a policy's own target and condition as
+// well as of its rules, in a SIMPLIFIED set at any depth; a set of another
+// type is classified by its type alone.
+func TestExportFeatures_UndeclaredPIPReadsOfPoliciesAndNestedSimplifiedSets(t *testing.T) {
+	reading := func(typ string) map[string]any {
+		return map[string]any{"type": typ, "status": "ACTIVE", "tenantId": "a", "policies": []any{
+			map[string]any{"condition": "subject.parityX == 'v'"},
+		}}
+	}
+	for _, tc := range []struct {
+		name string
+		sets []any
+		want []string
+	}{
+		{"a policy-level condition", []any{reading("SIMPLIFIED")}, []string{"undeclared-pip:parityX"}},
+		{"a nested SIMPLIFIED set", []any{map[string]any{"type": "SIMPLIFIED", "status": "ACTIVE", "tenantId": "a",
+			"policySets": []any{reading("SIMPLIFIED")}}}, []string{"undeclared-pip:parityX"}},
+		{"a DEFAULT set", []any{reading("DEFAULT")}, []string{"set-type:DEFAULT"}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if diff := cmp.Diff(tc.want, exportFeatures(tc.sets, nil, nil, "a")); diff != "" {
+				t.Errorf("exportFeatures (-want +got):\n%s", diff)
+			}
+		})
 	}
 }
 
@@ -425,6 +546,7 @@ func TestLegacyClass(t *testing.T) {
 		{"an export the agent did not load", p, false, "pull-failure"},
 		{"a loaded export with features", p, true, "set-type:DEFAULT"},
 		{"a loaded export without features", legacyExportPoint{}, true, "agent"},
+		{"a tenant feature before an undeclared PIP", legacyExportPoint{features: []string{"tenant", "undeclared-pip:x"}}, true, "tenant"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			if got := legacyClass(tc.p, tc.loaded); got != tc.want {
@@ -444,6 +566,8 @@ func TestAcceptedLegacyDifference(t *testing.T) {
 		{"a regular set of a named type", "set-type:DEFAULT", false, true},
 		{"a regular set that allows what the golden denies", "set-type:DEFAULT", true, false},
 		{"a class with no decision", "tenant", false, false},
+		{"an undeclared PIP that denies", "undeclared-pip:parityX", false, true},
+		{"an undeclared PIP that allows what the golden denies", "undeclared-pip:parityX", true, true},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			if _, got := acceptedLegacyDifference(tc.class, tc.wrongAllow); got != tc.want {
@@ -517,13 +641,15 @@ func TestLegacyExportReport_ListsWrongAllowsFirstAndCountsPerFamilyAndClass(t *t
 		{exportResult: exportResult{Path: "a", Class: "agent", Families: []string{"simplified"}, Verdict: verdictMatch}},
 		{exportResult: exportResult{Path: "b", Class: "agent", Families: []string{"simplified"}, Verdict: verdictDiffers}},
 		{exportResult: exportResult{Path: "c", Class: "tenant", Families: []string{"tenant"}, Verdict: verdictDiffers}, WrongAllow: true},
+		{exportResult: exportResult{Path: "e", Class: "undeclared-pip:x", Families: []string{"simplified"}, Verdict: verdictAccepted}, WrongAllow: true},
 	}
 	report := legacyExportReport(results, map[string]string{"d": "no raw read of pips at step s: tenant t pips"})
 	// The columns are padded; compare with single spaces.
 	flat := strings.Join(strings.Fields(report), " ")
 	for _, want := range []string{
-		"3 goldens compared, 1 decisions without a legacy export",
-		"family simplified match 1, accepted 0, differs 1, skipped 0",
+		"4 goldens compared, 1 decisions without a legacy export",
+		"family simplified match 1, accepted 1, differs 1, skipped 0",
+		"class undeclared-pip:x differs 1, wrong allows 1",
 		"class agent differs 1, wrong allows 0",
 		"class tenant differs 1, wrong allows 1",
 		"uncompared 1: no raw read of pips",
@@ -534,6 +660,9 @@ func TestLegacyExportReport_ListsWrongAllowsFirstAndCountsPerFamilyAndClass(t *t
 	}
 	if wa, d := strings.Index(report, "WRONG ALLOW c"), strings.Index(report, "DIFFERS b"); wa < 0 || d < 0 || wa > d {
 		t.Errorf("report lists the wrong allow c after the difference b, or omits one:\n%s", report)
+	}
+	if strings.Contains(report, " e (") {
+		t.Errorf("report lists the accepted wrong allow e among the differences:\n%s", report)
 	}
 }
 

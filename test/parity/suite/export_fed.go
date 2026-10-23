@@ -676,7 +676,8 @@ func (r *exportReplayer) judge(group []exportEvent, sent bool, status int, body 
 // targets wants (the variants of one golden) does not: a check that allows
 // where the golden denies, an id or an operation the golden leaves out, or a
 // filter result of a higher rank (DENY, then USE_FILTER_CONDITION, then
-// ALLOW). An accepted class never covers such an answer.
+// ALLOW). An accepted class covers such an answer only in part A of the
+// profile, where its entry sets AllowsMore.
 func grantsMore(actual any, wants []any) bool {
 	for _, want := range wants {
 		if !grants(actual, want) {

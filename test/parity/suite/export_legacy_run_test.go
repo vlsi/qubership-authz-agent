@@ -38,7 +38,8 @@ import (
 // check of the canary tells a loaded export from a failed pull. A golden
 // fails when the agent's answer differs from it, unless the kind of its
 // class (set-type for set-type:DEFAULT) is listed in
-// acceptedExportDivergences and the answer allows nothing the golden denies. It runs only under
+// acceptedExportDivergences and the answer allows nothing the golden denies,
+// or the entry covers such an answer too (AllowsMore). It runs only under
 // PARITY_PROFILE=authz-agent-export (make parity-export-legacy);
 // PARITY_EXPORT_RUN selects the cases whose <file>/<case id> it matches.
 func TestExportFedLegacyAgent(t *testing.T) {
@@ -99,7 +100,7 @@ func TestExportFedLegacyAgent(t *testing.T) {
 					res := s.judgeLegacyDecision(lc, p, d, loaded)
 					all = append(all, res)
 					switch {
-					case res.WrongAllow:
+					case res.WrongAllow && res.Verdict == verdictDiffers:
 						t.Errorf("WRONG ALLOW %s (class %s): %s", res.Path, res.Class, res.Detail)
 					case res.Verdict == verdictDiffers:
 						t.Errorf("%s (class %s): %s", res.Path, res.Class, res.Detail)
