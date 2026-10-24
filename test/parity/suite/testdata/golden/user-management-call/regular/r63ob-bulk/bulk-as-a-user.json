@@ -10,6 +10,7 @@
       ],
       "headers": {
         "authorization": "\u003cservice account\u003e",
+        "authorization:issuer": "\u003cidp\u003e",
         "tenant": "\u003ctenant_id\u003e"
       }
     },
@@ -23,6 +24,7 @@
       ],
       "headers": {
         "authorization": "\u003cservice account\u003e",
+        "authorization:issuer": "\u003cidp\u003e",
         "tenant": "\u003ctenant_id\u003e"
       }
     }

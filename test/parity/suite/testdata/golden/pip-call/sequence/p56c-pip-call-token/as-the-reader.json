@@ -5,6 +5,7 @@
   },
   "headers": {
     "authorization": "\u003cother token\u003e",
+    "authorization:issuer": "\u003cidp\u003e",
     "authorization:subject": "\u003cservice account\u003e",
     "incoming-token": null,
     "tenant": "\u003ctenant_id\u003e"
