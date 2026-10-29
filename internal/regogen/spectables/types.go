@@ -167,12 +167,128 @@ const (
 	ClassList Class = "l"
 	// ClassHeaderList is a list of scalars read from a HEADER or GENERAL PIP.
 	ClassHeaderList Class = "hl"
-	// ClassOther is any other value, such as an object or a nested list.
+	// ClassNullElement is a list with a null element.
+	ClassNullElement Class = "xn"
+	// ClassNested is a list with a list or an object element, and no null
+	// element.
+	ClassNested Class = "xl"
+	// ClassObject is an object.
+	ClassObject Class = "xo"
+	// ClassNull is a null value in state VALUE, such as a whole resource that
+	// is JSON null; it differs from state NULL.
+	ClassNull Class = "z"
+	// ClassOther is the one class of schema version 1 for an object, a nested
+	// list, and a list with a null element; version 2 splits it into
+	// ClassNullElement, ClassNested, and ClassObject.
 	ClassOther Class = "x"
 )
 
-// Classes lists every value class.
-var Classes = []Class{ClassString, ClassScalar, ClassList, ClassHeaderList, ClassOther}
+// Classes lists every value class of schema version 2.
+var Classes = []Class{ClassString, ClassScalar, ClassList, ClassHeaderList, ClassNullElement, ClassNested,
+	ClassObject, ClassNull}
+
+// classesV1 lists the value classes of schema version 1.
+var classesV1 = []Class{ClassString, ClassScalar, ClassList, ClassHeaderList, ClassOther}
+
+// ValueRule names the branch of the specification that decides a by_value
+// cell from the operand values.
+type ValueRule string
+
+// The value rules. A negated operator reports the rule of the operator it
+// negates.
+const (
+	// RuleEq compares two scalars under == and !=: fold, numbers, Java text.
+	RuleEq ValueRule = "eq"
+	// RuleListEq compares two lists under ==.
+	RuleListEq ValueRule = "list_eq"
+	// RuleStructureTextLeft compares a list or an object on the left with a
+	// string on the right by the Java text of the structure.
+	RuleStructureTextLeft ValueRule = "structure_text_left"
+	// RuleArrayEq is == with a list on the left that the structure text does
+	// not decide.
+	RuleArrayEq ValueRule = "array_eq"
+	// RuleObjectEq compares two objects under IN and CONTAINS.
+	RuleObjectEq ValueRule = "object_eq"
+	// RuleRel is <, <=, >, and >=.
+	RuleRel ValueRule = "rel"
+	// RuleEmpty is IS EMPTY and IS NOT EMPTY over a value.
+	RuleEmpty ValueRule = "empty"
+	// RuleInAny is IN over a scalar: some element equal.
+	RuleInAny ValueRule = "in_any"
+	// RuleContainsAny is CONTAINS and CONTAINS ANY: some pair equal.
+	RuleContainsAny ValueRule = "contains_any"
+	// RuleContainsRightAttributeList is CONTAINS with an attribute list on the
+	// right.
+	RuleContainsRightAttributeList ValueRule = "contains_right_attribute_list"
+	// RuleSubset is IS SUBSET.
+	RuleSubset ValueRule = "subset"
+	// RuleMatch is the pattern of MATCH.
+	RuleMatch ValueRule = "match"
+	// RuleNullElementEnds is a null element of a list that ends the rule
+	// before the values are compared.
+	RuleNullElementEnds ValueRule = "null_element_ends"
+	// RuleRightListScalarOps is a list on the right of ==, !=, CONTAINS, or
+	// NOT CONTAINS.
+	RuleRightListScalarOps ValueRule = "right_list_scalar_ops"
+	// RuleSingleOdd is a one-element GENERAL list of null, a boolean, or an
+	// object, read as a value.
+	RuleSingleOdd ValueRule = "single_odd"
+)
+
+// ValueRules lists every value rule.
+var ValueRules = []ValueRule{RuleEq, RuleListEq, RuleStructureTextLeft, RuleArrayEq, RuleObjectEq, RuleRel,
+	RuleEmpty, RuleInAny, RuleContainsAny, RuleContainsRightAttributeList, RuleSubset, RuleMatch,
+	RuleNullElementEnds, RuleRightListScalarOps, RuleSingleOdd}
+
+// NodeOutcome is the outcome of a node of the policy tree.
+type NodeOutcome string
+
+// The node outcomes.
+const (
+	NodePermit        NodeOutcome = "permit"
+	NodeDeny          NodeOutcome = "deny"
+	NodeNotApplicable NodeOutcome = "na"
+)
+
+// NodeOutcomes lists every node outcome.
+var NodeOutcomes = []NodeOutcome{NodePermit, NodeDeny, NodeNotApplicable}
+
+// Algorithms lists the combining algorithms a node may name.
+var Algorithms = []string{"DENY_UNLESS_PERMIT", "PERMIT_OVERRIDES", "DENY_OVERRIDES", "PERMIT_UNLESS_DENY"}
+
+// RuleEffects lists the rule effects other than ALLOW and DENY that the
+// effects of [Nodes] map, with "other" for every effect not listed.
+var RuleEffects = []string{"USE_FILTER_CONDITION", "NOT_APPLICABLE", "other"}
+
+// AbsentEffects lists what a rule without an effect may count as: ALLOW,
+// DENY, or the effects entry "other".
+var AbsentEffects = []string{"ALLOW", "DENY", "other"}
+
+// Combination is the outcome of a node by what its applicable children give:
+// some permit and no deny, some deny and no permit, both, and neither.
+type Combination struct {
+	Permit NodeOutcome `json:"permit"`
+	Deny   NodeOutcome `json:"deny"`
+	Both   NodeOutcome `json:"both"`
+	None   NodeOutcome `json:"none"`
+}
+
+// Nodes holds how the specification combines the outcomes of the nodes above
+// the leaves.
+type Nodes struct {
+	// Algorithms maps each name of [Algorithms] to its combination.
+	Algorithms map[string]Combination `json:"algorithms"`
+	// AbsentAlgorithm is the algorithm of a node that names none.
+	AbsentAlgorithm string `json:"absent_algorithm"`
+	// Effects maps each name of [RuleEffects] to the node outcome of a rule
+	// with that effect whose target and condition hold.
+	Effects map[string]NodeOutcome `json:"effects"`
+	// AbsentEffect is what a rule without an effect counts as, one of
+	// [AbsentEffects].
+	AbsentEffect string `json:"absent_effect"`
+	// AbsentExpression is the value of an absent target or condition: T or F.
+	AbsentExpression Outcome `json:"absent_expression"`
+}
 
 // Place is where a condition that contains the leaf stands.
 type Place string
@@ -304,6 +420,9 @@ type Cell struct {
 	// Outcomes lists, for an Outcome of by_value, the outcomes the operand
 	// values can produce; it is nil otherwise.
 	Outcomes []Outcome
+	// ValueRule lists, for an Outcome of by_value in schema version 2, the
+	// value rules the specification went through, sorted; it is nil otherwise.
+	ValueRule []ValueRule
 }
 
 func admitsRight(op Operator, k Kind) bool {

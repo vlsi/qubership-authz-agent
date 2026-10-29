@@ -56,7 +56,7 @@ const (
 
 func completeExport() doc {
 	return doc{
-		"schema_version": 1,
+		"schema_version": 2,
 		"spec_tag":       "r99",
 		"profiles": doc{
 			"legacy": fixtureProfile(nil),
@@ -82,7 +82,8 @@ func eqResPathLitStrCells() []any {
 			"effect": "DENY", "outcome": "T"},
 		eqNullAllow: doc{"op": "EQ", "left": left("NULL", ""), "right": right, "disjunction": false, "in_iterate": false,
 			"effect": "ALLOW", "outcome": "F"},
-		eqValueS: doc{"op": "EQ", "left": left("VALUE", "s"), "right": right, "outcome": "by_value", "outcomes": []any{"T", "F"}},
+		eqValueS: doc{"op": "EQ", "left": left("VALUE", "s"), "right": right, "outcome": "by_value", "outcomes": []any{"T", "F"},
+			"value_rule": []any{"eq"}},
 		eqValueLRuleTarget: doc{"op": "EQ", "left": left("VALUE", "l"), "right": right, "place": "rule_target",
 			"outcome": "bad_request"},
 	}
@@ -125,8 +126,46 @@ func fixtureProfile(eq []any) doc {
 	return doc{
 		"knobs": doc{"fold": "java", "eq_numeric": false, "list_eq_by_value": true, "subset_fold": false},
 		"kinds": kinds,
+		"nodes": fixtureNodes(),
 		"cells": cells,
 	}
+}
+
+// fixtureNodes are the default node rules of the specification.
+func fixtureNodes() doc {
+	combination := func(both, none string) doc {
+		return doc{"permit": "permit", "deny": "deny", "both": both, "none": none}
+	}
+	return doc{
+		"algorithms": doc{
+			"DENY_UNLESS_PERMIT": combination("permit", "deny"),
+			"PERMIT_OVERRIDES":   combination("permit", "na"),
+			"DENY_OVERRIDES":     combination("deny", "na"),
+			"PERMIT_UNLESS_DENY": combination("deny", "permit"),
+		},
+		"absent_algorithm":  "DENY_UNLESS_PERMIT",
+		"effects":           doc{"USE_FILTER_CONDITION": "deny", "NOT_APPLICABLE": "na", "other": "na"},
+		"absent_effect":     "other",
+		"absent_expression": "T",
+	}
+}
+
+func nodesOf(d doc) doc { return profileOf(d, "agent")["nodes"].(doc) }
+
+// versionOne returns completeExport in schema version 1: no nodes, no value
+// rules, and class x.
+func versionOne() doc {
+	d := completeExport()
+	d["schema_version"] = 1
+	for _, p := range []string{"legacy", "agent"} {
+		delete(profileOf(d, p), "nodes")
+		profileOf(d, p)["kinds"].(doc)["res:path"] = doc{"states": []any{"VALUE", "NULL"}, "classes": []any{"s", "l", "x"}}
+	}
+	delete(eqCell(d, eqValueS), "value_rule")
+	pr := profileOf(d, "agent")
+	pr["cells"] = append(agentCells(d), doc{"op": "EQ", "left": doc{"kind": "res:path", "state": "VALUE", "class": "x"},
+		"right": doc{"kind": "lit:str"}, "outcome": "F"})
+	return d
 }
 
 func fixtureRights(op string) []string {
@@ -229,9 +268,9 @@ func TestLookupFindsTheCellThatCoversTheKey(t *testing.T) {
 			want: Cell{Outcome: OutcomeF},
 		},
 		{
-			name: "a value cell lists the outcomes the values produce",
+			name: "a value cell lists the outcomes the values produce and the rule that decides them",
 			key:  Key{Op: OpEQ, Left: resPath(StateValue, ClassString), Right: litStr, Context: ruleCondition()},
-			want: Cell{Outcome: OutcomeByValue, Outcomes: []Outcome{OutcomeT, OutcomeF}},
+			want: Cell{Outcome: OutcomeByValue, Outcomes: []Outcome{OutcomeT, OutcomeF}, ValueRule: []ValueRule{RuleEq}},
 		},
 		{
 			name: "a cell narrowed to one place answers in that place",
@@ -256,7 +295,8 @@ func TestLookupFindsTheCellThatCoversTheKey(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Lookup(agent, %+v) error = %v, want nil", tt.key, err)
 			}
-			if got.Outcome != tt.want.Outcome || !slices.Equal(got.Outcomes, tt.want.Outcomes) {
+			if got.Outcome != tt.want.Outcome || !slices.Equal(got.Outcomes, tt.want.Outcomes) ||
+				!slices.Equal(got.ValueRule, tt.want.ValueRule) {
 				t.Errorf("Lookup(agent, %+v) = %+v, want %+v", tt.key, got, tt.want)
 			}
 		})
@@ -400,6 +440,31 @@ func TestLoadRejectsAnIncompleteExport(t *testing.T) {
 			edit:  func(d doc) { delete(profileOf(d, "agent")["knobs"].(doc), "subset_fold") },
 			names: "agent: knob subset_fold is missing",
 		},
+		{
+			name:  "the node rules",
+			edit:  func(d doc) { delete(profileOf(d, "agent"), "nodes") },
+			names: "agent: nodes is missing",
+		},
+		{
+			name:  "an algorithm",
+			edit:  func(d doc) { delete(nodesOf(d)["algorithms"].(doc), "PERMIT_UNLESS_DENY") },
+			names: "agent: nodes: algorithm PERMIT_UNLESS_DENY is missing",
+		},
+		{
+			name:  "a rule effect",
+			edit:  func(d doc) { delete(nodesOf(d)["effects"].(doc), "other") },
+			names: "agent: nodes: rule effect other is missing",
+		},
+		{
+			name:  "one outcome of an algorithm",
+			edit:  func(d doc) { delete(nodesOf(d)["algorithms"].(doc)["DENY_OVERRIDES"].(doc), "none") },
+			names: "agent: nodes: DENY_OVERRIDES.none is missing",
+		},
+		{
+			name:  "the absent algorithm",
+			edit:  func(d doc) { delete(nodesOf(d), "absent_algorithm") },
+			names: "agent: nodes: absent_algorithm is missing",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -438,8 +503,98 @@ func TestLoadRejectsAnInvalidExport(t *testing.T) {
 		},
 		{
 			name:  "another schema version",
-			edit:  func(d doc) { d["schema_version"] = 2 },
-			names: "schema_version is 2, want 1",
+			edit:  func(d doc) { d["schema_version"] = 3 },
+			names: "schema_version is 3, want 2",
+		},
+		{
+			name:  "a by_value cell without a value rule",
+			edit:  func(d doc) { delete(eqCell(d, eqValueS), "value_rule") },
+			names: "by_value has no value_rule",
+		},
+		{
+			name:  "an unknown value rule",
+			edit:  func(d doc) { eqCell(d, eqValueS)["value_rule"] = []any{"eq", "regex_lookahead"} },
+			names: `unknown value rule "regex_lookahead"`,
+		},
+		{
+			name:  "value rules out of order",
+			edit:  func(d doc) { eqCell(d, eqValueS)["value_rule"] = []any{"null_element_ends", "in_any"} },
+			names: "is not sorted, or repeats a rule",
+		},
+		{
+			name:  "a repeated value rule",
+			edit:  func(d doc) { eqCell(d, eqValueS)["value_rule"] = []any{"eq", "eq"} },
+			names: "is not sorted, or repeats a rule",
+		},
+		{
+			name:  "an unknown outcome of a rule effect",
+			edit:  func(d doc) { nodesOf(d)["effects"].(doc)["other"] = "indeterminate" },
+			names: `agent: nodes: effects.other has unknown node outcome "indeterminate"`,
+		},
+		{
+			name:  "a value rule on a constant cell",
+			edit:  func(d doc) { eqCell(d, eqNullOr)["value_rule"] = []any{"eq"} },
+			names: "value_rule is set for outcome F",
+		},
+		{
+			name: "class x in schema version 2",
+			edit: func(d doc) {
+				profileOf(d, "agent")["kinds"].(doc)["res:path"] = doc{"states": []any{"VALUE", "NULL"}, "classes": []any{"s", "l", "x"}}
+			},
+			names: `agent: operand kind res:path: class "x" is unknown or repeated`,
+		},
+		{
+			name: "an unknown algorithm",
+			edit: func(d doc) {
+				nodesOf(d)["algorithms"].(doc)["FIRST_APPLICABLE"] = nodesOf(d)["algorithms"].(doc)["DENY_OVERRIDES"]
+			},
+			names: `agent: nodes: unknown algorithm "FIRST_APPLICABLE"`,
+		},
+		{
+			name:  "an unknown node outcome",
+			edit:  func(d doc) { nodesOf(d)["algorithms"].(doc)["DENY_OVERRIDES"].(doc)["none"] = "indeterminate" },
+			names: `agent: nodes: DENY_OVERRIDES.none has unknown node outcome "indeterminate"`,
+		},
+		{
+			name:  "an absent algorithm that is not an algorithm",
+			edit:  func(d doc) { nodesOf(d)["absent_algorithm"] = "FIRST_APPLICABLE" },
+			names: `agent: nodes: absent_algorithm "FIRST_APPLICABLE" is not an algorithm`,
+		},
+		{
+			name:  "an unknown rule effect",
+			edit:  func(d doc) { nodesOf(d)["effects"].(doc)["PERMIT"] = "permit" },
+			names: `agent: nodes: unknown rule effect "PERMIT"`,
+		},
+		{
+			name:  "an unknown absent effect",
+			edit:  func(d doc) { nodesOf(d)["absent_effect"] = "NOT_APPLICABLE" },
+			names: `agent: nodes: absent_effect "NOT_APPLICABLE" is not one of`,
+		},
+		{
+			name:  "an absent expression that is undefined",
+			edit:  func(d doc) { nodesOf(d)["absent_expression"] = "U" },
+			names: `agent: nodes: absent_expression "U" is not T or F`,
+		},
+		{
+			name: "node rules in schema version 1",
+			edit: func(d doc) {
+				nodes := nodesOf(d)
+				for k, v := range versionOne() {
+					d[k] = v
+				}
+				profileOf(d, "agent")["nodes"] = nodes
+			},
+			names: "agent: nodes is set in schema version 1",
+		},
+		{
+			name: "a value rule in schema version 1",
+			edit: func(d doc) {
+				for k, v := range versionOne() {
+					d[k] = v
+				}
+				eqCell(d, eqValueS)["value_rule"] = []any{"eq"}
+			},
+			names: "value_rule is set in schema version 1",
 		},
 		{
 			name:  "an unknown profile",
@@ -518,8 +673,8 @@ func TestLoadRejectsAnInvalidExport(t *testing.T) {
 		},
 		{
 			name:  "a class outside the kind's domain",
-			edit:  func(d doc) { eqCell(d, eqValueS)["left"].(doc)["class"] = "x" },
-			names: `left class "x" is not in the domain of res:path`,
+			edit:  func(d doc) { eqCell(d, eqValueS)["left"].(doc)["class"] = "xo" },
+			names: `left class "xo" is not in the domain of res:path`,
 		},
 		{
 			name:  "a state outside the kind's domain",
@@ -547,6 +702,50 @@ func TestLoadRejectsAnInvalidExport(t *testing.T) {
 				t.Errorf("Load() error = %v, want ErrInvalid naming %q", err, tt.names)
 			}
 		})
+	}
+}
+
+// The generator embeds an export of schema version 1 until the exporter
+// writes version 2, so version 1 still loads: class x, no value rules, and no
+// node rules.
+func TestLoadReadsSchemaVersion1(t *testing.T) {
+	t.Parallel()
+	tab, err := load(t, versionOne())
+	if err != nil {
+		t.Fatalf("Load(version 1 export) error = %v, want nil", err)
+	}
+	if got := tab.SchemaVersion(); got != 1 {
+		t.Errorf("SchemaVersion() = %d, want 1", got)
+	}
+	if _, ok := tab.Nodes(ProfileAgent); ok {
+		t.Errorf("Nodes(agent) reports node rules for a version 1 export, want none")
+	}
+	key := Key{Op: OpEQ, Left: Point{Kind: KindResPath, State: StateValue, Class: ClassOther},
+		Right: Point{Kind: KindLitStr, State: StateValue, Class: ClassString}, Context: ruleCondition()}
+	if _, err := tab.Lookup(ProfileAgent, key); err != nil {
+		t.Errorf("Lookup(agent, class x) error = %v, want nil", err)
+	}
+}
+
+func TestNodesReturnsTheNodeRulesOfTheProfile(t *testing.T) {
+	t.Parallel()
+	d := completeExport()
+	nodesOf(d)["algorithms"].(doc)["PERMIT_UNLESS_DENY"].(doc)["none"] = "na"
+	tab := mustLoad(t, d)
+	agent, ok := tab.Nodes(ProfileAgent)
+	if !ok {
+		t.Fatalf("Nodes(agent) reports no node rules, want them")
+	}
+	if got, want := agent.Algorithms["PERMIT_UNLESS_DENY"], (Combination{NodePermit, NodeDeny, NodeDeny, NodeNotApplicable}); got != want {
+		t.Errorf("Nodes(agent).Algorithms[PERMIT_UNLESS_DENY] = %+v, want %+v", got, want)
+	}
+	legacy, _ := tab.Nodes(ProfileLegacy)
+	if got := legacy.Algorithms["PERMIT_UNLESS_DENY"].None; got != NodePermit {
+		t.Errorf("Nodes(legacy).Algorithms[PERMIT_UNLESS_DENY].None = %q, want %q", got, NodePermit)
+	}
+	if agent.AbsentAlgorithm != "DENY_UNLESS_PERMIT" || agent.Effects["USE_FILTER_CONDITION"] != NodeDeny ||
+		agent.AbsentEffect != "other" || agent.AbsentExpression != OutcomeT {
+		t.Errorf("Nodes(agent) = %+v, want the fixture's absent algorithm, effects, absent effect, and absent expression", agent)
 	}
 }
 
@@ -591,6 +790,9 @@ func TestLoadAcceptsTheExportNamedBySpectablesExport(t *testing.T) {
 	tab, err := Load(f)
 	if err != nil {
 		t.Fatalf("Load(%s) error = %v, want nil", path, err)
+	}
+	if got := tab.SchemaVersion(); got != SchemaVersion {
+		t.Fatalf("Load(%s): schema_version %d, want %d", path, got, SchemaVersion)
 	}
 	t.Logf("Load(%s): spec_tag %s", path, tab.SpecTag())
 }
