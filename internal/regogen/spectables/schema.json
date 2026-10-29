@@ -44,7 +44,8 @@
               "description": "s a string; n a number or a boolean; l a list of scalars; hl a list of scalars from a HEADER or GENERAL PIP; xn a list with a null element; xl a list with a list or an object element and no null element; xo an object; z a null value in state VALUE."},
     "valueRule": {
       "enum": ["eq", "list_eq", "structure_text_left", "array_eq", "object_eq", "rel", "empty", "in_any", "contains_any",
-               "contains_right_attribute_list", "subset", "match", "null_element_ends", "right_list_scalar_ops", "single_odd"]
+               "contains_right_attribute_list", "subset", "match", "null_element_ends", "right_list_scalar_ops", "single_odd",
+               "scalar_odd_rel"]
     },
     "nodeOutcome": {"enum": ["permit", "deny", "na"]},
     "algorithm": {"enum": ["DENY_UNLESS_PERMIT", "PERMIT_OVERRIDES", "DENY_OVERRIDES", "PERMIT_UNLESS_DENY"]},

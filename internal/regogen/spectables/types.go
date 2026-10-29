@@ -233,12 +233,17 @@ const (
 	// RuleSingleOdd is a one-element GENERAL list of null, a boolean, or an
 	// object, read as a value.
 	RuleSingleOdd ValueRule = "single_odd"
+	// RuleScalarOddRel is a GENERAL body that is a number or a boolean
+	// (state SCALAR_ODD) on either side of <, <=, >, or >=: a boolean and a
+	// number each give the outcome their setting names, before the values
+	// are compared.
+	RuleScalarOddRel ValueRule = "scalar_odd_rel"
 )
 
 // ValueRules lists every value rule.
 var ValueRules = []ValueRule{RuleEq, RuleListEq, RuleStructureTextLeft, RuleArrayEq, RuleObjectEq, RuleRel,
 	RuleEmpty, RuleInAny, RuleContainsAny, RuleContainsRightAttributeList, RuleSubset, RuleMatch,
-	RuleNullElementEnds, RuleRightListScalarOps, RuleSingleOdd}
+	RuleNullElementEnds, RuleRightListScalarOps, RuleSingleOdd, RuleScalarOddRel}
 
 // NodeOutcome is the outcome of a node of the policy tree.
 type NodeOutcome string
