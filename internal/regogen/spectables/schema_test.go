@@ -62,6 +62,11 @@ func TestSchemaListsTheValuesTheLoaderAccepts(t *testing.T) {
 		{"legacyOutcome", names(legacy)},
 		{"agentValueOutcome", names(valueOutcomes(ProfileAgent))},
 		{"legacyValueOutcome", names(valueOutcomes(ProfileLegacy))},
+		{"valueRule", names(ValueRules)},
+		{"nodeOutcome", names(NodeOutcomes)},
+		{"algorithm", Algorithms},
+		{"ruleEffect", RuleEffects},
+		{"absentEffect", AbsentEffects},
 	}
 	for _, tt := range tests {
 		if got := schema.Defs[tt.def].Enum; !slices.Equal(got, tt.want) {

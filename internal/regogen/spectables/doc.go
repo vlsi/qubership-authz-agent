@@ -28,7 +28,9 @@
 // The export is one JSON document, described for the exporter by schema.json in
 // this directory. Its top level carries:
 //
-//   - schema_version: 1.
+//   - schema_version: 2. [Load] also reads version 1, the format without
+//     value rules and node rules, with one class x for an object, a nested
+//     list, and a list with a null element.
 //   - spec_tag: the tag of the specification commit the tables were computed
 //     from, such as r65. A changed decision changes a knob, the
 //     specification gets a new tag, and the export is regenerated under it.
@@ -43,7 +45,16 @@
 //     value-by-value case need, keyed by their name in the specification:
 //     exactly fold, eq_numeric, list_eq_by_value, and subset_fold.
 //   - kinds: for every operand kind of [Kinds], the states the operand can be in
-//     and, when the states include VALUE, the classes of value it can hold.
+//     and, when the states include VALUE, the classes of value it can hold
+//     ([Classes]).
+//   - nodes: how the outcomes of the nodes above the leaves combine, as the
+//     profile's settings give them ([Nodes]): the outcome of each algorithm
+//     of [Algorithms] when its children include a permit only, a deny only,
+//     both, and neither; the algorithm of a node that names none; the
+//     outcome of a rule whose effect is neither ALLOW nor DENY; what a rule
+//     without an effect counts as; and the value of an absent target or
+//     condition. Every algorithm and rule effect is required, and an unknown
+//     one is an error, so the generator never falls back to a default.
 //   - cells: the outcomes.
 //
 // # Cells
@@ -76,8 +87,12 @@
 // request the service rejects with 400, and unsupported, a form the
 // specification does not evaluate. The outcome by_value marks a cell whose
 // outcome depends on the operand values rather than on their states; such a cell
-// lists in outcomes the two or more outcomes the values can produce, and the
-// generator writes the comparison of values for it.
+// lists in outcomes the two or more outcomes the values can produce, and in
+// value_rule the rules of [ValueRules] the specification went through to reach
+// them, sorted. A cell that moves to another rule therefore changes the
+// export, and the generator can pick its template of the comparison by rule
+// and fail generation on a rule it has none for. value_rule appears on no
+// other cell.
 //
 // The export carries no provenance: a field or a knob that the format does not
 // define, such as a reference to the golden that fixed a cell, is rejected.

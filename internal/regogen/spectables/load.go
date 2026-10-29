@@ -23,8 +23,13 @@ import (
 	"strings"
 )
 
-// SchemaVersion is the version of the export format this package reads.
-const SchemaVersion = 1
+// SchemaVersion is the version of the export format the exporter writes.
+const SchemaVersion = 2
+
+// schemaVersion1 is the format before value rules, the split of class x, and
+// nodes. [Load] still reads it, so that an export written before the exporter
+// moved to version 2 keeps loading.
+const schemaVersion1 = 1
 
 // maxProblems bounds how many problems an error from [Load] spells out.
 const maxProblems = 20
@@ -44,6 +49,7 @@ var (
 
 // Table is a loaded and validated export. It is safe for concurrent use.
 type Table struct {
+	version  int
 	specTag  string
 	profiles map[Profile]*profileTable
 }
@@ -52,6 +58,7 @@ type profileTable struct {
 	knobs   map[string]json.RawMessage
 	domains map[Kind]Domain
 	cells   map[combo][]cellJSON
+	nodes   *Nodes
 }
 
 // combo is one combination of operator and operand kinds; right is empty for a
@@ -77,6 +84,7 @@ type exportJSON struct {
 type profileJSON struct {
 	Knobs map[string]json.RawMessage `json:"knobs"`
 	Kinds map[Kind]Domain            `json:"kinds"`
+	Nodes *Nodes                     `json:"nodes,omitempty"`
 	Cells []cellJSON                 `json:"cells"`
 }
 
@@ -87,15 +95,16 @@ type sideJSON struct {
 }
 
 type cellJSON struct {
-	Op          Operator  `json:"op"`
-	Left        *sideJSON `json:"left"`
-	Right       *sideJSON `json:"right,omitempty"`
-	Place       Place     `json:"place,omitempty"`
-	Effect      Effect    `json:"effect,omitempty"`
-	Disjunction *bool     `json:"disjunction,omitempty"`
-	InIterate   *bool     `json:"in_iterate,omitempty"`
-	Outcome     Outcome   `json:"outcome"`
-	Outcomes    []Outcome `json:"outcomes,omitempty"`
+	Op          Operator    `json:"op"`
+	Left        *sideJSON   `json:"left"`
+	Right       *sideJSON   `json:"right,omitempty"`
+	Place       Place       `json:"place,omitempty"`
+	Effect      Effect      `json:"effect,omitempty"`
+	Disjunction *bool       `json:"disjunction,omitempty"`
+	InIterate   *bool       `json:"in_iterate,omitempty"`
+	Outcome     Outcome     `json:"outcome"`
+	Outcomes    []Outcome   `json:"outcomes,omitempty"`
+	ValueRule   []ValueRule `json:"value_rule,omitempty"`
 }
 
 // Load reads an export and validates it. The error wraps [ErrInvalid] when the
@@ -111,15 +120,16 @@ func Load(r io.Reader) (*Table, error) {
 	if dec.More() {
 		return nil, fmt.Errorf("%w: data after the export document", ErrInvalid)
 	}
-	if doc.SchemaVersion != SchemaVersion {
-		return nil, fmt.Errorf("%w: schema_version is %d, want %d", ErrInvalid, doc.SchemaVersion, SchemaVersion)
+	if doc.SchemaVersion != SchemaVersion && doc.SchemaVersion != schemaVersion1 {
+		return nil, fmt.Errorf("%w: schema_version is %d, want %d (or %d, the format before value rules)", ErrInvalid,
+			doc.SchemaVersion, SchemaVersion, schemaVersion1)
 	}
 	if doc.SpecTag == "" {
 		return nil, fmt.Errorf("%w: spec_tag is empty", ErrInvalid)
 	}
 
 	var invalid, incomplete problems
-	t := &Table{specTag: doc.SpecTag, profiles: map[Profile]*profileTable{}}
+	t := &Table{version: doc.SchemaVersion, specTag: doc.SpecTag, profiles: map[Profile]*profileTable{}}
 	for p := range doc.Profiles {
 		if !known(Profiles, p) {
 			invalid.add("unknown profile %q", p)
@@ -131,7 +141,7 @@ func Load(r io.Reader) (*Table, error) {
 			incomplete.add("profile %s is missing", p)
 			continue
 		}
-		pt := buildProfile(p, pj, &invalid, &incomplete)
+		pt := buildProfile(p, doc.SchemaVersion, pj, &invalid, &incomplete)
 		t.profiles[p] = pt
 	}
 	if err := invalid.err(ErrInvalid); err != nil {
@@ -154,6 +164,20 @@ func Load(r io.Reader) (*Table, error) {
 // SpecTag returns the tag of the specification commit the export was computed
 // from.
 func (t *Table) SpecTag() string { return t.specTag }
+
+// SchemaVersion returns the format version of the export: [SchemaVersion], or
+// 1 for the format before value rules and nodes.
+func (t *Table) SchemaVersion() int { return t.version }
+
+// Nodes returns how the profile combines the outcomes of nodes, and false for
+// an unknown profile or an export of schema version 1, which carries none.
+func (t *Table) Nodes(p Profile) (Nodes, bool) {
+	pt := t.profiles[p]
+	if pt == nil || pt.nodes == nil {
+		return Nodes{}, false
+	}
+	return *pt.nodes, true
+}
 
 // Knob returns the raw JSON value of a specification setting in the profile,
 // and false when the export does not carry it.
@@ -198,7 +222,7 @@ func (t *Table) Lookup(p Profile, k Key) (Cell, error) {
 	for i := range pt.cells[c] {
 		cj := &pt.cells[c][i]
 		if cj.matchesContext(k.Context) && cj.Left.matches(k.Left) && (cj.Right == nil || cj.Right.matches(k.Right)) {
-			return Cell{Outcome: cj.Outcome, Outcomes: slices.Clone(cj.Outcomes)}, nil
+			return Cell{Outcome: cj.Outcome, Outcomes: slices.Clone(cj.Outcomes), ValueRule: slices.Clone(cj.ValueRule)}, nil
 		}
 	}
 	return Cell{}, fmt.Errorf("%w: %s, %s", ErrNotCovered, c, describePoint(k.Left, k.Right, k.Context, c.right != ""))
@@ -217,8 +241,19 @@ func (pt *profileTable) inDomain(p Point) bool {
 	return p.Class == ""
 }
 
-func buildProfile(p Profile, pj *profileJSON, invalid, incomplete *problems) *profileTable {
-	pt := &profileTable{knobs: pj.Knobs, domains: map[Kind]Domain{}, cells: map[combo][]cellJSON{}}
+func buildProfile(p Profile, version int, pj *profileJSON, invalid, incomplete *problems) *profileTable {
+	pt := &profileTable{knobs: pj.Knobs, domains: map[Kind]Domain{}, cells: map[combo][]cellJSON{}, nodes: pj.Nodes}
+	classes := Classes
+	if version == schemaVersion1 {
+		classes = classesV1
+		if pj.Nodes != nil {
+			invalid.add("%s: nodes is set in schema version 1", p)
+		}
+	} else if pj.Nodes == nil {
+		incomplete.add("%s: nodes is missing", p)
+	} else {
+		checkNodes(p, pj.Nodes, invalid, incomplete)
+	}
 	for _, name := range RequiredKnobs {
 		if _, ok := pj.Knobs[name]; !ok {
 			incomplete.add("%s: knob %s is missing", p, name)
@@ -234,7 +269,7 @@ func buildProfile(p Profile, pj *profileJSON, invalid, incomplete *problems) *pr
 			invalid.add("%s: unknown operand kind %q", p, k)
 			continue
 		}
-		checkDomain(p, k, d, invalid)
+		checkDomain(p, k, d, classes, invalid)
 		pt.domains[k] = d
 	}
 	for _, k := range Kinds {
@@ -244,7 +279,7 @@ func buildProfile(p Profile, pj *profileJSON, invalid, incomplete *problems) *pr
 	}
 	for i := range pj.Cells {
 		cj := pj.Cells[i]
-		if checkCell(p, i, &cj, pt.domains, invalid) {
+		if checkCell(p, version, i, &cj, pt.domains, invalid) {
 			c := combo{op: cj.Op, left: cj.Left.Kind}
 			if cj.Right != nil {
 				c.right = cj.Right.Kind
@@ -255,7 +290,7 @@ func buildProfile(p Profile, pj *profileJSON, invalid, incomplete *problems) *pr
 	return pt
 }
 
-func checkDomain(p Profile, k Kind, d Domain, invalid *problems) {
+func checkDomain(p Profile, k Kind, d Domain, classes []Class, invalid *problems) {
 	if len(d.States) == 0 {
 		invalid.add("%s: operand kind %s has no states", p, k)
 	}
@@ -265,7 +300,7 @@ func checkDomain(p Profile, k Kind, d Domain, invalid *problems) {
 		}
 	}
 	for i, c := range d.Classes {
-		if !known(Classes, c) || slices.Contains(d.Classes[:i], c) {
+		if !known(classes, c) || slices.Contains(d.Classes[:i], c) {
 			invalid.add("%s: operand kind %s: class %q is unknown or repeated", p, k, c)
 		}
 	}
@@ -275,7 +310,7 @@ func checkDomain(p Profile, k Kind, d Domain, invalid *problems) {
 }
 
 // checkCell reports whether the cell is well-formed, and records each problem.
-func checkCell(p Profile, i int, cj *cellJSON, domains map[Kind]Domain, invalid *problems) bool {
+func checkCell(p Profile, version, i int, cj *cellJSON, domains map[Kind]Domain, invalid *problems) bool {
 	before := len(invalid.list) + invalid.extra
 	where := fmt.Sprintf("%s: cell %d", p, i)
 	if !known(Operators, cj.Op) {
@@ -316,6 +351,15 @@ func checkCell(p Profile, i int, cj *cellJSON, domains map[Kind]Domain, invalid 
 	case len(cj.Outcomes) > 0:
 		invalid.add("%s: outcomes is set for outcome %s; only by_value lists outcomes", where, cj.Outcome)
 	}
+	switch {
+	case version == schemaVersion1 && cj.ValueRule != nil:
+		invalid.add("%s: value_rule is set in schema version 1", where)
+	case version == schemaVersion1:
+	case cj.Outcome == OutcomeByValue:
+		checkValueRule(where, cj.ValueRule, invalid)
+	case cj.ValueRule != nil:
+		invalid.add("%s: value_rule is set for outcome %s; only by_value names a value rule", where, cj.Outcome)
+	}
 	return len(invalid.list)+invalid.extra == before
 }
 
@@ -345,6 +389,83 @@ func checkValueOutcomes(where string, p Profile, outs []Outcome, invalid *proble
 	}
 	if len(outs) < 2 {
 		invalid.add("%s: by_value lists %d outcomes, want at least 2", where, len(outs))
+	}
+}
+
+// checkValueRule records a by_value cell whose value_rule is missing, holds a
+// rule the generator does not know, or is not sorted without repeats.
+func checkValueRule(where string, rules []ValueRule, invalid *problems) {
+	if len(rules) == 0 {
+		invalid.add("%s: by_value has no value_rule", where)
+		return
+	}
+	for _, r := range rules {
+		if !known(ValueRules, r) {
+			invalid.add("%s: unknown value rule %q", where, r)
+		}
+	}
+	for i := 1; i < len(rules); i++ {
+		if rules[i-1] >= rules[i] {
+			invalid.add("%s: value_rule %q is not sorted, or repeats a rule", where, rules)
+			break
+		}
+	}
+}
+
+// checkNodes records an unknown or missing algorithm, rule effect, or node
+// outcome of the profile's nodes.
+func checkNodes(p Profile, n *Nodes, invalid, incomplete *problems) {
+	where := fmt.Sprintf("%s: nodes", p)
+	outcome := func(what string, o NodeOutcome) {
+		switch {
+		case o == "":
+			incomplete.add("%s: %s is missing", where, what)
+		case !known(NodeOutcomes, o):
+			invalid.add("%s: %s has unknown node outcome %q", where, what, o)
+		}
+	}
+	missing := func(what, v string) bool {
+		if v == "" {
+			incomplete.add("%s: %s is missing", where, what)
+		}
+		return v == ""
+	}
+	for name, c := range n.Algorithms {
+		if !known(Algorithms, name) {
+			invalid.add("%s: unknown algorithm %q", where, name)
+			continue
+		}
+		outcome(name+".permit", c.Permit)
+		outcome(name+".deny", c.Deny)
+		outcome(name+".both", c.Both)
+		outcome(name+".none", c.None)
+	}
+	for _, name := range Algorithms {
+		if _, ok := n.Algorithms[name]; !ok {
+			incomplete.add("%s: algorithm %s is missing", where, name)
+		}
+	}
+	if !missing("absent_algorithm", n.AbsentAlgorithm) && !known(Algorithms, n.AbsentAlgorithm) {
+		invalid.add("%s: absent_algorithm %q is not an algorithm", where, n.AbsentAlgorithm)
+	}
+	for name, o := range n.Effects {
+		if !known(RuleEffects, name) {
+			invalid.add("%s: unknown rule effect %q", where, name)
+			continue
+		}
+		outcome("effects."+name, o)
+	}
+	for _, name := range RuleEffects {
+		if _, ok := n.Effects[name]; !ok {
+			incomplete.add("%s: rule effect %s is missing", where, name)
+		}
+	}
+	if !missing("absent_effect", n.AbsentEffect) && !known(AbsentEffects, n.AbsentEffect) {
+		invalid.add("%s: absent_effect %q is not one of %q", where, n.AbsentEffect, AbsentEffects)
+	}
+	if !missing("absent_expression", string(n.AbsentExpression)) &&
+		n.AbsentExpression != OutcomeT && n.AbsentExpression != OutcomeF {
+		invalid.add("%s: absent_expression %q is not T or F", where, n.AbsentExpression)
 	}
 }
 

@@ -1,12 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Leaf-outcome tables of the policy language specification",
-  "description": "The export the Rego generator reads. This schema checks the shape of the document. The Go loader (load.go) also checks what the schema cannot: every kind has a domain; a cell's state and class lie in its kind's domain; outcomes is present exactly when outcome is by_value; pattern appears only on the right of MATCH and NOT_MATCH; and every combination of operator and operand kinds is answered at every point exactly once. See doc.go.",
+  "description": "The export the Rego generator reads. This schema checks the shape of the document. The Go loader (load.go) also checks what the schema cannot: every kind has a domain; a cell's state and class lie in its kind's domain; outcomes and value_rule are present exactly when outcome is by_value, and value_rule is sorted; nodes names every algorithm and rule effect; pattern appears only on the right of MATCH and NOT_MATCH; and every combination of operator and operand kinds is answered at every point exactly once. See doc.go.",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema_version", "spec_tag", "profiles"],
   "properties": {
-    "schema_version": {"const": 1},
+    "schema_version": {"const": 2},
     "spec_tag": {"type": "string", "minLength": 1, "description": "Tag of the specification commit the tables were computed from, such as r65."},
     "profiles": {
       "type": "object",
@@ -40,7 +40,45 @@
       "enum": ["VALUE", "ABSENT", "NULL", "PIP_EMPTY", "EMPTY_COLL", "EMPTY_SEL", "INDEX_OOB", "PIP_NULL", "ERROR",
                "SINGLE_ODD", "SCALAR_ODD", "SCOPE_OUTSIDE"]
     },
-    "class": {"enum": ["s", "n", "l", "hl", "x"]},
+    "class": {"enum": ["s", "n", "l", "hl", "xn", "xl", "xo", "z"],
+              "description": "s a string; n a number or a boolean; l a list of scalars; hl a list of scalars from a HEADER or GENERAL PIP; xn a list with a null element; xl a list with a list or an object element and no null element; xo an object; z a null value in state VALUE."},
+    "valueRule": {
+      "enum": ["eq", "list_eq", "structure_text_left", "array_eq", "object_eq", "rel", "empty", "in_any", "contains_any",
+               "contains_right_attribute_list", "subset", "match", "null_element_ends", "right_list_scalar_ops", "single_odd",
+               "scalar_odd_rel"]
+    },
+    "nodeOutcome": {"enum": ["permit", "deny", "na"]},
+    "algorithm": {"enum": ["DENY_UNLESS_PERMIT", "PERMIT_OVERRIDES", "DENY_OVERRIDES", "PERMIT_UNLESS_DENY"]},
+    "ruleEffect": {"enum": ["USE_FILTER_CONDITION", "NOT_APPLICABLE", "other"]},
+    "absentEffect": {"enum": ["ALLOW", "DENY", "other"]},
+    "combination": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["permit", "deny", "both", "none"],
+      "properties": {
+        "permit": {"$ref": "#/$defs/nodeOutcome", "description": "Some applicable child permits and none denies."},
+        "deny": {"$ref": "#/$defs/nodeOutcome", "description": "Some applicable child denies and none permits."},
+        "both": {"$ref": "#/$defs/nodeOutcome", "description": "Some child permits and some denies."},
+        "none": {"$ref": "#/$defs/nodeOutcome", "description": "No child permits or denies."}
+      }
+    },
+    "nodes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["algorithms", "absent_algorithm", "effects", "absent_effect", "absent_expression"],
+      "description": "How the profile combines the outcomes of the nodes above the leaves.",
+      "properties": {
+        "algorithms": {"type": "object", "propertyNames": {"$ref": "#/$defs/algorithm"},
+                       "additionalProperties": {"$ref": "#/$defs/combination"},
+                       "description": "Every algorithm of #/$defs/algorithm is required."},
+        "absent_algorithm": {"$ref": "#/$defs/algorithm", "description": "The algorithm of a node that names none."},
+        "effects": {"type": "object", "propertyNames": {"$ref": "#/$defs/ruleEffect"},
+                    "additionalProperties": {"$ref": "#/$defs/nodeOutcome"},
+                    "description": "The outcome of a rule whose effect is neither ALLOW nor DENY; other covers every effect not listed. Every rule effect is required."},
+        "absent_effect": {"$ref": "#/$defs/absentEffect", "description": "What a rule without an effect counts as."},
+        "absent_expression": {"enum": ["T", "F"], "description": "The value of an absent target or condition."}
+      }
+    },
     "place": {"enum": ["simplified", "rule_condition", "rule_target", "policy_target", "set_target"]},
     "effect": {"enum": ["ALLOW", "DENY"]},
     "legacyOutcome": {"enum": ["T", "F", "ABORT", "ERR", "bad_request", "unsupported", "by_value"]},
@@ -94,7 +132,9 @@
         "in_iterate": {"type": "boolean", "description": "Whether the leaf is evaluated in a pass of iterate. Omitted: both."},
         "outcome": {"type": "string"},
         "outcomes": {"type": "array", "minItems": 2, "uniqueItems": true,
-                     "description": "Present exactly when outcome is by_value."}
+                     "description": "Present exactly when outcome is by_value."},
+        "value_rule": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/valueRule"},
+                       "description": "Present exactly when outcome is by_value: the value rules the specification went through over all representative values, sorted. A negated operator names the rule of the operator it negates."}
       },
       "if": {"properties": {"op": {"$ref": "#/$defs/unaryOperator"}}},
       "then": {"not": {"required": ["right"]}},
@@ -117,20 +157,22 @@
     "legacyProfile": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["knobs", "kinds", "cells"],
+      "required": ["knobs", "kinds", "nodes", "cells"],
       "properties": {
         "knobs": {"$ref": "#/$defs/knobs"},
         "kinds": {"$ref": "#/$defs/kinds"},
+        "nodes": {"$ref": "#/$defs/nodes"},
         "cells": {"type": "array", "items": {"$ref": "#/$defs/legacyCell"}}
       }
     },
     "agentProfile": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["knobs", "kinds", "cells"],
+      "required": ["knobs", "kinds", "nodes", "cells"],
       "properties": {
         "knobs": {"$ref": "#/$defs/knobs"},
         "kinds": {"$ref": "#/$defs/kinds"},
+        "nodes": {"$ref": "#/$defs/nodes"},
         "cells": {"type": "array", "items": {"$ref": "#/$defs/agentCell"}}
       }
     }
