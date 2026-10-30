@@ -389,9 +389,11 @@ func valueOutcomes(p Profile) []Outcome {
 // right_list_scalar_ops is the outcome of ==, !=, CONTAINS, and NOT CONTAINS
 // with a list of two or more values on the right that is not a literal list,
 // and right_list_attribute says whether a resource attribute there is
-// compared instead (EVAL).
+// compared instead (EVAL). string_list_split says how a literal list of two
+// or more quoted strings is read (SPLIT_TRIM: from its token, split at every
+// comma), and idiom_list_item_trim how each part is trimmed.
 var RequiredKnobs = []string{"fold", "eq_numeric", "list_eq_by_value", "subset_fold", "right_list_scalar_ops",
-	"right_list_attribute"}
+	"right_list_attribute", "string_list_split", "idiom_list_item_trim"}
 
 // knobsV1 lists the knobs of schema version 1.
 var knobsV1 = []string{"fold", "eq_numeric", "list_eq_by_value", "subset_fold"}
