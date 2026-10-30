@@ -15,8 +15,12 @@
 package regogen
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"regexp"
 	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/open-policy-agent/opa/v1/ast"
@@ -60,9 +64,11 @@ type Record struct {
 	// N0 is set for a list that holds a null element; its keys leave the
 	// null out.
 	N0 bool
-	// TK is the key of a list's or an object's Java text, which a string
-	// equals it by.
+	// TK is the key of the text a string equals a list or an object by
+	// (structureText).
 	TK *string
+	// Len is the number of elements of a list, null elements included.
+	Len *int
 	// O is the key two lists are equal by, their typed elements as a set, and
 	// the key two objects are equal by, member by member.
 	O *string
@@ -133,13 +139,17 @@ func record(r *Ref, v Resolved) Record {
 			rec.KS = []string{}
 		}
 		rec.N0 = lv.State == legacyvalue.StateNullElement
-		rec.TK = lv.Key
+		tk := legacyvalue.Fold(structureText(v.Value))
+		rec.TK = &tk
 		rec.O = lv.Structure
+		if l, ok := v.Value.([]jsonvalue.Value); ok {
+			n := len(l)
+			rec.Len = &n
+		}
 		if lv.State == legacyvalue.StateEmptyColl {
-			// the record of an empty list carries no keys; its Java text and
-			// its structure key are both []
+			// the record of an empty list carries no structure key; it is []
 			empty := "[]"
-			rec.TK, rec.O = &empty, &empty
+			rec.O = &empty
 		}
 	}
 	if s, ok := v.Value.(string); ok {
@@ -215,15 +225,18 @@ func (r Record) term() *ast.Term {
 	if r.O != nil {
 		o.Insert(strTerm("o"), strTerm(*r.O))
 	}
+	if r.Len != nil {
+		o.Insert(strTerm("ln"), ast.IntNumberTerm(*r.Len))
+	}
 	return ast.NewTerm(o)
 }
 
 // Value returns the input as a Rego value: maps s, t, k, ks, raw, seg, eseg,
-// nseg, n0, tk, and o from a reference ID to a field of its record, then
+// nseg, n0, tk, o, and ln from a reference ID to a field of its record, then
 // sroles, m2m, and g. A network PIP's record is not in it: nc.pip returns it.
 func (in *Input) Value() ast.Value {
 	fields := map[string]ast.Object{}
-	for _, f := range []string{"s", "t", "k", "ks", "raw", "seg", "eseg", "nseg", "n0", "tk", "o"} {
+	for _, f := range []string{"s", "t", "k", "ks", "raw", "seg", "eseg", "nseg", "n0", "tk", "o", "ln"} {
 		fields[f] = ast.NewObject()
 	}
 	for _, r := range in.refs {
@@ -253,6 +266,9 @@ func (in *Input) Value() ast.Value {
 		}
 		if rec.O != nil {
 			fields["o"].Insert(id, strTerm(*rec.O))
+		}
+		if rec.Len != nil {
+			fields["ln"].Insert(id, ast.IntNumberTerm(*rec.Len))
 		}
 		if rec.Segs != nil {
 			fields["seg"].Insert(id, strsTerm(rec.Segs))
@@ -291,4 +307,112 @@ func (in *Input) NodeInterval(id string) (*ast.Term, bool) {
 	}
 	return ast.ObjectTerm([2]*ast.Term{strTerm("lo"), strTerm(iv[0])},
 		[2]*ast.Term{strTerm("hi"), strTerm(iv[1])}), true
+}
+
+// structureText is the text a string compares a list or an object by, as the
+// agent profile prints it: the members in document order, a scalar member as
+// its Java text with a number stripped of trailing zeros in plain notation,
+// and a member that is itself a list or an object as compact JSON with its
+// numbers as written.
+func structureText(v jsonvalue.Value) string {
+	member := func(x jsonvalue.Value) string {
+		switch x := x.(type) {
+		case []jsonvalue.Value, *jsonvalue.Object:
+			return jsonText(x)
+		case nil:
+			return "null"
+		case bool:
+			return strconv.FormatBool(x)
+		case jsonvalue.Number:
+			return plainStripped(string(x))
+		case string:
+			return x
+		}
+		return ""
+	}
+	var parts []string
+	switch v := v.(type) {
+	case []jsonvalue.Value:
+		for _, x := range v {
+			parts = append(parts, member(x))
+		}
+		return "[" + strings.Join(parts, ", ") + "]"
+	case *jsonvalue.Object:
+		for _, k := range v.Keys() {
+			x, _ := v.Get(k)
+			parts = append(parts, k+"="+member(x))
+		}
+		return "{" + strings.Join(parts, ", ") + "}"
+	}
+	return member(v)
+}
+
+// jsonText is compact JSON with the numbers as the document writes them.
+func jsonText(v jsonvalue.Value) string {
+	var parts []string
+	switch v := v.(type) {
+	case []jsonvalue.Value:
+		for _, x := range v {
+			parts = append(parts, jsonText(x))
+		}
+		return "[" + strings.Join(parts, ",") + "]"
+	case *jsonvalue.Object:
+		for _, k := range v.Keys() {
+			x, _ := v.Get(k)
+			parts = append(parts, jsonString(k)+":"+jsonText(x))
+		}
+		return "{" + strings.Join(parts, ",") + "}"
+	case jsonvalue.Number:
+		return string(v)
+	case string:
+		return jsonString(v)
+	case bool:
+		return strconv.FormatBool(v)
+	}
+	return "null"
+}
+
+func jsonString(s string) string {
+	var b bytes.Buffer
+	enc := json.NewEncoder(&b)
+	enc.SetEscapeHTML(false)
+	_ = enc.Encode(s)
+	return strings.TrimSuffix(b.String(), "\n")
+}
+
+var numberRE = regexp.MustCompile(`^(-?)(\d*)(?:\.(\d*))?(?:[eE]([-+]?\d+))?$`)
+
+// plainStripped is BigDecimal.stripTrailingZeros().toPlainString() of a
+// number's text: 5.50 is 5.5, 5.0 is 5, 1e3 is 1000.
+func plainStripped(text string) string {
+	m := numberRE.FindStringSubmatch(text)
+	if m == nil {
+		return text
+	}
+	coef := strings.TrimLeft(m[2]+m[3], "0")
+	exp := -len(m[3])
+	if m[4] != "" {
+		e, err := strconv.Atoi(m[4])
+		if err != nil {
+			return text
+		}
+		exp += e
+	}
+	for strings.HasSuffix(coef, "0") {
+		coef = coef[:len(coef)-1]
+		exp++
+	}
+	if coef == "" {
+		return "0"
+	}
+	var out string
+	switch point := len(coef) + exp; {
+	case exp >= 0:
+		out = coef + strings.Repeat("0", exp)
+	case point > 0:
+		out = coef[:point] + "." + coef[point:]
+	default:
+		out = "0." + strings.Repeat("0", -point) + coef
+	}
+	return m[1] + out
 }

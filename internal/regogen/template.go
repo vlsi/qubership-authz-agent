@@ -73,6 +73,17 @@ func fieldOf(f string, cl spectables.Class) bool {
 	return false
 }
 
+// isStructureOrList reports whether cl is a list or an object.
+func isStructureOrList(cl spectables.Class) bool {
+	return isListClass(cl) || cl == spectables.ClassObject
+}
+
+// isListClass reports whether cl is a list.
+func isListClass(cl spectables.Class) bool {
+	return cl == spectables.ClassList || cl == spectables.ClassHeaderList || cl == spectables.ClassNullElement ||
+		cl == spectables.ClassNested
+}
+
 // isStructure reports whether cl is a list with a null, a list or object
 // element, or an object.
 func isStructure(cl spectables.Class) bool {
@@ -228,8 +239,51 @@ func valueTemplate(op spectables.Operator, L, R *side, cl, cr spectables.Class) 
 	}
 	lref, rref := L.ref != nil, R.ref != nil
 	net := lref && L.ref.Network || rref && R.ref.Network
-	if (op == spectables.OpIn || op == spectables.OpContains) && cl == spectables.ClassObject &&
-		cr == spectables.ClassObject && lref && rref {
+	if op == spectables.OpEQ && (isStructureOrList(cl) && cr == spectables.ClassString && lref ||
+		cl == spectables.ClassString && isStructureOrList(cr) && rref) {
+		// a list or an object equals a string by its Java text under
+		// equalsIgnoreCase: value_op reaches it for a list on the left
+		// (structure_text_left), eq for every other order (eq)
+		structure, text := L, R
+		if !isStructureOrList(cl) {
+			structure, text = R, L
+		}
+		b.use(structure, "tk")
+		bind := conj(L.bind(), R.bind())
+		c := clsCheck
+		if net {
+			c = clsAfterBuilt
+		}
+		t := conj(bind, clause{{cls: c, text: structure.field("tk") + " == " + b.k(text), fact: vfact(structure)}})
+		f := conj(bind, clause{{cls: c, text: structure.field("tk") + " != " + b.k(text), fact: vfact(structure)}})
+		tp, _ := out(spectables.RuleEq, dnf{t}, dnf{f})
+		tp.rules[spectables.RuleStructureTextLeft] = true
+		return tp, true
+	}
+	if op == spectables.OpContains && cl == spectables.ClassObject && cr == spectables.ClassString && lref {
+		// an object on the left of CONTAINS equals a string by its Java text
+		b.use(L, "tk")
+		bind := conj(L.bind(), R.bind())
+		c := L.cls(clsCheck)
+		if net {
+			c = clsAfterBuilt
+		}
+		t := conj(bind, clause{{cls: c, text: L.field("tk") + " == " + b.k(R), fact: vfact(L)}})
+		f := conj(bind, clause{{cls: c, text: L.field("tk") + " != " + b.k(R), fact: vfact(L)}})
+		return out(spectables.RuleStructureTextLeft, dnf{t}, dnf{f})
+	}
+	if op == spectables.OpIn && lref && !rref && (isListClass(cl) || cl == spectables.ClassObject) {
+		// a list or an object on the left of IN is in a literal list holding
+		// its Java text
+		b.use(L, "tk")
+		keys := R.lit.keys
+		t := conj(L.bind(), clause{{cls: L.cls(clsCheck), text: L.field("tk") + " in " + setLit(keys), fact: vfact(L)}})
+		f := conj(L.bind(), clause{{cls: L.cls(clsCheck), text: "not " + L.field("tk") + " in " + setLit(keys),
+			fact: vfact(L)}})
+		return out(spectables.RuleStructureTextLeft, dnf{t}, dnf{f})
+	}
+	if (op == spectables.OpIn || op == spectables.OpContains || op == spectables.OpEQ) &&
+		cl == spectables.ClassObject && cr == spectables.ClassObject && lref && rref {
 		// two objects are equal by their members: the same keys, each value
 		// of the same JSON type and equal, a list inside in order
 		b.use(L, "o")
@@ -241,7 +295,11 @@ func valueTemplate(op spectables.Operator, L, R *side, cl, cr spectables.Class) 
 		bind := conj(L.bind(), R.bind())
 		t := conj(bind, clause{{cls: c, text: L.field("o") + " == " + R.field("o"), fact: vfact(L)}})
 		f := conj(bind, clause{{cls: c, text: L.field("o") + " != " + R.field("o"), fact: vfact(L)}})
-		return out(spectables.RuleObjectEq, dnf{t}, dnf{f})
+		// IN and CONTAINS reach the comparison through object_eq, == through
+		// eq
+		tp, _ := out(spectables.RuleObjectEq, dnf{t}, dnf{f})
+		tp.rules[spectables.RuleEq] = true
+		return tp, true
 	}
 	switch op {
 	case spectables.OpMatch:
@@ -266,7 +324,15 @@ func valueTemplate(op spectables.Operator, L, R *side, cl, cr spectables.Class) 
 			text: fmt.Sprintf("not regex.match(%s, %s)", lit(rx), L.field("raw")), fact: vfact(L)}})
 		return out(spectables.RuleMatch, dnf{t}, dnf{f})
 	case spectables.OpEQ:
-		if cl == spectables.ClassList && cr == spectables.ClassList && lref && rref {
+		if cl == spectables.ClassNullElement && cr == spectables.ClassList && lref && rref {
+			// a list with a null element never equals a list of scalars
+			b.use(L, "ks")
+			return out(spectables.RuleListEq, dnfFalse, dnf{conj(L.bind(), R.bind())})
+		}
+		listOrNested := func(c spectables.Class) bool {
+			return c == spectables.ClassList || c == spectables.ClassNested
+		}
+		if listOrNested(cl) && listOrNested(cr) && lref && rref {
 			// two lists are equal as sets of typed elements, a number by its
 			// text and a string with its case
 			b.use(L, "o")

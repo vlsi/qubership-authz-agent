@@ -186,14 +186,15 @@ func TestANullElementLeavesContainsUndefined(t *testing.T) {
 }
 
 // A value-dependent cell the templates do not cover is a generation error
-// that names the operator and the kinds, never a false rail. Two attributes
-// holding a nested list (class xl) under == have no template; the same
-// attribute against a literal is the control that generates.
+// that names the operator and the kinds, never a false rail. < of two
+// string attributes depends on the values through the rule rel, which has no
+// template; the same attribute under == with a literal is the control that
+// generates.
 func TestAValueDependentCellWithoutATemplateFailsGeneration(t *testing.T) {
-	tree := tenantWithSet(t, "DENY_UNLESS_PERMIT", "ALLOW", "resource.a == resource.b")
+	tree := tenantWithSet(t, "DENY_UNLESS_PERMIT", "ALLOW", "resource.a < resource.b")
 	_, err := Generate(tree, table(t), DefaultOptions())
-	if err == nil || !strings.Contains(err.Error(), "EQ(res:path xl, res:path xl)") {
-		t.Errorf("Generate(resource.a == resource.b) error = %v, want one naming EQ(res:path xl, res:path xl)", err)
+	if err == nil || !strings.Contains(err.Error(), "LT(res:path ") {
+		t.Errorf("Generate(resource.a < resource.b) error = %v, want one naming LT(res:path ...)", err)
 	}
 	control := tenantWithSet(t, "DENY_UNLESS_PERMIT", "ALLOW", "resource.a == 'x'")
 	if _, err := Generate(control, table(t), DefaultOptions()); err != nil {
@@ -201,15 +202,29 @@ func TestAValueDependentCellWithoutATemplateFailsGeneration(t *testing.T) {
 	}
 }
 
-// A cell whose value rules include one no template implements fails
-// generation and names the rule. Two subject lists under == reach
-// right_list_scalar_ops, whose constant for a longer list on the right the
-// export does not carry, so the list equality template does not answer it.
-func TestAValueRuleWithoutATemplateFailsGeneration(t *testing.T) {
-	tree := tenantWithSet(t, "DENY_UNLESS_PERMIT", "ALLOW", "subject.roles == subject.scopes")
-	_, err := Generate(tree, table(t), DefaultOptions())
-	if err == nil || !strings.Contains(err.Error(), "value rule right_list_scalar_ops has no template") {
-		t.Errorf("Generate(subject.roles == subject.scopes) error = %v, want one naming right_list_scalar_ops", err)
+// A subject list of two or more values on the right of == or != answers
+// with the profile's setting right_list_scalar_ops, false for the agent,
+// before the lists are compared; a list of one compares as a set, and !=
+// negates it.
+func TestALongListOnTheRightOfEqualityAnswersTheSetting(t *testing.T) {
+	for _, tc := range []struct {
+		name, op, roles, scopes string
+		want                    bool
+	}{
+		{"== with two scopes is false however the lists compare", "==", `["x", "y"]`, `["y", "x"]`, false},
+		{"!= with two scopes is false too", "!=", `["x"]`, `["x", "y"]`, false},
+		{"== with one scope compares the lists", "==", `["x"]`, `["x"]`, true},
+		{"!= with one scope negates the comparison", "!=", `["x"]`, `["X"]`, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			tree := tenantWithSet(t, "DENY_UNLESS_PERMIT", "ALLOW", "subject.roles "+tc.op+" subject.scopes")
+			values := map[string]Resolved{`["subj","roles"]`: resolved(t, "VALUE", tc.roles),
+				`["subj","scopes"]`: resolved(t, "VALUE", tc.scopes)}
+			if got := decideValues(t, tree, DefaultOptions(), values); got != tc.want {
+				t.Errorf("allow(roles %s scopes, roles = %s, scopes = %s) = %v, want %v", tc.op, tc.roles, tc.scopes,
+					got, tc.want)
+			}
+		})
 	}
 }
 
@@ -360,6 +375,82 @@ func TestTheNodeRulesComeFromTheExport(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			if got := decideWith(t, tree, tc.tab, DefaultOptions(), map[string]Resolved{keyA: resolved(t, "VALUE", `"y"`)}); got != tc.want {
 				t.Errorf("allow(resource.a = \"y\") = %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
+
+// A list or an object compares with a string by the text the profile prints
+// for it, in either order and under equalsIgnoreCase; a number inside prints
+// without trailing zeros.
+func TestAStructureComparesWithAStringByItsText(t *testing.T) {
+	keyB := `["res",".b"]`
+	for _, tc := range []struct {
+		name, condition, a, b string
+		want                  bool
+	}{
+		{"a list equals its text in another case", "resource.a == '[X, y]'", `["x", "y"]`, "", true},
+		{"a number element prints without its trailing zero", "resource.a == '[1]'", `[1.0]`, "", true},
+		{"a list does not equal another text", "resource.a == '[y]'", `["x"]`, "", false},
+		{"a string equals the text of a list on the right", "resource.b == resource.a", `["x"]`, `"[x]"`, true},
+		{"an object contains its text", "resource.a CONTAINS '{k=v}'", `{"k": "v"}`, "", true},
+		{"a list is in literals that hold its text", "resource.a IN '[x]', 'z'", `["x"]`, "", true},
+		{"a list is not in literals that hold its elements", "resource.a IN 'x', 'z'", `["x"]`, "", false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			tree := tenantWithSet(t, "DENY_UNLESS_PERMIT", "ALLOW", tc.condition)
+			values := map[string]Resolved{keyA: resolved(t, "VALUE", tc.a)}
+			if tc.b != "" {
+				values[keyB] = resolved(t, "VALUE", tc.b)
+			}
+			if got := decideValues(t, tree, DefaultOptions(), values); got != tc.want {
+				t.Errorf("allow(%s, resource.a = %s, resource.b = %s) = %v, want %v", tc.condition, tc.a, tc.b, got,
+					tc.want)
+			}
+		})
+	}
+}
+
+// A string compared under == with a right operand in state NULL equals it
+// only as the text [], since the profile reads that operand as an empty list.
+func TestAStringEqualsANullOperandOnlyAsAnEmptyList(t *testing.T) {
+	for _, tc := range []struct {
+		name, op, b string
+		want        bool
+	}{
+		{"[] equals it", "==", `"[]"`, true},
+		{"another string does not", "==", `"x"`, false},
+		{"another string differs from it", "!=", `"x"`, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			tree := tenantWithSet(t, "DENY_UNLESS_PERMIT", "ALLOW", "resource.b "+tc.op+" resource.a")
+			values := map[string]Resolved{keyA: resolved(t, "NULL", ""), `["res",".b"]`: resolved(t, "VALUE", tc.b)}
+			if got := decideValues(t, tree, DefaultOptions(), values); got != tc.want {
+				t.Errorf("allow(resource.b %s resource.a, resource.b = %s, resource.a in NULL) = %v, want %v", tc.op,
+					tc.b, got, tc.want)
+			}
+		})
+	}
+}
+
+// Two lists, nested ones included, are equal as sets of their elements; a
+// list inside keeps its order. Two objects are equal by their members, a
+// number by its value, a string with its case.
+func TestStructuresEqualByTheirElements(t *testing.T) {
+	for _, tc := range []struct {
+		name, a, b string
+		want       bool
+	}{
+		{"nested lists in another order are equal", `[["a"], "b"]`, `["b", ["a"]]`, true},
+		{"a list inside keeps its order", `[["a", "c"]]`, `[["c", "a"]]`, false},
+		{"objects with equal numbers are equal", `{"n": 1}`, `{"n": 1.0}`, true},
+		{"objects with strings in another case differ", `{"k": "V"}`, `{"k": "v"}`, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			tree := tenantWithSet(t, "DENY_UNLESS_PERMIT", "ALLOW", "resource.a == resource.b")
+			values := map[string]Resolved{keyA: resolved(t, "VALUE", tc.a), `["res",".b"]`: resolved(t, "VALUE", tc.b)}
+			if got := decideValues(t, tree, DefaultOptions(), values); got != tc.want {
+				t.Errorf("allow(resource.a = %s, resource.b = %s) = %v, want %v", tc.a, tc.b, got, tc.want)
 			}
 		})
 	}

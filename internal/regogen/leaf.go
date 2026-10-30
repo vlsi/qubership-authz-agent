@@ -15,6 +15,7 @@
 package regogen
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"maps"
@@ -281,9 +282,25 @@ func (g *gen) byValue(rails *leafRails, op spectables.Operator, L, R *side, cell
 		rails.threeValued = true
 		return nil
 	}
+	if (op == spectables.OpEQ || op == spectables.OpNE) && lp.st == spectables.StateValue &&
+		lp.cl == spectables.ClassString && L.ref != nil && R != nil && rp.st != spectables.StateValue &&
+		len(cell.ValueRule) == 1 && cell.ValueRule[0] == spectables.RuleEq {
+		// a right operand in a special state whose cell evaluates the values
+		// is read as an empty list, and a string equals it by the text []
+		eq := conj(L.bind(), clause{{cls: L.cls(clsCheck), text: L.field("k") + ` == "[]"`, fact: vfact(L)}})
+		ne := conj(L.bind(), clause{{cls: L.cls(clsCheck), text: L.field("k") + ` != "[]"`, fact: vfact(L)}})
+		if op == spectables.OpNE {
+			eq, ne = ne, eq
+		}
+		at := conj(L.at(lps[i]), rightAt(R, rps[j]))
+		rails.t = union(rails.t, prod(dnf{at}, dnf{eq}, true))
+		rails.f = union(rails.f, prod(dnf{at}, dnf{ne}, true))
+		return nil
+	}
 	if lp.st != spectables.StateValue || R != nil && rp.st != spectables.StateValue {
 		g.stats.NoTemplate[fmt.Sprintf("%s(%s %s, %s %s)", op, L.kind, lp.st, kindOf(R), rp.st)]++
-		return fmt.Errorf("%s: value-dependent cell in state %s × %s has no template", op, lp.st, rp.st)
+		return fmt.Errorf("%s(%s %s, %s %s): value-dependent cell in a state other than VALUE has no template", op,
+			L.kind, lp.st, kindOf(R), rp.st)
 	}
 	if L.ref == nil && L.lit != nil && R != nil && R.ref == nil {
 		// both values known at generation: a copy of the tree for one
@@ -304,6 +321,13 @@ func (g *gen) byValue(rails *leafRails, op spectables.Operator, L, R *side, cell
 		return nil
 	}
 	tp, ok := template(op, L, R, lp.cl, rp.cl)
+	if ok && slices.Contains(cell.ValueRule, spectables.RuleRightListScalarOps) {
+		if err := g.rightListScalarOps(&tp, R, rp); err != nil {
+			g.stats.NoTemplate[fmt.Sprintf("%s(%s %s, %s %s) rule %s", op, L.kind, lp.cl, kindOf(R), rp.cl,
+				spectables.RuleRightListScalarOps)]++
+			return fmt.Errorf("%s(%s %s, %s %s): %w", op, L.kind, lp.cl, kindOf(R), rp.cl, err)
+		}
+	}
 	if ok && slices.Contains(cell.Outcomes, spectables.OutcomeU) && !tp.undefined {
 		g.stats.NoTemplate[fmt.Sprintf("%s(%s %s, %s %s) with U", op, L.kind, lp.cl, kindOf(R), rp.cl)]++
 		return fmt.Errorf("%s: value-dependent cell with an undefined outcome has no template", op)
@@ -472,4 +496,49 @@ func uncovered(rules []spectables.ValueRule, have ...spectables.ValueRule) (spec
 		}
 	}
 	return "", false
+}
+
+// rightListScalarOps adds the rule right_list_scalar_ops to the template of a
+// cell that names it: a list of two or more values on the right answers with
+// the profile's setting right_list_scalar_ops before the values are compared,
+// for the negated operators too, and a shorter list compares as the template
+// says. A cell of CONTAINS with a list attribute on the right has no base
+// template, so it fails generation before this is reached.
+func (g *gen) rightListScalarOps(tp *tpl, R *side, rp point) error {
+	if R == nil || R.ref == nil || !isListClass(rp.cl) {
+		return fmt.Errorf("value rule %s needs a list attribute on the right", spectables.RuleRightListScalarOps)
+	}
+	raw, ok := g.tab.Knob(spectables.ProfileAgent, "right_list_scalar_ops")
+	if !ok {
+		return fmt.Errorf("the export carries no knob right_list_scalar_ops")
+	}
+	var knob string
+	if err := json.Unmarshal(raw, &knob); err != nil {
+		return fmt.Errorf("knob right_list_scalar_ops: %w", err)
+	}
+	// the setting holds a legacy outcome; the agent ends no rule and fails
+	// no decision there (an end is false, an error unknown)
+	outcome, ok := map[string]spectables.Outcome{"T": spectables.OutcomeT, "F": spectables.OutcomeF,
+		"ABORT": spectables.OutcomeF, "ERR": spectables.OutcomeU}[knob]
+	if !ok {
+		return fmt.Errorf("knob right_list_scalar_ops is %q, not an outcome", knob)
+	}
+	long := conj(R.bind(), clause{{cls: R.cls(clsCheck), text: R.field("ln") + " > 1", fact: vfact(R)}})
+	short := conj(R.bind(), clause{{cls: R.cls(clsCheck), text: R.field("ln") + " <= 1", fact: vfact(R)}})
+	tp.t = prod(dnf{short}, tp.t, true)
+	tp.f = prod(dnf{short}, tp.f, true)
+	switch outcome {
+	case spectables.OutcomeT:
+		tp.t = union(tp.t, dnf{long})
+	case spectables.OutcomeF:
+		tp.f = union(tp.f, dnf{long})
+	default:
+		tp.undefined = true
+	}
+	if tp.fields[R] == nil {
+		tp.fields[R] = map[string]bool{}
+	}
+	tp.fields[R]["ln"] = true
+	tp.rules[spectables.RuleRightListScalarOps] = true
+	return nil
 }
