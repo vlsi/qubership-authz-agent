@@ -125,7 +125,8 @@ func fixtureProfile(eq []any) doc {
 	}
 	return doc{
 		"knobs": doc{"fold": "java", "eq_numeric": false, "list_eq_by_value": true, "subset_fold": false,
-			"right_list_scalar_ops": "ABORT", "right_list_attribute": "EVAL"},
+			"right_list_scalar_ops": "ABORT", "right_list_attribute": "EVAL", "string_list_split": "SPLIT_TRIM",
+			"idiom_list_item_trim": "java_trim"},
 		"kinds": kinds,
 		"nodes": fixtureNodes(),
 		"cells": cells,
@@ -166,6 +167,8 @@ func versionOne() doc {
 	for _, p := range []string{"legacy", "agent"} {
 		delete(profileOf(d, p)["knobs"].(doc), "right_list_scalar_ops")
 		delete(profileOf(d, p)["knobs"].(doc), "right_list_attribute")
+		delete(profileOf(d, p)["knobs"].(doc), "string_list_split")
+		delete(profileOf(d, p)["knobs"].(doc), "idiom_list_item_trim")
 	}
 	pr := profileOf(d, "agent")
 	pr["cells"] = append(agentCells(d), doc{"op": "EQ", "left": doc{"kind": "res:path", "state": "VALUE", "class": "x"},
