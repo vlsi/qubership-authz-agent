@@ -271,6 +271,12 @@ func valueTemplate(op spectables.Operator, L, R *side, cl, cr spectables.Class) 
 		f := conj(bind, clause{{cls: c, text: L.field("tk") + " != " + b.k(R), fact: vfact(L)}})
 		return out(spectables.RuleStructureTextLeft, dnf{t}, dnf{f})
 	}
+	if op == spectables.OpContains && cl == spectables.ClassObject && isListClass(cr) && lref && rref &&
+		!isRes(R.kind) {
+		// an object on the left of CONTAINS contains a string by its text or
+		// an equal object, never a list
+		return out(spectables.RuleObjectEq, dnfFalse, dnf{conj(L.bind(), R.bind())})
+	}
 	if op == spectables.OpIn && lref && !rref && (isListClass(cl) || cl == spectables.ClassObject) {
 		// a list or an object on the left of IN is in a literal list holding
 		// its Java text
@@ -341,6 +347,11 @@ func valueTemplate(op spectables.Operator, L, R *side, cl, cr spectables.Class) 
 			f := conj(bind, clause{{cls: c, text: L.field("o") + " != " + R.field("o"), fact: vfact(L)}})
 			return out(spectables.RuleListEq, dnf{t}, dnf{f})
 		}
+		if (cl == spectables.ClassScalar || cl == spectables.ClassObject) && isListClass(cr) && rref {
+			// a number, a boolean, or an object equals no list: only a string
+			// is compared with a list's Java text
+			return out(spectables.RuleEq, dnfFalse, dnf{conj(L.bind(), R.bind())})
+		}
 		if !isScalar(cl) || !isScalar(cr) || !lref && !rref {
 			return tpl{}, false
 		}
@@ -360,6 +371,11 @@ func valueTemplate(op spectables.Operator, L, R *side, cl, cr spectables.Class) 
 		f := conj(bind, clause{{cls: fc, text: b.k(L) + " != " + b.k(R), fact: vfact(L), test: scalarTest("ne", L, R)}})
 		return out(spectables.RuleEq, dnf{t}, dnf{f})
 	case spectables.OpIn:
+		if cl == spectables.ClassNull && lref {
+			// a null on the left is in no list; a null element on the right
+			// ends the rule before the values are compared
+			return out(spectables.RuleInAny, dnfFalse, dnf{conj(L.bind(), R.bind())})
+		}
 		if (cl == spectables.ClassList || isStructure(cl)) && lref && rref {
 			// a list or an object on the left is in the right when a string
 			// there equals its Java text
@@ -415,22 +431,82 @@ func valueTemplate(op spectables.Operator, L, R *side, cl, cr spectables.Class) 
 		listy := func(c spectables.Class) bool {
 			return isScalar(c) || c == spectables.ClassList || c == spectables.ClassHeaderList || isStructure(c)
 		}
-		if op == spectables.OpContains && rref && isRes(R.kind) && cr == spectables.ClassList {
+		if op == spectables.OpContains && rref && isRes(R.kind) && isListClass(cr) {
 			// a resource attribute on the right is one value, and no element
 			// equals a list (right_attribute_one_value,
 			// contains_right_attribute_list_false)
 			b.use(L, "ks")
 			return out(spectables.RuleContainsRightAttributeList, dnfFalse, dnf{conj(L.bind(), R.bind())})
 		}
-		if op == spectables.OpContains && rref {
-			// a list of several values on the right of CONTAINS is not
-			// compared element-wise: only a scalar on the right
-			if !isScalar(cr) || !listy(cl) {
-				return tpl{}, false
-			}
+		subjectList := cr == spectables.ClassList || cr == spectables.ClassNullElement ||
+			cr == spectables.ClassNested
+		if op == spectables.OpContains && rref && !isScalar(cr) && cr != spectables.ClassObject &&
+			(!subjectList || isRes(R.kind)) {
+			// a list on the right of CONTAINS is one value, unless it is a
+			// list of class l, xn, or xl of the subject or a PIP, whose cells
+			// add right_list_scalar_ops: the template then sees a list of at
+			// most one value
+			return tpl{}, false
 		}
 		if !listy(cl) || !listy(cr) {
 			return tpl{}, false
+		}
+		structured := func(c spectables.Class) bool {
+			return c == spectables.ClassNested || c == spectables.ClassNullElement || c == spectables.ClassObject
+		}
+		if structured(cl) || structured(cr) {
+			// a list or an object takes part, so elements are equal as eq
+			// says, which the tokens of the records give (Record.EA)
+			c := clsCheck
+			if net {
+				c = clsAfterBuilt
+			}
+			if !lref || !rref {
+				// a literal's tokens are its keys, the same in ea and eb, and
+				// ea is part of eb, so the other side's eb decides
+				lits, other := L, R
+				if lref {
+					lits, other = R, L
+				}
+				b.use(other, "eb")
+				eb := other.field("eb")
+				toks := make([]string, len(lits.lit.keys))
+				var ts dnf
+				for i, k := range lits.lit.keys {
+					toks[i] = "t:" + k
+					ts = append(ts, conj(other.bind(), clause{{cls: other.cls(c), text: lit(toks[i]) + " in " + eb,
+						fact: vfact(other), test: refTest(other, &test{kind: "has", val: toks[i], field: "eb"})}}))
+				}
+				f := conj(other.bind(), clause{{cls: other.cls(c), fact: vfact(other),
+					test: refTest(other, &test{kind: "none", set: toks, field: "eb"}),
+					text: fmt.Sprintf("every x in %s { not x in %s }", eb, setLit(toks))}})
+				return out(spectables.RuleContainsAny, union(ts), dnf{f})
+			}
+			v := "e_" + L.ref.ID + "_" + R.ref.ID
+			bind := conj(L.bind(), R.bind())
+			var t dnf
+			var f clause
+			for _, p := range [][2]string{{"ea", "eb"}, {"eb", "ea"}} {
+				b.use(L, p[0])
+				b.use(R, p[1])
+				pair := func(kind string) *test {
+					if t := pairTest(kind, L, R); t != nil {
+						t.field, t.field2 = p[0], p[1]
+						return t
+					}
+					return nil
+				}
+				t = append(t, conj(bind, clause{
+					{cls: c, text: fmt.Sprintf("some %s in %s", v, L.field(p[0])), fact: vfact(L), test: pair("overlap")},
+					{cls: c, text: fmt.Sprintf("%s in %s", v, R.field(p[1])), fact: vfact(R), test: pair("noop")}}))
+				f = append(f, expr{cls: c, fact: vfact(L), test: pair("disjoint"),
+					text: fmt.Sprintf("every %s in %s { not %s in %s }", v, L.field(p[0]), v, R.field(p[1]))})
+			}
+			return out(spectables.RuleContainsAny, t, dnf{conj(bind, f)})
+		}
+		rks := ""
+		if rref {
+			rks = b.ks(R)
 		}
 		if !lref {
 			if !rref {
@@ -438,12 +514,12 @@ func valueTemplate(op spectables.Operator, L, R *side, cl, cr spectables.Class) 
 			}
 			var ts dnf
 			for _, k := range L.lit.keys {
-				ts = append(ts, conj(R.bind(), clause{{cls: R.cls(clsIndexIn), text: lit(k) + " in " + b.ks(R),
+				ts = append(ts, conj(R.bind(), clause{{cls: R.cls(clsIndexIn), text: lit(k) + " in " + rks,
 					fact: vfact(R), test: refTest(R, &test{kind: "has", val: k})}}))
 			}
 			f := conj(R.bind(), clause{{cls: R.cls(clsCheck), fact: vfact(R),
 				test: refTest(R, &test{kind: "none", set: L.lit.keys}),
-				text: fmt.Sprintf("every x in %s { not x in %s }", b.ks(R), setLit(L.lit.keys))}})
+				text: fmt.Sprintf("every x in %s { not x in %s }", rks, setLit(L.lit.keys))}})
 			return out(spectables.RuleContainsAny, union(ts), dnf{f})
 		}
 		if !rref {
@@ -465,9 +541,9 @@ func valueTemplate(op spectables.Operator, L, R *side, cl, cr spectables.Class) 
 		bind := conj(L.bind(), R.bind())
 		t := conj(bind, clause{{cls: c, text: fmt.Sprintf("some %s in %s", v, b.ks(L)), fact: vfact(L),
 			test: pairTest("overlap", L, R)},
-			{cls: c, text: fmt.Sprintf("%s in %s", v, b.ks(R)), fact: vfact(R), test: pairTest("noop", L, R)}})
+			{cls: c, text: fmt.Sprintf("%s in %s", v, rks), fact: vfact(R), test: pairTest("noop", L, R)}})
 		f := conj(bind, clause{{cls: c, fact: vfact(L), test: pairTest("disjoint", L, R),
-			text: fmt.Sprintf("every %s in %s { not %s in %s }", v, b.ks(L), v, b.ks(R))}})
+			text: fmt.Sprintf("every %s in %s { not %s in %s }", v, b.ks(L), v, rks)}})
 		return out(spectables.RuleContainsAny, dnf{t}, dnf{f})
 	}
 	return tpl{}, false

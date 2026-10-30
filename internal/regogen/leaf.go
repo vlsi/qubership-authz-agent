@@ -266,12 +266,18 @@ func (g *gen) byValue(rails *leafRails, op spectables.Operator, L, R *side, cell
 			g.stats.NoTemplate[fmt.Sprintf("%s(%s %s, %s %s) odd", op, L.kind, lps[i].st, kindOf(R), rps[j].st)]++
 			return fmt.Errorf("%s: value-dependent cell in state %s × %s has no template", op, lps[i].st, rps[j].st)
 		}
-		if r, ok := uncovered(cell.ValueRule, spectables.RuleSingleOdd, spectables.RuleNullElementEnds); ok {
+		// the other side reads as an empty list, so a collection rule
+		// compares the odd list with nothing, or with a resource list no
+		// element equals, and gives that one outcome
+		if r, ok := uncovered(cell.ValueRule, spectables.RuleSingleOdd, spectables.RuleNullElementEnds,
+			spectables.RuleContainsAny, spectables.RuleInAny, spectables.RuleContainsRightAttributeList); ok {
 			g.stats.NoTemplate[fmt.Sprintf("%s(%s %s, %s %s) rule %s", op, L.kind, lps[i].st, kindOf(R), rps[j].st, r)]++
 			return fmt.Errorf("%s: value rule %s of a SINGLE_ODD cell has no template", op, r)
 		}
+		// the guard reads the odd list in its own state, so it states no
+		// fact of state VALUE, which would contradict that state
 		g2 := conj(oddSide.bind(), clause{{cls: oddSide.cls(clsCheck), text: "not " + oddSide.field("n0"),
-			fact: vfact(oddSide), test: refTest(oddSide, &test{kind: "non0"})}})
+			test: refTest(oddSide, &test{kind: "non0"})}})
 		c := conj(L.at(lps[i]), rightAt(R, rps[j]), g2)
 		if rest[0] == spectables.OutcomeT {
 			rails.t = union(rails.t, dnf{c})
@@ -320,12 +326,37 @@ func (g *gen) byValue(rails *leafRails, op spectables.Operator, L, R *side, cell
 		return nil
 	}
 	tp, ok := template(op, L, R, lp.cl, rp.cl)
+	if ok && rightListOp[op] && R != nil && R.ref != nil && !isRes(R.kind) && !oddR &&
+		(rp.cl == spectables.ClassList || rp.cl == spectables.ClassNullElement || rp.cl == spectables.ClassNested) &&
+		!slices.Contains(cell.ValueRule, spectables.RuleRightListScalarOps) {
+		// the templates compare such a list element by element, which holds
+		// only for a list of at most one value; a cell that names no
+		// right_list_scalar_ops has not seen a longer one
+		g.stats.NoTemplate[fmt.Sprintf("%s(%s %s, %s %s) without rule %s", op, L.kind, lp.cl, kindOf(R), rp.cl,
+			spectables.RuleRightListScalarOps)]++
+		return fmt.Errorf("%s(%s %s, %s %s): a list on the right without rule %s has no template", op, L.kind,
+			lp.cl, kindOf(R), rp.cl, spectables.RuleRightListScalarOps)
+	}
 	if ok && slices.Contains(cell.ValueRule, spectables.RuleRightListScalarOps) {
 		if err := g.rightListScalarOps(&tp, R, rp); err != nil {
 			g.stats.NoTemplate[fmt.Sprintf("%s(%s %s, %s %s) rule %s", op, L.kind, lp.cl, kindOf(R), rp.cl,
 				spectables.RuleRightListScalarOps)]++
 			return fmt.Errorf("%s(%s %s, %s %s): %w", op, L.kind, lp.cl, kindOf(R), rp.cl, err)
 		}
+	}
+	if ok && op == spectables.OpContainsAny && (oddL || oddR) &&
+		lp.cl == spectables.ClassNullElement && rp.cl == spectables.ClassNullElement {
+		// A SINGLE_ODD list of null fails the PIP on the left of CONTAINS
+		// ANY. On the right it is a value, and a list of a boolean or an
+		// object holds no null, so a null element on the left ends the rule
+		// there as it does against any list without one.
+		g := dnf{conj(L.bind(), clause{{cls: L.cls(clsCheck), text: "not " + L.field("n0"), fact: vfact(L)}})}
+		if oddR && !oddL {
+			g = append(g, conj(R.bind(), clause{{cls: R.cls(clsCheck), text: R.field("n0"), fact: vfact(R)}}))
+		}
+		tp.t, tp.f = prod(g, tp.t, true), prod(g, tp.f, true)
+		tp.undefined = true
+		tp.rules[spectables.RuleNullElementEnds] = true
 	}
 	if ok && slices.Contains(cell.Outcomes, spectables.OutcomeU) && !tp.undefined {
 		g.stats.NoTemplate[fmt.Sprintf("%s(%s %s, %s %s) with U", op, L.kind, lp.cl, kindOf(R), rp.cl)]++
@@ -537,3 +568,8 @@ func (g *gen) rightListScalarOps(tp *tpl, R *side, rp point) error {
 	tp.rules[spectables.RuleRightListScalarOps] = true
 	return nil
 }
+
+// rightListOp lists the operators that answer right_list_scalar_ops for a
+// list of two or more values of the subject or a PIP on the right.
+var rightListOp = map[spectables.Operator]bool{spectables.OpEQ: true, spectables.OpNE: true,
+	spectables.OpContains: true, spectables.OpNotContains: true}

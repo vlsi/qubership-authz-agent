@@ -21,7 +21,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/open-policy-agent/opa/v1/ast"
 	"github.com/open-policy-agent/opa/v1/rego"
+	"github.com/open-policy-agent/opa/v1/types"
 
 	"authz-agent/internal/jsonvalue"
 	"authz-agent/internal/policyir"
@@ -34,12 +36,20 @@ import (
 // condition given.
 func tenantWithSet(t *testing.T, algorithm, effect, condition string) *policyir.Tree {
 	t.Helper()
+	return tenantWithSetAndPIPs(t, algorithm, effect, condition, "")
+}
+
+// tenantWithSetAndPIPs is tenantWithSet with the PIP declarations given, a
+// comma-separated list of JSON objects without their tenantId.
+func tenantWithSetAndPIPs(t *testing.T, algorithm, effect, condition, pips string) *policyir.Tree {
+	t.Helper()
 	sets := fmt.Sprintf(`{"policySets": [{"policySetId": "s1", "name": "s1", "status": "ACTIVE",
 		"target": "resourceType == 'doc'", "combiningAlgorithm": %[1]q, "tenantId": "t1",
 		"policies": [{"policyId": "p1", "target": "true", "combiningAlgorithm": %[1]q,
 			"tenantId": "t1", "rules": [{"ruleId": "r1", "target": "operation == 'read'",
 				"condition": %[2]q, "effect": %[3]q, "tenantId": "t1"}]}]}]}`, algorithm, condition, effect)
-	exp, err := policyir.FromRegular([]byte(sets), []byte(`{"pips": []}`))
+	pips = strings.ReplaceAll(pips, "{", `{"tenantId": "t1", `)
+	exp, err := policyir.FromRegular([]byte(sets), []byte(`{"pips": [`+pips+`]}`))
 	if err != nil {
 		t.Fatalf("FromRegular: %v", err)
 	}
@@ -101,14 +111,24 @@ func decideWith(t *testing.T, tree *policyir.Tree, tab *spectables.Table, opt Op
 func evalModule(t *testing.T, m *Module, req Request) bool {
 	t.Helper()
 	opt := DefaultOptions()
-	pq, err := rego.New(append([]func(*rego.Rego){rego.Query("data." + opt.Package + ".allow"),
-		rego.Module("gen.rego", m.Text)}, regobuiltins.Options()...)...).PrepareForEval(context.Background())
-	if err != nil {
-		t.Fatalf("PrepareForEval: %v\n%s", err, m.Text)
-	}
 	in, err := Project(m, req)
 	if err != nil {
 		t.Fatalf("Project: %v", err)
+	}
+	// nc.pip answers a network PIP from the projection, as the agent's
+	// built-in would after its call
+	pip := rego.Function1(&rego.Function{Name: "nc.pip", Decl: types.NewFunction(types.Args(types.S), types.A)},
+		func(_ rego.BuiltinContext, a *ast.Term) (*ast.Term, error) {
+			r, ok := in.PIPRecord(string(a.Value.(ast.String)))
+			if !ok {
+				return nil, fmt.Errorf("nc.pip: no record of %v", a)
+			}
+			return r, nil
+		})
+	pq, err := rego.New(append([]func(*rego.Rego){rego.Query("data." + opt.Package + ".allow"),
+		rego.Module("gen.rego", m.Text), pip}, regobuiltins.Options()...)...).PrepareForEval(context.Background())
+	if err != nil {
+		t.Fatalf("PrepareForEval: %v\n%s", err, m.Text)
 	}
 	rs, err := pq.Eval(context.Background(), rego.EvalParsedInput(in.Value()))
 	if err != nil {
@@ -654,6 +674,298 @@ func TestTheFormsOfTheModuleAnswerAlike(t *testing.T) {
 					t.Errorf("allow(roles = %s, resource.a = %s) %s = %v, want %v", tc.roles, tc.value, form, got,
 						tc.want)
 				}
+			}
+		})
+	}
+}
+
+// Under == a number, a boolean, or an object equals no list, whatever it
+// holds: only a string compares with a list's text. A subject list of two or
+// more values answers != with the setting right_list_scalar_ops, false for
+// the agent, before that.
+func TestANumberOrAnObjectEqualsNoList(t *testing.T) {
+	const nested, id = `["res",".a.b"]`, `["subj","id"]`
+	for _, tc := range []struct {
+		name, op, a, id string
+		want            bool
+	}{
+		{"a number is not a list that holds its text", "!=", `5`, `["5"]`, true},
+		{"a number equals no list", "==", `5`, `["5"]`, false},
+		{"an object is not a list that holds its text", "!=", `{"k": "v"}`, `["{k=v}"]`, true},
+		{"a list of two values answers the setting", "!=", `5`, `["5", "6"]`, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			tree := tenantWithSet(t, "DENY_UNLESS_PERMIT", "ALLOW", "resource.a.b "+tc.op+" subject.id")
+			values := map[string]Resolved{nested: resolved(t, "VALUE", tc.a), id: resolved(t, "VALUE", tc.id)}
+			if got := decideValues(t, tree, DefaultOptions(), values); got != tc.want {
+				t.Errorf("allow(resource.a.b %s subject.id, resource.a.b = %s, subject.id = %s) = %v, want %v", tc.op,
+					tc.a, tc.id, got, tc.want)
+			}
+		})
+	}
+}
+
+// A subject list on the right of CONTAINS or NOT CONTAINS compares element
+// by element when it holds one value; with two or more it answers the
+// setting right_list_scalar_ops, false for the agent, under either operator.
+func TestAStringContainsASubjectListOfOneValue(t *testing.T) {
+	for _, tc := range []struct {
+		name, op, id string
+		want         bool
+	}{
+		{"one equal value allows", "CONTAINS", `["x"]`, true},
+		{"one other value denies", "CONTAINS", `["y"]`, false},
+		{"one other value is not contained", "NOT CONTAINS", `["y"]`, true},
+		{"two values with an equal one answer the setting", "CONTAINS", `["x", "y"]`, false},
+		{"two other values answer the setting under the negation", "NOT CONTAINS", `["y", "z"]`, false},
+		{"a list of null holds nothing, so it is not contained", "NOT CONTAINS", `[null]`, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			tree := tenantWithSet(t, "DENY_UNLESS_PERMIT", "ALLOW", "resource.a "+tc.op+" subject.id")
+			values := map[string]Resolved{keyA: resolved(t, "VALUE", `"x"`), `["subj","id"]`: resolved(t, "VALUE", tc.id)}
+			if got := decideValues(t, tree, DefaultOptions(), values); got != tc.want {
+				t.Errorf("allow(resource.a %s subject.id, subject.id = %s) = %v, want %v", tc.op, tc.id, got, tc.want)
+			}
+		})
+	}
+}
+
+// An object on the right of CONTAINS or CONTAINS ANY is one candidate: a
+// string on the left equals it by its text, an object by its members, with
+// their case, and a list element of another kind not at all.
+func TestAnObjectOnTheRightIsOneCandidate(t *testing.T) {
+	const object = `{"k": "v"}`
+	for _, tc := range []struct {
+		name, op, a string
+		want        bool
+	}{
+		{"a string equals the object's text in another case", "CONTAINS", `"{K=v}"`, true},
+		{"a string with another text denies", "CONTAINS", `"{k=w}"`, false},
+		{"a list of strings holds the text", "CONTAINS", `["z", "{k=v}"]`, true},
+		{"an object element with the same members allows", "CONTAINS", `[{"k": "v"}, ["q"]]`, true},
+		{"an object element in another case denies", "CONTAINS", `[{"k": "V"}, ["q"]]`, false},
+		{"a string element beside a list holds the text", "CONTAINS", `["{k=v}", ["q"]]`, true},
+		{"a list element with the text inside denies", "CONTAINS", `[["{k=v}"]]`, false},
+		{"an object with the same members has one in common", "CONTAINS ANY", object, true},
+		{"an object in another case has none", "CONTAINS ANY", `{"k": "V"}`, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			tree := tenantWithSet(t, "DENY_UNLESS_PERMIT", "ALLOW", "resource.a "+tc.op+" resource.b")
+			values := map[string]Resolved{keyA: resolved(t, "VALUE", tc.a), `["res",".b"]`: resolved(t, "VALUE", object)}
+			if got := decideValues(t, tree, DefaultOptions(), values); got != tc.want {
+				t.Errorf("allow(resource.a %s resource.b, resource.a = %s, resource.b = %s) = %v, want %v", tc.op,
+					tc.a, object, got, tc.want)
+			}
+		})
+	}
+}
+
+// generalPIPs declares subject.g and subject.h as GENERAL PIPs.
+const generalPIPs = `{"name": "subject.g", "pipType": "GENERAL", "url": "http://g"},
+	{"name": "subject.h", "pipType": "GENERAL", "url": "http://h"}`
+
+// A one-element GENERAL list of null (SINGLE_ODD) fails the PIP on the left
+// of CONTAINS ANY, and the agent reads that as undefined; one of a boolean
+// is a list without a null. On the right the list of null is a value, so a
+// null element on the left ends the rule only against the list of a boolean.
+// Under PERMIT_UNLESS_DENY a DENY rule permits only when its condition is
+// false, which tells false from undefined.
+func TestASingleOddListUnderContainsAny(t *testing.T) {
+	tree := tenantWithSetAndPIPs(t, "PERMIT_UNLESS_DENY", "DENY", "subject.g CONTAINS ANY subject.h", generalPIPs)
+	for _, tc := range []struct {
+		name                 string
+		gState, g, hState, h string
+		want                 bool
+	}{
+		{"a boolean against an empty PIP is false", "SINGLE_ODD", `[true]`, "PIP_EMPTY", "", true},
+		{"a null against an empty PIP is undefined", "SINGLE_ODD", `[null]`, "PIP_EMPTY", "", false},
+		{"a boolean against a list with a null is false", "SINGLE_ODD", `[true]`, "VALUE", `[null, "x"]`, true},
+		{"a null on the left is undefined against a list with a null", "SINGLE_ODD", `[null]`, "VALUE",
+			`[null, "x"]`, false},
+		{"a null element against a boolean ends the rule", "VALUE", `[null, "x"]`, "SINGLE_ODD", `[true]`, false},
+		{"a null element against a null compares the values", "VALUE", `[null, "x"]`, "SINGLE_ODD", `[null]`, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			values := map[string]Resolved{`["subj","g"]`: resolved(t, tc.gState, tc.g),
+				`["subj","h"]`: resolved(t, tc.hState, tc.h)}
+			if got := decideValues(t, tree, DefaultOptions(), values); got != tc.want {
+				t.Errorf("allow(subject.g = %s %s, subject.h = %s %s) = %v, want %v", tc.gState, tc.g, tc.hState,
+					tc.h, got, tc.want)
+			}
+		})
+	}
+}
+
+// A null whole resource is in no list, and a one-element GENERAL list of null
+// on the right of IN ends the rule, which the agent reads as undefined.
+func TestANullResourceIsInNoSingleOddList(t *testing.T) {
+	tree := tenantWithSetAndPIPs(t, "PERMIT_UNLESS_DENY", "DENY", "resource IN subject.g", generalPIPs)
+	for _, tc := range []struct {
+		name, g string
+		want    bool
+	}{
+		{"a list of a boolean is false and permits", `[true]`, true},
+		{"a list of null is undefined and denies", `[null]`, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			values := map[string]Resolved{`["res",""]`: resolved(t, "VALUE", "null"),
+				`["subj","g"]`: resolved(t, "SINGLE_ODD", tc.g)}
+			if got := decideValues(t, tree, DefaultOptions(), values); got != tc.want {
+				t.Errorf("allow(resource = null, subject.g = SINGLE_ODD %s) = %v, want %v", tc.g, got, tc.want)
+			}
+		})
+	}
+}
+
+// A string on the left of CONTAINS equals a list or an object element of a
+// subject list by the element's text, under equalsIgnoreCase.
+func TestAStringEqualsAStructureElementByItsText(t *testing.T) {
+	tree := tenantWithSet(t, "DENY_UNLESS_PERMIT", "ALLOW", "resource.a CONTAINS subject.id")
+	for _, tc := range []struct {
+		name, a, id string
+		want        bool
+	}{
+		{"the text of an object element in another case allows", `"{K=v}"`, `[{"k": "v"}]`, true},
+		{"the text of a list element allows", `"[x]"`, `[["x"]]`, true},
+		{"an element of a list element denies", `"x"`, `[["x"]]`, false},
+		{"the text of a nested member allows", `"{k=[\"a\"]}"`, `[{"k": ["a"]}]`, true},
+		{"the Java text of a nested member denies", `"{k=[a]}"`, `[{"k": ["a"]}]`, false},
+		{"two values with an equal one answer the setting", `"x"`, `[["q"], "x"]`, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			values := map[string]Resolved{keyA: resolved(t, "VALUE", tc.a), `["subj","id"]`: resolved(t, "VALUE", tc.id)}
+			if got := decideValues(t, tree, DefaultOptions(), values); got != tc.want {
+				t.Errorf("allow(resource.a = %s, subject.id = %s) = %v, want %v", tc.a, tc.id, got, tc.want)
+			}
+		})
+	}
+}
+
+// A one-element GENERAL list of an object (SINGLE_ODD) has an element in
+// common with an equal object on the right of CONTAINS ANY: the members
+// decide, with their case.
+func TestASingleOddObjectContainsAnEqualObject(t *testing.T) {
+	tree := tenantWithSetAndPIPs(t, "DENY_UNLESS_PERMIT", "ALLOW", "subject.g CONTAINS ANY resource.b", generalPIPs)
+	for _, tc := range []struct {
+		name, g string
+		want    bool
+	}{
+		{"the same members allow", `[{"k": "v"}]`, true},
+		{"a member in another case denies", `[{"k": "V"}]`, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			values := map[string]Resolved{`["subj","g"]`: resolved(t, "SINGLE_ODD", tc.g),
+				`["res",".b"]`: resolved(t, "VALUE", `{"k": "v"}`)}
+			if got := decideValues(t, tree, DefaultOptions(), values); got != tc.want {
+				t.Errorf("allow(subject.g = SINGLE_ODD %s, resource.b = {\"k\": \"v\"}) = %v, want %v", tc.g, got,
+					tc.want)
+			}
+		})
+	}
+}
+
+// A one-element GENERAL list (SINGLE_ODD) contains no element of an empty
+// resource list, which CONTAINS reads as one value; a list of null fails the
+// PIP, and the agent reads that as undefined.
+func TestASingleOddListContainsNoEmptyAttributeList(t *testing.T) {
+	tree := tenantWithSetAndPIPs(t, "PERMIT_UNLESS_DENY", "DENY", "subject.g CONTAINS resource.b", generalPIPs)
+	for _, tc := range []struct {
+		name, g string
+		want    bool
+	}{
+		{"a list of a boolean is false and permits", `[true]`, true},
+		{"a list of null is undefined and denies", `[null]`, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			values := map[string]Resolved{`["subj","g"]`: resolved(t, "SINGLE_ODD", tc.g),
+				`["res",".b"]`: resolved(t, "EMPTY_COLL", "[]")}
+			if got := decideValues(t, tree, DefaultOptions(), values); got != tc.want {
+				t.Errorf("allow(subject.g = SINGLE_ODD %s, resource.b = EMPTY_COLL) = %v, want %v", tc.g, got, tc.want)
+			}
+		})
+	}
+}
+
+// Two lists have an element in common under CONTAINS ANY, or a list on the
+// left contains a subject list of one value, when two elements are equal: an
+// object by its members, with their case, and a list by its elements in
+// order, each as equalsIgnoreCase compares texts.
+func TestStructureElementsAreEqualByValue(t *testing.T) {
+	for _, tc := range []struct {
+		name, condition, a, b string
+		want                  bool
+	}{
+		{"an object element with the same members", "resource.a CONTAINS subject.id", `[{"k": "v"}]`,
+			`[{"k": "v"}]`, true},
+		{"an object element in another case", "resource.a CONTAINS subject.id", `[{"k": "V"}]`, `[{"k": "v"}]`,
+			false},
+		{"a list element in another case", "resource.a CONTAINS ANY subject.id", `[["A"]]`, `[["a"]]`, true},
+		{"a list element in another order", "resource.a CONTAINS ANY subject.id", `[["a", "b"]]`, `[["b", "a"]]`,
+			false},
+		{"a list element with a null equals nothing", "resource.a CONTAINS ANY subject.id", `[[null]]`, `[[null]]`,
+			false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			tree := tenantWithSet(t, "DENY_UNLESS_PERMIT", "ALLOW", tc.condition)
+			values := map[string]Resolved{keyA: resolved(t, "VALUE", tc.a), `["subj","id"]`: resolved(t, "VALUE", tc.b)}
+			if got := decideValues(t, tree, DefaultOptions(), values); got != tc.want {
+				t.Errorf("allow(%s, resource.a = %s, subject.id = %s) = %v, want %v", tc.condition, tc.a, tc.b, got,
+					tc.want)
+			}
+		})
+	}
+}
+
+// An object on the left of CONTAINS contains a string by its text or an
+// equal object, never a list, even one that holds its text.
+func TestAnObjectContainsNoList(t *testing.T) {
+	for _, tc := range []struct {
+		op   string
+		want bool
+	}{{"CONTAINS", false}, {"NOT CONTAINS", true}} {
+		t.Run(tc.op, func(t *testing.T) {
+			tree := tenantWithSet(t, "DENY_UNLESS_PERMIT", "ALLOW", "resource.a "+tc.op+" subject.id")
+			values := map[string]Resolved{keyA: resolved(t, "VALUE", `{"k": "v"}`),
+				`["subj","id"]`: resolved(t, "VALUE", `["{k=v}"]`)}
+			if got := decideValues(t, tree, DefaultOptions(), values); got != tc.want {
+				t.Errorf("allow(resource.a = {\"k\": \"v\"} %s subject.id = [\"{k=v}\"]) = %v, want %v", tc.op, got,
+					tc.want)
+			}
+		})
+	}
+}
+
+// A resource list attribute on the right of CONTAINS is one value, so no
+// element on the left equals it, an equal list element included, whatever
+// the list holds.
+func TestAResourceListOnTheRightIsOneValue(t *testing.T) {
+	tree := tenantWithSet(t, "PERMIT_UNLESS_DENY", "DENY", "resource.a CONTAINS resource.b")
+	for _, tc := range []struct{ name, a, b string }{
+		{"an equal list element", `[["x"]]`, `[["x"]]`},
+		{"an element of a list with a null", `["x"]`, `[null, "x"]`},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			values := map[string]Resolved{keyA: resolved(t, "VALUE", tc.a), `["res",".b"]`: resolved(t, "VALUE", tc.b)}
+			if got := decideValues(t, tree, DefaultOptions(), values); !got {
+				t.Errorf("allow(resource.a = %s CONTAINS resource.b = %s) = false, want true: the condition is false",
+					tc.a, tc.b)
+			}
+		})
+	}
+}
+
+// A null whole resource is in no list without a null, and NOT IN holds.
+func TestANullResourceIsInNoList(t *testing.T) {
+	for _, tc := range []struct {
+		op   string
+		want bool
+	}{{"IN", false}, {"NOT IN", true}} {
+		t.Run(tc.op, func(t *testing.T) {
+			tree := tenantWithSet(t, "DENY_UNLESS_PERMIT", "ALLOW", "resource "+tc.op+" subject.id")
+			values := map[string]Resolved{`["res",""]`: resolved(t, "VALUE", "null"),
+				`["subj","id"]`: resolved(t, "VALUE", `["x"]`)}
+			if got := decideValues(t, tree, DefaultOptions(), values); got != tc.want {
+				t.Errorf("allow(resource = null %s subject.id = [\"x\"]) = %v, want %v", tc.op, got, tc.want)
 			}
 		})
 	}

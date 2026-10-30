@@ -31,6 +31,10 @@ type test struct {
 	val  string
 	set  []string
 	ref2 string
+	// field and field2 name the list of the record of ref and of ref2 that
+	// has, nothas, none, overlap, and disjoint read: ks when empty, or ea or
+	// eb.
+	field, field2 string
 }
 
 // Group is a subject group: a conjunction of factors, each a disjunction of
@@ -218,7 +222,7 @@ func (m *Module) groupIndex() *groupIndex {
 				for _, c := range f {
 					k := ""
 					for _, t := range c {
-						if t.kind == "has" || t.kind == "eq" {
+						if t.kind == "has" && t.field == "" || t.kind == "eq" {
 							k = t.kind + "\x00" + t.ref + "\x00" + t.val
 							break
 						}
@@ -287,12 +291,12 @@ func (t *test) holds(in *Input) bool {
 	} else {
 		r, ok := in.Records[t.ref]
 		if ok {
-			ks, k, st, cl, n0 = r.KS, r.K, r.S, r.T, r.N0
+			ks, k, st, cl, n0 = r.list(t.field), r.K, r.S, r.T, r.N0
 		}
 	}
 	in2 := func() ([]string, *string) {
 		r := in.Records[t.ref2]
-		return r.KS, r.K
+		return r.list(t.field2), r.K
 	}
 	switch t.kind {
 	case "has":
@@ -335,4 +339,16 @@ func (t *test) holds(in *Input) bool {
 		return ks != nil && !(ks2 != nil && slices.ContainsFunc(ks, func(x string) bool { return slices.Contains(ks2, x) }))
 	}
 	panic("unknown test " + t.kind)
+}
+
+// list returns the list field f of the record: ks when f is empty, or ea or
+// eb.
+func (r Record) list(f string) []string {
+	switch f {
+	case "ea":
+		return r.EA
+	case "eb":
+		return r.EB
+	}
+	return r.KS
 }

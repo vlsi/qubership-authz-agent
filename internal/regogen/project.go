@@ -72,6 +72,13 @@ type Record struct {
 	// O is the key two lists are equal by, their typed elements as a set, and
 	// the key two objects are equal by, member by member.
 	O *string
+	// EA and EB hold the tokens of the elements of a list, or of a value
+	// read as a list of one, such that two elements are equal under the
+	// collection operators exactly when the EA of one meets the EB of the
+	// other: EA holds the token of the element's value (eqToken), and EB
+	// adds, for a list or an object, the token of its text, which a string
+	// equals it by.
+	EA, EB []string
 }
 
 // Input is the projection of a request into the input of a module.
@@ -114,6 +121,7 @@ func record(r *Ref, v Resolved) Record {
 			rec.KS = []string{}
 		}
 		rec.N0 = lv.State == legacyvalue.StateNullElement
+		rec.EA, rec.EB = elementTokens(v.Value)
 		return rec
 	}
 	if v.State != spectables.StateValue {
@@ -129,6 +137,7 @@ func record(r *Ref, v Resolved) Record {
 		cl = spectables.ClassHeaderList
 	}
 	rec.T = string(cl)
+	rec.EA, rec.EB = elementTokens(v.Value)
 	switch cl {
 	case spectables.ClassString, spectables.ClassScalar:
 		rec.K = lv.Key
@@ -159,6 +168,56 @@ func record(r *Ref, v Resolved) Record {
 		}
 	}
 	return rec
+}
+
+// elementTokens returns the EA and EB of a value, a list or a value read as
+// a list of one.
+func elementTokens(v jsonvalue.Value) (ea, eb []string) {
+	l, ok := v.([]jsonvalue.Value)
+	if !ok {
+		l = []jsonvalue.Value{v}
+	}
+	ea, eb = []string{}, []string{}
+	for _, e := range l {
+		if t, ok := eqToken(e); ok {
+			ea = append(ea, t)
+			eb = append(eb, t)
+		}
+		switch e.(type) {
+		case []jsonvalue.Value, *jsonvalue.Object:
+			eb = append(eb, "t:"+legacyvalue.Fold(structureText(e)))
+		}
+	}
+	return ea, eb
+}
+
+// eqToken returns the token two elements are equal by when neither is a
+// string facing a list or an object: a scalar by its key, as
+// equalsIgnoreCase compares the texts; an object by its members, with their
+// case; a list by its elements in order, each by its token. Null equals
+// nothing, so null and a list that holds one have no token.
+func eqToken(e jsonvalue.Value) (string, bool) {
+	switch e := e.(type) {
+	case nil:
+		return "", false
+	case *jsonvalue.Object:
+		return "o:" + *legacyvalue.Of(e).Structure, true
+	case []jsonvalue.Value:
+		parts := make([]string, len(e))
+		for i, x := range e {
+			t, ok := eqToken(x)
+			if !ok {
+				return "", false
+			}
+			parts[i] = t
+		}
+		b, err := json.Marshal(parts)
+		if err != nil {
+			panic(err)
+		}
+		return "l:" + string(b), true
+	}
+	return "t:" + *legacyvalue.Of(e).Key, true
 }
 
 // Project builds the input of the module for a request. It fails when the
@@ -228,15 +287,21 @@ func (r Record) term() *ast.Term {
 	if r.Len != nil {
 		o.Insert(strTerm("ln"), ast.IntNumberTerm(*r.Len))
 	}
+	if r.EA != nil {
+		o.Insert(strTerm("ea"), strsTerm(r.EA))
+		o.Insert(strTerm("eb"), strsTerm(r.EB))
+	}
 	return ast.NewTerm(o)
 }
 
 // Value returns the input as a Rego value: maps s, t, k, ks, raw, seg, eseg,
-// nseg, n0, tk, o, and ln from a reference ID to a field of its record, then
-// sroles, m2m, and g. A network PIP's record is not in it: nc.pip returns it.
+// nseg, n0, tk, o, ln, ea, and eb from a reference ID to a field of its
+// record, then sroles, m2m, and g. A network PIP's record is not in it:
+// nc.pip returns it.
 func (in *Input) Value() ast.Value {
 	fields := map[string]ast.Object{}
-	for _, f := range []string{"s", "t", "k", "ks", "raw", "seg", "eseg", "nseg", "n0", "tk", "o", "ln"} {
+	for _, f := range []string{"s", "t", "k", "ks", "raw", "seg", "eseg", "nseg", "n0", "tk", "o", "ln", "ea",
+		"eb"} {
 		fields[f] = ast.NewObject()
 	}
 	for _, r := range in.refs {
@@ -269,6 +334,10 @@ func (in *Input) Value() ast.Value {
 		}
 		if rec.Len != nil {
 			fields["ln"].Insert(id, ast.IntNumberTerm(*rec.Len))
+		}
+		if rec.EA != nil {
+			fields["ea"].Insert(id, strsTerm(rec.EA))
+			fields["eb"].Insert(id, strsTerm(rec.EB))
 		}
 		if rec.Segs != nil {
 			fields["seg"].Insert(id, strsTerm(rec.Segs))
