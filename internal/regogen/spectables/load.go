@@ -254,13 +254,17 @@ func buildProfile(p Profile, version int, pj *profileJSON, invalid, incomplete *
 	} else {
 		checkNodes(p, pj.Nodes, invalid, incomplete)
 	}
-	for _, name := range RequiredKnobs {
+	knobs := RequiredKnobs
+	if version == schemaVersion1 {
+		knobs = knobsV1
+	}
+	for _, name := range knobs {
 		if _, ok := pj.Knobs[name]; !ok {
 			incomplete.add("%s: knob %s is missing", p, name)
 		}
 	}
 	for name := range pj.Knobs {
-		if !slices.Contains(RequiredKnobs, name) {
+		if !slices.Contains(knobs, name) {
 			invalid.add("%s: unknown knob %q", p, name)
 		}
 	}
