@@ -27,9 +27,10 @@ import (
 )
 
 // Ref is an operand the module reads from the request: an attribute of the
-// resource, the subject, or a PIP. The projection puts its value record into
-// input under the reference's ID, or, for a network PIP, the stub nc.pip
-// returns it.
+// resource, the subject, or a PIP, or a value an iterate's pass binds. The
+// projection puts its value record into input under the reference's ID, into
+// each pass of input.ps for a pass value, or, for a network PIP, the stub
+// nc.pip returns it.
 type Ref struct {
 	// ID is the name of the reference in the module: op, rt, or rN.
 	ID string
@@ -46,6 +47,9 @@ type Ref struct {
 	Segments bool
 	// Subset is set when IS SUBSET reads the value's element tokens.
 	Subset bool
+	// Pass is set for a value an iterate's pass binds: its record is in each
+	// pass of input.ps, not in the input itself.
+	Pass   bool
 	domain spectables.Domain
 }
 
@@ -122,6 +126,8 @@ func SpecKey(o policyir.Operand) (string, bool) {
 		return specKey("subj", strings.TrimPrefix(o.Name, "subject.")), true
 	case policyir.Entitled:
 		return specKey("ent", o.ResourceType, o.As), true
+	case policyir.PassValue:
+		return specKey("subj", "permissionScope."+o.Key), true
 	}
 	return "", false
 }
@@ -293,7 +299,8 @@ func (g *gen) ref(o policyir.Operand, kind spectables.Kind, network bool) (*Ref,
 		g.nextRef++
 		id = fmt.Sprintf("r%d", g.nextRef)
 	}
-	r := &Ref{ID: id, Key: key, Kind: kind, Network: network, domain: dom}
+	_, pass := o.(policyir.PassValue)
+	r := &Ref{ID: id, Key: key, Kind: kind, Network: network, Pass: pass, domain: dom}
 	g.refs[key] = r
 	g.refList = append(g.refList, r)
 	return r, nil

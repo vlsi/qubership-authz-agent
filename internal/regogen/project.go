@@ -46,11 +46,23 @@ type Request struct {
 	Operation, ResourceType string
 	Roles                   []string
 	M2M                     bool
-	// Values holds the resolved value of each operand, by [Ref.Key].
+	// Values holds the resolved value of each operand but the pass values,
+	// by [Ref.Key].
 	Values map[string]Resolved
-	// Nodes holds the interval of each iterate set, by set ID: lo and hi,
-	// each P, N, or D.
-	Nodes map[string][2]string
+	// Scope is the subject's permission scope that an iterate runs over,
+	// read when the module iterates ([Module.Iterates]).
+	Scope *Scope
+}
+
+// Scope is the permission scope of a request's subject as the passes of an
+// iterate read it.
+type Scope struct {
+	// Failed is set when the permission scope cannot be read.
+	Failed bool
+	// Passes holds, for each assignment of the scope in order, the resolved
+	// value of each subject.permissionScope.<key> operand in that pass, by
+	// [Ref.Key].
+	Passes []map[string]Resolved
 }
 
 // Record is the value record of a reference, as the module reads it.
@@ -92,12 +104,15 @@ type Record struct {
 
 // Input is the projection of a request into the input of a module.
 type Input struct {
-	Records map[string]Record // by reference ID, network PIPs included
+	Records map[string]Record // by reference ID, network PIPs included, pass values not
 	SRoles  []string
 	M2M     bool
 	G       []string
-	nodes   map[string][2]string
-	refs    []*Ref
+	// Passes holds the records of the pass values of each pass, by
+	// reference ID; ScopeFailed is [Scope.Failed].
+	Passes      []map[string]Record
+	ScopeFailed bool
+	refs        []*Ref
 }
 
 // class is the class of a value in state VALUE that is not null: the class
@@ -243,13 +258,17 @@ func eqToken(e jsonvalue.Value) (string, bool) {
 }
 
 // Project builds the input of the module for a request. It fails when the
-// request lacks the value of an operand the module reads.
+// request lacks the value of an operand the module reads, or the permission
+// scope of a module that iterates.
 func Project(m *Module, req Request) (*Input, error) {
-	in := &Input{Records: map[string]Record{}, M2M: req.M2M, nodes: req.Nodes, refs: m.Refs}
+	in := &Input{Records: map[string]Record{}, M2M: req.M2M, refs: m.Refs}
 	for _, r := range req.Roles {
 		in.SRoles = append(in.SRoles, legacyvalue.Fold(r))
 	}
 	for _, r := range m.Refs {
+		if r.Pass {
+			continue
+		}
 		var v Resolved
 		switch r.ID {
 		case "op":
@@ -264,9 +283,24 @@ func Project(m *Module, req Request) (*Input, error) {
 		}
 		in.Records[r.ID] = record(r, v)
 	}
-	for _, id := range m.IterateSets {
-		if _, ok := req.Nodes[id]; !ok {
-			return nil, fmt.Errorf("no interval of the iterate set %s", id)
+	if m.Iterates {
+		if req.Scope == nil {
+			return nil, fmt.Errorf("no permission scope for the iterate of the module")
+		}
+		in.ScopeFailed = req.Scope.Failed
+		for i, values := range req.Scope.Passes {
+			pass := map[string]Record{}
+			for _, r := range m.Refs {
+				if !r.Pass {
+					continue
+				}
+				v, ok := values[r.Key]
+				if !ok {
+					return nil, fmt.Errorf("no resolved value of %s (%s) in pass %d", r.Key, r.ID, i)
+				}
+				pass[r.ID] = record(r, v)
+			}
+			in.Passes = append(in.Passes, pass)
 		}
 	}
 	in.G = EvalGroups(m, in)
@@ -332,20 +366,43 @@ func (r Record) term() *ast.Term {
 }
 
 // Value returns the input as a Rego value: maps s, t, k, ks, raw, seg, eseg,
-// nseg, n0, tk, o, ln, ea, eb, nk, sa, and sb from a reference ID to a field of its
-// record, then sroles, m2m, and g. A network PIP's record is not in it:
-// nc.pip returns it.
+// nseg, n0, tk, o, ln, ea, eb, nk, sa, and sb from a reference ID to a field of
+// its record, then sroles, m2m, g, ps (the passes, each with the same maps of
+// its pass values), and psf. A network PIP's record is not in it: nc.pip
+// returns it.
 func (in *Input) Value() ast.Value {
+	o := fieldMaps(in.refs, func(r *Ref) (Record, bool) {
+		rec, ok := in.Records[r.ID]
+		return rec, ok && !r.Network && !r.Pass
+	})
+	o.Insert(strTerm("sroles"), strsTerm(in.SRoles))
+	o.Insert(strTerm("m2m"), ast.BooleanTerm(in.M2M))
+	o.Insert(strTerm("g"), strsTerm(in.G))
+	passes := make([]*ast.Term, len(in.Passes))
+	for i, pass := range in.Passes {
+		passes[i] = ast.NewTerm(fieldMaps(in.refs, func(r *Ref) (Record, bool) {
+			rec, ok := pass[r.ID]
+			return rec, ok
+		}))
+	}
+	o.Insert(strTerm("ps"), ast.ArrayTerm(passes...))
+	o.Insert(strTerm("psf"), ast.BooleanTerm(in.ScopeFailed))
+	return o
+}
+
+// fieldMaps returns the object of the maps from a reference ID to a field of
+// its record, for each reference whose record rec gives.
+func fieldMaps(refs []*Ref, rec func(*Ref) (Record, bool)) ast.Object {
 	fields := map[string]ast.Object{}
 	for _, f := range []string{"s", "t", "k", "ks", "raw", "seg", "eseg", "nseg", "n0", "tk", "o", "ln", "ea",
 		"eb", "nk", "sa", "sb"} {
 		fields[f] = ast.NewObject()
 	}
-	for _, r := range in.refs {
-		if r.Network {
+	for _, r := range refs {
+		rec, ok := rec(r)
+		if !ok {
 			continue
 		}
-		rec := in.Records[r.ID]
 		id := strTerm(r.ID)
 		fields["s"].Insert(id, strTerm(rec.S))
 		if rec.T != "" {
@@ -395,9 +452,6 @@ func (in *Input) Value() ast.Value {
 	for f, v := range fields {
 		o.Insert(strTerm(f), ast.NewTerm(v))
 	}
-	o.Insert(strTerm("sroles"), strsTerm(in.SRoles))
-	o.Insert(strTerm("m2m"), ast.BooleanTerm(in.M2M))
-	o.Insert(strTerm("g"), strsTerm(in.G))
 	return o
 }
 
@@ -409,17 +463,6 @@ func (in *Input) PIPRecord(id string) (*ast.Term, bool) {
 		return nil, false
 	}
 	return r.term(), true
-}
-
-// NodeInterval returns the record nc.node returns for an iterate set: lo and
-// hi, each P, N, or D.
-func (in *Input) NodeInterval(id string) (*ast.Term, bool) {
-	iv, ok := in.nodes[id]
-	if !ok {
-		return nil, false
-	}
-	return ast.ObjectTerm([2]*ast.Term{strTerm("lo"), strTerm(iv[0])},
-		[2]*ast.Term{strTerm("hi"), strTerm(iv[1])}), true
 }
 
 // structureText is the text a string compares a list or an object by, as the

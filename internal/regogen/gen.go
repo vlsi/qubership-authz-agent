@@ -69,9 +69,9 @@ type Module struct {
 	// Refs are the operands the module reads, in the order they were
 	// assigned.
 	Refs []*Ref
-	// IterateSets lists the IDs of the iterate sets the module reads through
-	// the stub nc.node.
-	IterateSets []string
+	// Iterates is set when the module reads the passes of an iterate over
+	// subject.permissionScope, which [Project] takes from [Request.Scope].
+	Iterates bool
 	// Groups are the subject groups of the module, by ID.
 	Groups map[string]Group
 	// Stats counts what the generator produced.
@@ -89,10 +89,10 @@ type Module struct {
 
 // Stats counts what the generator produced.
 type Stats struct {
-	Leaves, ThreeValuedConds, Lookups               int
-	Clauses, AllowClauses, UnguardedAllow, Rules    int
-	Materialized, AccessCopies, IterateStubs, Bytes int
-	NoTemplate                                      map[string]int
+	Leaves, ThreeValuedConds, Lookups            int
+	Clauses, AllowClauses, UnguardedAllow, Rules int
+	Materialized, AccessCopies, Iterates, Bytes  int
+	NoTemplate                                   map[string]int
 }
 
 type nodeKind int
@@ -103,7 +103,7 @@ const (
 	kindSet
 	kindSimplified
 	kindUnknown // a set the agent evaluates to [deny, permit] under its target
-	kindStub    // an iterate set, answered by nc.node
+	kindIterate // an iterate set: its only kid is the set evaluated in one pass
 )
 
 type node struct {
@@ -115,7 +115,6 @@ type node struct {
 	cond   *cond
 	effect string // ALLOW, DENY, NA
 	simp   []simpKid
-	setID  string
 }
 
 type simpKid struct {
@@ -150,8 +149,12 @@ type gen struct {
 	groups   map[string]Group
 	groupIDs map[string]string
 
-	iterate []string
-	stats   Stats
+	stats Stats
+	// pass is set while the generator translates the subtree of an iterate
+	// set, whose rules are functions of the pass p.
+	pass bool
+	// params holds the rules that are functions of the pass.
+	params map[string]bool
 
 	where    whereNow
 	report   []LeafReport
@@ -169,7 +172,7 @@ func Generate(tree *policyir.Tree, tab *spectables.Table, opt Options) (*Module,
 	g := &gen{tab: tab, tree: tree, opt: opt, refs: map[string]*Ref{}, rules: map[string]dnf{},
 		memo: map[string]string{}, counters: map[string]int{}, anyBodies: map[string]dnf{},
 		condMemo: map[string]*cond{}, decNames: map[string]string{}, decRoots: map[string]*node{},
-		groups: map[string]Group{}, groupIDs: map[string]string{}}
+		groups: map[string]Group{}, groupIDs: map[string]string{}, params: map[string]bool{}}
 	g.stats.NoTemplate = map[string]int{}
 	if fs := tree.Unsupported(); len(fs) > 0 {
 		rej := &RejectedError{}
@@ -206,7 +209,7 @@ func Generate(tree *policyir.Tree, tab *spectables.Table, opt Options) (*Module,
 		}
 		allow = union(allow, d)
 	}
-	m := &Module{Refs: g.refList, IterateSets: g.iterate, Groups: g.groups, Report: g.report,
+	m := &Module{Refs: g.refList, Iterates: g.stats.Iterates > 0, Groups: g.groups, Report: g.report,
 		Failures: g.failures}
 	m.Text = g.module(allow)
 	g.stats.Bytes = len(m.Text)
@@ -353,29 +356,45 @@ func (g *gen) set(s *policyir.PolicySet) (*node, error) {
 		g.fail(Failure{Set: s.ID, Reason: reason})
 		return &node{kind: kindUnknown, id: id, tgt: tgt}, nil
 	}
-	if s.Iterate != nil {
-		g.stats.IterateStubs++
-		if !slices.Contains(g.iterate, s.ID) {
-			g.iterate = append(g.iterate, s.ID)
-		}
-		return &node{kind: kindStub, id: id, setID: s.ID}, nil
-	}
 	n := &node{kind: kindSet, id: id, alg: g.alg(s.Algorithm), tgt: tgt}
+	if s.Iterate != nil {
+		// The set is evaluated once per pass under the set's algorithm, and
+		// the passes combine by the iterate's: the set's node is the one kid
+		// of the iterate's node, and its subtree reads the pass.
+		g.stats.Iterates++
+		saved := g.pass
+		g.pass = true
+		defer func() { g.pass = saved }()
+		n.tgt = g.constCond(true)
+		it := &node{kind: kindIterate, id: g.fresh("n"), alg: g.alg(s.Iterate.Algorithm), tgt: tgt, kids: []*node{n}}
+		if err := g.setKids(n, s); err != nil {
+			return nil, err
+		}
+		return it, nil
+	}
+	if err := g.setKids(n, s); err != nil {
+		return nil, err
+	}
+	return n, nil
+}
+
+// setKids translates the policies and the nested sets of s into the kids of n.
+func (g *gen) setKids(n *node, s *policyir.PolicySet) error {
 	for _, p := range s.Policies {
 		k, err := g.policy(p)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		n.kids = append(n.kids, k)
 	}
 	for _, c := range s.Sets {
 		k, err := g.set(c)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		n.kids = append(n.kids, k)
 	}
-	return n, nil
+	return nil
 }
 
 func (g *gen) policy(p *policyir.Policy) (*node, error) {
@@ -428,14 +447,14 @@ func (g *gen) cond(c *policyir.Condition, place spectables.Place, effect policyi
 	if g.fixedOp != nil {
 		fixed = fmt.Sprintf("%s/%d", *g.fixedOp, g.fixedDepth)
 	}
-	k := fmt.Sprintf("%p|%s|%s|%s", c, place, effect, fixed)
+	k := fmt.Sprintf("%p|%s|%s|%s|%t", c, place, effect, fixed, g.pass)
 	if cc, ok := g.condMemo[k]; ok {
 		return cc, nil
 	}
 	// The leaf's context carries the effect as the rule writes it, which is
 	// what a leaf reads, not what the effect counts as at the node: only a
 	// written DENY is DENY, an absent effect reads as ALLOW.
-	ctx := spectables.Context{Place: place, Effect: spectables.EffectAllow, Disjunction: c.HasOr()}
+	ctx := spectables.Context{Place: place, Effect: spectables.EffectAllow, Disjunction: c.HasOr(), InIterate: g.pass}
 	if effect == policyir.EffectDeny {
 		ctx.Effect = spectables.EffectDeny
 	}
@@ -481,6 +500,11 @@ func (g *gen) leaf(a policyir.Atom, ctx spectables.Context) (leafRails, error) {
 		return leafRails{t: dnf{{{cls: clsIndexEq, text: "input.m2m == true", test: t}}},
 			f: dnf{{{cls: clsIndexEq, text: "input.m2m == false", test: f}}}, subjectOnly: true}, nil
 	case policyir.Access:
+		if g.pass {
+			// legacy reads the decision for the operation in the current
+			// pass, which needs a copy of the tree per pass
+			return leafRails{}, gap(FormGenerator, fmt.Errorf("subject allowed or denied inside iterate"))
+		}
 		return g.access(a)
 	case policyir.Compare:
 		return g.compare(a, ctx)
@@ -615,6 +639,18 @@ func (g *gen) rule(name string, body dnf) string {
 	if _, ok := g.rules[name]; !ok {
 		g.rules[name] = union(body)
 		g.order = append(g.order, name)
+		if g.pass {
+			g.params[name] = true
+		}
+	}
+	return name
+}
+
+// call is the text that reads rule name: name, or name(p) for a function of
+// the pass.
+func (g *gen) call(name string) string {
+	if g.params[name] {
+		return name + "(p)"
 	}
 	return name
 }
@@ -628,15 +664,15 @@ func (g *gen) refRule(d dnf, prefix string, negate bool) dnf {
 	case d.isTrue(), d.isFalse():
 		return dnfTrue
 	}
-	k := prefix + "|" + d.key()
+	k := fmt.Sprintf("%s|%t|%s", prefix, g.pass, d.key())
 	name, ok := g.memo[k]
 	if !ok {
 		name = g.rule(g.fresh(prefix), d)
 		g.memo[k] = name
 	}
-	text := name
+	text := g.call(name)
 	if negate {
-		text = "not " + name
+		text = "not " + text
 	}
 	return dnf{{{cls: clsCheck, text: text, rule: name}}}
 }
@@ -736,8 +772,8 @@ func (g *gen) flagBody(n *node, b, x string) (dnf, error) {
 			out = union(out, g.product(alts, body))
 		}
 		return out, nil
-	case kindStub:
-		return dnf{{{cls: clsBuiltin, text: fmt.Sprintf("nc.node(%s).%s == %q", lit(n.setID), b, x)}}}, nil
+	case kindIterate:
+		return g.iterateFlag(n, b, x)
 	case kindUnknown:
 		// [deny, permit] under a true target, [deny, deny] under an
 		// undefined one
@@ -765,8 +801,12 @@ func (g *gen) flagBody(n *node, b, x string) (dnf, error) {
 }
 
 // anyKid returns the clauses of "some child of n has bound b equal to x",
-// inlined when positive in the flat form, or a reference to its rule.
+// inlined when positive in the flat form, or a reference to its rule; for an
+// iterate node, whose children are its passes, always a reference (anyPass).
 func (g *gen) anyKid(n *node, b, x string, negate bool) (dnf, error) {
+	if n.kind == kindIterate {
+		return g.anyPass(n, b, x, negate)
+	}
 	name := n.id + "_any_" + b + x
 	if _, ok := g.anyBodies[name]; !ok {
 		body := dnfFalse
@@ -781,12 +821,12 @@ func (g *gen) anyKid(n *node, b, x string, negate bool) (dnf, error) {
 		g.anyBodies[name] = body
 	}
 	body := g.anyBodies[name]
-	ref := dnf{{{cls: clsCheck, text: name, rule: name}}}
+	ref := dnf{{{cls: clsCheck, text: g.call(name), rule: name}}}
 	if negate {
 		if body.isFalse() {
 			return dnfTrue, nil
 		}
-		return dnf{{{cls: clsCheck, text: "not " + name, rule: name}}}, nil
+		return dnf{{{cls: clsCheck, text: "not " + g.call(name), rule: name}}}, nil
 	}
 	if g.opt.Flat {
 		return body, nil
@@ -900,6 +940,18 @@ func (g *gen) used(allow dnf) map[string]bool {
 	return seen
 }
 
+// readsPass reports whether a clause of d reads the pass p.
+func readsPass(d dnf) bool {
+	for _, c := range d {
+		for _, e := range c {
+			if strings.Contains(e.text, "p.") || strings.Contains(e.text, "(p)") {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 func clauseText(name string, c clause) string {
 	if len(c) == 0 {
 		return name + " := true\n"
@@ -929,21 +981,36 @@ func (g *gen) module(allow dnf) string {
 			continue
 		}
 		body := g.rules[name]
+		// a function of the pass has the head name(p); its default and a
+		// body that holds always do not read p
+		head, any, of := name, name, func(n string) string { return n }
+		if g.params[name] {
+			head, any, of = name+"(p)", name+"(_)", func(n string) string { return n + "(p)" }
+			if !readsPass(body) && len(body) <= g.opt.AliasClauses {
+				// a strict compiler refuses an argument the body never reads;
+				// an alias passes p on, so it keeps it
+				head = any
+			}
+		}
 		b.WriteString("\n")
 		if len(body) == 0 {
-			b.WriteString("default " + name + " := false\n")
+			b.WriteString("default " + any + " := false\n")
 			continue
 		}
-		target := name
+		target := head
 		if len(body) > g.opt.AliasClauses {
 			// A reference to a rule adds an edge per clause to the compiler's
 			// dependency graph, so a rule of many clauses referenced from many
 			// clauses costs their product: the references go to an alias.
-			b.WriteString(clauseText(name, clause{{text: name + "__body"}}))
-			target = name + "__body"
+			b.WriteString(clauseText(head, clause{{text: of(name + "__body")}}))
+			target = of(name + "__body")
 			g.stats.Clauses++
 		}
 		for _, c := range body {
+			if len(c) == 0 && g.params[name] {
+				b.WriteString(clauseText(strings.TrimSuffix(target, "(p)")+"(_)", c))
+				continue
+			}
 			b.WriteString(clauseText(target, c))
 		}
 		g.stats.Clauses += len(body)

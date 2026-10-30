@@ -1639,3 +1639,226 @@ func TestAnUnknownKnobValueIsNoRejection(t *testing.T) {
 		t.Errorf("Generate error = %v, want an error that is not a *RejectedError", err)
 	}
 }
+
+// iterateTree is a tenant whose one set iterates over the permission scope
+// under algorithm, with one ALLOW rule whose condition compares the pass's
+// domain with the resource's.
+func iterateTree(t *testing.T, algorithm, condition string) *policyir.Tree {
+	t.Helper()
+	sets := fmt.Sprintf(`{"policySets": [{"policySetId": "s1", "status": "ACTIVE", "target": "resourceType == 'doc'",
+		"combiningAlgorithm": "DENY_UNLESS_PERMIT", "tenantId": "t1",
+		"iterate": {"foreach": "subject.permissionScope", "combiningAlgorithm": %q},
+		"policies": [{"policyId": "p1", "target": "true", "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+			"tenantId": "t1", "rules": [{"ruleId": "r1", "target": "true", "condition": %q,
+				"effect": "ALLOW", "tenantId": "t1"}]}]}]}`, algorithm, condition)
+	exp, err := policyir.FromRegular([]byte(sets), []byte(`{"pips": []}`))
+	if err != nil {
+		t.Fatalf("FromRegular: %v", err)
+	}
+	return exp.Trees["t1"]
+}
+
+// An iterate evaluates its set once per assignment of the permission scope,
+// with subject.permissionScope.<key> reading the pass, and combines the passes
+// by its algorithm: under DENY_UNLESS_PERMIT one permitting pass permits, and
+// no pass denies. A permission scope that cannot be read leaves the node
+// unknown, which denies.
+func TestAnIterateCombinesItsPasses(t *testing.T) {
+	const domain = `["subj","permissionScope.domain"]`
+	pass := func(v string) map[string]Resolved { return map[string]Resolved{domain: resolved(t, "VALUE", v)} }
+	for _, form := range []struct {
+		name string
+		opt  func(*Options)
+	}{{"flat", func(*Options) {}}, {"without inlining", func(o *Options) { o.Flat = false }},
+		{"with groups", func(o *Options) { o.Groups = true }}} {
+		opt := DefaultOptions()
+		form.opt(&opt)
+		m, err := Generate(iterateTree(t, "DENY_UNLESS_PERMIT", "subject.permissionScope.domain CONTAINS resource.domain"),
+			table(t), opt)
+		if err != nil {
+			t.Fatalf("Generate: %v", err)
+		}
+		for _, tc := range []struct {
+			name  string
+			scope Scope
+			want  bool
+		}{
+			{"the second of two passes holds the domain", Scope{Passes: []map[string]Resolved{pass(`["x"]`), pass(`["d"]`)}}, true},
+			{"no pass holds the domain", Scope{Passes: []map[string]Resolved{pass(`["x"]`), pass(`["y"]`)}}, false},
+			{"no pass at all", Scope{Passes: []map[string]Resolved{}}, false},
+			{"a scope that cannot be read", Scope{Failed: true}, false},
+		} {
+			t.Run(form.name+"/"+tc.name, func(t *testing.T) {
+				req := Request{Operation: "read", ResourceType: "doc", Scope: &tc.scope,
+					Values: map[string]Resolved{`["res",".domain"]`: resolved(t, "VALUE", `"d"`)}}
+				if got := evalModule(t, m, req); got != tc.want {
+					t.Errorf("allow(resource.domain = d, scope %+v) = %v, want %v", tc.scope, got, tc.want)
+				}
+			})
+		}
+	}
+}
+
+// Under PERMIT_UNLESS_DENY an iterate with no pass permits, the algorithm's
+// outcome over no children, while a scope that cannot be read leaves the
+// node unknown and denies.
+func TestAnEmptyScopeAndAFailedScopeDiffer(t *testing.T) {
+	m, err := Generate(iterateTree(t, "PERMIT_UNLESS_DENY", "resource.domain == 'never'"), table(t), DefaultOptions())
+	if err != nil {
+		t.Fatalf("Generate: %v", err)
+	}
+	for _, tc := range []struct {
+		name  string
+		scope Scope
+		want  bool
+	}{{"no pass", Scope{Passes: []map[string]Resolved{}}, true}, {"a failed scope", Scope{Failed: true}, false}} {
+		t.Run(tc.name, func(t *testing.T) {
+			req := Request{Operation: "read", ResourceType: "doc", Scope: &tc.scope,
+				Values: map[string]Resolved{`["res",".domain"]`: resolved(t, "VALUE", `"d"`)}}
+			if got := evalModule(t, m, req); got != tc.want {
+				t.Errorf("allow(scope %+v) = %v, want %v", tc.scope, got, tc.want)
+			}
+		})
+	}
+}
+
+// subject allowed inside an iterate reads the decision in the current pass,
+// which the generator does not translate yet, so the tenant is rejected.
+func TestSubjectAllowedInsideAnIterateRejectsTheTenant(t *testing.T) {
+	_, err := Generate(iterateTree(t, "DENY_UNLESS_PERMIT", "subject allowed 'write' on resource"), table(t),
+		DefaultOptions())
+	var rej *RejectedError
+	if !errors.As(err, &rej) || rej.Rejections[0].Form != FormGenerator {
+		t.Errorf("Generate error = %v, want a *RejectedError of form %s", err, FormGenerator)
+	}
+}
+
+// nestedIterateTree is a tenant whose PERMIT_UNLESS_DENY set holds a set that
+// iterates over the permission scope: inner is the nested set's algorithm,
+// iter the iterate's, and the nested set's one rule has the effect and
+// condition given. The parent permits unless the nested set denies or is
+// unknown, so its answer tells a deny, a not applicable, and an unknown node
+// apart.
+func nestedIterateTree(t *testing.T, inner, iter, effect, condition string) *policyir.Tree {
+	t.Helper()
+	sets := fmt.Sprintf(`{"policySets": [{"policySetId": "parent", "status": "ACTIVE", "target": "true",
+		"combiningAlgorithm": "PERMIT_UNLESS_DENY", "tenantId": "t1", "policySets": [
+		{"policySetId": "s1", "target": "resourceType == 'doc'", "combiningAlgorithm": %q, "tenantId": "t1",
+		 "iterate": {"foreach": "subject.permissionScope", "combiningAlgorithm": %q},
+		 "policies": [{"policyId": "p1", "target": "true", "combiningAlgorithm": %[1]q, "tenantId": "t1",
+			"rules": [{"ruleId": "r1", "target": "true", "condition": %[3]q, "effect": %[4]q, "tenantId": "t1"}]}]}]}]}`,
+		inner, iter, condition, effect)
+	exp, err := policyir.FromRegular([]byte(sets), []byte(`{"pips": []}`))
+	if err != nil {
+		t.Fatalf("FromRegular: %v", err)
+	}
+	tree, ok := exp.Trees["t1"]
+	if !ok {
+		t.Fatalf("FromRegular: no tree of t1; failed %v, dropped %v", exp.Failed, exp.Dropped)
+	}
+	return tree
+}
+
+// Under a PERMIT_UNLESS_DENY parent the outcome of the iterate's node shows:
+// a scope that cannot be read leaves it unknown, which denies, while no pass
+// gives PERMIT_OVERRIDES' not applicable, which permits; a denying pass makes
+// DENY_OVERRIDES deny; and where the set's target does not hold, the node is
+// not applicable whatever the scope.
+func TestTheOutcomeOfAnIterateNode(t *testing.T) {
+	const domain = `["subj","permissionScope.domain"]`
+	pass := func(v string) map[string]Resolved { return map[string]Resolved{domain: resolved(t, "VALUE", v)} }
+	const cond = "subject.permissionScope.domain CONTAINS resource.domain"
+	for _, tc := range []struct {
+		name, inner, iter, effect, resourceType string
+		scope                                   Scope
+		want                                    bool
+	}{
+		{"a failed scope is unknown", "DENY_UNLESS_PERMIT", "PERMIT_OVERRIDES", "ALLOW", "doc",
+			Scope{Failed: true}, false},
+		{"no pass is not applicable under PERMIT_OVERRIDES", "DENY_UNLESS_PERMIT", "PERMIT_OVERRIDES", "ALLOW", "doc",
+			Scope{Passes: []map[string]Resolved{}}, true},
+		{"a pass whose rule denies makes DENY_OVERRIDES deny", "PERMIT_UNLESS_DENY", "DENY_OVERRIDES", "DENY", "doc",
+			Scope{Passes: []map[string]Resolved{pass(`["x"]`), pass(`["d"]`)}}, false},
+		{"passes whose rule does not deny permit under DENY_OVERRIDES", "PERMIT_UNLESS_DENY", "DENY_OVERRIDES",
+			"DENY", "doc", Scope{Passes: []map[string]Resolved{pass(`["x"]`)}}, true},
+		{"a failed scope under a target that does not hold", "DENY_UNLESS_PERMIT", "PERMIT_OVERRIDES", "ALLOW",
+			"other", Scope{Failed: true}, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			m, err := Generate(nestedIterateTree(t, tc.inner, tc.iter, tc.effect, cond), table(t), DefaultOptions())
+			if err != nil {
+				t.Fatalf("Generate: %v", err)
+			}
+			req := Request{Operation: "read", ResourceType: tc.resourceType, Scope: &tc.scope,
+				Values: map[string]Resolved{`["res",".domain"]`: resolved(t, "VALUE", `"d"`)}}
+			if got := evalModule(t, m, req); got != tc.want {
+				t.Errorf("allow(%s, scope %+v) = %v, want %v", tc.resourceType, tc.scope, got, tc.want)
+			}
+		})
+	}
+}
+
+// A pass reads subject groups as the tree does, a DENY rule in a pass denies
+// under DENY_OVERRIDES, and a rule that a condition both inside and outside an
+// iterate shares stays a rule of the tree outside and a function of the pass
+// inside, in every form of the module, aliases and a rule without a condition
+// included.
+func TestAnIterateInEveryFormOfTheModule(t *testing.T) {
+	const domain = `["subj","permissionScope.domain"]`
+	sets := `{"policySets": [
+		{"policySetId": "s1", "status": "ACTIVE", "target": "resourceType == 'doc'",
+		 "combiningAlgorithm": "DENY_UNLESS_PERMIT", "tenantId": "t1",
+		 "iterate": {"foreach": "subject.permissionScope", "combiningAlgorithm": "DENY_UNLESS_PERMIT"},
+		 "policies": [{"policyId": "p1", "target": "true", "combiningAlgorithm": "DENY_OVERRIDES", "tenantId": "t1",
+			"rules": [
+				{"ruleId": "r1", "target": "true", "effect": "DENY", "tenantId": "t1",
+				 "condition": "subject.g == 'x'"},
+				{"ruleId": "r2", "target": "true", "effect": "ALLOW", "tenantId": "t1",
+				 "condition": "subject.roles CONTAINS 'r' AND subject.permissionScope.domain CONTAINS resource.domain"},
+				{"ruleId": "r3", "target": "operation == 'audit'", "effect": "ALLOW", "tenantId": "t1"}]}]},
+		{"policySetId": "s2", "status": "ACTIVE", "target": "resourceType == 'note'",
+		 "combiningAlgorithm": "DENY_UNLESS_PERMIT", "tenantId": "t1",
+		 "policies": [{"policyId": "p2", "target": "true", "combiningAlgorithm": "DENY_OVERRIDES", "tenantId": "t1",
+			"rules": [{"ruleId": "r4", "target": "true", "effect": "DENY", "tenantId": "t1",
+				"condition": "subject.g == 'x'"},
+				{"ruleId": "r5", "target": "true", "effect": "ALLOW", "tenantId": "t1"}]}]}]}`
+	exp, err := policyir.FromRegular([]byte(sets),
+		[]byte(`{"pips": [{"tenantId": "t1", "name": "subject.g", "pipType": "GENERAL", "url": "http://g"}]}`))
+	if err != nil {
+		t.Fatalf("FromRegular: %v", err)
+	}
+	for _, form := range []struct {
+		name string
+		opt  func(*Options)
+	}{{"flat", func(*Options) {}}, {"without inlining", func(o *Options) { o.Flat = false }},
+		{"with groups", func(o *Options) { o.Groups = true }},
+		{"with aliases", func(o *Options) { o.Flat, o.AliasClauses = false, 0 }}} {
+		opt := DefaultOptions()
+		form.opt(&opt)
+		m, err := Generate(exp.Trees["t1"], table(t), opt)
+		if err != nil {
+			t.Fatalf("Generate %s: %v", form.name, err)
+		}
+		for _, tc := range []struct {
+			name, resourceType, roles, g string
+			want                         bool
+		}{
+			{"a pass with the domain and the role", "doc", `["r"]`, `"y"`, true},
+			{"the role missing", "doc", `["q"]`, `"y"`, false},
+			{"the PIP that the DENY rule reads denies", "doc", `["r"]`, `"x"`, false},
+			{"the same condition outside the iterate denies", "note", `["q"]`, `"x"`, false},
+			{"the same condition false outside the iterate permits", "note", `["q"]`, `"y"`, true},
+		} {
+			t.Run(form.name+"/"+tc.name, func(t *testing.T) {
+				req := Request{Operation: "read", ResourceType: tc.resourceType, Roles: []string{"r"},
+					Scope: &Scope{Passes: []map[string]Resolved{{domain: resolved(t, "VALUE", `["d"]`)}}},
+					Values: map[string]Resolved{`["res",".domain"]`: resolved(t, "VALUE", `"d"`),
+						`["subj","roles"]`: resolved(t, "VALUE", tc.roles), `["subj","g"]`: resolved(t, "VALUE", tc.g)}}
+				if got := evalModule(t, m, req); got != tc.want {
+					t.Errorf("allow(%s, roles %s, subject.g %s) = %v, want %v", tc.resourceType, tc.roles, tc.g, got,
+						tc.want)
+				}
+			})
+		}
+	}
+}

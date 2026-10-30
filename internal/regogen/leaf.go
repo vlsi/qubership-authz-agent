@@ -75,6 +75,9 @@ func (s *side) field(f string) string {
 	if s.ref.Network {
 		return "p_" + s.ref.ID + "." + f
 	}
+	if s.ref.Pass {
+		return "p." + f + "." + s.ref.ID
+	}
 	return "input." + f + "." + s.ref.ID
 }
 

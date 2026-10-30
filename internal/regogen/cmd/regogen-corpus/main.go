@@ -70,7 +70,7 @@ type request struct {
 	Roles  []string                      `json:"roles"`
 	M2M    bool                          `json:"m2m"`
 	Vals   map[string][3]json.RawMessage `json:"vals"`
-	Nodes  map[string][2]string          `json:"nodes"`
+	Scope  json.RawMessage               `json:"scope"`
 	Agent  bool                          `json:"agent"`
 	Legacy map[string]any                `json:"legacy"`
 }
@@ -95,10 +95,7 @@ type ctxKey struct{}
 
 var explain bool
 
-var (
-	pipDecl  = &ast.Builtin{Name: "nc.pip", Decl: types.NewFunction(types.Args(types.S), types.A)}
-	nodeDecl = &ast.Builtin{Name: "nc.node", Decl: types.NewFunction(types.Args(types.S), types.A)}
-)
+var pipDecl = &ast.Builtin{Name: "nc.pip", Decl: types.NewFunction(types.Args(types.S), types.A)}
 
 func stubs() []func(*rego.Rego) {
 	pip := rego.Function1(&rego.Function{Name: pipDecl.Name, Decl: pipDecl.Decl},
@@ -110,35 +107,54 @@ func stubs() []func(*rego.Rego) {
 			}
 			return t, nil
 		})
-	node := rego.Function1(&rego.Function{Name: nodeDecl.Name, Decl: nodeDecl.Decl},
-		func(bctx rego.BuiltinContext, a *ast.Term) (*ast.Term, error) {
-			in := bctx.Context.Value(ctxKey{}).(*regogen.Input)
-			t, ok := in.NodeInterval(string(a.Value.(ast.String)))
-			if !ok {
-				return nil, fmt.Errorf("nc.node: no interval %v", a)
-			}
-			return t, nil
-		})
-	return append(regobuiltins.Options(), pip, node)
+	return append(regobuiltins.Options(), pip)
 }
 
 func toRequest(q request) (regogen.Request, error) {
-	r := regogen.Request{Roles: q.Roles, M2M: q.M2M, Values: map[string]regogen.Resolved{}, Nodes: q.Nodes}
+	r := regogen.Request{Roles: q.Roles, M2M: q.M2M}
 	if q.Op != nil {
 		r.Operation = *q.Op
 	}
 	if q.RT != nil {
 		r.ResourceType = *q.RT
 	}
-	for k, v := range q.Vals {
+	var err error
+	if r.Values, err = resolvedValues(q.Vals); err != nil {
+		return r, err
+	}
+	// scope is "ERROR", null for a tenant without iterate, or the passes
+	var failed string
+	if json.Unmarshal(q.Scope, &failed) == nil && failed == "ERROR" {
+		r.Scope = &regogen.Scope{Failed: true}
+	} else if len(q.Scope) > 0 && string(q.Scope) != "null" {
+		var passes []map[string][3]json.RawMessage
+		if err := json.Unmarshal(q.Scope, &passes); err != nil {
+			return r, fmt.Errorf("scope: %w", err)
+		}
+		r.Scope = &regogen.Scope{Passes: []map[string]regogen.Resolved{}}
+		for _, p := range passes {
+			vals, err := resolvedValues(p)
+			if err != nil {
+				return r, err
+			}
+			r.Scope.Passes = append(r.Scope.Passes, vals)
+		}
+	}
+	return r, nil
+}
+
+// resolvedValues reads the resolved values of a bundle, by operand key.
+func resolvedValues(vals map[string][3]json.RawMessage) (map[string]regogen.Resolved, error) {
+	out := map[string]regogen.Resolved{}
+	for k, v := range vals {
 		var parts []any
 		if err := json.Unmarshal([]byte(k), &parts); err != nil {
-			return r, err
+			return nil, err
 		}
 		key, _ := json.Marshal(parts)
 		var st string
 		if err := json.Unmarshal(v[0], &st); err != nil {
-			return r, err
+			return nil, err
 		}
 		res := regogen.Resolved{State: spectables.State(st)}
 		var hl bool
@@ -146,18 +162,18 @@ func toRequest(q request) (regogen.Request, error) {
 		res.HeaderList = hl
 		var text *string
 		if err := json.Unmarshal(v[1], &text); err != nil {
-			return r, err
+			return nil, err
 		}
 		if text != nil {
 			val, err := jsonvalue.Decode([]byte(*text))
 			if err != nil {
-				return r, fmt.Errorf("value of %s: %w", k, err)
+				return nil, fmt.Errorf("value of %s: %w", k, err)
 			}
 			res.Value = val
 		}
-		r.Values[string(key)] = res
+		out[string(key)] = res
 	}
-	return r, nil
+	return out, nil
 }
 
 func run(b bundle, tab *spectables.Table, opt regogen.Options, reps int, dumpDir string) result {
@@ -376,7 +392,7 @@ func main() {
 		sum["unguarded_allow"] += r.Stats.UnguardedAllow
 		sum["groups"] += r.Groups
 		sum["access_copies"] += r.Stats.AccessCopies
-		sum["iterate_stubs"] += r.Stats.IterateStubs
+		sum["iterates"] += r.Stats.Iterates
 		sum["materialized"] += r.Stats.Materialized
 		sum["lookups"] += r.Stats.Lookups
 		if r.Stats.Clauses > sum["max_clauses"] {
