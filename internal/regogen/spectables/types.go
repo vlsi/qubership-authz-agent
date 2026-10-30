@@ -384,9 +384,17 @@ func valueOutcomes(p Profile) []Outcome {
 }
 
 // RequiredKnobs lists the specification settings every profile of an export
-// carries, and no other: a knob is added here and to schema.json when a
-// template of the generator starts to read it.
-var RequiredKnobs = []string{"fold", "eq_numeric", "list_eq_by_value", "subset_fold"}
+// of schema version 2 carries, and no other: a knob is added here and to
+// schema.json when a template of the generator starts to read it.
+// right_list_scalar_ops is the outcome of ==, !=, CONTAINS, and NOT CONTAINS
+// with a list of two or more values on the right that is not a literal list,
+// and right_list_attribute says whether a resource attribute there is
+// compared instead (EVAL).
+var RequiredKnobs = []string{"fold", "eq_numeric", "list_eq_by_value", "subset_fold", "right_list_scalar_ops",
+	"right_list_attribute"}
+
+// knobsV1 lists the knobs of schema version 1.
+var knobsV1 = []string{"fold", "eq_numeric", "list_eq_by_value", "subset_fold"}
 
 // Domain is what an operand of one kind can resolve to: its states and, when
 // the states include VALUE, the classes of value it can hold.

@@ -124,7 +124,8 @@ func fixtureProfile(eq []any) doc {
 		}
 	}
 	return doc{
-		"knobs": doc{"fold": "java", "eq_numeric": false, "list_eq_by_value": true, "subset_fold": false},
+		"knobs": doc{"fold": "java", "eq_numeric": false, "list_eq_by_value": true, "subset_fold": false,
+			"right_list_scalar_ops": "ABORT", "right_list_attribute": "EVAL"},
 		"kinds": kinds,
 		"nodes": fixtureNodes(),
 		"cells": cells,
@@ -162,6 +163,10 @@ func versionOne() doc {
 		profileOf(d, p)["kinds"].(doc)["res:path"] = doc{"states": []any{"VALUE", "NULL"}, "classes": []any{"s", "l", "x"}}
 	}
 	delete(eqCell(d, eqValueS), "value_rule")
+	for _, p := range []string{"legacy", "agent"} {
+		delete(profileOf(d, p)["knobs"].(doc), "right_list_scalar_ops")
+		delete(profileOf(d, p)["knobs"].(doc), "right_list_attribute")
+	}
 	pr := profileOf(d, "agent")
 	pr["cells"] = append(agentCells(d), doc{"op": "EQ", "left": doc{"kind": "res:path", "state": "VALUE", "class": "x"},
 		"right": doc{"kind": "lit:str"}, "outcome": "F"})
@@ -439,6 +444,11 @@ func TestLoadRejectsAnIncompleteExport(t *testing.T) {
 			name:  "a knob",
 			edit:  func(d doc) { delete(profileOf(d, "agent")["knobs"].(doc), "subset_fold") },
 			names: "agent: knob subset_fold is missing",
+		},
+		{
+			name:  "a knob of schema version 2",
+			edit:  func(d doc) { delete(profileOf(d, "agent")["knobs"].(doc), "right_list_scalar_ops") },
+			names: "agent: knob right_list_scalar_ops is missing",
 		},
 		{
 			name:  "the node rules",
