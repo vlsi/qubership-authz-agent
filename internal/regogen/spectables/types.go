@@ -61,6 +61,16 @@ func (o Operator) Unary() bool {
 	}
 }
 
+// Negations maps each negated operator to the operator it negates. The
+// specification evaluates a negated operator as its positive one and mirrors
+// the outcome: T and F swap, and every other outcome stays. An export of
+// schema version 3 lists the same pairs under negates, and gives a negated
+// combination cells of its own only where legacy departs from the mirror.
+var Negations = map[Operator]Operator{
+	OpNE: OpEQ, OpIsNotNull: OpIsNull, OpIsNotEmpty: OpIsEmpty, OpNotIn: OpIn, OpNotContains: OpContains,
+	OpNotContainsAny: OpContainsAny, OpIsNotSubset: OpIsSubset, OpNotMatch: OpMatch,
+}
+
 // Kind is the kind of an operand: what the operand reads, not the value it
 // holds. Each name is the specification's own, except that the specification's
 // single kind for a declared PIP is split here by pipType.
@@ -435,7 +445,7 @@ type Cell struct {
 	// Outcomes lists, for an Outcome of by_value, the outcomes the operand
 	// values can produce; it is nil otherwise.
 	Outcomes []Outcome
-	// ValueRule lists, for an Outcome of by_value in schema version 2, the
+	// ValueRule lists, for an Outcome of by_value from schema version 2, the
 	// value rules the specification went through, sorted; it is nil otherwise.
 	ValueRule []ValueRule
 }

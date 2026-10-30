@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
+	"reflect"
 	"slices"
 	"strings"
 	"testing"
@@ -516,8 +517,23 @@ func TestLoadRejectsAnInvalidExport(t *testing.T) {
 		},
 		{
 			name:  "another schema version",
-			edit:  func(d doc) { d["schema_version"] = 3 },
-			names: "schema_version is 3, want 2",
+			edit:  func(d doc) { d["schema_version"] = 4 },
+			names: "schema_version is 4, want 3",
+		},
+		{
+			name:  "negates in schema version 2",
+			edit:  func(d doc) { d["negates"] = doc{"NE": "EQ"} },
+			names: "negates is set in schema version 2",
+		},
+		{
+			name:  "a leaf map in schema version 2",
+			edit:  func(d doc) { profileOf(d, "agent")["leaf"] = doc{"ABORT": "F", "ERR": "U"} },
+			names: "agent: leaf or aliases is set in schema version 2",
+		},
+		{
+			name:  "aliases in schema version 2",
+			edit:  func(d doc) { profileOf(d, "legacy")["aliases"] = doc{"subj.name": "subj.id"} },
+			names: "legacy: leaf or aliases is set in schema version 2",
 		},
 		{
 			name:  "a by_value cell without a value rule",
@@ -807,4 +823,268 @@ func TestLoadAcceptsTheExportNamedBySpectablesExport(t *testing.T) {
 		t.Fatalf("Load(%s): schema_version %d, want %d", path, got, SchemaVersion)
 	}
 	t.Logf("Load(%s): spec_tag %s", path, tab.SpecTag())
+}
+
+// versionThree returns an export of schema version 3 whose two profiles carry
+// the same cells, in legacy's outcomes: those of fixtureProfile, with eq as the
+// cells of EQ(res:path, lit:str) when eq is not nil. The agent profile maps
+// ABORT to F and ERR to U, and subj.name is an alias of subj.id.
+func versionThree(eq []any) doc {
+	negates := doc{}
+	for neg, pos := range Negations {
+		negates[string(neg)] = string(pos)
+	}
+	d := doc{
+		"schema_version": 3,
+		"spec_tag":       "r99",
+		"negates":        negates,
+		"profiles":       doc{"legacy": fixtureProfile(eq), "agent": fixtureProfile(eq)},
+	}
+	profileOf(d, "legacy")["leaf"] = doc{}
+	profileOf(d, "agent")["leaf"] = doc{"ABORT": "F", "ERR": "U"}
+	for _, p := range []string{"legacy", "agent"} {
+		profileOf(d, p)["aliases"] = doc{"subj.name": "subj.id"}
+	}
+	return d
+}
+
+// setCells replaces the cells of the combination in both profiles; no cells
+// leaves the combination to its source.
+func setCells(d doc, op, left, right string, cells ...doc) {
+	for _, p := range []string{"legacy", "agent"} {
+		pr := profileOf(d, p)
+		kept := slices.DeleteFunc(pr["cells"].([]any), func(c any) bool { return isCombo(c.(doc), op, left, right) })
+		for _, c := range cells {
+			kept = append(kept, c)
+		}
+		pr["cells"] = kept
+	}
+}
+
+func cellOf(op, left, right string, outcome string, extra doc) doc {
+	c := doc{"op": op, "left": doc{"kind": left}, "right": doc{"kind": right}, "outcome": outcome}
+	for k, v := range extra {
+		c[k] = v
+	}
+	return c
+}
+
+// eqPositive is EQ(res:path, lit:str) in legacy's outcomes: T on NULL, ABORT
+// or T by value on VALUE/s, and ERR on VALUE/l.
+func eqPositive() []any {
+	left := func(state, class string) doc {
+		s := doc{"kind": "res:path", "state": state}
+		if class != "" {
+			s["class"] = class
+		}
+		return s
+	}
+	right := doc{"kind": "lit:str"}
+	return []any{
+		doc{"op": "EQ", "left": left("NULL", ""), "right": right, "outcome": "T"},
+		doc{"op": "EQ", "left": left("VALUE", "s"), "right": right, "outcome": "by_value", "outcomes": []any{"T", "ABORT"},
+			"value_rule": []any{"eq"}},
+		doc{"op": "EQ", "left": left("VALUE", "l"), "right": right, "outcome": "ERR"},
+	}
+}
+
+func TestLoadDerivesTheCellsOfSchemaVersion3(t *testing.T) {
+	t.Parallel()
+	resPath := func(s State, c Class) Point { return Point{Kind: KindResPath, State: s, Class: c} }
+	litStr := Point{Kind: KindLitStr, State: StateValue, Class: ClassString}
+	subj := func(k Kind) Point { return Point{Kind: k, State: StateNull} }
+	byValue := func(rule ValueRule, outs ...Outcome) Cell {
+		return Cell{Outcome: OutcomeByValue, Outcomes: outs, ValueRule: []ValueRule{rule}}
+	}
+	tests := []struct {
+		name string
+		edit func(d doc)
+		prof Profile
+		key  Key
+		want Cell
+	}{
+		{
+			name: "a negated combination without cells takes its positive operator's cell with T and F swapped",
+			edit: func(d doc) { setCells(d, "NE", "res:path", "lit:str") },
+			prof: ProfileLegacy,
+			key:  Key{Op: OpNE, Left: resPath(StateNull, ""), Right: litStr, Context: ruleCondition()},
+			want: Cell{Outcome: OutcomeF},
+		},
+		{
+			name: "a mirrored by_value cell swaps T and F among its outcomes and keeps its value rule",
+			edit: func(d doc) { setCells(d, "NE", "res:path", "lit:str") },
+			prof: ProfileLegacy,
+			key:  Key{Op: OpNE, Left: resPath(StateValue, ClassString), Right: litStr, Context: ruleCondition()},
+			want: byValue(RuleEq, OutcomeF, OutcomeAbort),
+		},
+		{
+			name: "a mirror keeps an outcome other than T and F",
+			edit: func(d doc) { setCells(d, "NE", "res:path", "lit:str") },
+			prof: ProfileLegacy,
+			key:  Key{Op: OpNE, Left: resPath(StateValue, ClassList), Right: litStr, Context: ruleCondition()},
+			want: Cell{Outcome: OutcomeErr},
+		},
+		{
+			name: "a negated combination with cells of its own is not mirrored",
+			edit: func(d doc) {
+				setCells(d, "NE", "res:path", "lit:str", cellOf("NE", "res:path", "lit:str", "ABORT", nil))
+			},
+			prof: ProfileLegacy,
+			key:  Key{Op: OpNE, Left: resPath(StateNull, ""), Right: litStr, Context: ruleCondition()},
+			want: Cell{Outcome: OutcomeAbort},
+		},
+		{
+			name: "an alias combination without cells takes its representative's cells",
+			edit: func(d doc) {
+				setCells(d, "EQ", "subj.id", "lit:str", cellOf("EQ", "subj.id", "lit:str", "T", nil))
+				setCells(d, "EQ", "subj.name", "lit:str")
+			},
+			prof: ProfileLegacy,
+			key:  Key{Op: OpEQ, Left: subj(KindSubjName), Right: litStr, Context: ruleCondition()},
+			want: Cell{Outcome: OutcomeT},
+		},
+		{
+			name: "an alias combination with cells of its own keeps them",
+			edit: func(d doc) {
+				setCells(d, "EQ", "subj.id", "lit:str", cellOf("EQ", "subj.id", "lit:str", "T", nil))
+				setCells(d, "EQ", "subj.name", "lit:str", cellOf("EQ", "subj.name", "lit:str", "ABORT", nil))
+			},
+			prof: ProfileLegacy,
+			key:  Key{Op: OpEQ, Left: subj(KindSubjName), Right: litStr, Context: ruleCondition()},
+			want: Cell{Outcome: OutcomeAbort},
+		},
+		{
+			name: "a negated alias combination takes its representative's own cells rather than the mirror",
+			edit: func(d doc) {
+				setCells(d, "NE", "subj.id", "lit:str", cellOf("NE", "subj.id", "lit:str", "ABORT", nil))
+				setCells(d, "EQ", "subj.name", "lit:str", cellOf("EQ", "subj.name", "lit:str", "T", nil))
+				setCells(d, "NE", "subj.name", "lit:str")
+			},
+			prof: ProfileLegacy,
+			key:  Key{Op: OpNE, Left: subj(KindSubjName), Right: litStr, Context: ruleCondition()},
+			want: Cell{Outcome: OutcomeAbort},
+		},
+		{
+			name: "a negated alias combination without cells takes the mirror of its positive one, renamed",
+			edit: func(d doc) {
+				setCells(d, "EQ", "subj.id", "lit:str", cellOf("EQ", "subj.id", "lit:str", "T", nil))
+				setCells(d, "EQ", "subj.name", "lit:str")
+				setCells(d, "NE", "subj.name", "lit:str")
+			},
+			prof: ProfileLegacy,
+			key:  Key{Op: OpNE, Left: subj(KindSubjName), Right: litStr, Context: ruleCondition()},
+			want: Cell{Outcome: OutcomeF},
+		},
+		{
+			name: "a combination with an alias on both sides takes its representatives' cells",
+			edit: func(d doc) {
+				setCells(d, "EQ", "subj.id", "subj.id", cellOf("EQ", "subj.id", "subj.id", "T", nil))
+				setCells(d, "EQ", "subj.name", "subj.name")
+			},
+			prof: ProfileLegacy,
+			key:  Key{Op: OpEQ, Left: subj(KindSubjName), Right: subj(KindSubjName), Context: ruleCondition()},
+			want: Cell{Outcome: OutcomeT},
+		},
+		{
+			name: "the leaf map takes ERR of the agent profile to U",
+			edit: func(d doc) {},
+			prof: ProfileAgent,
+			key:  Key{Op: OpEQ, Left: resPath(StateValue, ClassList), Right: litStr, Context: ruleCondition()},
+			want: Cell{Outcome: OutcomeU},
+		},
+		{
+			name: "the leaf map takes ABORT among the outcomes of a by_value cell to F",
+			edit: func(d doc) {},
+			prof: ProfileAgent,
+			key:  Key{Op: OpEQ, Left: resPath(StateValue, ClassString), Right: litStr, Context: ruleCondition()},
+			want: byValue(RuleEq, OutcomeT, OutcomeF),
+		},
+		{
+			name: "a by_value cell whose outcomes the leaf map takes to one outcome answers that outcome",
+			edit: func(d doc) { setCells(d, "NE", "res:path", "lit:str") },
+			prof: ProfileAgent,
+			key:  Key{Op: OpNE, Left: resPath(StateValue, ClassString), Right: litStr, Context: ruleCondition()},
+			want: Cell{Outcome: OutcomeF},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			d := versionThree(eqPositive())
+			tt.edit(d)
+			tab := mustLoad(t, d)
+			got, err := tab.Lookup(tt.prof, tt.key)
+			if err != nil || !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Lookup(%s, %+v) = %+v, %v, want %+v", tt.prof, tt.key, got, err, tt.want)
+			}
+		})
+	}
+}
+
+func TestLoadRejectsAnInvalidExportOfSchemaVersion3(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name  string
+		edit  func(d doc)
+		names string // the part of the error that names the problem
+	}{
+		{
+			name:  "negates without one pair of the language",
+			edit:  func(d doc) { delete(d["negates"].(doc), "NE") },
+			names: "negates is map[",
+		},
+		{
+			name:  "a leaf map that leaves an outcome of legacy unmapped",
+			edit:  func(d doc) { delete(profileOf(d, "agent")["leaf"].(doc), "ERR") },
+			names: "agent: leaf does not map ERR",
+		},
+		{
+			name:  "a leaf map of an outcome the profile has",
+			edit:  func(d doc) { profileOf(d, "legacy")["leaf"] = doc{"ABORT": "F"} },
+			names: `legacy: leaf maps "ABORT" to "F"`,
+		},
+		{
+			name:  "a leaf map to an outcome no by_value cell of the profile lists",
+			edit:  func(d doc) { profileOf(d, "agent")["leaf"].(doc)["ABORT"] = "bad_request" },
+			names: `agent: leaf maps "ABORT" to "bad_request"`,
+		},
+		{
+			name:  "an alias of itself",
+			edit:  func(d doc) { profileOf(d, "legacy")["aliases"].(doc)["subj.type"] = "subj.type" },
+			names: "legacy: alias subj.type names subj.type, which is itself or another alias",
+		},
+		{
+			name:  "an alias of the pattern",
+			edit:  func(d doc) { profileOf(d, "legacy")["aliases"].(doc)["subj.type"] = "pattern" },
+			names: `legacy: alias "subj.type" of "pattern" names an unknown kind or the pattern`,
+		},
+		{
+			name:  "an alias of an alias",
+			edit:  func(d doc) { profileOf(d, "legacy")["aliases"].(doc)["subj.type"] = "subj.name" },
+			names: "legacy: alias subj.type names subj.name, which is itself or another alias",
+		},
+		{
+			name: "an alias with another domain than its representative",
+			edit: func(d doc) {
+				profileOf(d, "legacy")["kinds"].(doc)["subj.name"] = doc{"states": []any{"NULL"}}
+			},
+			names: "legacy: alias subj.name has another domain than its representative subj.id",
+		},
+		{
+			name:  "a cell outcome of the agent profile in place of legacy's",
+			edit:  func(d doc) { setCells(d, "EQ", "res:path", "lit:str", cellOf("EQ", "res:path", "lit:str", "U", nil)) },
+			names: `outcome "U" is not an outcome of profile legacy`,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			d := versionThree(nil)
+			tt.edit(d)
+			_, err := load(t, d)
+			if !errors.Is(err, ErrInvalid) || !strings.Contains(err.Error(), tt.names) {
+				t.Errorf("Load() error = %v, want ErrInvalid naming %q", err, tt.names)
+			}
+		})
+	}
 }
