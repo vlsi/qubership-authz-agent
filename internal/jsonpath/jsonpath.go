@@ -48,8 +48,11 @@
 //   - [n] selects an element; a negative n counts from the end.
 //   - [n,m,...] selects the listed elements that exist, and [a:b], [a:], and
 //     [:b] select a range of elements, where a negative bound counts from the
-//     end. An index or a bound beyond Java's int range is refused, and so is
-//     [:].
+//     end. Jayway does not compile [:], an index or a bound beyond Java's
+//     int range, or one with a digit outside the Basic Multilingual Plane;
+//     the legacy service reads the attribute of such a path as absent, so
+//     the path compiles and selects nothing ([KindMissing]) whatever the
+//     document.
 //   - [*] selects every element of a list and every member of an object.
 //   - [?(filter)] tests every element of a list and every object; over one
 //     value that is neither, the path selects nothing.
@@ -84,12 +87,26 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"unicode"
 
 	"authz-agent/internal/jsonvalue"
 )
 
 // ErrUnsupported is the error [Compile] wraps for a path outside the subset.
 var ErrUnsupported = errors.New("jsonpath: unsupported path")
+
+// errJaywayRefuses marks a step Jayway does not compile, which makes the path
+// select nothing rather than leave the subset.
+var errJaywayRefuses = errors.New("jsonpath: Jayway does not compile the path")
+
+// errGoRegex marks a filter pattern that Jayway compiles and Go cannot match
+// as java.util.regex does: the path leaves the subset, unless a later part
+// of it is one Jayway does not compile.
+var errGoRegex = errors.New("a pattern Go does not match as java.util.regex does")
+
+// errBeyondInt marks a number beyond the int range, which Jayway does not
+// compile as an index or a slice bound.
+var errBeyondInt = fmt.Errorf("beyond the int range: %w", errJaywayRefuses)
 
 // Kind is how a path selected.
 type Kind string
@@ -134,6 +151,9 @@ type Result struct {
 // Path is a compiled path. It is safe for concurrent use.
 type Path struct {
 	steps []step
+	// refused is set for a path Jayway does not compile: it selects
+	// nothing.
+	refused bool
 }
 
 type stepKind int
@@ -185,9 +205,13 @@ var (
 )
 
 // Compile parses path. It returns an error that wraps [ErrUnsupported] for a
-// path outside the subset, including one Jayway refuses to compile, such as
-// [:] or an index beyond the int range, and a filter whose regular expression
-// Go cannot match as java.util.regex does.
+// path outside the subset, such as a filter whose regular expression Go
+// cannot match as java.util.regex does. A path that Jayway does not compile
+// compiles to a path that selects nothing, as the legacy service reads it as
+// absent, also where such a filter pattern comes first: [:], an index or a
+// slice bound beyond the int range, and a decimal digit outside the Basic
+// Multilingual Plane in an index, a slice bound, a filter's number literal,
+// or a size.
 func Compile(path string) (*Path, error) {
 	toks := tokenRE.FindAllString(path, -1)
 	if strings.Join(toks, "") != path {
@@ -195,18 +219,34 @@ func Compile(path string) (*Path, error) {
 	}
 	p := &Path{steps: make([]step, 0, len(toks))}
 	deep := false
+	var unsupported error
 	for pos, t := range toks {
 		s, err := parseStep(t, pos)
+		if errors.Is(err, errJaywayRefuses) {
+			return &Path{refused: true}, nil
+		}
+		if errors.Is(err, errGoRegex) {
+			// Jayway compiles the pattern, so a later step it does not
+			// compile still decides
+			if unsupported == nil {
+				unsupported = fmt.Errorf("%w: %q: %w", ErrUnsupported, path, err)
+			}
+			continue
+		}
 		if err != nil {
 			return nil, fmt.Errorf("%w: %q: %w", ErrUnsupported, path, err)
 		}
 		deep = deep || s.kind == stepDeep
 		if deep && s.kind == stepFunction {
 			// Jayway computes a function after a deep scan over more values
-			// than the scan selects.
+			// than the scan selects; the path leaves the subset before any
+			// later step is read.
 			return nil, fmt.Errorf("%w: %q: a function after a deep scan", ErrUnsupported, path)
 		}
 		p.steps = append(p.steps, s)
+	}
+	if unsupported != nil {
+		return nil, unsupported
 	}
 	return p, nil
 }
@@ -251,7 +291,7 @@ func parseStep(t string, pos int) (step, error) {
 	}
 	if m := sliceRE.FindStringSubmatch(t); m != nil {
 		if m[1] == "" && m[2] == "" {
-			return step{}, fmt.Errorf("slice %q has no bound", t)
+			return step{}, fmt.Errorf("slice %q has no bound: %w", t, errJaywayRefuses)
 		}
 		s := step{kind: stepSlice}
 		for i, bound := range []**int{&s.lo, &s.hi} {
@@ -274,15 +314,20 @@ func parseStep(t string, pos int) (step, error) {
 }
 
 // parseInt reads an optional minus and Unicode decimal digits as Java's
-// Integer.parseInt does, and refuses a value outside the int range.
+// Integer.parseInt does. A value outside the int range and a digit outside
+// the Basic Multilingual Plane, which Integer.parseInt refuses, are an error
+// that wraps errJaywayRefuses.
 func parseInt(s string) (int, error) {
+	if strings.ContainsFunc(s, func(r rune) bool { return r > 0xFFFF && unicode.IsDigit(r) }) {
+		return 0, fmt.Errorf("index %q has a digit outside the Basic Multilingual Plane: %w", s, errJaywayRefuses)
+	}
 	d, ok := jsonvalue.ParseDecimal(s)
 	if !ok || strings.ContainsAny(s, "+.eE") {
 		return 0, fmt.Errorf("index %q", s)
 	}
 	n, err := strconv.ParseInt(d.String(), 10, 32)
 	if err != nil {
-		return 0, fmt.Errorf("index %q beyond the int range", s)
+		return 0, fmt.Errorf("index %q: %w", s, errBeyondInt)
 	}
 	return int(n), nil
 }
@@ -293,6 +338,9 @@ func parseInt(s string) (int, error) {
 // and the size of the final selection, counting a value as often as a step
 // reaches it.
 func (p *Path) Select(doc jsonvalue.Value) Result {
+	if p.refused {
+		return Result{Kind: KindMissing}
+	}
 	if doc == nil && (len(p.steps) == 0 || p.steps[0].kind != stepRootBracket) {
 		// Jayway refuses a null document. A path that starts with ['key']
 		// never reaches Jayway, so its kind does not depend on the document.

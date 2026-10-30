@@ -16,6 +16,7 @@ package jsonpath
 
 import (
 	"cmp"
+	"errors"
 	"fmt"
 	"regexp"
 	"slices"
@@ -71,12 +72,25 @@ func parseFilter(expr string, reads *[]string) (predicate, error) {
 			continue
 		}
 		preds := make([]predicate, len(parts))
+		var first error
 		for i, part := range parts {
 			p, err := parseFilter(part, reads)
-			if err != nil {
+			switch {
+			case errors.Is(err, errJaywayRefuses):
+				return nil, err
+			case errors.Is(err, errGoRegex):
+				// Jayway compiles the pattern, so a later part it does not
+				// compile still decides
+				if first == nil {
+					first = err
+				}
+			case err != nil:
 				return nil, err
 			}
 			preds[i] = p
+		}
+		if first != nil {
+			return nil, first
 		}
 		if sep == "||" {
 			return func(e jsonvalue.Value) bool {
@@ -228,6 +242,12 @@ func compareFilter(key, op, lit, quoted string) (predicate, error) {
 	default:
 		var ok bool
 		l = literal{kind: 'n', text: lit}
+		if strings.ContainsFunc(lit, func(r rune) bool { return r > 0xFFFF && unicode.IsDigit(r) }) {
+			// Jayway reads one UTF-16 char at a time, and half a digit
+			// fails the path's compilation
+			return nil, fmt.Errorf("number %q has a digit outside the Basic Multilingual Plane: %w", lit,
+				errJaywayRefuses)
+		}
 		if l.num, ok = jsonvalue.ParseDecimal(lit); !ok {
 			return nil, fmt.Errorf("number %q", lit)
 		}
@@ -335,13 +355,18 @@ func listFilter(key, op string, quoted [][]string) (predicate, error) {
 
 // sizeFilter compiles size and empty. The size of a string is its length in
 // UTF-16 code units, as Java counts it, and the size of a list is its number
-// of elements; size tests no other value. An object is empty where it has no
-// member; Jayway 2.9.0 throws for empty over an object instead.
+// of elements; size tests no other value. A size beyond the int range is
+// compared as it is written, so no value has it. An object is empty where it
+// has no member; Jayway 2.9.0 throws for empty over an object instead.
 func sizeFilter(key, size, empty string) (predicate, error) {
 	n := -1
 	if size != "" {
 		var err error
-		if n, err = parseInt(size); err != nil {
+		if n, err = parseInt(size); errors.Is(err, errBeyondInt) {
+			// no length reaches it; -1 stands for empty, so take -2
+			n, err = -2, nil
+		}
+		if err != nil {
 			return nil, err
 		}
 	}
@@ -377,16 +402,16 @@ func sizeFilter(key, size, empty string) (predicate, error) {
 func regexFilter(key, pattern string, fold bool) (predicate, error) {
 	translated, err := javaPattern(pattern, fold)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %w", errGoRegex, err)
 	}
 	// The pattern compiles alone first, so that an unbalanced parenthesis
 	// cannot break out of the anchors around it.
 	if _, err := regexp.Compile(translated); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %w", errGoRegex, err)
 	}
 	re, err := regexp.Compile(`\A(?:` + translated + `)\z`)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %w", errGoRegex, err)
 	}
 	matches := func(v jsonvalue.Value) bool {
 		text, ok := regexInput(v)

@@ -254,6 +254,11 @@ func compareWithJayway(t *testing.T, cases []selectCase, known map[string]string
 				t.Skipf("Decode: %v", err)
 			}
 			p, err := Compile(tt.path)
+			if err == nil && p.refused {
+				// the path compiles to select nothing because Jayway does
+				// not compile it
+				err = errJaywayRefuses
+			}
 			switch {
 			case err != nil && a.CompileError != "":
 				compared[tt.name] = true

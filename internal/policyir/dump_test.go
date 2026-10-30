@@ -65,7 +65,7 @@ func TestTreeDump(t *testing.T) {
 							{Access{Operation: "EDIT"}, Access{Denied: true, Operation: "DELETE"}},
 							{
 								Compare{Op: OpEQ, Left: PIPRef{Name: "subject.region.code"}, Right: PassValue{Var: "v", Key: "region"}},
-								Compare{Op: OpEQ, Left: Subject{Attr: SubjectID}, Right: Unsupported{Form: FormJSONPath, Text: "resource.a[:]"}},
+								Compare{Op: OpEQ, Left: Subject{Attr: SubjectID}, Right: Unsupported{Form: FormJSONPath, Text: "resource.a[0:2:1]"}},
 								Compare{Op: OpContains, Left: Bool{Value: true}, Right: PIPRef{Name: "subject.owners.filtered", Filtered: true}},
 							},
 							{
@@ -104,7 +104,7 @@ set "s1" name="orders" domain="d" algorithm=DENY_OVERRIDES
   policy "p1" name="P" algorithm=absent
     rule "r1" name="R" effect=ALLOW
       target[rule_target]: operation IN ["READ", "EDIT"] raw="'READ','EDIT'"
-      condition[rule_condition]: resource.amount GE 12.30 AND subject.roles IS_NOT_EMPTY OR subject allowed "EDIT" on resource AND subject denied "DELETE" on resource OR pip("subject.region.code") EQ pass("v")["region"] AND subject.id EQ unsupported(jsonpath "resource.a[:]") AND true CONTAINS pip("subject.owners.filtered") FILTERED "" OR resource['path'] NOT_MATCH pattern("/api/*") AND subject.entitledResources.of("order").as["id", "owner"] IS_SUBSET resource.null AND unsupported(jsonpath "x.y")
+      condition[rule_condition]: resource.amount GE 12.30 AND subject.roles IS_NOT_EMPTY OR subject allowed "EDIT" on resource AND subject denied "DELETE" on resource OR pip("subject.region.code") EQ pass("v")["region"] AND subject.id EQ unsupported(jsonpath "resource.a[0:2:1]") AND true CONTAINS pip("subject.owners.filtered") FILTERED "" OR resource['path'] NOT_MATCH pattern("/api/*") AND subject.entitledResources.of("order").as["id", "owner"] IS_SUBSET resource.null AND unsupported(jsonpath "x.y")
       predicate rsql "r==1"
       predicate sql "r = 1"
       predicate mongodb "{\"r\": 1}"

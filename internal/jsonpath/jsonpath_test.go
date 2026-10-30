@@ -378,7 +378,7 @@ func TestSelect_LengthOfAStringIsNull(t *testing.T) {
 }
 
 // intRangeCases take an index at the edge of Java's int range, beyond which
-// Jayway refuses to compile the path.
+// Jayway does not compile the path (TestSelect_APathJaywayDoesNotCompileSelectsNothing).
 var intRangeCases = []selectCase{
 	{"the largest int index is past the end", `{"a": [1]}`, `.a[2147483647]`, KindIndexOutOfBounds, ``},
 	{"the smallest int index is before the start", `{"a": [1]}`, `.a[-2147483648]`, KindIndexOutOfBounds, ``},
@@ -388,11 +388,43 @@ func TestSelect_AnIndexInTheIntRangeCompiles(t *testing.T) {
 	checkSelect(t, intRangeCases)
 }
 
-func TestCompile_RefusesAnIndexBeyondTheIntRange(t *testing.T) {
-	for _, path := range []string{`.a[2147483648]`, `.a[-2147483649]`, `.a[0,2147483648]`, `.a[0:2147483648]`} {
-		if _, err := Compile(path); !errors.Is(err, ErrUnsupported) {
-			t.Errorf("Compile(%s) error = %v, want ErrUnsupported", path, err)
-		}
+// A path Jayway does not compile, which the legacy service reads as an
+// absent attribute, compiles and selects nothing on any document, even one
+// where the same path with a valid index or bound selects values: [:], an
+// index or a bound beyond the int range, and a digit outside the Basic
+// Multilingual Plane in an index, a bound, a number literal, or a size.
+func TestSelect_APathJaywayDoesNotCompileSelectsNothing(t *testing.T) {
+	const doc = `{"a": [{"n": 1, "k": [1]}, {"n": 2, "k": [1]}]}`
+	root, err := jsonvalue.Decode([]byte(doc))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, tc := range []struct{ name, path, control string }{
+		{"a slice without bounds", `.a[:]`, `.a[0:]`},
+		{"an index beyond the int range", `.a[2147483648]`, `.a[1]`},
+		{"an index below the int range", `.a[-2147483649]`, `.a[-1]`},
+		{"an index list beyond the int range", `.a[0,2147483648]`, `.a[0,1]`},
+		{"a slice bound beyond the int range", `.a[0:2147483648]`, `.a[0:2]`},
+		{"an index with a digit outside the Basic Multilingual Plane", `.a[𝟙]`, `.a[1]`},
+		{"a slice with a digit outside the Basic Multilingual Plane", `.a[𝟙:]`, `.a[1:]`},
+		{"an index list with a digit outside the Basic Multilingual Plane", `.a[0,𝟙]`, `.a[0,1]`},
+		{"a number literal with a digit outside the Basic Multilingual Plane", `.a[?(@.n == 𝟙)]`, `.a[?(@.n == 1)]`},
+		{"a size with a digit outside the Basic Multilingual Plane", `.a[?(@.k size 𝟙)]`, `.a[?(@.k size 1)]`},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			for _, c := range []struct {
+				path    string
+				missing bool
+			}{{tc.path, true}, {tc.control, false}} {
+				p, err := Compile(c.path)
+				if err != nil {
+					t.Fatalf("Compile(%s): %v", c.path, err)
+				}
+				if got := p.Select(root).Kind; (got == KindMissing) != c.missing {
+					t.Errorf("Select(%s) over %s kind = %s, want missing: %v", c.path, doc, got, c.missing)
+				}
+			}
+		})
 	}
 }
 
@@ -464,7 +496,6 @@ func TestCompile_RefusesAPathOutsideTheSubset(t *testing.T) {
 		{"step after a function", `.a.length().b`},
 		{"unknown function", `.a.size()`},
 		{"slice with a step", `.a[0:2:1]`},
-		{"slice without bounds", `.a[:]`},
 		{"unclosed filter", `.a[?(@.k)`},
 		{"filter with no closing parenthesis and nothing inside", `.a[?(]`},
 		{"filter with no closing parenthesis after a key", `.a[?(@.kk]`},
@@ -509,14 +540,9 @@ func TestCompile_RefusesAPathOutsideTheSubset(t *testing.T) {
 		{"a quoted literal with an unreadable unicode escape", `.a[?(@.k == '\uZZZZ')]`},
 		{"a quoted literal that unescapes to half a surrogate pair", `.a[?(@.k == '\uD800')]`},
 		{"regex group name used twice", `.a[?(@.k =~ /(?<x>a)(?<x>b)/)]`},
-		{"an index with a digit outside the Basic Multilingual Plane", `.a[𝟙]`},
-		{"a slice with a digit outside the Basic Multilingual Plane", `.a[𝟙:]`},
-		{"an index list with a digit outside the Basic Multilingual Plane", `.a[0,𝟙]`},
-		{"a number literal with a digit outside the Basic Multilingual Plane", `.a[?(@.n == 𝟙)]`},
 		{"a list item with an unreadable unicode escape", `.a[?(@.k in ['\uZZZZ'])]`},
 		{"a bracket key with an unreadable unicode escape", `.x['\uZZZZ']`},
 		{"a bracket key that unescapes to half a surrogate pair", `.x['\uD800']`},
-		{"a size with a digit outside the Basic Multilingual Plane", `.a[?(@.k size 𝟙)]`},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -701,5 +727,50 @@ func TestWeight_StopsAtTheLimit(t *testing.T) {
 		if got := weight(root, 10); got <= 10 || got > 100 {
 			t.Errorf("weight(%.20s..., 10) = %d, want above 10 and at most 100", doc, got)
 		}
+	}
+}
+
+// A size beyond the int range compiles, as Jayway compiles it, and no value
+// has that size, so the filter selects nothing; a size in range is the
+// control.
+func TestSelect_ASizeBeyondTheIntRangeMatchesNothing(t *testing.T) {
+	checkSelect(t, []selectCase{
+		{"a size beyond the int range", `{"a": [{"k": [1]}]}`, `.a[?(@.k size 2147483648)]`, KindMany, `[]`},
+		{"a size in the int range", `{"a": [{"k": [1]}]}`, `.a[?(@.k size 1)]`, KindMany, `[{"k":[1]}]`},
+	})
+}
+
+// Jayway compiles a filter pattern that Go cannot match as java.util.regex
+// does, so a later part of the path that Jayway does not compile still makes
+// the path select nothing, in a later step or in a later part of the filter.
+// Any other form outside the subset leaves it before a later part is read.
+func TestCompile_AGoOnlyPatternDoesNotHideAFormJaywayDoesNotCompile(t *testing.T) {
+	for _, tc := range []struct {
+		name, path string
+		missing    bool
+	}{
+		{"a pattern with a lookahead alone", `.a[?(@.k =~ /(?=u)/)]`, false},
+		{"a pattern with a lookahead before [:]", `.a[?(@.k =~ /(?=u)/)][:]`, true},
+		{"a pattern with a lookahead before a number with a digit outside the BMP",
+			`.a[?(@.k =~ /(?=u)/ && @.n == 𝟙)]`, true},
+		{"a bare word in brackets before [:]", `.a[abc][:]`, false},
+		{"an unknown operator before a number with a digit outside the BMP", `.a[?(@.k ~= 'v' && @.n == 𝟙)]`, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			p, err := Compile(tc.path)
+			if !tc.missing {
+				if !errors.Is(err, ErrUnsupported) {
+					t.Errorf("Compile(%s) error = %v, want ErrUnsupported", tc.path, err)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("Compile(%s): %v", tc.path, err)
+			}
+			if got := p.Select(nil).Kind; got != KindMissing || !p.refused {
+				t.Errorf("Compile(%s) refused = %v, Select kind %s; want a path that selects nothing", tc.path,
+					p.refused, got)
+			}
+		})
 	}
 }

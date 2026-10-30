@@ -89,8 +89,10 @@ library as a runtime dependency.
 - The release supports the subset listed in the Context, plus the forms of real configurations: `$.[*]` and any other
   bracket step after a dot, a key with a hyphen, an index written after a dot, and `null` as a filter literal. A path
   outside the subset fails to compile with an unsupported-path error, so the policy that holds it is refused before
-  it runs. So does a path Jayway refuses to compile, such as `[:]` or an index beyond the `int` range, and a regular
-  expression Go cannot match the way `java.util.regex` does.
+  it runs. So does a regular expression Go cannot match the way `java.util.regex` does. A path Jayway refuses to
+  compile, such as `[:]`, an index or a slice bound beyond the `int` range, or a digit outside the Basic Multilingual
+  Plane in an index or a filter number, compiles and selects nothing: the legacy service catches Jayway's exception
+  and reads the attribute as absent, and so does the specification.
 - Each further Jayway form is added as its own change, with cases that run against Jayway.
 - A differential test runs the package and Jayway JsonPath 2.9.0 on the JVM over the same inputs: the package's own
   cases, the queries of json-path-comparison, and the paths and documents that Jayway's own tests read, recorded by a

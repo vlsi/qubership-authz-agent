@@ -39,11 +39,11 @@ func TestTreeUnsupportedListsEveryForm(t *testing.T) {
 
 	p := validParts()
 	p.simplified[0].Policies[0].Condition = one(PlaceSimplified,
-		Compare{Op: OpEQ, Left: Unsupported{Form: FormJSONPath, Text: "resource.a[:]"}, Right: String{Value: "x"}})
+		Compare{Op: OpEQ, Left: Unsupported{Form: FormJSONPath, Text: "resource.a[0:2:1]"}, Right: String{Value: "x"}})
 	p.rule().Condition = one(PlaceRuleCondition,
 		readOp, Unsupported{Form: FormSyntax, Text: "resource.a  == 1"})
 	p.sets[0].Policies[0].Target = one(PlacePolicyTarget,
-		Compare{Op: OpEQ, Left: Resource{Path: ".a"}, Right: Unsupported{Form: FormJSONPath, Text: "resource.b[:]"}})
+		Compare{Op: OpEQ, Left: Resource{Path: ".a"}, Right: Unsupported{Form: FormJSONPath, Text: "resource.b[0:2:1]"}})
 	p.sets[0].Sets = append(p.sets[0].Sets,
 		&PolicySet{ID: "s3", Sets: []*PolicySet{{ID: "s4", Iterate: &Iterate{Var: "w", Algorithm: AlgorithmDenyOverrides}}}})
 	p.pips[0].Unsupported = "query, body"
@@ -54,8 +54,8 @@ func TestTreeUnsupportedListsEveryForm(t *testing.T) {
 
 	want := []Finding{
 		{Where: `pip "subject.region"`, Form: FormPIPExtension, Text: "query, body"},
-		{Where: `simplified "d"/"c"/"uri" > policy "sp1" > condition`, Form: FormJSONPath, Text: "resource.a[:]"},
-		{Where: `set "s1" > policy "p1" > target`, Form: FormJSONPath, Text: "resource.b[:]"},
+		{Where: `simplified "d"/"c"/"uri" > policy "sp1" > condition`, Form: FormJSONPath, Text: "resource.a[0:2:1]"},
+		{Where: `set "s1" > policy "p1" > target`, Form: FormJSONPath, Text: "resource.b[0:2:1]"},
 		{Where: `set "s1" > policy "p1" > rule "r1" > condition`, Form: FormSyntax, Text: "resource.a  == 1"},
 		{Where: `set "s1" > set "s3" > set "s4"`, Form: FormNestedIterate, Text: "iterate var w"},
 	}
