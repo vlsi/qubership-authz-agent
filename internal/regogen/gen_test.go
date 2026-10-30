@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -1275,5 +1276,173 @@ func TestInWithLiteralsDoesNotGrowWithTheirNumber(t *testing.T) {
 	if five != two {
 		t.Errorf("allow clauses of IN with five literals = %d, want %d as with two", five, two)
 		t.Log(m5text)
+	}
+}
+
+// The same tree and options give the same module byte for byte, the same
+// subject groups, and the same report, however Go orders its maps from one
+// run to the next.
+func TestTheSameTreeGivesTheSameModule(t *testing.T) {
+	tree := tenantWithSetAndPIPs(t, "DENY_OVERRIDES", "ALLOW",
+		"subject.roles CONTAINS 'admin' AND resource.a IN 'x', 'y' OR resource.a CONTAINS ANY subject.g "+
+			"OR subject.id < 5 AND resource.b IS SUBSET 'p', 'q' OR resource.c MATCH /api/*/items "+
+			"OR resource.d == subject.name", generalPIPs)
+	opt := DefaultOptions()
+	opt.Groups, opt.Report = true, true
+	first, err := Generate(tree, table(t), opt)
+	if err != nil {
+		t.Fatalf("Generate: %v", err)
+	}
+	for range 5 {
+		m, err := Generate(tree, table(t), opt)
+		if err != nil {
+			t.Fatalf("Generate: %v", err)
+		}
+		if m.Text != first.Text {
+			t.Fatalf("a second generation of one tree differs:\n%s\nfirst:\n%s", m.Text, first.Text)
+		}
+		if !reflect.DeepEqual(m.Groups, first.Groups) {
+			t.Fatalf("a second generation of one tree has other groups: %v, first %v", m.Groups, first.Groups)
+		}
+		if len(m.Report) != len(first.Report) {
+			t.Fatalf("a second generation of one tree has %d report entries, first %d", len(m.Report),
+				len(first.Report))
+		}
+		for i := range m.Report {
+			if !reflect.DeepEqual(m.Report[i], first.Report[i]) {
+				t.Fatalf("report entry %d of a second generation = %+v, first %+v", i, m.Report[i], first.Report[i])
+			}
+		}
+	}
+}
+
+// With Report set, the module carries a report entry for every comparison: the
+// set, policy, and rule of its condition, where the condition stands, the
+// comparison as written, and for each pair of operand points the cell's
+// outcome and, for a value-dependent cell, the value rules of its template.
+func TestTheReportNamesTheCellAndTemplateOfEachComparison(t *testing.T) {
+	opt := DefaultOptions()
+	opt.Report = true
+	m, err := Generate(tenantWithSet(t, "DENY_UNLESS_PERMIT", "ALLOW", "resource.a < 5"), table(t), opt)
+	if err != nil {
+		t.Fatalf("Generate: %v", err)
+	}
+	var leaf *LeafReport
+	for i, r := range m.Report {
+		if r.Place == spectables.PlaceRuleCondition {
+			leaf = &m.Report[i]
+		}
+	}
+	if leaf == nil {
+		t.Fatalf("the report has no rule condition: %+v", m.Report)
+	}
+	if got, want := [4]string{leaf.Set, leaf.Policy, leaf.Rule, leaf.Leaf}, [4]string{"s1", "p1", "r1", "resource.a < 5"}; got != want {
+		t.Errorf("set, policy, rule, and leaf of the rule condition = %q, want %q", got, want)
+	}
+	num := spectables.Point{Kind: spectables.KindLitNum, State: spectables.StateValue, Class: spectables.ClassScalar}
+	want := map[spectables.Point]CellReport{
+		{Kind: spectables.KindResPath, State: spectables.StateValue, Class: spectables.ClassString}: {
+			Outcome: spectables.OutcomeByValue, Template: "rel"},
+		{Kind: spectables.KindResPath, State: spectables.StateAbsent}: {Outcome: spectables.OutcomeF},
+	}
+	for _, c := range leaf.Cells {
+		w, ok := want[c.Left]
+		if !ok {
+			continue
+		}
+		delete(want, c.Left)
+		if c.Right != num || c.Outcome != w.Outcome || c.Template != w.Template {
+			t.Errorf("cell at %+v = %+v, want right %+v, outcome %s, template %q", c.Left, c, num, w.Outcome,
+				w.Template)
+		}
+	}
+	for p := range want {
+		t.Errorf("the report has no cell at %+v", p)
+	}
+	m2, err := Generate(tenantWithSet(t, "DENY_UNLESS_PERMIT", "ALLOW", "resource.a < 5"), table(t), DefaultOptions())
+	if err != nil {
+		t.Fatalf("Generate without Report: %v", err)
+	}
+	if len(m2.Report) != 0 {
+		t.Errorf("without Report the module carries %d report entries, want none", len(m2.Report))
+	}
+}
+
+// The report places each comparison: a set target, a policy target, the
+// condition of a simplified policy, a comparison over an undeclared PIP with
+// no cells, and the comparisons of the copy of the tree that subject allowed
+// reads, after which the next comparison of the same condition is the tree's
+// own again. A by_value cell names its template, including a fixed one for
+// two literals and single_odd for a SINGLE_ODD list.
+func TestTheReportPlacesEachComparison(t *testing.T) {
+	sets := `{"policySets": [
+		{"policySetId": "s1", "name": "s1", "status": "ACTIVE", "target": "resourceType == 'doc'",
+		 "combiningAlgorithm": "DENY_UNLESS_PERMIT", "tenantId": "t1",
+		 "policies": [{"policyId": "p1", "target": "resource.t == 'y'", "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+			"tenantId": "t1", "rules": [
+				{"ruleId": "r1", "target": "operation == 'read'",
+				 "condition": "subject allowed 'write' on resource AND resource.a < 5", "effect": "ALLOW",
+				 "tenantId": "t1"},
+				{"ruleId": "r2", "target": "operation == 'write'", "condition": "subject.g IS SUBSET resource.b",
+				 "effect": "ALLOW", "tenantId": "t1"},
+				{"ruleId": "r3", "target": "operation == 'read'", "condition": "subject.nope == 'x'",
+				 "effect": "ALLOW", "tenantId": "t1"}]}]},
+		{"policySetId": "s2", "name": "s2", "status": "ACTIVE", "type": "SIMPLIFIED",
+		 "target": "resourceType == 'note'", "combiningAlgorithm": "DENY_UNLESS_PERMIT", "tenantId": "t1",
+		 "policies": [{"policyId": "p2", "target": "operation == 'read'", "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+			"tenantId": "t1", "rules": [{"ruleId": "r4", "target": "subject.roles CONTAINS ANY 'reader'",
+				"condition": "resource.c == 'x'", "effect": "ALLOW", "tenantId": "t1"}]}]}]}`
+	exp, err := policyir.FromRegular([]byte(sets),
+		[]byte(`{"pips": [{"tenantId": "t1", "name": "subject.g", "pipType": "GENERAL", "url": "http://g"}]}`))
+	if err != nil {
+		t.Fatalf("FromRegular: %v", err)
+	}
+	opt := DefaultOptions()
+	opt.Report = true
+	m, err := Generate(exp.Trees["t1"], table(t), opt)
+	if err != nil {
+		t.Fatalf("Generate: %v", err)
+	}
+	type where struct {
+		set, policy, rule string
+		place             spectables.Place
+		operation         string
+		depth             int
+		leaf              string
+	}
+	entries := map[where]LeafReport{}
+	for _, r := range m.Report {
+		entries[where{r.Set, r.Policy, r.Rule, r.Place, r.Operation, r.Depth, r.Leaf}] = r
+	}
+	for _, w := range []where{
+		{"s1", "", "", spectables.PlaceSetTarget, "", 0, `resourceType == "doc"`},
+		{"s1", "p1", "", spectables.PlacePolicyTarget, "", 0, `resource.t == "y"`},
+		{"s2", "r4", "", spectables.PlaceSimplified, "", 0, `resource.c == "x"`},
+		{"s1", "p1", "r1", spectables.PlaceRuleCondition, "write", 1, "resource.a < 5"},
+		{"s1", "p1", "r1", spectables.PlaceRuleCondition, "", 0, "resource.a < 5"},
+	} {
+		if _, ok := entries[w]; !ok {
+			t.Errorf("the report has no entry %+v", w)
+		}
+	}
+	undeclared := where{"s1", "p1", "r3", spectables.PlaceRuleCondition, "", 0, `pip("subject.nope") == "x"`}
+	if r, ok := entries[undeclared]; !ok || len(r.Cells) != 0 {
+		t.Errorf("entry %+v = %+v, present %v; want one without cells", undeclared, r, ok)
+	}
+	template := func(w where, left spectables.State) string {
+		for _, c := range entries[w].Cells {
+			if c.Left.State == left {
+				return c.Template
+			}
+		}
+		return "no such cell"
+	}
+	copyTarget := where{"s1", "p1", "r1", spectables.PlaceRuleTarget, "write", 1, `operation == "read"`}
+	if got := template(copyTarget, spectables.StateValue); got != "two literals compared at generation" {
+		t.Errorf("template of %+v = %q, want two literals compared at generation", copyTarget, got)
+	}
+	odd := where{"s1", "p1", "r2", spectables.PlaceRuleCondition, "", 0, `pip("subject.g") IS SUBSET resource.b`}
+	if got := template(odd, spectables.StateSingleOdd); got != "single_odd,subset" {
+		t.Errorf("template of the SINGLE_ODD cell of %+v = %q, want single_odd,subset", odd, got)
 	}
 }

@@ -50,6 +50,8 @@ type Options struct {
 	// AccessDepth is the deepest nesting of subject allowed/denied that a copy
 	// of the tree answers; deeper, the leaf is a constant.
 	AccessDepth int
+	// Report fills [Module.Report].
+	Report bool
 }
 
 // DefaultOptions returns the settings the measurements of the prototype chose:
@@ -73,6 +75,9 @@ type Module struct {
 	Groups map[string]Group
 	// Stats counts what the generator produced.
 	Stats Stats
+	// Report holds the [LeafReport] of every comparison, when
+	// [Options.Report] is set.
+	Report []LeafReport
 
 	ixOnce sync.Once
 	ix     *groupIndex
@@ -143,6 +148,9 @@ type gen struct {
 
 	iterate []string
 	stats   Stats
+
+	where  whereNow
+	report []LeafReport
 }
 
 // Generate translates the policy tree of a tenant into one Rego module that
@@ -184,7 +192,7 @@ func Generate(tree *policyir.Tree, tab *spectables.Table, opt Options) (*Module,
 		}
 		allow = union(allow, d)
 	}
-	m := &Module{Refs: g.refList, IterateSets: g.iterate, Groups: g.groups}
+	m := &Module{Refs: g.refList, IterateSets: g.iterate, Groups: g.groups, Report: g.report}
 	m.Text = g.module(allow)
 	g.stats.Bytes = len(m.Text)
 	g.stats.AllowClauses = len(allow)
@@ -232,7 +240,10 @@ func (g *gen) fold(s string) string {
 
 func (g *gen) simplified(sg *policyir.SimplifiedGroup) (*node, error) {
 	n := &node{kind: kindSimplified, id: g.fresh("n")}
+	saved := g.where
+	defer func() { g.where = saved }()
 	for _, p := range sg.Policies {
+		g.where = whereNow{set: sg.ID, policy: p.ID}
 		var m clause
 		if sg.ResourceType != "ALL" {
 			if _, err := g.ref(policyir.ResourceType{}, spectables.KindResourceType, false); err != nil {
@@ -315,6 +326,9 @@ func (g *gen) set(s *policyir.PolicySet) (*node, error) {
 		return nil, fmt.Errorf("set %s is isolated: %s", s.ID, s.Isolated)
 	}
 	id := g.fresh("n")
+	saved := g.where
+	defer func() { g.where = saved }()
+	g.where = whereNow{set: s.ID}
 	tgt, err := g.cond(s.Target, spectables.PlaceSetTarget, "")
 	if err != nil {
 		return nil, err
@@ -348,12 +362,15 @@ func (g *gen) set(s *policyir.PolicySet) (*node, error) {
 }
 
 func (g *gen) policy(p *policyir.Policy) (*node, error) {
+	set := g.where.set
+	g.where = whereNow{set: set, policy: p.ID}
 	tgt, err := g.cond(p.Target, spectables.PlacePolicyTarget, "")
 	if err != nil {
 		return nil, err
 	}
 	n := &node{kind: kindPolicy, id: g.fresh("n"), alg: g.alg(p.Algorithm), tgt: tgt}
 	for _, r := range p.Rules {
+		g.where = whereNow{set: set, policy: p.ID, rule: r.ID}
 		rt, err := g.cond(r.Target, spectables.PlaceRuleTarget, "")
 		if err != nil {
 			return nil, err
@@ -406,6 +423,7 @@ func (g *gen) cond(c *policyir.Condition, place spectables.Place, effect policyi
 		ctx.Effect = spectables.EffectDeny
 	}
 	cc := &cond{g: g}
+	g.where.place = place
 	for _, d := range c.Disjuncts {
 		var leaves []leafRails
 		for _, a := range d {
