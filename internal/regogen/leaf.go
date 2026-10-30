@@ -161,8 +161,8 @@ func (g *gen) compare(c policyir.Compare, ctx spectables.Context) (leafRails, er
 			}
 			switch cell.Outcome {
 			case spectables.OutcomeUnsupported, spectables.OutcomeBadRequest:
-				return leafRails{}, fmt.Errorf("%s(%s %v, %s %v) at %s: the specification answers %s", op,
-					L.kind, lp, kindOf(R), rps[j], ctx.Place, cell.Outcome)
+				return leafRails{}, gap(FormSpecification, fmt.Errorf("%s(%s %v, %s %v) at %s: the specification answers %s",
+					op, L.kind, lp, kindOf(R), rps[j], ctx.Place, cell.Outcome))
 			}
 			cells[i][j] = cell
 		}
@@ -285,7 +285,7 @@ func (g *gen) byValue(rails *leafRails, op spectables.Operator, L, R *side, cell
 		}
 		if len(rest) != 1 || !slices.Contains(cell.Outcomes, spectables.OutcomeU) {
 			g.stats.NoTemplate[fmt.Sprintf("%s(%s %s, %s %s) odd", op, L.kind, lps[i].st, kindOf(R), rps[j].st)]++
-			return "", fmt.Errorf("%s: value-dependent cell in state %s × %s has no template", op, lps[i].st, rps[j].st)
+			return "", gap(FormGenerator, fmt.Errorf("%s: value-dependent cell in state %s × %s has no template", op, lps[i].st, rps[j].st))
 		}
 		// the other side reads as an empty list, so a collection rule
 		// compares the odd list with nothing, or with a resource list no
@@ -293,7 +293,7 @@ func (g *gen) byValue(rails *leafRails, op spectables.Operator, L, R *side, cell
 		if r, ok := uncovered(cell.ValueRule, spectables.RuleSingleOdd, spectables.RuleNullElementEnds,
 			spectables.RuleContainsAny, spectables.RuleInAny, spectables.RuleContainsRightAttributeList); ok {
 			g.stats.NoTemplate[fmt.Sprintf("%s(%s %s, %s %s) rule %s", op, L.kind, lps[i].st, kindOf(R), rps[j].st, r)]++
-			return "", fmt.Errorf("%s: value rule %s of a SINGLE_ODD cell has no template", op, r)
+			return "", gap(FormGenerator, fmt.Errorf("%s: value rule %s of a SINGLE_ODD cell has no template", op, r))
 		}
 		// the guard reads the odd list in its own state, so it states no
 		// fact of state VALUE, which would contradict that state
@@ -325,8 +325,8 @@ func (g *gen) byValue(rails *leafRails, op spectables.Operator, L, R *side, cell
 	}
 	if lp.st != spectables.StateValue || R != nil && rp.st != spectables.StateValue {
 		g.stats.NoTemplate[fmt.Sprintf("%s(%s %s, %s %s)", op, L.kind, lp.st, kindOf(R), rp.st)]++
-		return "", fmt.Errorf("%s(%s %s, %s %s): value-dependent cell in a state other than VALUE has no template", op,
-			L.kind, lp.st, kindOf(R), rp.st)
+		return "", gap(FormGenerator, fmt.Errorf("%s(%s %s, %s %s): value-dependent cell in a state other than VALUE has no template", op,
+			L.kind, lp.st, kindOf(R), rp.st))
 	}
 	if L.ref == nil && L.lit != nil && R != nil && R.ref == nil {
 		// both values known at generation: a copy of the tree for one
@@ -338,7 +338,7 @@ func (g *gen) byValue(rails *leafRails, op spectables.Operator, L, R *side, cell
 		}
 		if !ok {
 			g.stats.NoTemplate[fmt.Sprintf("%s(%s, %s) of two literals", op, L.kind, R.kind)]++
-			return "", fmt.Errorf("%s(%s, %s): no constant template", op, L.kind, R.kind)
+			return "", gap(FormGenerator, fmt.Errorf("%s(%s, %s): no constant template", op, L.kind, R.kind))
 		}
 		if v {
 			rails.t = union(rails.t, dnfTrue)
@@ -356,8 +356,8 @@ func (g *gen) byValue(rails *leafRails, op spectables.Operator, L, R *side, cell
 		// right_list_scalar_ops has not seen a longer one
 		g.stats.NoTemplate[fmt.Sprintf("%s(%s %s, %s %s) without rule %s", op, L.kind, lp.cl, kindOf(R), rp.cl,
 			spectables.RuleRightListScalarOps)]++
-		return "", fmt.Errorf("%s(%s %s, %s %s): a list on the right without rule %s has no template", op, L.kind,
-			lp.cl, kindOf(R), rp.cl, spectables.RuleRightListScalarOps)
+		return "", gap(FormGenerator, fmt.Errorf("%s(%s %s, %s %s): a list on the right without rule %s has no template", op, L.kind,
+			lp.cl, kindOf(R), rp.cl, spectables.RuleRightListScalarOps))
 	}
 	if ok && slices.Contains(cell.ValueRule, spectables.RuleRightListScalarOps) {
 		if err := g.rightListScalarOps(&tp, R, rp); err != nil {
@@ -382,11 +382,11 @@ func (g *gen) byValue(rails *leafRails, op spectables.Operator, L, R *side, cell
 	}
 	if ok && slices.Contains(cell.Outcomes, spectables.OutcomeU) && !tp.undefined {
 		g.stats.NoTemplate[fmt.Sprintf("%s(%s %s, %s %s) with U", op, L.kind, lp.cl, kindOf(R), rp.cl)]++
-		return "", fmt.Errorf("%s: value-dependent cell with an undefined outcome has no template", op)
+		return "", gap(FormGenerator, fmt.Errorf("%s: value-dependent cell with an undefined outcome has no template", op))
 	}
 	if ok && tp.undefined && !slices.Contains(cell.Outcomes, spectables.OutcomeU) {
 		g.stats.NoTemplate[fmt.Sprintf("%s(%s %s, %s %s) without U", op, L.kind, lp.cl, kindOf(R), rp.cl)]++
-		return "", fmt.Errorf("%s: the template leaves a value undefined where the cell has no undefined outcome", op)
+		return "", gap(FormGenerator, fmt.Errorf("%s: the template leaves a value undefined where the cell has no undefined outcome", op))
 	}
 	if tp.undefined {
 		rails.threeValued = true
@@ -398,8 +398,8 @@ func (g *gen) byValue(rails *leafRails, op spectables.Operator, L, R *side, cell
 	}
 	if !ok {
 		g.stats.NoTemplate[fmt.Sprintf("%s(%s %s, %s %s)", op, L.kind, lp.cl, kindOf(R), rp.cl)]++
-		return "", fmt.Errorf("%s(%s %s, %s %s): no template for a value-dependent cell", op, L.kind, lp.cl,
-			kindOf(R), rp.cl)
+		return "", gap(FormGenerator, fmt.Errorf("%s(%s %s, %s %s): no template for a value-dependent cell", op, L.kind, lp.cl,
+			kindOf(R), rp.cl))
 	}
 	have := slices.Collect(maps.Keys(tp.rules))
 	if oddL || oddR {
@@ -407,7 +407,7 @@ func (g *gen) byValue(rails *leafRails, op spectables.Operator, L, R *side, cell
 	}
 	if r, bad := uncovered(cell.ValueRule, have...); bad {
 		g.stats.NoTemplate[fmt.Sprintf("%s(%s %s, %s %s) rule %s", op, L.kind, lp.cl, kindOf(R), rp.cl, r)]++
-		return "", fmt.Errorf("%s(%s %s, %s %s): value rule %s has no template", op, L.kind, lp.cl, kindOf(R), rp.cl, r)
+		return "", gap(FormGenerator, fmt.Errorf("%s(%s %s, %s %s): value rule %s has no template", op, L.kind, lp.cl, kindOf(R), rp.cl, r))
 	}
 	// same reports whether the template's true rows are the same at every
 	// point of s whose record carries the fields they read, with the other

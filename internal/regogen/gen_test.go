@@ -17,6 +17,7 @@ package regogen
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -1444,5 +1445,197 @@ func TestTheReportPlacesEachComparison(t *testing.T) {
 	odd := where{"s1", "p1", "r2", spectables.PlaceRuleCondition, "", 0, `pip("subject.g") IS SUBSET resource.b`}
 	if got := template(odd, spectables.StateSingleOdd); got != "single_odd,subset" {
 		t.Errorf("template of the SINGLE_ODD cell of %+v = %q, want single_odd,subset", odd, got)
+	}
+}
+
+// A tree with a form the agent cannot execute is rejected as a whole, and the
+// error lists every such form with its place, so that no form runs in part;
+// the same tree without them generates.
+func TestAFormTheAgentCannotExecuteRejectsTheTenant(t *testing.T) {
+	sets := `{"policySets": [{"policySetId": "s1", "name": "s1", "status": "ACTIVE",
+		"target": "resourceType == 'doc'", "combiningAlgorithm": "DENY_UNLESS_PERMIT", "tenantId": "t1",
+		"policies": [{"policyId": "p1", "target": "true", "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+			"tenantId": "t1", "rules": [{"ruleId": "r1", "target": %q,
+				"condition": %q, "effect": "ALLOW", "tenantId": "t1"}]}]}]}`
+	generate := func(target, condition string) (*Module, error) {
+		exp, err := policyir.FromRegular([]byte(fmt.Sprintf(sets, target, condition)), []byte(`{"pips": []}`))
+		if err != nil {
+			t.Fatalf("FromRegular: %v", err)
+		}
+		return Generate(exp.Trees["t1"], table(t), DefaultOptions())
+	}
+	_, err := generate("operation == == 'read'", "resource.a[(@.length-1)] == 'x'")
+	var rej *RejectedError
+	if !errors.As(err, &rej) {
+		t.Fatalf("Generate error = %v, want a *RejectedError", err)
+	}
+	want := []Rejection{
+		{`set "s1" > policy "p1" > rule "r1" > target`, policyir.FormSyntax, "operation == == 'read'"},
+		{`set "s1" > policy "p1" > rule "r1" > condition`, policyir.FormJSONPath, "resource.a[(@.length-1)]"},
+	}
+	if !reflect.DeepEqual(rej.Rejections, want) {
+		t.Errorf("Rejections = %+v, want %+v", rej.Rejections, want)
+	}
+	if _, err := generate("operation == 'read'", "resource.a == 'x'"); err != nil {
+		t.Errorf("Generate without the forms: %v, want no error", err)
+	}
+}
+
+// A comparison the generator does not translate rejects the tenant too, and
+// the rejection names the place of its condition.
+func TestAComparisonWithoutATemplateRejectsTheTenantAtItsPlace(t *testing.T) {
+	const cell = `{"op":"LT","left":{"kind":"res:path","state":"VALUE","class":"s"},` +
+		`"right":{"kind":"res:path","state":"VALUE","class":"s"},"outcome":"by_value","outcomes":["T","F"],"value_rule":[`
+	tab := editedTable(t, cell+`"rel"]}`, cell+`"array_eq"]}`)
+	_, err := Generate(tenantWithSet(t, "DENY_UNLESS_PERMIT", "ALLOW", "resource.a < resource.b"), tab,
+		DefaultOptions())
+	var rej *RejectedError
+	if !errors.As(err, &rej) || len(rej.Rejections) != 1 {
+		t.Fatalf("Generate error = %v, want a *RejectedError with one rejection", err)
+	}
+	r := rej.Rejections[0]
+	if r.Where != `set "s1" > policy "p1" > rule "r1" > rule_condition` || r.Form != FormGenerator {
+		t.Errorf("rejection = %+v, want one at the rule condition of r1 with form %s", r, FormGenerator)
+	}
+}
+
+// A set a damaged export leaves unusable fails as a source does under its
+// target, and the module lists it as a failure instead of taking the whole
+// tenant out of service. Here the two sets of one policySetId would each
+// permit alone, being PERMIT_UNLESS_DENY without policies; isolated, they
+// deny under their targets, and the tenant's other set answers as usual.
+func TestAnIsolatedSetFailsUnderItsTargetOnly(t *testing.T) {
+	sets := `{"policySets": [
+		{"policySetId": "s", "status": "ACTIVE", "target": "resourceType == 'r1'", "tenantId": "t1",
+		 "combiningAlgorithm": "PERMIT_UNLESS_DENY"},
+		{"policySetId": "s", "status": "ACTIVE", "target": "resourceType == 'r2'", "tenantId": "t1",
+		 "combiningAlgorithm": "PERMIT_UNLESS_DENY"},
+		{"policySetId": "ok", "status": "ACTIVE", "target": "resourceType == 'other'",
+		 "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+		 "tenantId": "t1", "policies": [{"policyId": "p", "target": "true", "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+			"tenantId": "t1", "rules": [{"ruleId": "r", "target": "true", "effect": "ALLOW", "tenantId": "t1"}]}]}]}`
+	exp, err := policyir.FromRegular([]byte(sets), []byte(`{"pips": []}`))
+	if err != nil {
+		t.Fatalf("FromRegular: %v", err)
+	}
+	m, err := Generate(exp.Trees["t1"], table(t), DefaultOptions())
+	if err != nil {
+		t.Fatalf("Generate: %v", err)
+	}
+	reason := "isolated: the tenant has 2 top-level sets with this policySetId"
+	if want := []Failure{{Set: "s", Reason: reason}}; !reflect.DeepEqual(m.Failures, want) {
+		t.Errorf("Failures = %+v, want %+v", m.Failures, want)
+	}
+	for _, tc := range []struct {
+		resourceType string
+		want         bool
+	}{{"r1", false}, {"r2", false}, {"other", true}} {
+		if got := evalModule(t, m, Request{Operation: "read", ResourceType: tc.resourceType}); got != tc.want {
+			t.Errorf("allow(read %s) = %v, want %v", tc.resourceType, got, tc.want)
+		}
+	}
+	single := `{"policySets": [{"policySetId": "s", "status": "ACTIVE", "target": "resourceType == 'r1'",
+		"tenantId": "t1", "combiningAlgorithm": "PERMIT_UNLESS_DENY"}]}`
+	exp, err = policyir.FromRegular([]byte(single), []byte(`{"pips": []}`))
+	if err != nil {
+		t.Fatalf("FromRegular: %v", err)
+	}
+	if m, err = Generate(exp.Trees["t1"], table(t), DefaultOptions()); err != nil {
+		t.Fatalf("Generate of the set alone: %v", err)
+	}
+	if !evalModule(t, m, Request{Operation: "read", ResourceType: "r1"}) {
+		t.Errorf("allow(read r1) of the set alone = false, want true: only its isolation denies")
+	}
+}
+
+// A condition that reads a PIP the tenant declares more than once, or not at
+// all, reads a failed source: the comparison is undefined, so an ALLOW rule
+// does not permit, and the module lists the PIP as a failure. With one
+// declaration the same rule permits.
+func TestAnIsolatedOrUndeclaredPIPFails(t *testing.T) {
+	const tok = `{"name": "subject.x", "pipType": "TOKEN", "claim": "c"}`
+	for _, tc := range []struct {
+		name, pips string
+		want       bool
+		failures   []Failure
+	}{
+		{"one declaration", tok, true, nil},
+		{"two declarations", tok + ", " + tok, false,
+			[]Failure{{Set: "s1", PIP: "subject.x", Reason: "isolated: declared 2 times"}}},
+		{"no declaration", "", false, []Failure{{Set: "s1", PIP: "subject.x", Reason: "not declared"}}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			tree := tenantWithSetAndPIPs(t, "DENY_UNLESS_PERMIT", "ALLOW", "subject.x == 'v'", tc.pips)
+			m, err := Generate(tree, table(t), DefaultOptions())
+			if err != nil {
+				t.Fatalf("Generate: %v", err)
+			}
+			if !reflect.DeepEqual(m.Failures, tc.failures) {
+				t.Errorf("Failures = %+v, want %+v", m.Failures, tc.failures)
+			}
+			values := map[string]Resolved{`["subj","x"]`: resolved(t, "VALUE", `"v"`)}
+			if got := evalModule(t, m, Request{Operation: "read", ResourceType: "doc", Values: values}); got != tc.want {
+				t.Errorf("allow(subject.x = v) = %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
+
+// A set the legacy service never evaluates, such as one whose iterate runs
+// over something other than the permission scope, is listed as a failure too.
+func TestASetLegacyNeverEvaluatesIsAFailure(t *testing.T) {
+	sets := `{"policySets": [{"policySetId": "s", "status": "ACTIVE", "target": "resourceType == 'doc'",
+		"tenantId": "t1", "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+		"iterate": {"foreach": "subject.roles", "combiningAlgorithm": "DENY_UNLESS_PERMIT"}}]}`
+	exp, err := policyir.FromRegular([]byte(sets), []byte(`{"pips": []}`))
+	if err != nil {
+		t.Fatalf("FromRegular: %v", err)
+	}
+	m, err := Generate(exp.Trees["t1"], table(t), DefaultOptions())
+	if err != nil {
+		t.Fatalf("Generate: %v", err)
+	}
+	if want := []Failure{{Set: "s", Reason: `iterate foreach "subject.roles"`}}; !reflect.DeepEqual(m.Failures, want) {
+		t.Errorf("Failures = %+v, want %+v", m.Failures, want)
+	}
+}
+
+// A comparison the generator cannot translate inside the copy of the tree
+// that subject allowed reads rejects the tenant once, placed in that copy.
+func TestARejectionInACopyOfTheTreeNamesTheCopy(t *testing.T) {
+	const cell = `{"op":"LT","left":{"kind":"res:path","state":"VALUE","class":"s"},` +
+		`"right":{"kind":"res:path","state":"VALUE","class":"s"},"outcome":"by_value","outcomes":["T","F"],"value_rule":[`
+	tab := editedTable(t, cell+`"rel"]}`, cell+`"array_eq"]}`)
+	sets := `{"policySets": [{"policySetId": "s1", "name": "s1", "status": "ACTIVE",
+		"target": "resourceType == 'doc'", "combiningAlgorithm": "DENY_UNLESS_PERMIT", "tenantId": "t1",
+		"policies": [{"policyId": "p1", "target": "true", "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+			"tenantId": "t1", "rules": [
+				{"ruleId": "r1", "target": "operation == 'read'", "condition": "subject allowed 'write' on resource",
+				 "effect": "ALLOW", "tenantId": "t1"},
+				{"ruleId": "r2", "target": "operation == 'write'", "condition": "resource.a < resource.b",
+				 "effect": "ALLOW", "tenantId": "t1"}]}]}]}`
+	exp, err := policyir.FromRegular([]byte(sets), []byte(`{"pips": []}`))
+	if err != nil {
+		t.Fatalf("FromRegular: %v", err)
+	}
+	_, err = Generate(exp.Trees["t1"], tab, DefaultOptions())
+	var rej *RejectedError
+	if !errors.As(err, &rej) || len(rej.Rejections) != 1 {
+		t.Fatalf("Generate error = %v, want a *RejectedError with one rejection", err)
+	}
+	want := `set "s1" > policy "p1" > rule "r2" > rule_condition > (subject allowed "write")`
+	if r := rej.Rejections[0]; r.Where != want || r.Form != FormGenerator {
+		t.Errorf("rejection = %+v, want one at %s with form %s", r, want, FormGenerator)
+	}
+}
+
+// An export whose knob holds a value the generator does not know is a defect
+// of the export, not a form of the tenant, so the error is no rejection.
+func TestAnUnknownKnobValueIsNoRejection(t *testing.T) {
+	tab := editedTable(t, `"string_list_split": "SPLIT_TRIM"`, `"string_list_split": "BY_HAND"`)
+	_, err := Generate(tenantWithSet(t, "DENY_UNLESS_PERMIT", "ALLOW", "resource.a IN 'x', 'y'"), tab, DefaultOptions())
+	var rej *RejectedError
+	if err == nil || errors.As(err, &rej) {
+		t.Errorf("Generate error = %v, want an error that is not a *RejectedError", err)
 	}
 }

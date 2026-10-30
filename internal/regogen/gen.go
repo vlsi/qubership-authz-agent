@@ -15,6 +15,7 @@
 package regogen
 
 import (
+	"errors"
 	"fmt"
 	"maps"
 	"slices"
@@ -78,6 +79,9 @@ type Module struct {
 	// Report holds the [LeafReport] of every comparison, when
 	// [Options.Report] is set.
 	Report []LeafReport
+	// Failures lists the parts of the tenant the module reads as a permanent
+	// failure of their source, in the order the generator met them.
+	Failures []Failure
 
 	ixOnce sync.Once
 	ix     *groupIndex
@@ -149,21 +153,31 @@ type gen struct {
 	iterate []string
 	stats   Stats
 
-	where  whereNow
-	report []LeafReport
+	where    whereNow
+	report   []LeafReport
+	failures []Failure
 }
 
 // Generate translates the policy tree of a tenant into one Rego module that
 // answers check/resource as the profile agent of the specification does. The
-// leaves come from the agent profile of tab. An error names the first form the
-// generator cannot translate, and the module carries the statistics gathered
-// up to it.
+// leaves come from the agent profile of tab. A tree with a form the agent
+// cannot execute gives a [*RejectedError]; any other error is a defect of the
+// export or the generator. With an error, the module carries only the
+// statistics gathered up to it. A part of the tree that fails as a source does
+// generates, and [Module.Failures] lists it.
 func Generate(tree *policyir.Tree, tab *spectables.Table, opt Options) (*Module, error) {
 	g := &gen{tab: tab, tree: tree, opt: opt, refs: map[string]*Ref{}, rules: map[string]dnf{},
 		memo: map[string]string{}, counters: map[string]int{}, anyBodies: map[string]dnf{},
 		condMemo: map[string]*cond{}, decNames: map[string]string{}, decRoots: map[string]*node{},
 		groups: map[string]Group{}, groupIDs: map[string]string{}}
 	g.stats.NoTemplate = map[string]int{}
+	if fs := tree.Unsupported(); len(fs) > 0 {
+		rej := &RejectedError{}
+		for _, f := range fs {
+			rej.Rejections = append(rej.Rejections, Rejection{Where: f.Where, Form: f.Form, Text: f.Text})
+		}
+		return &Module{Stats: g.stats}, rej
+	}
 	nodes, ok := tab.Nodes(spectables.ProfileAgent)
 	if !ok {
 		return nil, fmt.Errorf("the export of schema version %d carries no node rules for profile %s",
@@ -192,7 +206,8 @@ func Generate(tree *policyir.Tree, tab *spectables.Table, opt Options) (*Module,
 		}
 		allow = union(allow, d)
 	}
-	m := &Module{Refs: g.refList, IterateSets: g.iterate, Groups: g.groups, Report: g.report}
+	m := &Module{Refs: g.refList, IterateSets: g.iterate, Groups: g.groups, Report: g.report,
+		Failures: g.failures}
 	m.Text = g.module(allow)
 	g.stats.Bytes = len(m.Text)
 	g.stats.AllowClauses = len(allow)
@@ -322,9 +337,6 @@ func (g *gen) effect(e policyir.Effect) (string, error) {
 }
 
 func (g *gen) set(s *policyir.PolicySet) (*node, error) {
-	if s.Isolated != "" {
-		return nil, fmt.Errorf("set %s is isolated: %s", s.ID, s.Isolated)
-	}
 	id := g.fresh("n")
 	saved := g.where
 	defer func() { g.where = saved }()
@@ -333,7 +345,12 @@ func (g *gen) set(s *policyir.PolicySet) (*node, error) {
 	if err != nil {
 		return nil, err
 	}
-	if s.AlwaysFails != "" {
+	if s.AlwaysFails != "" || s.Isolated != "" {
+		reason := s.AlwaysFails
+		if s.Isolated != "" {
+			reason = "isolated: " + s.Isolated
+		}
+		g.fail(Failure{Set: s.ID, Reason: reason})
 		return &node{kind: kindUnknown, id: id, tgt: tgt}, nil
 	}
 	if s.Iterate != nil {
@@ -429,6 +446,13 @@ func (g *gen) cond(c *policyir.Condition, place spectables.Place, effect policyi
 		for _, a := range d {
 			l, err := g.leaf(a, ctx)
 			if err != nil {
+				if rej := (*RejectedError)(nil); errors.As(err, &rej) {
+					return nil, err
+				}
+				if gp := (*gapError)(nil); errors.As(err, &gp) {
+					return nil, &RejectedError{Rejections: []Rejection{{Where: g.whereText(), Form: gp.form,
+						Text: fmt.Sprintf("%s: %v", policyir.FormatCondition(c), err)}}}
+				}
 				return nil, fmt.Errorf("%s: %w", policyir.FormatCondition(c), err)
 			}
 			g.stats.Leaves++

@@ -239,6 +239,11 @@ func (g *gen) operandKind(o policyir.Operand) (kind spectables.Kind, network, de
 		}
 		pip, ok := g.tree.PIP(o.Name)
 		if !ok {
+			g.fail(Failure{Set: g.where.set, PIP: o.Name, Reason: "not declared"})
+			return "", false, false, nil
+		}
+		if pip.Isolated != "" {
+			g.fail(Failure{Set: g.where.set, PIP: o.Name, Reason: "isolated: " + pip.Isolated})
 			return "", false, false, nil
 		}
 		switch pip.Type {
