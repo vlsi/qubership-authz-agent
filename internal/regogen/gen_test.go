@@ -1289,6 +1289,82 @@ func TestInWithLiteralsDoesNotGrowWithTheirNumber(t *testing.T) {
 	}
 }
 
+// CONTAINS ANY with literals takes one clause per literal for the attribute
+// classes whose keys it reads and one for those whose element tokens it reads:
+// the classes that read one field share a clause, which checks that the class
+// is one of them.
+func TestContainsAnyWithLiteralsTakesTwoClausesPerLiteral(t *testing.T) {
+	const condition = "resource.a CONTAINS ANY 'a', 'b', 'c', 'd', 'e'"
+	m, err := Generate(tenantWithSet(t, "DENY_UNLESS_PERMIT", "ALLOW", condition), table(t), DefaultOptions())
+	if err != nil {
+		t.Fatalf("Generate(%s): %v", condition, err)
+	}
+	if got := m.Stats.AllowClauses; got != 10 {
+		t.Errorf("allow clauses of %s = %d, want 10", condition, got)
+		t.Log(m.Text)
+	}
+}
+
+// The clauses CONTAINS ANY shares among attribute classes, on its true and
+// false rails, hold for a value of each class they join and for no list with
+// a null element, whose keys hold the literal too: a null element leaves
+// CONTAINS ANY undefined. A subject attribute joins a subject group, whose
+// evaluator reads the shared class check in Go.
+func TestAJoinedClassCheckAdmitsOnlyTheClassesItJoins(t *testing.T) {
+	grouped := DefaultOptions()
+	grouped.Groups = true
+	for _, operand := range []struct {
+		name, attribute, key string
+		opt                  Options
+	}{
+		{"a resource attribute", "resource.a", keyA, DefaultOptions()},
+		{"a subject attribute in a group", "subject.id", `["subj","id"]`, grouped},
+	} {
+		condition := operand.attribute + " CONTAINS ANY 'x', '5'"
+		for _, tc := range []struct {
+			name, value, want string
+		}{
+			{"a string literal", `"x"`, "T"},
+			{"a number literal", `5`, "T"},
+			{"a list holding a literal", `["w", "x"]`, "T"},
+			{"a list holding no literal", `["w"]`, "F"},
+			{"a list holding a literal and a null element", `[null, "x"]`, "U"},
+		} {
+			t.Run(operand.name+"/"+tc.name, func(t *testing.T) {
+				values := map[string]Resolved{operand.key: resolved(t, "VALUE", tc.value)}
+				if got := leafOutcome(t, condition, operand.opt, values); got != tc.want {
+					t.Errorf("%s with %s = %s is %s, want %s", condition, operand.attribute, tc.value, got, tc.want)
+				}
+			})
+		}
+	}
+}
+
+// A clause holds only where one class satisfies every class check of a
+// reference in it, a check that allows several classes included.
+func TestAClauseNeedsAClassEveryClassCheckAllows(t *testing.T) {
+	one := func(cl string) expr { return expr{fact: fact{ref: "r1", field: 't', val: cl}} }
+	some := func(cls ...string) expr { return expr{fact: fact{ref: "r1", field: 't', vals: cls}} }
+	for _, tc := range []struct {
+		name string
+		c    clause
+		want bool
+	}{
+		{"a class among those allowed", clause{some("l", "n", "s"), one("s")}, true},
+		{"a class outside those allowed", clause{some("l", "n", "s"), one("xo")}, false},
+		{"two sets that share a class", clause{some("l", "n"), some("n", "xo")}, true},
+		{"two sets that share no class", clause{some("l", "n", "s"), some("xl", "xo")}, false},
+		{"a set and a class of another reference", clause{some("l", "n"),
+			{fact: fact{ref: "r2", field: 't', val: "xo"}}}, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := consistent(tc.c); got != tc.want {
+				t.Errorf("consistent(%+v) = %v, want %v", tc.c, got, tc.want)
+			}
+		})
+	}
+}
+
 // The same tree and options give the same module byte for byte, the same
 // subject groups, and the same report, however Go orders its maps from one
 // run to the next.

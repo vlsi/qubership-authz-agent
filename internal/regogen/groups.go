@@ -31,7 +31,7 @@ type test struct {
 	kind string // a case of test.holds
 	ref  string // sroles for the roles a simplified policy matches
 	val  string
-	set  []string // a literal's keys; for IS SUBSET, the tokens of a literal on the right
+	set  []string // a literal's keys; for IS SUBSET, the tokens of a literal on the right; for clsin, the classes
 	ref2 string
 	// field and field2 name the list of the record of ref and of ref2 that
 	// has, nothas, none, overlap, and disjoint read: ks when empty, or ea or
@@ -335,6 +335,8 @@ func (t *test) holds(in *Input) bool {
 		return st == t.val
 	case "cls":
 		return cl == t.val
+	case "clsin":
+		return slices.Contains(t.set, cl)
 	case "eqref", "neref", "inref", "notinref":
 		ks2, k2 := in2()
 		switch t.kind {

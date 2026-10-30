@@ -35,7 +35,8 @@ type expr struct {
 	cls  int
 	text string
 	// fact records what the expression requires of one reference, so that a
-	// product can drop a clause that requires two states of it.
+	// product can drop a clause that requires two states, or classes that no
+	// value has at once, of it.
 	fact fact
 	// test is the expression as a subject-group test, or nil when the group
 	// evaluator does not know it.
@@ -45,11 +46,15 @@ type expr struct {
 }
 
 // fact is the requirement an expression puts on a reference: a state, a class
-// (which implies the state VALUE), or any value at all (state VALUE).
+// or one of several classes (which implies the state VALUE), or any value at
+// all (state VALUE).
 type fact struct {
 	ref   string
 	field byte // 's' state, 't' class, 'v' a value; 0 for no fact
 	val   string
+	// vals are the classes a field 't' allows when there are several; val is
+	// then empty.
+	vals []string
 }
 
 // clause is a conjunction of expressions without repeats.
@@ -127,16 +132,17 @@ func prod(a, b dnf, prune bool) dnf {
 	return union(out)
 }
 
-// consistent reports whether a clause can hold: one state and one class per
-// reference, and a value only in the state VALUE. A product of two leaves over
-// one reference often asks for two states at once; such a clause never holds
-// and only costs the compiler.
+// consistent reports whether a clause can hold: one state per reference, a
+// class that every class check of the reference allows, and a value only in
+// the state VALUE. A product of two leaves over one reference often asks for
+// two states at once; such a clause never holds and only costs the compiler.
 func consistent(c clause) bool {
 	type slot struct {
 		ref   string
 		field byte
 	}
 	seen := map[slot]string{}
+	classes := map[string][]string{}
 	set := func(ref string, field byte, v string) bool {
 		k := slot{ref, field}
 		if old, ok := seen[k]; ok {
@@ -153,9 +159,20 @@ func consistent(c clause) bool {
 				return false
 			}
 		case 't':
-			if !set(f.ref, 's', "VALUE") || !set(f.ref, 't', f.val) {
+			if !set(f.ref, 's', "VALUE") {
 				return false
 			}
+			vs := f.vals
+			if vs == nil {
+				vs = []string{f.val}
+			}
+			if old, ok := classes[f.ref]; ok {
+				vs = slices.DeleteFunc(slices.Clone(vs), func(v string) bool { return !slices.Contains(old, v) })
+				if len(vs) == 0 {
+					return false
+				}
+			}
+			classes[f.ref] = vs
 		case 'v':
 			if !set(f.ref, 's', "VALUE") {
 				return false

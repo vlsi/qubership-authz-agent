@@ -240,11 +240,57 @@ func (g *gen) compare(c policyir.Compare, ctx spectables.Context) (leafRails, er
 			}
 		}
 	}
+	for _, s := range []*side{L, R} {
+		rails.t, rails.f = joinClasses(rails.t, s), joinClasses(rails.f, s)
+	}
 	if g.opt.Report {
 		g.reportLeaf(leafText(), reportCells(L, R, lps, rps, cells, templates))
 	}
 	rails.subjectOnly = sideSubjectOnly(L) && (R == nil || sideSubjectOnly(R))
 	return rails, nil
+}
+
+// joinClasses replaces each set of clauses of d that are equal except for the
+// class they require of s with one clause that requires any of those classes,
+// so d holds for the same requests with fewer clauses. A template that reads
+// a field several classes share, such as ks, gives such a set: CONTAINS ANY
+// with literals writes a membership per literal for each class.
+func joinClasses(d dnf, s *side) dnf {
+	if s == nil || s.ref == nil || len(d) < 2 {
+		return d
+	}
+	type joined struct {
+		at      int
+		classes []string
+	}
+	out := make(dnf, 0, len(d))
+	var groups []*joined
+	byRest := map[string]int{}
+	for _, c := range d {
+		at := slices.IndexFunc(c, func(e expr) bool { return e.fact.field == 't' && e.fact.ref == s.ref.ID })
+		if at < 0 || c[at].fact.vals != nil {
+			out, groups = append(out, c), append(groups, nil)
+			continue
+		}
+		rest := slices.Delete(slices.Clone(c), at, at+1).key()
+		if k, ok := byRest[rest]; ok {
+			groups[k].classes = append(groups[k].classes, c[at].fact.val)
+			continue
+		}
+		byRest[rest] = len(out)
+		out, groups = append(out, c), append(groups, &joined{at: at, classes: []string{c[at].fact.val}})
+	}
+	for k, j := range groups {
+		if j == nil || len(j.classes) < 2 {
+			continue
+		}
+		slices.Sort(j.classes)
+		c := slices.Clone(out[k])
+		c[j.at] = expr{cls: c[j.at].cls, text: s.field("t") + " in " + setLit(j.classes),
+			fact: fact{ref: s.ref.ID, field: 't', vals: j.classes}, test: refTest(s, &test{kind: "clsin", set: j.classes})}
+		out[k] = c
+	}
+	return out
 }
 
 func rightAt(R *side, p point) clause {
