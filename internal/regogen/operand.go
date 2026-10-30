@@ -142,7 +142,20 @@ func literal(o policyir.Operand) (*litVal, error) {
 				items[i], num = it.Value, false
 			}
 		}
+		strs := true
+		for _, it := range o.Items {
+			if _, ok := it.(policyir.String); !ok {
+				strs = false
+			}
+		}
 		v = items
+		if strs && len(o.Items) > 1 && o.Raw != "" {
+			// the specification reads a list of two or more quoted strings
+			// from its token, split at every comma and trimmed as Java's
+			// String.trim does (string_list_split SPLIT_TRIM), so an item
+			// with a comma inside is two values
+			v = splitList(o.Raw)
+		}
 		switch {
 		case num && len(items) == 1:
 			kind = spectables.KindListNum1
@@ -288,4 +301,19 @@ func (g *gen) side(o policyir.Operand) (*side, error) {
 		return nil, err
 	}
 	return &side{kind: kind, ref: r}, nil
+}
+
+// splitList reads a token of quoted strings as the specification's
+// java_split_list does: quotes dropped, split at each comma, trailing empty
+// parts dropped, and each part trimmed of characters up to U+0020.
+func splitList(raw string) []jsonvalue.Value {
+	parts := strings.Split(strings.ReplaceAll(raw, "'", ""), ",")
+	for len(parts) > 0 && parts[len(parts)-1] == "" {
+		parts = parts[:len(parts)-1]
+	}
+	out := make([]jsonvalue.Value, len(parts))
+	for i, p := range parts {
+		out[i] = strings.TrimFunc(p, func(r rune) bool { return r <= ' ' })
+	}
+	return out
 }

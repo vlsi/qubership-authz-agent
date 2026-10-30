@@ -189,10 +189,9 @@ func template(op spectables.Operator, L, R *side, cl, cr spectables.Class) (tpl,
 			ends = L
 		}
 	case spectables.OpContainsAny:
-		if cl == spectables.ClassNullElement {
-			// With nulls on both sides the guard leaves the leaf undefined,
-			// where the specification compares the values: an open
-			// departure.
+		if cl == spectables.ClassNullElement && cr != spectables.ClassNullElement {
+			// with a null on both sides the values are compared, and a null
+			// equals nothing, so the keys without it decide
 			ends = L
 		}
 	}
@@ -324,13 +323,9 @@ func valueTemplate(op spectables.Operator, L, R *side, cl, cr spectables.Class) 
 			text: fmt.Sprintf("not regex.match(%s, %s)", lit(rx), L.field("raw")), fact: vfact(L)}})
 		return out(spectables.RuleMatch, dnf{t}, dnf{f})
 	case spectables.OpEQ:
-		if cl == spectables.ClassNullElement && cr == spectables.ClassList && lref && rref {
-			// a list with a null element never equals a list of scalars
-			b.use(L, "ks")
-			return out(spectables.RuleListEq, dnfFalse, dnf{conj(L.bind(), R.bind())})
-		}
+		// a null element is an element of the set too
 		listOrNested := func(c spectables.Class) bool {
-			return c == spectables.ClassList || c == spectables.ClassNested
+			return c == spectables.ClassList || c == spectables.ClassNested || c == spectables.ClassNullElement
 		}
 		if listOrNested(cl) && listOrNested(cr) && lref && rref {
 			// two lists are equal as sets of typed elements, a number by its

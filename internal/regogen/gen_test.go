@@ -443,11 +443,60 @@ func TestStructuresEqualByTheirElements(t *testing.T) {
 	}{
 		{"nested lists in another order are equal", `[["a"], "b"]`, `["b", ["a"]]`, true},
 		{"a list inside keeps its order", `[["a", "c"]]`, `[["c", "a"]]`, false},
+		{"lists with a null in another order are equal", `[null, "x"]`, `["x", null]`, true},
+		{"a list with a null differs from one without", `[null, "x"]`, `["x"]`, false},
 		{"objects with equal numbers are equal", `{"n": 1}`, `{"n": 1.0}`, true},
 		{"objects with strings in another case differ", `{"k": "V"}`, `{"k": "v"}`, false},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			tree := tenantWithSet(t, "DENY_UNLESS_PERMIT", "ALLOW", "resource.a == resource.b")
+			values := map[string]Resolved{keyA: resolved(t, "VALUE", tc.a), `["res",".b"]`: resolved(t, "VALUE", tc.b)}
+			if got := decideValues(t, tree, DefaultOptions(), values); got != tc.want {
+				t.Errorf("allow(resource.a = %s, resource.b = %s) = %v, want %v", tc.a, tc.b, got, tc.want)
+			}
+		})
+	}
+}
+
+// A literal list of two or more quoted strings splits at every comma, so an
+// item with a comma inside is two values; a list of one is not split.
+func TestALiteralListSplitsAtCommas(t *testing.T) {
+	for _, tc := range []struct {
+		name, condition, a string
+		want               bool
+	}{
+		{"a string with a comma is not in a split list", "resource.a IN 'a,b', 'x'", `"a,b"`, false},
+		{"a part of the split item is in it", "resource.a IN 'a,b', 'x'", `"a"`, true},
+		{"a list text with a comma is not in a split list", "resource.a IN '[null, abc]', 'x'", `[null, "abc"]`, false},
+		{"a list text without a comma is in it", "resource.a IN '[null]', 'x'", `[null]`, true},
+		{"a list of one item is not split", "resource.a IN 'a,b'", `"a,b"`, true},
+		{"each part is trimmed", "resource.a IN ' a', 'x'", `"a"`, true},
+		{"an empty part is kept", "resource.a IN 'a', ''", `""`, true},
+		{"a list of numbers is not read as text", "resource.a IN 1, 2", `2`, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			tree := tenantWithSet(t, "DENY_UNLESS_PERMIT", "ALLOW", tc.condition)
+			if got := decide(t, tree, DefaultOptions(), keyA, resolved(t, "VALUE", tc.a)); got != tc.want {
+				t.Errorf("allow(%s, resource.a = %s) = %v, want %v", tc.condition, tc.a, got, tc.want)
+			}
+		})
+	}
+}
+
+// CONTAINS ANY with a null element on both sides compares the values, and a
+// null equals nothing; with a null on the left only, it ends the rule, which
+// the agent reads as undefined.
+func TestContainsAnyWithNullsOnBothSidesCompares(t *testing.T) {
+	tree := tenantWithSet(t, "DENY_UNLESS_PERMIT", "ALLOW", "resource.a CONTAINS ANY resource.b")
+	for _, tc := range []struct {
+		name, a, b string
+		want       bool
+	}{
+		{"a common value allows", `[null, "x"]`, `[null, "x"]`, true},
+		{"no common value but the nulls denies", `[null, "y"]`, `[null, "x"]`, false},
+		{"a null on the left only is undefined and denies", `[null, "x"]`, `["x"]`, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
 			values := map[string]Resolved{keyA: resolved(t, "VALUE", tc.a), `["res",".b"]`: resolved(t, "VALUE", tc.b)}
 			if got := decideValues(t, tree, DefaultOptions(), values); got != tc.want {
 				t.Errorf("allow(resource.a = %s, resource.b = %s) = %v, want %v", tc.a, tc.b, got, tc.want)
