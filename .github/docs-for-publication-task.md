@@ -38,28 +38,30 @@ the repository.
 
 | Variable | Used by | Purpose |
 | --- | --- | --- |
-| `SONAR_PROJECT_KEY` | `go-build.yaml` → `generic-go-build.yaml` | SonarQube project key for code-quality scans |
-| `SONAR_ORGANIZATION` | inherited via `secrets: inherit` in `go-build.yaml` | SonarQube organisation (set at org level) |
-| `SONAR_HOST_URL` | inherited | SonarQube server URL (set at org level) |
+| `SONAR_PROJECT_KEY` | `go-build.yaml` | SonarQube project key for code-quality scans |
+| `SONAR_ORGANIZATION` | `go-build.yaml` | SonarQube organisation (set at org level) |
+| `SONAR_HOST_URL` | `go-build.yaml` | SonarQube server URL (set at org level) |
 
 ### Secrets (`secrets.*`)
 
 | Secret | Used by | Purpose |
 | --- | --- | --- |
-| `SONAR_TOKEN` | `go-build.yaml` → `generic-go-build.yaml` | Token to authenticate to SonarQube |
+| `SONAR_TOKEN` | `go-build.yaml` | Token to authenticate to SonarQube |
 | `CLA_ACCESS_TOKEN` | `cla.yaml` | Personal access token for the CLA assistant to write to `cla-storage` |
-| `GITHUB_TOKEN` | all release workflows | Automatically provided by GitHub Actions; no manual setup needed |
+| `GITHUB_TOKEN` | `go-build.yaml` and all release workflows | Automatically provided by GitHub Actions; no manual setup needed |
 
-`SONAR_*` variables and `SONAR_TOKEN` are typically configured at the organisation
-level and inherited by all repositories via `secrets: inherit`.  Verify that they
-are set for the organisation before the first CI run.
+`SONAR_ORGANIZATION`, `SONAR_HOST_URL`, and `SONAR_TOKEN` are typically configured at the
+organisation level and shared with the repository. Verify that this repository can read them
+before the first CI run. Without `SONAR_PROJECT_KEY`, `go-build.yaml` skips the
+Sonar analysis.
 
 ## Branch protection
 
 Apply the organisation's standard branch-protection rule to `main`:
 
 - Require PR reviews (at least 1 approver from CODEOWNERS)
-- Require status checks to pass (`CI gate` from `integration-tests.yaml`, `CI / Go` from `go-build.yaml`)
+- Require status checks to pass (`CI gate` from `integration-tests.yaml`, `Build gate` from `go-build.yaml`,
+  `Lint gate` from `super-linter.yaml`)
 - Require branches to be up to date before merging
 
 The organisation's `Netcracker/.github/config/Protect-main-branch.json` contains
@@ -67,16 +69,7 @@ the canonical rule configuration.
 
 ## Container registry
 
-Images are pushed to `ghcr.io/netcracker/` on release.  The release workflow uses
+Images are pushed to `ghcr.io/netcracker/` on release, and dev images on every push to `main` or
+`lts/**` and every pull request from a branch of this repository (`go-build.yaml`). Both workflows use
 `GITHUB_TOKEN` (automatic) for authentication to the GitHub Container Registry.
 No additional secrets are needed.
-
-## docker-dev-config.json discovery
-
-The shared `docker-build.yaml` reads `.github/docker-dev-config.json` and runs
-one Docker build per component entry using a matrix strategy.  The component
-array in this repository's `docker-dev-config.json` is handled in a single
-workflow run; no per-component config files are needed.  This was confirmed by
-reading `Netcracker/qubership-core-infra/.github/workflows/docker-build.yaml`
-at `71206242f5967ac6691337913593f8623863f711` (v2.5.2), which uses
-`matrix: component: ${{ fromJson(needs.load_config.outputs.components) }}`.

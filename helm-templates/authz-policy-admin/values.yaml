@@ -5,8 +5,7 @@ ARTIFACT_DESCRIPTOR_VERSION: ''
 TAG: ''
 # The stub's image without its tag, as the platform's charts name it; the
 # image is IMAGE_REPOSITORY:TAG. The default is the component
-# qubership-authz-policy-admin that .github/docker-dev-config.json and
-# .qubership/docker.cfg both list, published by the docker action under the
+# qubership-authz-policy-admin that .qubership/docker.cfg lists, published by the docker action under the
 # repository's owner on GHCR. The name is qubership- plus the service, as the
 # platform names its images, with no authz-agent- prefix: the stub is a
 # service of its own.

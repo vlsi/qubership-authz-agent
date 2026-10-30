@@ -63,7 +63,7 @@ The images are named as the platform names its images: `qubership-` plus the
 service, as in `ghcr.io/netcracker/qubership-authz-agent` and
 `ghcr.io/netcracker/qubership-authz-policy-admin`. On every push to `main` or an
 `lts/**` branch, and on every pull request from a branch of this repository, CI
-builds the five components of `.github/docker-dev-config.json` (the two
+builds the five components of `.qubership/docker.cfg` (the two
 services, the test stand's images, and the transfer image) and pushes them to
 ghcr.io; a pull request from a fork builds none of them. A release is cut by hand with the
 Docker Images Release workflow (`.github/workflows/docker-release.yaml`), which

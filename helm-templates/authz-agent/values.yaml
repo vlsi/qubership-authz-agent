@@ -5,8 +5,7 @@ ARTIFACT_DESCRIPTOR_VERSION: ''
 TAG: ''
 # The agent's image without its tag, as the platform's charts name it; the
 # image is IMAGE_REPOSITORY:TAG. The default is the component
-# qubership-authz-agent that .github/docker-dev-config.json and
-# .qubership/docker.cfg both list, published by the docker action under the
+# qubership-authz-agent that .qubership/docker.cfg lists, published by the docker action under the
 # repository's owner on GHCR. The name is qubership- plus the service, as the platform names
 # its images; for the agent that is also the repository's name.
 IMAGE_REPOSITORY: ghcr.io/netcracker/qubership-authz-agent
