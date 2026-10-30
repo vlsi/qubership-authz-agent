@@ -30,8 +30,8 @@ import (
 // The zero value is not the default; use [DefaultOptions].
 type Options struct {
 	// Package is the Rego package of the module; data.<Package>.allow is
-	// whether the request is allowed, and [Options.Decision] adds
-	// data.<Package>.decision.
+	// whether the request is allowed. [Options.Decision] adds a second module
+	// in the package <Package>_decision.
 	Package string
 	// Flat inlines a positive flag of a child into its parent, so that an
 	// ALLOW rule under neutral ancestors becomes one clause of allow. Without
@@ -54,14 +54,14 @@ type Options struct {
 	AccessDepth int
 	// Report fills [Module.Report].
 	Report bool
-	// Decision adds the rules decision and maybe to the module. decision is
+	// Decision fills [Module.DecisionText], a second module that a denial
+	// evaluates, so that the module of allow keeps its size. Its package is
+	// <Package>_decision, and it holds allow, maybe, and decision. maybe
+	// holds where the hi bound of some top-level node is permit. decision is
 	// permit where allow holds; unknown where it does not but maybe does, so
-	// the denial depends on a value or a source the agent could not read,
-	// a permanent failure of [Module.Failures] included (the root's lo and hi
-	// bounds differ); deny otherwise. maybe holds where the hi bound of some
-	// top-level node is permit. It is off by default: the hi bounds of every
-	// node grow the module, on the PROD corpus with subject groups from 16023
-	// to 28422 clauses in the largest module.
+	// the denial depends on a value or a source the agent could not read, a
+	// permanent failure of [Module.Failures] included (the root's lo and hi
+	// bounds differ); deny otherwise.
 	Decision bool
 }
 
@@ -82,6 +82,9 @@ type Module struct {
 	// Iterates is set when the module reads the passes of an iterate over
 	// subject.permissionScope, which [Project] takes from [Request.Scope].
 	Iterates bool
+	// DecisionText is the decision module, empty without
+	// [Options.Decision].
+	DecisionText string
 	// Groups are the subject groups of the module, by ID.
 	Groups map[string]Group
 	// Stats counts what the generator produced.
@@ -97,12 +100,16 @@ type Module struct {
 	ix     *groupIndex
 }
 
-// Stats counts what the generator produced.
+// Stats counts what the generator produced. Clauses, AllowClauses,
+// UnguardedAllow, Rules, and Bytes describe [Module.Text], the module of
+// allow.
 type Stats struct {
 	Leaves, ThreeValuedConds, Lookups            int
 	Clauses, AllowClauses, UnguardedAllow, Rules int
 	Materialized, AccessCopies, Iterates, Bytes  int
-	NoTemplate                                   map[string]int
+	// DecisionClauses counts the clauses of [Module.DecisionText].
+	DecisionClauses int
+	NoTemplate      map[string]int
 }
 
 type nodeKind int
@@ -169,6 +176,8 @@ type gen struct {
 	where    whereNow
 	report   []LeafReport
 	failures []Failure
+
+	uncertainMemo map[*node]bool
 }
 
 // Generate translates the policy tree of a tenant into one Rego module that
@@ -182,7 +191,7 @@ func Generate(tree *policyir.Tree, tab *spectables.Table, opt Options) (*Module,
 	g := &gen{tab: tab, tree: tree, opt: opt, refs: map[string]*Ref{}, rules: map[string]dnf{},
 		memo: map[string]string{}, counters: map[string]int{}, anyBodies: map[string]dnf{},
 		condMemo: map[string]*cond{}, decNames: map[string]string{}, decRoots: map[string]*node{},
-		groups: map[string]Group{}, groupIDs: map[string]string{}, params: map[string]bool{}}
+		groups: map[string]Group{}, groupIDs: map[string]string{}, params: map[string]bool{}, uncertainMemo: map[*node]bool{}}
 	g.stats.NoTemplate = map[string]int{}
 	if fs := tree.Unsupported(); len(fs) > 0 {
 		rej := &RejectedError{}
@@ -231,7 +240,10 @@ func Generate(tree *policyir.Tree, tab *spectables.Table, opt Options) (*Module,
 	}
 	m := &Module{Refs: g.refList, Iterates: g.stats.Iterates > 0, Groups: g.groups, Report: g.report,
 		Failures: g.failures}
-	m.Text = g.module(allow, maybe)
+	if g.opt.Decision {
+		m.DecisionText, g.stats.DecisionClauses = g.module(g.opt.Package+"_decision", allow, maybe, true)
+	}
+	m.Text, g.stats.Clauses = g.module(g.opt.Package, allow, nil, false)
 	g.stats.Bytes = len(m.Text)
 	g.stats.AllowClauses = len(allow)
 	for _, c := range allow {
@@ -572,12 +584,42 @@ func (g *gen) access(a policyir.Access) (leafRails, error) {
 		}
 		return dnf{{{cls: clsCheck, text: t, rule: r}}}
 	}
+	// a decision that reads no unknown value has hi equal to lo, so the leaf
+	// is two-valued and reads lo alone
+	hi, three := name+"_hiP", g.uncertain(g.decRoots[name])
+	if !three {
+		hi = name + "_loP"
+	}
 	if !a.Denied {
-		return leafRails{t: ref(name+"_loP", false), f: ref(name+"_hiP", true), threeValued: true}, nil
+		return leafRails{t: ref(name+"_loP", false), f: ref(hi, true), threeValued: three}, nil
 	}
 	// denied: deny is true, permit false, and not applicable is
 	// denied_without_decision, true
-	return leafRails{t: ref(name+"_hiP", true), f: ref(name+"_loP", false), threeValued: true}, nil
+	return leafRails{t: ref(hi, true), f: ref(name+"_loP", false), threeValued: three}, nil
+}
+
+// uncertain reports whether the lo and hi bounds of n can differ: a rule
+// condition at or below n is three-valued, or n or a node below it fails as a
+// source or iterates over a permission scope that may fail. A three-valued
+// target does not split the bounds, as an undefined target makes its node
+// deny on both.
+func (g *gen) uncertain(n *node) bool {
+	if u, ok := g.uncertainMemo[n]; ok {
+		return u
+	}
+	u := false
+	switch n.kind {
+	case kindUnknown, kindIterate:
+		u = true
+	case kindRule:
+		u = n.cond.three
+	case kindSimplified:
+		u = slices.ContainsFunc(n.simp, func(k simpKid) bool { return k.c.three })
+	default:
+		u = slices.ContainsFunc(n.kids, g.uncertain)
+	}
+	g.uncertainMemo[n] = u
+	return u
 }
 
 // T is the true rail: a clause per disjunct, the product of its leaves' true
@@ -726,8 +768,12 @@ func (g *gen) product(a, b dnf) dnf {
 // -- flags --------------------------------------------------------------------
 
 // flag returns the clauses that hold exactly when bound b (lo, hi) of node n
-// is x (P permit, D deny).
+// is x (P permit, D deny). The hi bound of a node no unknown value reaches
+// (uncertain) is its lo bound, and reads the same clauses.
 func (g *gen) flag(n *node, b, x string) (dnf, error) {
+	if b == "hi" && !g.uncertain(n) {
+		return g.flag(n, "lo", x)
+	}
 	if !g.opt.Flat && n.kind != kindRule {
 		body, err := g.flagBody(n, b, x)
 		if err != nil {
@@ -962,7 +1008,7 @@ func (g *gen) used(allow dnf) map[string]bool {
 
 // decisionText is the rule decision, as [Options.Decision] describes it.
 // Only a denial whose bounds differ is unknown: a failed value in a target
-// makes its node not applicable on both bounds, and the denial is deny.
+// makes its node deny on both bounds, and the denial is deny.
 const decisionText = `
 decision := "permit" if {
 	allow
@@ -998,26 +1044,28 @@ func clauseText(name string, c clause) string {
 	return b.String()
 }
 
-// module writes the text of the module: allow, and with [Options.Decision]
-// the rules maybe, which holds where some top-level node may permit (its hi
-// bound is permit), and decision.
-func (g *gen) module(allow, maybe dnf) string {
+// module writes the text of a module in package pkg and returns it with its
+// number of clauses: allow and the rules it reads, and with decision also the
+// rules maybe and decision and what maybe reads.
+func (g *gen) module(pkg string, allow, maybe dnf, decision bool) (string, int) {
 	var b strings.Builder
-	b.WriteString("package " + g.opt.Package + "\n\ndefault allow := false\n\n")
+	b.WriteString("package " + pkg + "\n\ndefault allow := false\n\n")
 	for _, c := range allow {
 		b.WriteString(clauseText("allow", c))
 	}
-	g.stats.Clauses = len(allow)
-	if g.opt.Decision {
+	clauses := len(allow)
+	if decision {
 		b.WriteString(decisionText)
 		b.WriteString("\ndefault maybe := false\n\n")
 		for _, c := range maybe {
 			b.WriteString(clauseText("maybe", c))
 		}
-		g.stats.Clauses += len(maybe)
+		clauses += len(maybe)
 	}
 	used := g.used(union(allow, maybe))
-	g.stats.Rules = len(used)
+	if !decision {
+		g.stats.Rules = len(used)
+	}
 	for _, name := range g.order {
 		if !used[name] {
 			continue
@@ -1046,7 +1094,7 @@ func (g *gen) module(allow, maybe dnf) string {
 			// clauses costs their product: the references go to an alias.
 			b.WriteString(clauseText(head, clause{{text: of(name + "__body")}}))
 			target = of(name + "__body")
-			g.stats.Clauses++
+			clauses++
 		}
 		for _, c := range body {
 			if len(c) == 0 && g.params[name] {
@@ -1055,7 +1103,7 @@ func (g *gen) module(allow, maybe dnf) string {
 			}
 			b.WriteString(clauseText(target, c))
 		}
-		g.stats.Clauses += len(body)
+		clauses += len(body)
 	}
-	return b.String()
+	return b.String(), clauses
 }

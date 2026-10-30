@@ -25,9 +25,11 @@
 //	regogen-corpus -bundles bundles.jsonl -out results.jsonl [-workers 4] [-reps 3] [-flat=false] [-groups]
 //	               [-budget 16] [-decision] [-limit N] [-only key,...] [-dump DIR] [-explain]
 //
-// With -decision the module carries the rule decision, and decision ==
-// "permit" is compared in place of allow; the bundles carry no oracle answer
-// for the split of a denial into unknown and deny.
+// With -decision the decision module is compiled beside the module of allow,
+// and a denied request also evaluates its maybe; the summary gives the
+// decision module's clauses and compilation, the time of a denial (allow and
+// maybe), and the count of denials that maybe makes unknown. The bundles carry
+// no oracle answer for that split.
 //
 // A request carries the resolved values of its operands and, where the bundle
 // has it, the resource document, which a lazily read resource path reads.
@@ -83,19 +85,25 @@ type request struct {
 }
 
 type result struct {
-	Key        string         `json:"key"`
-	Error      string         `json:"error,omitempty"`
-	Stage      string         `json:"stage,omitempty"`
-	Requests   int            `json:"requests"`
-	Mismatch   []string       `json:"mismatch,omitempty"`
-	ProjErrors []string       `json:"projErrors,omitempty"`
-	GenMs      float64        `json:"genMs"`
-	CompileMs  float64        `json:"compileMs"`
-	EvalUs     []float64      `json:"evalUs,omitempty"`
-	GroupsUs   []float64      `json:"groupsUs,omitempty"`
-	Stats      regogen.Stats  `json:"stats"`
-	Groups     int            `json:"groups"`
-	NoTemplate map[string]int `json:"noTemplate,omitempty"`
+	Key        string   `json:"key"`
+	Error      string   `json:"error,omitempty"`
+	Stage      string   `json:"stage,omitempty"`
+	Requests   int      `json:"requests"`
+	Mismatch   []string `json:"mismatch,omitempty"`
+	ProjErrors []string `json:"projErrors,omitempty"`
+	GenMs      float64  `json:"genMs"`
+	CompileMs  float64  `json:"compileMs"`
+	// DecisionCompileMs and DenyUs are the compilation of the decision
+	// module and the evaluation of each denied request, allow and maybe;
+	// EvalUs times allow alone.
+	DecisionCompileMs float64        `json:"decisionCompileMs,omitempty"`
+	DenyUs            []float64      `json:"denyUs,omitempty"`
+	Unknown           int            `json:"unknown,omitempty"`
+	EvalUs            []float64      `json:"evalUs,omitempty"`
+	GroupsUs          []float64      `json:"groupsUs,omitempty"`
+	Stats             regogen.Stats  `json:"stats"`
+	Groups            int            `json:"groups"`
+	NoTemplate        map[string]int `json:"noTemplate,omitempty"`
 }
 
 type ctxKey struct{}
@@ -232,18 +240,25 @@ func run(b bundle, tab *spectables.Table, opt regogen.Options, reps int, dumpDir
 		_ = os.WriteFile(dumpDir+"/"+strings.ReplaceAll(b.Key, "/", "_")+".rego", []byte(m.Text), 0o644)
 	}
 	t0 = time.Now()
-	query := "data." + opt.Package + ".allow"
-	if opt.Decision {
-		// the module permits exactly where decision is permit
-		query = "data." + opt.Package + ".decision == \"permit\""
-	}
-	opts := append([]func(*rego.Rego){rego.Query(query),
+	opts := append([]func(*rego.Rego){rego.Query("data." + opt.Package + ".allow"),
 		rego.Module("gen.rego", m.Text)}, stubs()...)
 	pq, err := rego.New(opts...).PrepareForEval(context.Background())
 	res.CompileMs = float64(time.Since(t0).Microseconds()) / 1000
 	if err != nil {
 		res.Stage, res.Error = "compile", err.Error()
 		return res
+	}
+	// a denial evaluates maybe of the decision module, compiled beside
+	var pqd rego.PreparedEvalQuery
+	if opt.Decision {
+		t0 = time.Now()
+		opts := append([]func(*rego.Rego){rego.Query("data." + opt.Package + "_decision.maybe"),
+			rego.Module("decision.rego", m.DecisionText)}, stubs()...)
+		if pqd, err = rego.New(opts...).PrepareForEval(context.Background()); err != nil {
+			res.Stage, res.Error = "compile decision", err.Error()
+			return res
+		}
+		res.DecisionCompileMs = float64(time.Since(t0).Microseconds()) / 1000
 	}
 	for _, q := range b.Requests {
 		rq, err := toRequest(q)
@@ -260,24 +275,41 @@ func run(b bundle, tab *spectables.Table, opt regogen.Options, reps int, dumpDir
 		}
 		v := in.Value()
 		ctx := in.Context(context.WithValue(context.Background(), ctxKey{}, in))
-		best := -1.0
-		var got bool
+		best, bestDeny := -1.0, -1.0
+		var got, maybe bool
 		for i := 0; i < reps; i++ {
 			e0 := time.Now()
 			rs, err := pq.Eval(ctx, rego.EvalParsedInput(v))
 			us := float64(time.Since(e0).Nanoseconds()) / 1000
+			deny := us
+			if err == nil {
+				got = len(rs) == 1 && rs[0].Expressions[0].Value == true
+				if !got && opt.Decision {
+					rs, err = pqd.Eval(ctx, rego.EvalParsedInput(v))
+					maybe = len(rs) == 1 && rs[0].Expressions[0].Value == true
+					deny = float64(time.Since(e0).Nanoseconds()) / 1000
+				}
+			}
 			if err != nil {
 				res.ProjErrors = append(res.ProjErrors, q.ID+": eval: "+err.Error())
 				best = -2
 				break
 			}
-			got = len(rs) == 1 && rs[0].Expressions[0].Value == true
 			if best < 0 || us < best {
 				best = us
+			}
+			if bestDeny < 0 || deny < bestDeny {
+				bestDeny = deny
 			}
 		}
 		if best == -2 {
 			continue
+		}
+		if !got && opt.Decision {
+			res.DenyUs = append(res.DenyUs, bestDeny)
+			if maybe {
+				res.Unknown++
+			}
 		}
 		res.EvalUs = append(res.EvalUs, best)
 		res.GroupsUs = append(res.GroupsUs, gUs)
@@ -377,7 +409,7 @@ func main() {
 	}
 	defer func() { _ = w.Close() }()
 	enc := json.NewEncoder(w)
-	var evals, groupUs, compiles []float64
+	var evals, groupUs, compiles, denies, dcompiles []float64
 	sum := map[string]int{}
 	noTpl := map[string]int{}
 	errClasses := map[string]int{}
@@ -417,6 +449,13 @@ func main() {
 			sum["max_clauses"] = r.Stats.Clauses
 		}
 		clauses = append(clauses, float64(r.Stats.Clauses))
+		sum["decision_clauses"] += r.Stats.DecisionClauses
+		sum["max_decision_clauses"] = max(sum["max_decision_clauses"], r.Stats.DecisionClauses)
+		sum["unknown"] += r.Unknown
+		denies = append(denies, r.DenyUs...)
+		if r.DecisionCompileMs > 0 {
+			dcompiles = append(dcompiles, r.DecisionCompileMs)
+		}
 		evals = append(evals, r.EvalUs...)
 		groupUs = append(groupUs, r.GroupsUs...)
 		compiles = append(compiles, r.CompileMs)
@@ -427,6 +466,7 @@ func main() {
 	s, _ := json.MarshalIndent(map[string]any{
 		"counts": sum, "table_load_ms": loadMs, "spec_tag": tab.SpecTag(),
 		"eval_us": q(evals), "project_us": q(groupUs), "compile_ms": q(compiles), "clauses": q(clauses),
+		"deny_eval_us": q(denies), "decision_compile_ms": q(dcompiles),
 		"errors": errClasses, "no_template": noTpl, "seconds": time.Since(t0).Seconds(),
 	}, "", " ")
 	fmt.Println(string(s))

@@ -114,11 +114,15 @@ func evalModule(t *testing.T, m *Module, req Request) bool {
 	return evalRule(t, m, req, "allow") == true
 }
 
-// evalRule compiles the module and evaluates rule for the request; nil when
-// the rule is undefined.
+// evalRule compiles the module and evaluates rule for the request, decision
+// and maybe from the module of Options.Decision; nil when the rule is
+// undefined.
 func evalRule(t *testing.T, m *Module, req Request, rule string) any {
 	t.Helper()
-	opt := DefaultOptions()
+	pkg, text := DefaultOptions().Package, m.Text
+	if rule == "decision" || rule == "maybe" {
+		pkg, text = pkg+"_decision", m.DecisionText
+	}
 	in, err := Project(m, req)
 	if err != nil {
 		t.Fatalf("Project: %v", err)
@@ -133,10 +137,10 @@ func evalRule(t *testing.T, m *Module, req Request, rule string) any {
 			}
 			return r, nil
 		})
-	pq, err := rego.New(append([]func(*rego.Rego){rego.Query("data." + opt.Package + "." + rule),
-		rego.Module("gen.rego", m.Text), pip}, Builtins()...)...).PrepareForEval(context.Background())
+	pq, err := rego.New(append([]func(*rego.Rego){rego.Query("data." + pkg + "." + rule),
+		rego.Module("gen.rego", text), pip}, Builtins()...)...).PrepareForEval(context.Background())
 	if err != nil {
-		t.Fatalf("PrepareForEval: %v\n%s", err, m.Text)
+		t.Fatalf("PrepareForEval: %v\n%s", err, text)
 	}
 	rs, err := pq.Eval(in.Context(context.Background()), rego.EvalParsedInput(in.Value()))
 	if err != nil {
@@ -1948,7 +1952,8 @@ func TestAnIterateInEveryFormOfTheModule(t *testing.T) {
 	}
 }
 
-// With Decision, the module also answers decision: permit where it allows,
+// With Decision, a second module answers decision, and the module of allow
+// keeps only allow: decision is permit where it allows,
 // deny where no node may permit, and unknown where the denial depends on a
 // value or a source the agent could not read. Every value known never gives
 // unknown, and one top-level node that permits decides beside an unknown one.
@@ -2006,6 +2011,9 @@ func TestTheDecisionTellsAnUnknownDenialApart(t *testing.T) {
 				}
 				req := Request{Operation: "read", ResourceType: "doc",
 					Values: map[string]Resolved{`["subj","g"]`: resolved(t, tc.state, tc.value)}}
+				if strings.Contains(m.Text, "maybe") {
+					t.Errorf("the module of allow holds maybe; the decision module should:\n%s", m.Text)
+				}
 				if got := evalRule(t, m, req, "decision"); got != tc.want {
 					t.Errorf("decision(subject.g = %s %s) = %v, want %s", tc.state, tc.value, got, tc.want)
 				}
@@ -2017,11 +2025,9 @@ func TestTheDecisionTellsAnUnknownDenialApart(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Generate without Decision: %v", err)
 	}
-	req := Request{Operation: "read", ResourceType: "doc",
-		Values: map[string]Resolved{`["subj","g"]`: resolved(t, "VALUE", `"x"`)}}
-	if got := evalRule(t, m, req, "decision"); got != nil || strings.Contains(m.Text, "maybe") {
-		t.Errorf("without Decision, decision = %v and the module mentions maybe: %v; want neither", got,
-			strings.Contains(m.Text, "maybe"))
+	if m.DecisionText != "" || strings.Contains(m.Text, "maybe") {
+		t.Errorf("without Decision, the decision module is %q and the module mentions maybe: %v; want neither",
+			m.DecisionText, strings.Contains(m.Text, "maybe"))
 	}
 }
 
@@ -2133,5 +2139,172 @@ func TestAJSONPathOperandIsReadFromTheResource(t *testing.T) {
 				}
 			})
 		}
+	}
+}
+
+// A node no unknown value reaches has its hi bound equal to its lo bound, so
+// with Decision the module reads the lo clauses for it: maybe has the clauses
+// of allow, and neither a rule of a hi bound nor the hi rule of a subject
+// allowed copy appears. A condition over a GENERAL PIP is the control that
+// keeps the hi bound.
+func TestAnAlwaysKnownTreeAddsNoHiBound(t *testing.T) {
+	sets := `{"policySets": [{"policySetId": "s1", "name": "s1", "status": "ACTIVE", "target": "resourceType == 'doc'",
+		"combiningAlgorithm": "DENY_UNLESS_PERMIT", "tenantId": "t1",
+		"policies": [{"policyId": "p1", "target": "true", "combiningAlgorithm": "DENY_OVERRIDES", "tenantId": "t1",
+			"rules": [
+				{"ruleId": "r1", "target": "operation == 'read'", "condition": "subject allowed 'write' on resource",
+				 "effect": "ALLOW", "tenantId": "t1"},
+				{"ruleId": "r2", "target": "operation == 'write'", "condition": %q, "effect": "ALLOW", "tenantId": "t1"},
+				{"ruleId": "r3", "target": "true", "condition": "resource.b == 'no'", "effect": "DENY",
+				 "tenantId": "t1"}]}]}]}`
+	for _, tc := range []struct {
+		name, condition string
+		hi              bool
+	}{
+		{"an attribute of the resource", "resource.a == 'w'", false},
+		{"a GENERAL PIP", "subject.g == 'w'", true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			exp, err := policyir.FromRegular([]byte(fmt.Sprintf(sets, tc.condition)),
+				[]byte(`{"pips": [{"tenantId": "t1", "name": "subject.g", "pipType": "GENERAL", "url": "http://g"}]}`))
+			if err != nil {
+				t.Fatalf("FromRegular: %v", err)
+			}
+			opt := DefaultOptions()
+			opt.Decision, opt.Flat = true, false
+			m, err := Generate(exp.Trees["t1"], table(t), opt)
+			if err != nil {
+				t.Fatalf("Generate: %v", err)
+			}
+			allow, maybe := strings.Count(m.Text, "\nallow if"), strings.Count(m.DecisionText, "\nmaybe if")
+			hiRules := strings.Contains(m.DecisionText, "_hiP") || strings.Contains(m.DecisionText, "_hiD")
+			if hiRules != tc.hi || !tc.hi && maybe != allow {
+				t.Errorf("module over %s: hi rules %v (want %v), %d maybe and %d allow clauses:\n%s", tc.condition,
+					hiRules, tc.hi, maybe, allow, m.DecisionText)
+			}
+		})
+	}
+}
+
+// Each source of an unknown value leaves a denial unknown with Decision: a
+// set a damaged export isolates, an iterate over a permission scope that
+// cannot be read, and a simplified policy over a failed PIP.
+func TestEachSourceOfAnUnknownLeavesTheDenialUnknown(t *testing.T) {
+	const pips = `{"pips": [{"tenantId": "t1", "name": "subject.g", "pipType": "GENERAL", "url": "http://g"}]}`
+	isolated := `{"policySets": [
+		{"policySetId": "s", "status": "ACTIVE", "target": "resourceType == 'doc'", "tenantId": "t1",
+		 "combiningAlgorithm": "PERMIT_UNLESS_DENY"},
+		{"policySetId": "s", "status": "ACTIVE", "target": "resourceType == 'other'", "tenantId": "t1",
+		 "combiningAlgorithm": "PERMIT_UNLESS_DENY"}]}`
+	simplified := `{"policySets": [{"policySetId": "s2", "name": "s2", "status": "ACTIVE", "type": "SIMPLIFIED",
+		"target": "resourceType == 'doc'", "combiningAlgorithm": "DENY_UNLESS_PERMIT", "tenantId": "t1",
+		"policies": [{"policyId": "p2", "target": "operation == 'read'", "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+			"tenantId": "t1", "rules": [{"ruleId": "r2", "target": "subject.roles CONTAINS ANY 'reader'",
+				"condition": "subject.g == 'x'", "effect": "ALLOW", "tenantId": "t1"}]}]}]}`
+	tree := func(sets string) *policyir.Tree {
+		exp, err := policyir.FromRegular([]byte(sets), []byte(pips))
+		if err != nil {
+			t.Fatalf("FromRegular: %v", err)
+		}
+		return exp.Trees["t1"]
+	}
+	for _, tc := range []struct {
+		name string
+		tree *policyir.Tree
+		req  Request
+	}{
+		{"an isolated set", tree(isolated), Request{Operation: "read", ResourceType: "doc"}},
+		{"an iterate over a failed scope", iterateTree(t, "DENY_UNLESS_PERMIT",
+			"subject.permissionScope.domain CONTAINS resource.domain"),
+			Request{Operation: "read", ResourceType: "doc", Scope: &Scope{Failed: true},
+				Values: map[string]Resolved{`["res",".domain"]`: resolved(t, "VALUE", `"d"`)}}},
+		{"a simplified policy over a failed PIP", tree(simplified),
+			Request{Operation: "read", ResourceType: "doc", Roles: []string{"reader"},
+				Values: map[string]Resolved{`["subj","g"]`: resolved(t, "ERROR", "")}}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			opt := DefaultOptions()
+			opt.Decision = true
+			m, err := Generate(tc.tree, table(t), opt)
+			if err != nil {
+				t.Fatalf("Generate: %v", err)
+			}
+			if got := evalRule(t, m, tc.req, "decision"); got != "unknown" {
+				t.Errorf("decision = %v, want unknown", got)
+			}
+		})
+	}
+}
+
+// subject denied reads the decision of a copy of the tree for another
+// operation. Over a copy that reads only known values the leaf is two-valued;
+// over one that reads a failed PIP the denial is unknown.
+func TestSubjectDeniedOverACopyOfTheTree(t *testing.T) {
+	sets := `{"policySets": [{"policySetId": "s1", "name": "s1", "status": "ACTIVE", "target": "resourceType == 'doc'",
+		"combiningAlgorithm": "DENY_UNLESS_PERMIT", "tenantId": "t1",
+		"policies": [{"policyId": "p1", "target": "true", "combiningAlgorithm": "DENY_UNLESS_PERMIT", "tenantId": "t1",
+			"rules": [
+				{"ruleId": "r1", "target": "operation == 'read'", "condition": "subject denied 'write' on resource",
+				 "effect": "ALLOW", "tenantId": "t1"},
+				{"ruleId": "r2", "target": "operation == 'write'", "condition": %q, "effect": "ALLOW",
+				 "tenantId": "t1"}]}]}]}`
+	for _, tc := range []struct {
+		name, condition, key, state, value, want string
+	}{
+		{"a known value the write permits", "resource.a == 'w'", keyA, "VALUE", `"w"`, "deny"},
+		{"a known value the write denies", "resource.a == 'w'", keyA, "VALUE", `"z"`, "permit"},
+		{"a PIP value the write permits", "subject.g == 'w'", `["subj","g"]`, "VALUE", `"w"`, "deny"},
+		{"a PIP value the write denies", "subject.g == 'w'", `["subj","g"]`, "VALUE", `"z"`, "permit"},
+		{"a failed PIP", "subject.g == 'w'", `["subj","g"]`, "ERROR", "", "unknown"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			exp, err := policyir.FromRegular([]byte(fmt.Sprintf(sets, tc.condition)),
+				[]byte(`{"pips": [{"tenantId": "t1", "name": "subject.g", "pipType": "GENERAL", "url": "http://g"}]}`))
+			if err != nil {
+				t.Fatalf("FromRegular: %v", err)
+			}
+			opt := DefaultOptions()
+			opt.Decision = true
+			m, err := Generate(exp.Trees["t1"], table(t), opt)
+			if err != nil {
+				t.Fatalf("Generate: %v", err)
+			}
+			req := Request{Operation: "read", ResourceType: "doc",
+				Values: map[string]Resolved{tc.key: resolved(t, tc.state, tc.value)}}
+			if got := evalRule(t, m, req, "decision"); got != tc.want {
+				t.Errorf("decision(%s with %s %s) = %v, want %s", tc.condition, tc.state, tc.value, got, tc.want)
+			}
+			if got := evalModule(t, m, req); got != (tc.want == "permit") {
+				t.Errorf("allow(%s with %s %s) = %v, want %v", tc.condition, tc.state, tc.value, got,
+					tc.want == "permit")
+			}
+		})
+	}
+}
+
+// Decision adds the decision module and leaves the module of allow and its
+// statistics as they are without it.
+func TestDecisionLeavesTheModuleOfAllowAlone(t *testing.T) {
+	tree := tenantWithSetAndPIPs(t, "DENY_OVERRIDES", "ALLOW",
+		"subject.roles CONTAINS 'admin' AND resource.a IN 'x', 'y' OR subject.g == 'z'", generalPIPs)
+	off, err := Generate(tree, table(t), DefaultOptions())
+	if err != nil {
+		t.Fatalf("Generate: %v", err)
+	}
+	opt := DefaultOptions()
+	opt.Decision = true
+	on, err := Generate(tree, table(t), opt)
+	if err != nil {
+		t.Fatalf("Generate with Decision: %v", err)
+	}
+	if on.Text != off.Text {
+		t.Errorf("the module of allow differs with Decision:\n%s\nwithout:\n%s", on.Text, off.Text)
+	}
+	if on.Stats.Clauses != off.Stats.Clauses || on.Stats.Rules != off.Stats.Rules || on.Stats.Bytes != off.Stats.Bytes {
+		t.Errorf("Stats with Decision %+v, without %+v; want equal clauses, rules, and bytes", on.Stats, off.Stats)
+	}
+	if on.Stats.DecisionClauses == 0 || off.Stats.DecisionClauses != 0 {
+		t.Errorf("DecisionClauses with Decision %d, without %d; want some and none", on.Stats.DecisionClauses,
+			off.Stats.DecisionClauses)
 	}
 }
