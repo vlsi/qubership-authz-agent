@@ -1257,3 +1257,23 @@ func TestAComparisonOfTheOperationWithLiteralsIsDecidedAtGeneration(t *testing.T
 		})
 	}
 }
+
+// IN with two or more literals is one membership clause for a scalar's key
+// and one for a structure's text, however many literals there are: a clause
+// per literal would grow the module with every value a condition lists. A
+// single literal is an equality instead, and is not compared here.
+func TestInWithLiteralsDoesNotGrowWithTheirNumber(t *testing.T) {
+	generate := func(condition string) *Module {
+		m, err := Generate(tenantWithSet(t, "DENY_UNLESS_PERMIT", "ALLOW", condition), table(t), DefaultOptions())
+		if err != nil {
+			t.Fatalf("Generate(%s): %v", condition, err)
+		}
+		return m
+	}
+	m5 := generate("resource.a IN 'a', 'b', 'c', 'd', 'e'")
+	two, five, m5text := generate("resource.a IN 'x', 'y'").Stats.AllowClauses, m5.Stats.AllowClauses, m5.Text
+	if five != two {
+		t.Errorf("allow clauses of IN with five literals = %d, want %d as with two", five, two)
+		t.Log(m5text)
+	}
+}
