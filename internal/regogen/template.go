@@ -526,6 +526,15 @@ func valueTemplate(op spectables.Operator, L, R *side, cl, cr spectables.Class) 
 		if rref {
 			rks = b.ks(R)
 		}
+		// With literals on one side, each literal gets a clause of its own,
+		// "k" in ks, because the OPA rule index files such a clause under k
+		// and skips it for a request whose ks lacks k. One clause for all
+		// literals, some x in ks; x in {...}, is a loop the index cannot file,
+		// so every request evaluates it. On the PROD corpus with subject groups
+		// it saved under 0.2 % of the clauses and made Eval p50 and p99 3 to 7 %
+		// slower on the bundles it changed. Without groups it cut the largest
+		// module from 82239 to 24254 clauses at equal Eval, so a form without
+		// groups may want it.
 		if !lref {
 			if !rref {
 				return tpl{}, false
