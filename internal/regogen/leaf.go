@@ -311,7 +311,8 @@ func (g *gen) byValue(rails *leafRails, op spectables.Operator, L, R *side, cell
 		// both values known at generation: a copy of the tree for one
 		// operation compares the operation with a literal
 		v, ok := constCompare(op, L, R)
-		if _, bad := uncovered(cell.ValueRule, spectables.RuleEq, spectables.RuleInAny, spectables.RuleMatch); bad {
+		if _, bad := uncovered(cell.ValueRule, spectables.RuleEq, spectables.RuleInAny, spectables.RuleMatch,
+			spectables.RuleRel, spectables.RuleSubset); bad {
 			ok = false
 		}
 		if !ok {
@@ -486,6 +487,13 @@ func constCompare(op spectables.Operator, L, R *side) (bool, bool) {
 	case spectables.OpIn:
 		if isScalar(L.lit.class) {
 			return slices.Contains(R.lit.keys, L.lit.key), true
+		}
+	case spectables.OpIsSubset:
+		t := &test{kind: "subset", sets: L.lit.sa, set: R.lit.sb}
+		return t.subsetHolds(nil), true
+	case spectables.OpLT, spectables.OpLE, spectables.OpGT, spectables.OpGE:
+		if isScalar(L.lit.class) && isScalar(R.lit.class) {
+			return relHolds(string(op), L.lit.num, R.lit.num), true
 		}
 	case spectables.OpMatch:
 		if R.isPattern() && L.lit.class == spectables.ClassString {

@@ -79,6 +79,15 @@ type Record struct {
 	// adds, for a list or an object, the token of its text, which a string
 	// equals it by.
 	EA, EB []string
+	// N is the number <, <=, >, and >= compare a string or a scalar by, nil
+	// for a value they read as no number.
+	N *jsonvalue.Decimal
+	// SA holds the tokens of each element of the value read as a list, and
+	// SB those of all its elements, as IS SUBSET compares them on the left
+	// and on the right (subsetLeft, subsetRight); set when the module reads
+	// them.
+	SA [][]string
+	SB []string
 }
 
 // Input is the projection of a request into the input of a module.
@@ -122,6 +131,7 @@ func record(r *Ref, v Resolved) Record {
 		}
 		rec.N0 = lv.State == legacyvalue.StateNullElement
 		rec.EA, rec.EB = elementTokens(v.Value)
+		rec.subset(r, v.Value)
 		return rec
 	}
 	if v.State != spectables.StateValue {
@@ -129,6 +139,7 @@ func record(r *Ref, v Resolved) Record {
 	}
 	if v.Value == nil {
 		rec.T = string(spectables.ClassNull)
+		rec.subset(r, nil)
 		return rec
 	}
 	lv := legacyvalue.Of(v.Value)
@@ -138,10 +149,12 @@ func record(r *Ref, v Resolved) Record {
 	}
 	rec.T = string(cl)
 	rec.EA, rec.EB = elementTokens(v.Value)
+	rec.subset(r, v.Value)
 	switch cl {
 	case spectables.ClassString, spectables.ClassScalar:
 		rec.K = lv.Key
 		rec.KS = []string{*lv.Key}
+		rec.N = lv.Number
 	default:
 		rec.KS = lv.Keys
 		if rec.KS == nil {
@@ -168,6 +181,15 @@ func record(r *Ref, v Resolved) Record {
 		}
 	}
 	return rec
+}
+
+// subset sets SA and SB for a reference that IS SUBSET reads.
+func (rec *Record) subset(r *Ref, v jsonvalue.Value) {
+	if !r.Subset {
+		return
+	}
+	rec.SA = subsetLeft(v, inputNumberText)
+	rec.SB = subsetRight(v, inputNumberText, subsetOneValue(r.Kind))
 }
 
 // elementTokens returns the EA and EB of a value, a list or a value read as
@@ -261,6 +283,14 @@ func strsTerm(ss []string) *ast.Term {
 	return ast.ArrayTerm(ts...)
 }
 
+func setsTerm(sets [][]string) *ast.Term {
+	ts := make([]*ast.Term, len(sets))
+	for i, s := range sets {
+		ts[i] = strsTerm(s)
+	}
+	return ast.ArrayTerm(ts...)
+}
+
 func (r Record) term() *ast.Term {
 	o := ast.NewObject([2]*ast.Term{strTerm("s"), strTerm(r.S)})
 	if r.T != "" {
@@ -291,17 +321,24 @@ func (r Record) term() *ast.Term {
 		o.Insert(strTerm("ea"), strsTerm(r.EA))
 		o.Insert(strTerm("eb"), strsTerm(r.EB))
 	}
+	if r.N != nil {
+		o.Insert(strTerm("nk"), orderKey(*r.N))
+	}
+	if r.SA != nil {
+		o.Insert(strTerm("sa"), setsTerm(r.SA))
+		o.Insert(strTerm("sb"), strsTerm(r.SB))
+	}
 	return ast.NewTerm(o)
 }
 
 // Value returns the input as a Rego value: maps s, t, k, ks, raw, seg, eseg,
-// nseg, n0, tk, o, ln, ea, and eb from a reference ID to a field of its
+// nseg, n0, tk, o, ln, ea, eb, nk, sa, and sb from a reference ID to a field of its
 // record, then sroles, m2m, and g. A network PIP's record is not in it:
 // nc.pip returns it.
 func (in *Input) Value() ast.Value {
 	fields := map[string]ast.Object{}
 	for _, f := range []string{"s", "t", "k", "ks", "raw", "seg", "eseg", "nseg", "n0", "tk", "o", "ln", "ea",
-		"eb"} {
+		"eb", "nk", "sa", "sb"} {
 		fields[f] = ast.NewObject()
 	}
 	for _, r := range in.refs {
@@ -338,6 +375,13 @@ func (in *Input) Value() ast.Value {
 		if rec.EA != nil {
 			fields["ea"].Insert(id, strsTerm(rec.EA))
 			fields["eb"].Insert(id, strsTerm(rec.EB))
+		}
+		if rec.N != nil {
+			fields["nk"].Insert(id, orderKey(*rec.N))
+		}
+		if rec.SA != nil {
+			fields["sa"].Insert(id, setsTerm(rec.SA))
+			fields["sb"].Insert(id, strsTerm(rec.SB))
 		}
 		if rec.Segs != nil {
 			fields["seg"].Insert(id, strsTerm(rec.Segs))

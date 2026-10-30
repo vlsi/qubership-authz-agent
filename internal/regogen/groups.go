@@ -19,6 +19,8 @@ import (
 	"maps"
 	"slices"
 	"strings"
+
+	"authz-agent/internal/jsonvalue"
 )
 
 // test is one expression of a subject-only clause, in the form the group
@@ -29,12 +31,17 @@ type test struct {
 	kind string // a case of test.holds
 	ref  string // sroles for the roles a simplified policy matches
 	val  string
-	set  []string
+	set  []string // a literal's keys; for IS SUBSET, the tokens of a literal on the right
 	ref2 string
 	// field and field2 name the list of the record of ref and of ref2 that
 	// has, nothas, none, overlap, and disjoint read: ks when empty, or ea or
 	// eb.
 	field, field2 string
+	// num is the literal number rel compares with.
+	num *jsonvalue.Decimal
+	// sets are the tokens of the elements of a literal on the left of IS
+	// SUBSET.
+	sets [][]string
 }
 
 // Group is a subject group: a conjunction of factors, each a disjunction of
@@ -286,12 +293,13 @@ func (t *test) holds(in *Input) bool {
 	var k *string
 	var st, cl string
 	var n0 bool
+	var num *jsonvalue.Decimal
 	if t.ref == "sroles" {
 		ks = in.SRoles
 	} else {
 		r, ok := in.Records[t.ref]
 		if ok {
-			ks, k, st, cl, n0 = r.list(t.field), r.K, r.S, r.T, r.N0
+			ks, k, st, cl, n0, num = r.list(t.field), r.K, r.S, r.T, r.N0, r.N
 		}
 	}
 	in2 := func() ([]string, *string) {
@@ -315,6 +323,14 @@ func (t *test) holds(in *Input) bool {
 		return ks != nil && !slices.ContainsFunc(ks, func(x string) bool { return slices.Contains(t.set, x) })
 	case "non0":
 		return !n0
+	case "rel":
+		return relHolds(t.val, num, t.num)
+	case "relref":
+		return relHolds(t.val, num, in.Records[t.ref2].N)
+	case "nonum":
+		return num == nil
+	case "subset", "unmatched", "nonempty", "emptyleft":
+		return t.subsetHolds(in)
 	case "state":
 		return st == t.val
 	case "cls":

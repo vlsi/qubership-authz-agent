@@ -44,7 +44,9 @@ type Ref struct {
 	Network bool
 	// Segments is set when a MATCH guard reads the path segments of the value.
 	Segments bool
-	domain   spectables.Domain
+	// Subset is set when IS SUBSET reads the value's element tokens.
+	Subset bool
+	domain spectables.Domain
 }
 
 // litVal is a literal operand with its record.
@@ -54,6 +56,12 @@ type litVal struct {
 	key   string
 	keys  []string
 	raw   string // the text of a string literal
+	// num is the number <, <=, >, and >= read the literal as, nil for none.
+	num *jsonvalue.Decimal
+	// sa and sb are the tokens IS SUBSET reads of the literal on the left and
+	// on the right.
+	sa [][]string
+	sb []string
 }
 
 // side is one operand of a comparison: a literal, a pattern, a reference, or a
@@ -183,6 +191,19 @@ func literalSplit(o policyir.Operand, split func(raw string) ([]jsonvalue.Value,
 	if rec.Key != nil {
 		l.key = *rec.Key
 	}
+	switch o := o.(type) {
+	case policyir.String:
+		if d, ok := jsonvalue.ParseBigDecimal(o.Value); ok {
+			l.num = &d
+		}
+	case policyir.Number:
+		l.num = literalNumber(o.Text)
+	}
+	num := literalNumberText
+	if _, ok := o.(policyir.List); ok {
+		num = listNumberText
+	}
+	l.sa, l.sb = subsetLeft(v, num), subsetRight(v, num, false)
 	switch kind {
 	case spectables.KindLitStr:
 		l.class = spectables.ClassString
@@ -288,7 +309,7 @@ func (g *gen) side(o policyir.Operand) (*side, error) {
 		if g.fixedOp != nil {
 			l, _ := literal(policyir.String{Value: *g.fixedOp})
 			return &side{kind: spectables.KindOperation, lit: &litVal{kind: spectables.KindOperation,
-				class: spectables.ClassString, key: l.key, keys: l.keys, raw: l.raw}}, nil
+				class: spectables.ClassString, key: l.key, keys: l.keys, raw: l.raw, num: l.num, sa: l.sa, sb: l.sb}}, nil
 		}
 	case policyir.Subject:
 		if o.Attr == policyir.SubjectPermissionScope {

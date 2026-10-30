@@ -183,6 +183,16 @@ func (d Decimal) Compare(e Decimal) int {
 	return c
 }
 
+// Parts returns the sign of d (-1, 0, or 1), its significant digits without
+// leading or trailing zeros, and the exponent of ten of the first of them, so
+// that 0.0125 is 1, "125", -2. Zero has empty digits and exponent 0.
+func (d Decimal) Parts() (sign int, digits string, adjusted int64) {
+	if d.IsZero() {
+		return 0, "", 0
+	}
+	return d.sign(), d.coef, d.adjusted()
+}
+
 func (d Decimal) sign() int {
 	switch {
 	case d.IsZero():

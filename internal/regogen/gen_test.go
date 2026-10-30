@@ -205,20 +205,23 @@ func TestANullElementLeavesContainsUndefined(t *testing.T) {
 	}
 }
 
-// A value-dependent cell the templates do not cover is a generation error
-// that names the operator and the kinds, never a false rail. < of two
-// string attributes depends on the values through the rule rel, which has no
-// template; the same attribute under == with a literal is the control that
-// generates.
+// A value-dependent cell whose value rule no template implements is a
+// generation error that names the operator and the kinds, never a false rail.
+// The export is edited so that < of two string attributes names array_eq,
+// which no template implements; the same leaf generates from the export as
+// it is.
 func TestAValueDependentCellWithoutATemplateFailsGeneration(t *testing.T) {
+	const cell = `{"op":"LT","left":{"kind":"res:path","state":"VALUE","class":"s"},` +
+		`"right":{"kind":"res:path","state":"VALUE","class":"s"},"outcome":"by_value","outcomes":["T","F"],"value_rule":[`
+	tab := editedTable(t, cell+`"rel"]}`, cell+`"array_eq"]}`)
 	tree := tenantWithSet(t, "DENY_UNLESS_PERMIT", "ALLOW", "resource.a < resource.b")
-	_, err := Generate(tree, table(t), DefaultOptions())
+	_, err := Generate(tree, tab, DefaultOptions())
 	if err == nil || !strings.Contains(err.Error(), "LT(res:path ") {
-		t.Errorf("Generate(resource.a < resource.b) error = %v, want one naming LT(res:path ...)", err)
+		t.Errorf("Generate(resource.a < resource.b) with rule array_eq: error = %v, want one naming LT(res:path ...)",
+			err)
 	}
-	control := tenantWithSet(t, "DENY_UNLESS_PERMIT", "ALLOW", "resource.a == 'x'")
-	if _, err := Generate(control, table(t), DefaultOptions()); err != nil {
-		t.Errorf("Generate(resource.a == 'x') error = %v, want none", err)
+	if _, err := Generate(tree, table(t), DefaultOptions()); err != nil {
+		t.Errorf("Generate(resource.a < resource.b) error = %v, want none", err)
 	}
 }
 
@@ -292,12 +295,12 @@ func TestAnObjectIsInAnEqualObject(t *testing.T) {
 	}
 }
 
-// editedTable loads the embedded export with one node rule replaced; the
-// test fails when the export no longer holds the rule as written.
+// editedTable loads the embedded export with every occurrence of from
+// replaced by to; the test fails when the export no longer holds from.
 func editedTable(t *testing.T, from, to string) *spectables.Table {
 	t.Helper()
 	if !bytes.Contains(agentTables, []byte(from)) {
-		t.Fatalf("the embedded export has no node rule %s", from)
+		t.Fatalf("the embedded export has no text %s", from)
 	}
 	tab, err := spectables.Load(bytes.NewReader(bytes.ReplaceAll(agentTables, []byte(from), []byte(to))))
 	if err != nil {
@@ -966,6 +969,290 @@ func TestANullResourceIsInNoList(t *testing.T) {
 				`["subj","id"]`: resolved(t, "VALUE", `["x"]`)}
 			if got := decideValues(t, tree, DefaultOptions(), values); got != tc.want {
 				t.Errorf("allow(resource = null %s subject.id = [\"x\"]) = %v, want %v", tc.op, got, tc.want)
+			}
+		})
+	}
+}
+
+// leafOutcome evaluates condition as the only leaf of two modules, one where
+// an ALLOW rule permits on its true rail and one where a DENY rule permits on
+// its false rail, and returns T, F, or U for neither.
+func leafOutcome(t *testing.T, condition string, opt Options, values map[string]Resolved) string {
+	t.Helper()
+	return leafOutcomeWithPIPs(t, condition, "", opt, values)
+}
+
+// leafOutcomeWithPIPs is leafOutcome with the PIP declarations given, as
+// tenantWithSetAndPIPs takes them.
+func leafOutcomeWithPIPs(t *testing.T, condition, pips string, opt Options, values map[string]Resolved) string {
+	t.Helper()
+	isTrue := decideValues(t, tenantWithSetAndPIPs(t, "DENY_UNLESS_PERMIT", "ALLOW", condition, pips), opt, values)
+	isFalse := decideValues(t, tenantWithSetAndPIPs(t, "PERMIT_UNLESS_DENY", "DENY", condition, pips), opt, values)
+	switch {
+	case isTrue && isFalse:
+		t.Fatalf("%s is on both rails", condition)
+	case isTrue:
+		return "T"
+	case isFalse:
+		return "F"
+	}
+	return "U"
+}
+
+// <, <=, >, and >= compare the numbers the values read as: a string that
+// BigDecimal reads, and a number of the input rounded to a double, which
+// leaves 4.99999999999999999999 equal to 5. A value that reads as no number,
+// a boolean, and a number of the input beyond the range of a double compare
+// false; the string "1e400" is a number. A literal compares by its exact
+// value, and one that reads as no number, or a fraction beyond the range of a
+// double, compares false. The false rail holds each of them, which a negated
+// comparison would leave undefined where the number is missing.
+func TestARelationalComparisonComparesTheNumbersOfTheValues(t *testing.T) {
+	big := "1" + strings.Repeat("0", 400)
+	for _, tc := range []struct {
+		name, condition, a, want string
+	}{
+		{"a smaller number", "resource.a < 5", `3`, "T"},
+		{"a string that reads as a smaller number", "resource.a < 5", `"3"`, "T"},
+		{"the bound itself", "resource.a < 5", `5`, "F"},
+		{"the bound itself under <=", "resource.a <= 5", `5`, "T"},
+		{"the bound itself under >=", "resource.a >= 5", `5`, "T"},
+		{"the bound itself under >", "resource.a > 5", `5`, "F"},
+		{"a fraction the double rounds to the bound", "resource.a < 5", `4.99999999999999999999`, "F"},
+		{"a string that reads as no number", "resource.a < 5", `"abc"`, "F"},
+		{"a boolean", "resource.a < 5", `true`, "F"},
+		{"a number beyond the double range", "resource.a > 5", `1e400`, "F"},
+		{"a string beyond the double range", "resource.a > 5", `"1e400"`, "T"},
+		{"a string below a literal by its exact value", "resource.a < 0.30000000000000001", `"0.3"`, "T"},
+		{"a string above a literal by its exact value", "resource.a < 0.30000000000000001", `"0.30000000000000002"`,
+			"F"},
+		{"a string literal that reads as no number", "resource.a < 'abc'", `"a"`, "F"},
+		{"a boolean literal", "resource.a < true", `0`, "F"},
+		{"a literal fraction beyond the double range", "resource.a < " + big + ".5", `5`, "F"},
+		{"a literal integer beyond the double range", "resource.a < " + big, `5`, "T"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			values := map[string]Resolved{keyA: resolved(t, "VALUE", tc.a)}
+			if got := leafOutcome(t, tc.condition, DefaultOptions(), values); got != tc.want {
+				t.Errorf("%s with resource.a = %s is %s, want %s", tc.condition, tc.a, got, tc.want)
+			}
+		})
+	}
+}
+
+// Two attributes compare as numbers at any exponent, a negative one by its
+// magnitude reversed, zero between the signs and equal to minus zero, and two
+// strings that read as no number compare false.
+func TestTwoAttributesCompareAsNumbers(t *testing.T) {
+	for _, tc := range []struct {
+		name, op, a, b, want string
+	}{
+		{"two strings that read as numbers, not as text", "<", `"10"`, `"9"`, "F"},
+		{"two negative numbers", "<", `-1.55`, `-1.5`, "T"},
+		{"two positive numbers that share leading digits", "<", `1.5`, `1.55`, "T"},
+		{"zero and a positive number", "<", `0`, `1`, "T"},
+		{"a negative number and zero", "<", `-1`, `0`, "T"},
+		{"a negative and a positive number", "<", `-1`, `1`, "T"},
+		{"zero and minus zero", "<", `0`, `-0`, "F"},
+		{"zero and minus zero under <=", "<=", `0`, `-0`, "T"},
+		{"two exponents beyond the double range", "<", `"1e400"`, `"1e401"`, "T"},
+		{"two negative exponents beyond the double range", "<", `"-1e401"`, `"-1e400"`, "T"},
+		{"two strings that read as no number", "<", `"x"`, `"y"`, "F"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			values := map[string]Resolved{keyA: resolved(t, "VALUE", tc.a), `["res",".b"]`: resolved(t, "VALUE", tc.b)}
+			cond := "resource.a " + tc.op + " resource.b"
+			if got := leafOutcome(t, cond, DefaultOptions(), values); got != tc.want {
+				t.Errorf("%s with resource.a = %s, resource.b = %s is %s, want %s", cond, tc.a, tc.b, got, tc.want)
+			}
+		})
+	}
+}
+
+// A comparison of subject attributes joins a subject group, which Go
+// evaluates by the same numbers: with a literal on either side, and between
+// two attributes.
+func TestASubjectGroupComparesTheNumbers(t *testing.T) {
+	opt := DefaultOptions()
+	opt.Groups = true
+	for _, tc := range []struct {
+		name, condition, id, subjName, want string
+	}{
+		{"a smaller number", "subject.id < 5", `3`, `""`, "T"},
+		{"a larger number", "subject.id < 5", `7`, `""`, "F"},
+		{"a string that reads as no number", "subject.id < 5", `"abc"`, `""`, "F"},
+		{"a literal on the left above the value", "5 > subject.id", `3`, `""`, "T"},
+		{"a literal on the left below the value", "5 > subject.id", `7`, `""`, "F"},
+		{"two attributes in order", "subject.id < subject.name", `1`, `2`, "T"},
+		{"two attributes out of order", "subject.id < subject.name", `2`, `1`, "F"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			values := map[string]Resolved{`["subj","id"]`: resolved(t, "VALUE", tc.id),
+				`["subj","name"]`: resolved(t, "VALUE", tc.subjName)}
+			if got := leafOutcome(t, tc.condition, opt, values); got != tc.want {
+				t.Errorf("%s with subject.id = %s, subject.name = %s is %s, want %s", tc.condition, tc.id, tc.subjName,
+					got, tc.want)
+			}
+		})
+	}
+}
+
+// IS SUBSET holds when the left value, read as a list, is not empty and each
+// of its elements equals an element on the right: with case, a number equal to
+// its text, a list equal to a string by its Java text, and null equal to
+// nothing. An object on the right equals nothing. A resource attribute or a
+// PIP on the right is one value, so an element there that is not a string
+// equals nothing.
+func TestIsSubsetComparesElementsWithCase(t *testing.T) {
+	const perms, b, id, g = `["subj","permissions"]`, `["res",".b"]`, `["subj","id"]`, `["subj","g"]`
+	for _, tc := range []struct {
+		name, condition, a, rightKey, right, want string
+	}{
+		{"every element on the right", "resource.a IS SUBSET subject.permissions", `["x"]`, perms, `["x", "y"]`, "T"},
+		{"an element in another case", "resource.a IS SUBSET subject.permissions", `["X"]`, perms, `["x"]`, "F"},
+		{"a number and its text", "resource.a IS SUBSET subject.permissions", `[5]`, perms, `["5"]`, "T"},
+		{"a list and its text", "resource.a IS SUBSET subject.permissions", `[["abc"]]`, perms, `["[abc]"]`, "T"},
+		{"a string read as a list of one", "resource.a IS SUBSET subject.permissions", `"x"`, perms, `["x"]`, "T"},
+		{"a null element", "resource.a IS SUBSET subject.permissions", `["x", null]`, perms, `["x"]`, "F"},
+		{"a number in a resource attribute on the right", "resource.a IS SUBSET resource.b", `[5]`, b, `[5]`, "F"},
+		{"a string in a resource attribute on the right", "resource.a IS SUBSET resource.b", `[5]`, b, `["5"]`, "T"},
+		{"an object on the right", "resource.a IS SUBSET subject.id", `[{}]`, id, `[{}]`, "F"},
+		{"a string where the object was", "resource.a IS SUBSET subject.id", `["x"]`, id, `["x"]`, "T"},
+		{"a number in a PIP on the right", "resource.a IS SUBSET subject.g", `[5]`, g, `[5]`, "F"},
+		{"a string in a PIP on the right", "resource.a IS SUBSET subject.g", `[5]`, g, `["5"]`, "T"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			values := map[string]Resolved{keyA: resolved(t, "VALUE", tc.a), tc.rightKey: resolved(t, "VALUE", tc.right)}
+			if got := leafOutcomeWithPIPs(t, tc.condition, generalPIPs, DefaultOptions(), values); got != tc.want {
+				t.Errorf("%s with %s and %s is %s, want %s", tc.condition, tc.a, tc.right, got, tc.want)
+			}
+		})
+	}
+}
+
+// A string on the left of IS SUBSET never equals a boolean on the right,
+// while a boolean on the left does.
+func TestAStringIsNoSubsetOfABoolean(t *testing.T) {
+	for _, tc := range []struct{ a, want string }{{`"true"`, "F"}, {`true`, "T"}} {
+		t.Run(tc.a, func(t *testing.T) {
+			values := map[string]Resolved{keyA: resolved(t, "VALUE", tc.a)}
+			if got := leafOutcome(t, "resource.a IS SUBSET true", DefaultOptions(), values); got != tc.want {
+				t.Errorf("resource.a = %s IS SUBSET true is %s, want %s", tc.a, got, tc.want)
+			}
+		})
+	}
+}
+
+// An empty whole resource is a subset of nothing, so IS NOT SUBSET holds for
+// it as for a list with an element outside the right.
+func TestAnEmptyResourceIsNotASubset(t *testing.T) {
+	for _, tc := range []struct{ resource, want string }{{`[]`, "T"}, {`["y"]`, "T"}, {`["x"]`, "F"}} {
+		t.Run(tc.resource, func(t *testing.T) {
+			values := map[string]Resolved{`["res",""]`: resolved(t, "VALUE", tc.resource)}
+			if got := leafOutcome(t, "resource IS NOT SUBSET 'x'", DefaultOptions(), values); got != tc.want {
+				t.Errorf("resource = %s IS NOT SUBSET 'x' is %s, want %s", tc.resource, got, tc.want)
+			}
+		})
+	}
+}
+
+// IS SUBSET of subject lists joins a subject group, which Go evaluates by the
+// same tokens: against literals and between two attributes.
+func TestASubjectGroupComparesSubsets(t *testing.T) {
+	opt := DefaultOptions()
+	opt.Groups = true
+	for _, tc := range []struct {
+		name, condition, perms, roles, want string
+	}{
+		{"every element listed", "subject.permissions IS SUBSET 'x', 'y'", `["x"]`, `[]`, "T"},
+		{"an element not listed", "subject.permissions IS SUBSET 'x', 'y'", `["x", "z"]`, `[]`, "F"},
+		{"an element in another case", "subject.permissions IS SUBSET 'x', 'y'", `["X"]`, `[]`, "F"},
+		{"every element in the roles", "subject.permissions IS SUBSET subject.roles", `["x"]`, `["x", "y"]`, "T"},
+		{"an element not in the roles", "subject.permissions IS SUBSET subject.roles", `["x", "z"]`, `["x"]`, "F"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			values := map[string]Resolved{`["subj","permissions"]`: resolved(t, "VALUE", tc.perms),
+				`["subj","roles"]`: resolved(t, "VALUE", tc.roles)}
+			if got := leafOutcome(t, tc.condition, opt, values); got != tc.want {
+				t.Errorf("%s with subject.permissions = %s, subject.roles = %s is %s, want %s", tc.condition, tc.perms,
+					tc.roles, got, tc.want)
+			}
+		})
+	}
+}
+
+// A one-element GENERAL list of a boolean, null, or an object (SINGLE_ODD) on
+// the left of IS SUBSET is a list: the boolean equals its text, and null and
+// an object equal no string.
+func TestASingleOddListOnTheLeftOfIsSubsetIsAList(t *testing.T) {
+	for _, tc := range []struct{ g, want string }{{`[true]`, "T"}, {`[null]`, "F"}, {`[{}]`, "F"}} {
+		t.Run(tc.g, func(t *testing.T) {
+			values := map[string]Resolved{`["subj","g"]`: resolved(t, "SINGLE_ODD", tc.g),
+				`["res",".b"]`: resolved(t, "VALUE", `["true"]`)}
+			got := leafOutcomeWithPIPs(t, "subject.g IS SUBSET resource.b", generalPIPs, DefaultOptions(), values)
+			if got != tc.want {
+				t.Errorf("subject.g = SINGLE_ODD %s IS SUBSET resource.b = [\"true\"] is %s, want %s", tc.g, got, tc.want)
+			}
+		})
+	}
+}
+
+// A list value, the whole resource or the subject's scopes, is empty by its
+// length; a string is not empty.
+func TestAListIsEmptyByItsLength(t *testing.T) {
+	const resource, scopes = `["res",""]`, `["subj","scopes"]`
+	for _, tc := range []struct {
+		name, condition, key, value, want string
+	}{
+		{"an empty resource list", "resource IS EMPTY", resource, `[]`, "T"},
+		{"a resource list with an element", "resource IS EMPTY", resource, `["a"]`, "F"},
+		{"a resource string", "resource IS EMPTY", resource, `"x"`, "F"},
+		{"an empty resource list under IS NOT EMPTY", "resource IS NOT EMPTY", resource, `[]`, "F"},
+		{"a resource list with an element under IS NOT EMPTY", "resource IS NOT EMPTY", resource, `["a"]`, "T"},
+		{"no scopes", "subject.scopes IS EMPTY", scopes, `[]`, "T"},
+		{"a scope", "subject.scopes IS EMPTY", scopes, `["a"]`, "F"},
+		{"no scopes under IS NOT EMPTY", "subject.scopes IS NOT EMPTY", scopes, `[]`, "F"},
+		{"a scope under IS NOT EMPTY", "subject.scopes IS NOT EMPTY", scopes, `["a"]`, "T"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			values := map[string]Resolved{tc.key: resolved(t, "VALUE", tc.value)}
+			if got := leafOutcome(t, tc.condition, DefaultOptions(), values); got != tc.want {
+				t.Errorf("%s with %s is %s, want %s", tc.condition, tc.value, got, tc.want)
+			}
+		})
+	}
+}
+
+// In the copy of the tree for one operation, the operation is a literal, and
+// a comparison of it with literals is decided at generation: the rule that
+// subject allowed reads holds exactly where that comparison does.
+func TestAComparisonOfTheOperationWithLiteralsIsDecidedAtGeneration(t *testing.T) {
+	for _, tc := range []struct {
+		name, operation, condition string
+		want                       bool
+	}{
+		{"the operation in a literal list", "write", "operation IS SUBSET 'write', 'x'", true},
+		{"the operation outside a literal list", "write", "operation IS SUBSET 'x', 'y'", false},
+		{"an operation that reads as a smaller number", "3", "operation < 5", true},
+		{"an operation that reads as a larger number", "7", "operation < 5", false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			sets := fmt.Sprintf(`{"policySets": [
+				{"policySetId": "s1", "name": "s1", "status": "ACTIVE", "target": "resourceType == 'doc'",
+				 "combiningAlgorithm": "DENY_UNLESS_PERMIT", "tenantId": "t1",
+				 "policies": [{"policyId": "p1", "target": "true", "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+					"tenantId": "t1", "rules": [
+						{"ruleId": "r1", "target": "operation == 'read'", "condition": "subject allowed '%[1]s' on resource",
+						 "effect": "ALLOW", "tenantId": "t1"},
+						{"ruleId": "r2", "target": "operation == '%[1]s'", "condition": %[2]q,
+						 "effect": "ALLOW", "tenantId": "t1"}]}]}]}`, tc.operation, tc.condition)
+			exp, err := policyir.FromRegular([]byte(sets), []byte(`{"pips": []}`))
+			if err != nil {
+				t.Fatalf("FromRegular: %v", err)
+			}
+			if got := decideValues(t, exp.Trees["t1"], DefaultOptions(), nil); got != tc.want {
+				t.Errorf("allow(read) where subject allowed %q reads %s = %v, want %v", tc.operation, tc.condition, got,
+					tc.want)
 			}
 		})
 	}

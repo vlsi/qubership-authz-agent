@@ -149,3 +149,23 @@ func TestDecimal_ShortBoundaries(t *testing.T) {
 		}
 	}
 }
+
+func TestDecimal_PartsAreTheSignTheDigitsAndTheFirstExponent(t *testing.T) {
+	for _, tc := range []struct {
+		in     string
+		sign   int
+		digits string
+		adj    int64
+	}{
+		{"0.0125", 1, "125", -2},
+		{"-1500", -1, "15", 3},
+		{"7", 1, "7", 0},
+		{"-0.0", 0, "", 0},
+	} {
+		sign, digits, adj := mustParseDecimal(t, tc.in).Parts()
+		if sign != tc.sign || digits != tc.digits || adj != tc.adj {
+			t.Errorf("ParseDecimal(%q).Parts() = %d, %q, %d, want %d, %q, %d", tc.in, sign, digits, adj, tc.sign,
+				tc.digits, tc.adj)
+		}
+	}
+}

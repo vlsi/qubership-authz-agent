@@ -56,12 +56,12 @@ func (t tpl) fieldClasses(s *side) []spectables.Class {
 }
 
 // fieldOf reports whether [record] writes field f for a value of class cl:
-// k for s and n; ks for every class but z; raw and the segments for s; tk and
-// o for the lists and the object. Any other field, such as n0, keeps the check
-// of the class.
+// k and nk for s and n; ks for every class but z; raw and the segments for s;
+// tk and o for the lists and the object. Any other field, such as n0, keeps
+// the check of the class.
 func fieldOf(f string, cl spectables.Class) bool {
 	switch f {
-	case "k":
+	case "k", "nk":
 		return cl == spectables.ClassString || cl == spectables.ClassScalar
 	case "ks":
 		return cl != spectables.ClassNull
@@ -161,7 +161,7 @@ func isRes(k spectables.Kind) bool {
 var negated = map[spectables.Operator]spectables.Operator{
 	spectables.OpNE: spectables.OpEQ, spectables.OpNotIn: spectables.OpIn,
 	spectables.OpNotContains: spectables.OpContains, spectables.OpNotContainsAny: spectables.OpContainsAny,
-	spectables.OpNotMatch: spectables.OpMatch,
+	spectables.OpNotMatch: spectables.OpMatch, spectables.OpIsNotSubset: spectables.OpIsSubset,
 }
 
 // template returns the rows of a comparison between a value of class cl on the
@@ -228,6 +228,17 @@ func valueTemplate(op spectables.Operator, L, R *side, cl, cr spectables.Class) 
 			}
 		}
 		return tpl{t: t.f, f: t.t, fields: fields, undefined: t.undefined, rules: t.rules}, true
+	}
+	if (op == spectables.OpIsEmpty || op == spectables.OpIsNotEmpty) && L.ref != nil && isListClass(cl) {
+		// a list in state VALUE is empty by its length: the whole resource
+		// [], or a subject list (rule empty)
+		empty := conj(L.bind(), clause{{cls: L.cls(clsCheck), text: L.field("ln") + " == 0", fact: vfact(L)}})
+		full := conj(L.bind(), clause{{cls: L.cls(clsCheck), text: L.field("ln") + " > 0", fact: vfact(L)}})
+		if op == spectables.OpIsNotEmpty {
+			empty, full = full, empty
+		}
+		return tpl{t: dnf{empty}, f: dnf{full}, fields: map[*side]map[string]bool{L: {"ln": true}},
+			rules: map[spectables.ValueRule]bool{spectables.RuleEmpty: true}}, true
 	}
 	if R == nil {
 		return tpl{}, false
@@ -307,6 +318,13 @@ func valueTemplate(op spectables.Operator, L, R *side, cl, cr spectables.Class) 
 		return tp, true
 	}
 	switch op {
+	case spectables.OpIsSubset:
+		return subsetTemplate(L, R, b)
+	case spectables.OpLT, spectables.OpLE, spectables.OpGT, spectables.OpGE:
+		if !isScalar(cl) || !isScalar(cr) {
+			return tpl{}, false
+		}
+		return relTemplate(op, L, R, b)
 	case spectables.OpMatch:
 		if cl != spectables.ClassString || !R.isPattern() || !lref {
 			return tpl{}, false
