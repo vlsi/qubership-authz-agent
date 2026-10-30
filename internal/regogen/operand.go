@@ -29,8 +29,8 @@ import (
 // Ref is an operand the module reads from the request: an attribute of the
 // resource, the subject, or a PIP, or a value an iterate's pass binds. The
 // projection puts its value record into input under the reference's ID, into
-// each pass of input.ps for a pass value, or, for a network PIP, the stub
-// nc.pip returns it.
+// each pass of input.ps for a pass value; for a network PIP the stub nc.pip
+// returns it, and for a lazily read resource path nc.resource_path.
 type Ref struct {
 	// ID is the name of the reference in the module: op, rt, or rN.
 	ID string
@@ -40,8 +40,10 @@ type Ref struct {
 	Key string
 	// Kind is the operand kind of the specification's tables.
 	Kind spectables.Kind
-	// Network is set for an operand whose value comes from a network call:
-	// a GENERAL or FILTERED PIP and subject.entitledResources.
+	// Network is set for an operand whose record a built-in function returns
+	// inside the query: a GENERAL or FILTERED PIP and
+	// subject.entitledResources, which come from a network call, and a
+	// lazily read resource path ([Ref.Path]).
 	Network bool
 	// Segments is set when a MATCH guard reads the path segments of the value.
 	Segments bool
@@ -49,7 +51,10 @@ type Ref struct {
 	Subset bool
 	// Pass is set for a value an iterate's pass binds: its record is in each
 	// pass of input.ps, not in the input itself.
-	Pass   bool
+	Pass bool
+	// Path is the resource path of a reference read lazily, with Network
+	// set: nc.resource_path(input.resource, Path) returns its record.
+	Path   string
 	domain spectables.Domain
 }
 
@@ -301,6 +306,9 @@ func (g *gen) ref(o policyir.Operand, kind spectables.Kind, network bool) (*Ref,
 	}
 	_, pass := o.(policyir.PassValue)
 	r := &Ref{ID: id, Key: key, Kind: kind, Network: network, Pass: pass, domain: dom}
+	if res, ok := o.(policyir.Resource); ok && kind == spectables.KindResJSONPath {
+		r.Network, r.Path = true, res.Path
+	}
 	g.refs[key] = r
 	g.refList = append(g.refList, r)
 	return r, nil

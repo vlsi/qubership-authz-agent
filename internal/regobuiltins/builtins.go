@@ -211,6 +211,15 @@ func (d *Documents) Context(ctx context.Context) context.Context {
 // cache.
 type convertedKey struct{ v ast.Value }
 
+// JSONOf returns the JSON of the argument t of a built-in function, as nc.value
+// and nc.jsonpath read it: an object or a list that a [Documents] in the
+// query's context built as the JSON it was built from.
+func JSONOf(bctx rego.BuiltinContext, t *ast.Term) (jsonvalue.Value, error) { return jsonOf(bctx, t) }
+
+// CompilePath returns the compiled path s, as nc.jsonpath compiles and keeps
+// it.
+func CompilePath(s string) (*jsonpath.Path, error) { return compilePath(s) }
+
 // jsonOf returns the JSON of t. An object or a list that a [Documents] in the
 // query's context built, at any depth, is the JSON it was built from; any
 // other object or list is converted once per query where the query has a

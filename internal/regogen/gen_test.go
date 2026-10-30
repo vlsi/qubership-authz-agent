@@ -29,7 +29,6 @@ import (
 
 	"authz-agent/internal/jsonvalue"
 	"authz-agent/internal/policyir"
-	"authz-agent/internal/regobuiltins"
 	"authz-agent/internal/regogen/spectables"
 )
 
@@ -135,11 +134,11 @@ func evalRule(t *testing.T, m *Module, req Request, rule string) any {
 			return r, nil
 		})
 	pq, err := rego.New(append([]func(*rego.Rego){rego.Query("data." + opt.Package + "." + rule),
-		rego.Module("gen.rego", m.Text), pip}, regobuiltins.Options()...)...).PrepareForEval(context.Background())
+		rego.Module("gen.rego", m.Text), pip}, Builtins()...)...).PrepareForEval(context.Background())
 	if err != nil {
 		t.Fatalf("PrepareForEval: %v\n%s", err, m.Text)
 	}
-	rs, err := pq.Eval(context.Background(), rego.EvalParsedInput(in.Value()))
+	rs, err := pq.Eval(in.Context(context.Background()), rego.EvalParsedInput(in.Value()))
 	if err != nil {
 		t.Fatalf("Eval: %v", err)
 	}
@@ -1947,5 +1946,116 @@ func TestTheDecisionTellsAnUnknownDenialApart(t *testing.T) {
 	if got := evalRule(t, m, req, "decision"); got != nil || strings.Contains(m.Text, "maybe") {
 		t.Errorf("without Decision, decision = %v and the module mentions maybe: %v; want neither", got,
 			strings.Contains(m.Text, "maybe"))
+	}
+}
+
+// nc.resource_path gives a resource path the state the specification's
+// resolve_resource gives it: a missing member, a path through a missing
+// parent, a path that starts with a bracket, and no resource or a null one
+// are ABSENT; an index past the end INDEX_OOB; a wildcard that selects
+// nothing EMPTY_SEL; one null NULL; one empty list EMPTY_COLL; anything else
+// VALUE. A selection the package stops as too large is ERROR.
+func TestAResourcePathTakesTheStateOfItsSelection(t *testing.T) {
+	deep := strings.Repeat(`{"key":`, 60) + `1` + strings.Repeat(`}`, 60)
+	for _, tc := range []struct {
+		name, doc, path, want string
+	}{
+		{"a wildcard that selects values", `{"items": [{"id": "x"}]}`, ".items[*].id", "VALUE"},
+		{"a wildcard that selects nothing", `{"items": []}`, ".items[*].id", "EMPTY_SEL"},
+		{"a missing member", `{"other": 1}`, ".items[*].id", "ABSENT"},
+		{"a missing parent", `{"a": {}}`, ".a.x", "ABSENT"},
+		{"a path that starts with a bracket", `{"key": "value"}`, "['key']", "ABSENT"},
+		{"no resource or a null one", ``, ".items[*].id", "ABSENT"},
+		{"an index past the end", `{"items": []}`, ".items[0].id", "INDEX_OOB"},
+		{"one null", `{"items": [{"id": null}]}`, ".items[0].id", "NULL"},
+		{"one empty list", `{"items": [{"id": []}]}`, ".items[0].id", "EMPTY_COLL"},
+		{"one value", `{"items": [{"id": "x"}]}`, ".items[0].id", "VALUE"},
+		{"a selection too large to make", deep, "..key", "ERROR"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			var doc jsonvalue.Value
+			if tc.doc != "" {
+				var err error
+				if doc, err = jsonvalue.Decode([]byte(tc.doc)); err != nil {
+					t.Fatalf("Decode(%s): %v", tc.doc, err)
+				}
+			}
+			rec, err := JSONPathRecord(doc, tc.path)
+			if err != nil {
+				t.Fatalf("JSONPathRecord: %v", err)
+			}
+			if got := rec.Get(ast.StringTerm("s")); got == nil || got.Value.Compare(ast.String(tc.want)) != 0 {
+				t.Errorf("state of %s over %s = %v, want %s", tc.path, tc.doc, got, tc.want)
+			}
+		})
+	}
+}
+
+// A condition over a resource path that needs jsonPath reads the record
+// nc.resource_path returns from the request's resource, in every form of the
+// module, and decides as the specification does in each state of the
+// selection: the members of an object in the document's order and a number
+// with its text, two such paths in one comparison, and a selection too large
+// to make, which is undefined as a failed source is.
+func TestAJSONPathOperandIsReadFromTheResource(t *testing.T) {
+	deep := `{"o": ` + strings.Repeat(`{"key":`, 60) + `"x"` + strings.Repeat(`}`, 60) + `}`
+	for _, tc := range []struct {
+		name, condition, doc, want string
+	}{
+		{"a selected value contains the literal", "resource.items[*].id CONTAINS 'x'", `{"items": [{"id": "x"}, {"id": "y"}]}`, "T"},
+		{"no selected value is the literal", "resource.items[*].id CONTAINS 'x'", `{"items": [{"id": "y"}]}`, "F"},
+		{"the wildcard selects nothing", "resource.items[*].id CONTAINS 'x'", `{"items": []}`, "F"},
+		{"the member is missing", "resource.items[*].id CONTAINS 'x'", `{"other": 1}`, "F"},
+		{"no resource", "resource.items[*].id CONTAINS 'x'", ``, "F"},
+		{"an indexed value differing in letter case", "resource.items[0].id == 'x'", `{"items": [{"id": "X"}]}`, "T"},
+		{"an index past the end", "resource.items[0].id == 'x'", `{"items": []}`, "F"},
+		{"an indexed null", "resource.items[0].id == 'x'", `{"items": [{"id": null}]}`, "F"},
+		{"an indexed list", "resource.items[0].id == 'x'", `{"items": [{"id": ["x"]}]}`, "F"},
+		{"a pattern that matches", "resource.items[0].p MATCH /a/*", `{"items": [{"p": "/a/b"}]}`, "T"},
+		{"a pattern that does not match", "resource.items[0].p MATCH /a/*", `{"items": [{"p": "/a/b/c"}]}`, "F"},
+		{"keys in the document's order", "resource.o.keys() == '[b, a]'", `{"o": {"b": 1, "a": 2}}`, "T"},
+		{"keys in sorted order", "resource.o.keys() == '[a, b]'", `{"o": {"b": 1, "a": 2}}`, "F"},
+		{"a number with its text", "resource.items[0].n == '1.0'", `{"items": [{"n": 1.0}]}`, "T"},
+		{"a number without its fraction", "resource.items[0].n == '1'", `{"items": [{"n": 1.0}]}`, "F"},
+		{"two paths with equal values", "resource.a[0] == resource.b[0]", `{"a": ["x"], "b": ["X"]}`, "T"},
+		{"two paths with other values", "resource.a[0] == resource.b[0]", `{"a": ["x"], "b": ["y"]}`, "F"},
+		{"two paths, the second past the end", "resource.a[0] == resource.b[0]", `{"a": ["x"], "b": []}`, "F"},
+		{"a selection too large to make", "resource.o..key CONTAINS 'x'", deep, "U"},
+	} {
+		var doc jsonvalue.Value
+		if tc.doc != "" {
+			var err error
+			if doc, err = jsonvalue.Decode([]byte(tc.doc)); err != nil {
+				t.Fatalf("Decode(%s): %v", tc.doc, err)
+			}
+		}
+		for _, form := range []struct {
+			name string
+			opt  func(*Options)
+		}{{"flat", func(*Options) {}}, {"without inlining", func(o *Options) { o.Flat = false }},
+			{"with groups", func(o *Options) { o.Groups = true }}} {
+			t.Run(form.name+"/"+tc.name, func(t *testing.T) {
+				opt := DefaultOptions()
+				form.opt(&opt)
+				got := "U"
+				for _, rail := range []struct {
+					alg, effect, outcome string
+				}{{"DENY_UNLESS_PERMIT", "ALLOW", "T"}, {"PERMIT_UNLESS_DENY", "DENY", "F"}} {
+					m, err := Generate(tenantWithSet(t, rail.alg, rail.effect, tc.condition), table(t), opt)
+					if err != nil {
+						t.Fatalf("Generate: %v", err)
+					}
+					if !strings.Contains(m.Text, "nc.resource_path(input.resource") {
+						t.Fatalf("the module does not read the path through nc.resource_path:\n%s", m.Text)
+					}
+					if evalModule(t, m, Request{Operation: "read", ResourceType: "doc", Resource: doc}) {
+						got = rail.outcome
+					}
+				}
+				if got != tc.want {
+					t.Errorf("%s over %s is %s, want %s", tc.condition, tc.doc, got, tc.want)
+				}
+			})
+		}
 	}
 }

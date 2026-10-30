@@ -29,6 +29,9 @@
 // "permit" is compared in place of allow; the bundles carry no oracle answer
 // for the split of a denial into unknown and deny.
 //
+// A request carries the resolved values of its operands and, where the bundle
+// has it, the resource document, which a lazily read resource path reads.
+//
 // A request whose projection or evaluation fails is counted in proj_errors,
 // not as a disagreement.
 package main
@@ -54,7 +57,6 @@ import (
 
 	"authz-agent/internal/jsonvalue"
 	"authz-agent/internal/policyir"
-	"authz-agent/internal/regobuiltins"
 	"authz-agent/internal/regogen"
 	"authz-agent/internal/regogen/spectables"
 )
@@ -68,15 +70,16 @@ type bundle struct {
 }
 
 type request struct {
-	ID     string                        `json:"id"`
-	Op     *string                       `json:"op"`
-	RT     *string                       `json:"rt"`
-	Roles  []string                      `json:"roles"`
-	M2M    bool                          `json:"m2m"`
-	Vals   map[string][3]json.RawMessage `json:"vals"`
-	Scope  json.RawMessage               `json:"scope"`
-	Agent  bool                          `json:"agent"`
-	Legacy map[string]any                `json:"legacy"`
+	ID       string                        `json:"id"`
+	Op       *string                       `json:"op"`
+	RT       *string                       `json:"rt"`
+	Roles    []string                      `json:"roles"`
+	M2M      bool                          `json:"m2m"`
+	Vals     map[string][3]json.RawMessage `json:"vals"`
+	Scope    json.RawMessage               `json:"scope"`
+	Resource *string                       `json:"resource"`
+	Agent    bool                          `json:"agent"`
+	Legacy   map[string]any                `json:"legacy"`
 }
 
 type result struct {
@@ -111,7 +114,7 @@ func stubs() []func(*rego.Rego) {
 			}
 			return t, nil
 		})
-	return append(regobuiltins.Options(), pip)
+	return append(regogen.Builtins(), pip)
 }
 
 func toRequest(q request) (regogen.Request, error) {
@@ -125,6 +128,11 @@ func toRequest(q request) (regogen.Request, error) {
 	var err error
 	if r.Values, err = resolvedValues(q.Vals); err != nil {
 		return r, err
+	}
+	if q.Resource != nil {
+		if r.Resource, err = jsonvalue.Decode([]byte(*q.Resource)); err != nil {
+			return r, fmt.Errorf("resource: %w", err)
+		}
 	}
 	// scope is "ERROR", null for a tenant without iterate, or the passes
 	var failed string
@@ -251,7 +259,7 @@ func run(b bundle, tab *spectables.Table, opt regogen.Options, reps int, dumpDir
 			continue
 		}
 		v := in.Value()
-		ctx := context.WithValue(context.Background(), ctxKey{}, in)
+		ctx := in.Context(context.WithValue(context.Background(), ctxKey{}, in))
 		best := -1.0
 		var got bool
 		for i := 0; i < reps; i++ {

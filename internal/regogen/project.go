@@ -16,6 +16,7 @@ package regogen
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"regexp"
@@ -27,6 +28,7 @@ import (
 
 	"authz-agent/internal/jsonvalue"
 	"authz-agent/internal/legacyvalue"
+	"authz-agent/internal/regobuiltins"
 	"authz-agent/internal/regogen/spectables"
 )
 
@@ -52,6 +54,9 @@ type Request struct {
 	// Scope is the subject's permission scope that an iterate runs over,
 	// read when the module iterates ([Module.Iterates]).
 	Scope *Scope
+	// Resource is the resource document, nil for a request without one; a
+	// lazily read resource path ([Ref.Path]) reads it.
+	Resource jsonvalue.Value
 }
 
 // Scope is the permission scope of a request's subject as the passes of an
@@ -104,7 +109,7 @@ type Record struct {
 
 // Input is the projection of a request into the input of a module.
 type Input struct {
-	Records map[string]Record // by reference ID, network PIPs included, pass values not
+	Records map[string]Record // by reference ID, network PIPs included, pass values and lazy paths not
 	SRoles  []string
 	M2M     bool
 	G       []string
@@ -112,6 +117,8 @@ type Input struct {
 	// reference ID; ScopeFailed is [Scope.Failed].
 	Passes      []map[string]Record
 	ScopeFailed bool
+	resource    jsonvalue.Value
+	docs        *regobuiltins.Documents
 	refs        []*Ref
 }
 
@@ -261,12 +268,13 @@ func eqToken(e jsonvalue.Value) (string, bool) {
 // request lacks the value of an operand the module reads, or the permission
 // scope of a module that iterates.
 func Project(m *Module, req Request) (*Input, error) {
-	in := &Input{Records: map[string]Record{}, M2M: req.M2M, refs: m.Refs}
+	in := &Input{Records: map[string]Record{}, M2M: req.M2M, refs: m.Refs, resource: req.Resource,
+		docs: regobuiltins.NewDocuments()}
 	for _, r := range req.Roles {
 		in.SRoles = append(in.SRoles, legacyvalue.Fold(r))
 	}
 	for _, r := range m.Refs {
-		if r.Pass {
+		if r.Pass || r.Path != "" {
 			continue
 		}
 		var v Resolved
@@ -368,7 +376,8 @@ func (r Record) term() *ast.Term {
 // Value returns the input as a Rego value: maps s, t, k, ks, raw, seg, eseg,
 // nseg, n0, tk, o, ln, ea, eb, nk, sa, and sb from a reference ID to a field of
 // its record, then sroles, m2m, g, ps (the passes, each with the same maps of
-// its pass values), and psf. A network PIP's record is not in it: nc.pip
+// its pass values), psf, and for a module with a lazily read resource path
+// resource, the document. A network PIP's record is not in it: nc.pip
 // returns it.
 func (in *Input) Value() ast.Value {
 	o := fieldMaps(in.refs, func(r *Ref) (Record, bool) {
@@ -387,8 +396,20 @@ func (in *Input) Value() ast.Value {
 	}
 	o.Insert(strTerm("ps"), ast.ArrayTerm(passes...))
 	o.Insert(strTerm("psf"), ast.BooleanTerm(in.ScopeFailed))
+	if slices.ContainsFunc(in.refs, func(r *Ref) bool { return r.Path != "" }) {
+		res := ast.NullTerm()
+		if in.resource != nil {
+			// a jsonvalue.Value always has a term
+			res, _ = in.docs.Term(in.resource)
+		}
+		o.Insert(strTerm("resource"), res)
+	}
 	return o
 }
+
+// Context returns ctx with what nc.jsonpath needs to read input.resource as
+// the document it was built from; evaluate the module's query with it.
+func (in *Input) Context(ctx context.Context) context.Context { return in.docs.Context(ctx) }
 
 // fieldMaps returns the object of the maps from a reference ID to a field of
 // its record, for each reference whose record rec gives.

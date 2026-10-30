@@ -81,11 +81,15 @@ func (s *side) field(f string) string {
 	return "input." + f + "." + s.ref.ID
 }
 
-// bind is the clause that binds a network PIP's record, empty for any other
-// side.
+// bind is the clause that binds the record of a network PIP or of a lazily
+// read resource path, empty for any other side.
 func (s *side) bind() clause {
 	if s.ref == nil || !s.ref.Network {
 		return nil
+	}
+	if s.ref.Path != "" {
+		return clause{{cls: clsBuiltin, text: fmt.Sprintf("p_%s := nc.resource_path(input.resource, %s)", s.ref.ID,
+			lit(s.ref.Path))}}
 	}
 	return clause{{cls: clsBuiltin, text: fmt.Sprintf("p_%s := nc.pip(%q)", s.ref.ID, s.ref.ID)}}
 }
