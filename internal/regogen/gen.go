@@ -29,8 +29,9 @@ import (
 // Options switch the parts of the generator that the plan measures separately.
 // The zero value is not the default; use [DefaultOptions].
 type Options struct {
-	// Package is the Rego package of the module; the decision is
-	// data.<Package>.allow.
+	// Package is the Rego package of the module; data.<Package>.allow is
+	// whether the request is allowed, and [Options.Decision] adds
+	// data.<Package>.decision.
 	Package string
 	// Flat inlines a positive flag of a child into its parent, so that an
 	// ALLOW rule under neutral ancestors becomes one clause of allow. Without
@@ -53,6 +54,15 @@ type Options struct {
 	AccessDepth int
 	// Report fills [Module.Report].
 	Report bool
+	// Decision adds the rules decision and maybe to the module. decision is
+	// permit where allow holds; unknown where it does not but maybe does, so
+	// the denial depends on a value or a source the agent could not read,
+	// a permanent failure of [Module.Failures] included (the root's lo and hi
+	// bounds differ); deny otherwise. maybe holds where the hi bound of some
+	// top-level node is permit. It is off by default: the hi bounds of every
+	// node grow the module, on the PROD corpus with subject groups from 16023
+	// to 28422 clauses in the largest module.
+	Decision bool
 }
 
 // DefaultOptions returns the settings the measurements of the prototype chose:
@@ -209,9 +219,19 @@ func Generate(tree *policyir.Tree, tab *spectables.Table, opt Options) (*Module,
 		}
 		allow = union(allow, d)
 	}
+	maybe := dnfFalse
+	if g.opt.Decision {
+		for _, t := range tops {
+			d, err := g.flag(t, "hi", "P")
+			if err != nil {
+				return nil, err
+			}
+			maybe = union(maybe, d)
+		}
+	}
 	m := &Module{Refs: g.refList, Iterates: g.stats.Iterates > 0, Groups: g.groups, Report: g.report,
 		Failures: g.failures}
-	m.Text = g.module(allow)
+	m.Text = g.module(allow, maybe)
 	g.stats.Bytes = len(m.Text)
 	g.stats.AllowClauses = len(allow)
 	for _, c := range allow {
@@ -940,6 +960,17 @@ func (g *gen) used(allow dnf) map[string]bool {
 	return seen
 }
 
+// decisionText is the rule decision, as [Options.Decision] describes it.
+// Only a denial whose bounds differ is unknown: a failed value in a target
+// makes its node not applicable on both bounds, and the denial is deny.
+const decisionText = `
+decision := "permit" if {
+	allow
+} else := "unknown" if {
+	maybe
+} else := "deny"
+`
+
 // readsPass reports whether a clause of d reads the pass p.
 func readsPass(d dnf) bool {
 	for _, c := range d {
@@ -967,14 +998,25 @@ func clauseText(name string, c clause) string {
 	return b.String()
 }
 
-func (g *gen) module(allow dnf) string {
+// module writes the text of the module: allow, and with [Options.Decision]
+// the rules maybe, which holds where some top-level node may permit (its hi
+// bound is permit), and decision.
+func (g *gen) module(allow, maybe dnf) string {
 	var b strings.Builder
 	b.WriteString("package " + g.opt.Package + "\n\ndefault allow := false\n\n")
 	for _, c := range allow {
 		b.WriteString(clauseText("allow", c))
 	}
 	g.stats.Clauses = len(allow)
-	used := g.used(allow)
+	if g.opt.Decision {
+		b.WriteString(decisionText)
+		b.WriteString("\ndefault maybe := false\n\n")
+		for _, c := range maybe {
+			b.WriteString(clauseText("maybe", c))
+		}
+		g.stats.Clauses += len(maybe)
+	}
+	used := g.used(union(allow, maybe))
 	g.stats.Rules = len(used)
 	for _, name := range g.order {
 		if !used[name] {

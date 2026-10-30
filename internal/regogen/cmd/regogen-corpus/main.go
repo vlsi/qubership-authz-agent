@@ -23,7 +23,11 @@
 // generation, and timing to the -out file.
 //
 //	regogen-corpus -bundles bundles.jsonl -out results.jsonl [-workers 4] [-reps 3] [-flat=false] [-groups]
-//	               [-budget 16] [-limit N] [-only key,...] [-dump DIR] [-explain]
+//	               [-budget 16] [-decision] [-limit N] [-only key,...] [-dump DIR] [-explain]
+//
+// With -decision the module carries the rule decision, and decision ==
+// "permit" is compared in place of allow; the bundles carry no oracle answer
+// for the split of a denial into unknown and deny.
 //
 // A request whose projection or evaluation fails is counted in proj_errors,
 // not as a disagreement.
@@ -220,7 +224,12 @@ func run(b bundle, tab *spectables.Table, opt regogen.Options, reps int, dumpDir
 		_ = os.WriteFile(dumpDir+"/"+strings.ReplaceAll(b.Key, "/", "_")+".rego", []byte(m.Text), 0o644)
 	}
 	t0 = time.Now()
-	opts := append([]func(*rego.Rego){rego.Query("data." + opt.Package + ".allow"),
+	query := "data." + opt.Package + ".allow"
+	if opt.Decision {
+		// the module permits exactly where decision is permit
+		query = "data." + opt.Package + ".decision == \"permit\""
+	}
+	opts := append([]func(*rego.Rego){rego.Query(query),
 		rego.Module("gen.rego", m.Text)}, stubs()...)
 	pq, err := rego.New(opts...).PrepareForEval(context.Background())
 	res.CompileMs = float64(time.Since(t0).Microseconds()) / 1000
@@ -292,6 +301,7 @@ func main() {
 	only := flag.String("only", "", "comma-separated bundle keys")
 	dump := flag.String("dump", "", "directory to write modules to")
 	budget := flag.Int("budget", 16, "product limit")
+	decision := flag.Bool("decision", false, "evaluate decision == \"permit\" instead of allow")
 	flag.BoolVar(&explain, "explain", false, "print the export's tenants, the tree, and the module to stderr")
 	flag.Parse()
 
@@ -303,7 +313,7 @@ func main() {
 	}
 	loadMs := time.Since(t0).Milliseconds()
 	opt := regogen.DefaultOptions()
-	opt.Flat, opt.Groups, opt.ProductLimit = *flat, *groups, *budget
+	opt.Flat, opt.Groups, opt.ProductLimit, opt.Decision = *flat, *groups, *budget, *decision
 
 	f, err := os.Open(*path)
 	if err != nil {

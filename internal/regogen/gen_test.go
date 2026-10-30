@@ -109,8 +109,15 @@ func decideWith(t *testing.T, tree *policyir.Tree, tab *spectables.Table, opt Op
 	return evalModule(t, m, Request{Operation: "read", ResourceType: "doc", Values: values})
 }
 
-// evalModule compiles the module and evaluates the request.
+// evalModule compiles the module and evaluates allow for the request.
 func evalModule(t *testing.T, m *Module, req Request) bool {
+	t.Helper()
+	return evalRule(t, m, req, "allow") == true
+}
+
+// evalRule compiles the module and evaluates rule for the request; nil when
+// the rule is undefined.
+func evalRule(t *testing.T, m *Module, req Request, rule string) any {
 	t.Helper()
 	opt := DefaultOptions()
 	in, err := Project(m, req)
@@ -127,7 +134,7 @@ func evalModule(t *testing.T, m *Module, req Request) bool {
 			}
 			return r, nil
 		})
-	pq, err := rego.New(append([]func(*rego.Rego){rego.Query("data." + opt.Package + ".allow"),
+	pq, err := rego.New(append([]func(*rego.Rego){rego.Query("data." + opt.Package + "." + rule),
 		rego.Module("gen.rego", m.Text), pip}, regobuiltins.Options()...)...).PrepareForEval(context.Background())
 	if err != nil {
 		t.Fatalf("PrepareForEval: %v\n%s", err, m.Text)
@@ -136,7 +143,10 @@ func evalModule(t *testing.T, m *Module, req Request) bool {
 	if err != nil {
 		t.Fatalf("Eval: %v", err)
 	}
-	return len(rs) == 1 && rs[0].Expressions[0].Value == true
+	if len(rs) != 1 {
+		return nil
+	}
+	return rs[0].Expressions[0].Value
 }
 
 const keyA = `["res",".a"]`
@@ -1860,5 +1870,82 @@ func TestAnIterateInEveryFormOfTheModule(t *testing.T) {
 				}
 			})
 		}
+	}
+}
+
+// With Decision, the module also answers decision: permit where it allows,
+// deny where no node may permit, and unknown where the denial depends on a
+// value or a source the agent could not read. Every value known never gives
+// unknown, and one top-level node that permits decides beside an unknown one.
+// Without Decision the module has no rule decision.
+func TestTheDecisionTellsAnUnknownDenialApart(t *testing.T) {
+	sets := func(rules string) string {
+		return `{"policySets": [{"policySetId": "s1", "status": "ACTIVE", "target": "resourceType == 'doc'",
+			"combiningAlgorithm": "DENY_UNLESS_PERMIT", "tenantId": "t1",
+			"policies": [{"policyId": "p1", "target": "true", "combiningAlgorithm": "DENY_OVERRIDES",
+				"tenantId": "t1", "rules": [` + rules + `]}]}]}`
+	}
+	const (
+		allowG   = `{"ruleId": "a", "target": "true", "condition": "subject.g == 'x'", "effect": "ALLOW", "tenantId": "t1"}`
+		allowAll = `{"ruleId": "b", "target": "true", "effect": "ALLOW", "tenantId": "t1"}`
+		denyG    = `{"ruleId": "c", "target": "true", "condition": "subject.g == 'x'", "effect": "DENY", "tenantId": "t1"}`
+		allowNo  = `{"ruleId": "d", "target": "true", "condition": "subject.none == 'x'", "effect": "ALLOW", "tenantId": "t1"}`
+		otherSet = `, {"policySetId": "s2", "status": "ACTIVE", "target": "resourceType == 'doc'",
+			"combiningAlgorithm": "DENY_UNLESS_PERMIT", "tenantId": "t1", "policies": [{"policyId": "p2",
+			"target": "true", "combiningAlgorithm": "DENY_UNLESS_PERMIT", "tenantId": "t1", "rules": [` + allowAll + `]}]}`
+	)
+	for _, tc := range []struct {
+		name, export, state, value, want string
+	}{
+		{"an ALLOW rule's value permits", sets(allowG), "VALUE", `"x"`, "permit"},
+		{"an ALLOW rule's other value denies", sets(allowG), "VALUE", `"y"`, "deny"},
+		{"an ALLOW rule's failed PIP leaves the denial unknown", sets(allowG), "ERROR", "", "unknown"},
+		{"a DENY rule's value denies beside a permit", sets(allowAll + "," + denyG), "VALUE", `"x"`, "deny"},
+		{"a DENY rule's other value lets the permit through", sets(allowAll + "," + denyG), "VALUE", `"y"`, "permit"},
+		{"a DENY rule's failed PIP leaves the denial unknown", sets(allowAll + "," + denyG), "ERROR", "", "unknown"},
+		{"an undeclared PIP leaves the denial unknown", sets(allowNo), "VALUE", `"x"`, "unknown"},
+		{"a top-level node that permits decides beside an unknown one",
+			strings.TrimSuffix(sets(allowAll+","+denyG), "]}") + otherSet + "]}", "ERROR", "", "permit"},
+	} {
+		exp, err := policyir.FromRegular([]byte(tc.export),
+			[]byte(`{"pips": [{"tenantId": "t1", "name": "subject.g", "pipType": "GENERAL", "url": "http://g"}]}`))
+		if err != nil {
+			t.Fatalf("FromRegular: %v", err)
+		}
+		tree, ok := exp.Trees["t1"]
+		if !ok {
+			t.Fatalf("FromRegular: no tree of t1; failed %v", exp.Failed)
+		}
+		for _, form := range []struct {
+			name string
+			opt  func(*Options)
+		}{{"flat", func(*Options) {}}, {"without inlining", func(o *Options) { o.Flat = false }},
+			{"with groups", func(o *Options) { o.Groups = true }}} {
+			t.Run(form.name+"/"+tc.name, func(t *testing.T) {
+				opt := DefaultOptions()
+				opt.Decision = true
+				form.opt(&opt)
+				m, err := Generate(tree, table(t), opt)
+				if err != nil {
+					t.Fatalf("Generate: %v", err)
+				}
+				req := Request{Operation: "read", ResourceType: "doc",
+					Values: map[string]Resolved{`["subj","g"]`: resolved(t, tc.state, tc.value)}}
+				if got := evalRule(t, m, req, "decision"); got != tc.want {
+					t.Errorf("decision(subject.g = %s %s) = %v, want %s", tc.state, tc.value, got, tc.want)
+				}
+			})
+		}
+	}
+	m, err := Generate(tenantWithSetAndPIPs(t, "DENY_UNLESS_PERMIT", "ALLOW", "subject.g == 'x'", generalPIPs),
+		table(t), DefaultOptions())
+	if err != nil {
+		t.Fatalf("Generate without Decision: %v", err)
+	}
+	req := Request{Operation: "read", ResourceType: "doc",
+		Values: map[string]Resolved{`["subj","g"]`: resolved(t, "VALUE", `"x"`)}}
+	if got := evalRule(t, m, req, "decision"); got != nil || strings.Contains(m.Text, "maybe") {
+		t.Errorf("without Decision, decision = %v and the module mentions maybe: %v; want neither", got,
+			strings.Contains(m.Text, "maybe"))
 	}
 }
