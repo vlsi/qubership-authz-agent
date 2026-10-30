@@ -17,6 +17,7 @@ package regogen
 import (
 	"errors"
 	"fmt"
+	"maps"
 	"regexp"
 	"slices"
 
@@ -43,9 +44,6 @@ type point struct {
 }
 
 func (p point) spec(k spectables.Kind) spectables.Point {
-	if k == spectables.KindResource && p.st == spectables.StateValue && p.cl != spectables.ClassOther {
-		k = spectables.KindResPath
-	}
 	return spectables.Point{Kind: k, State: p.st, Class: p.cl}
 }
 
@@ -240,10 +238,11 @@ func (g *gen) byValue(rails *leafRails, op spectables.Operator, L, R *side, cell
 	lp, rp := lps[i], rps[j]
 	cell := cells[i][j]
 	// A one-element GENERAL list of null, a boolean, or an object
-	// (SINGLE_ODD) is a list of class x to the collection operators.
+	// (SINGLE_ODD) is a list that may hold a null element to the collection
+	// operators: the templates of class xn, whose guard reads the record's n0.
 	odd := func(p point) point {
 		if p.st == spectables.StateSingleOdd {
-			return point{spectables.StateValue, spectables.ClassOther}
+			return point{spectables.StateValue, spectables.ClassNullElement}
 		}
 		return p
 	}
@@ -267,6 +266,10 @@ func (g *gen) byValue(rails *leafRails, op spectables.Operator, L, R *side, cell
 			g.stats.NoTemplate[fmt.Sprintf("%s(%s %s, %s %s) odd", op, L.kind, lps[i].st, kindOf(R), rps[j].st)]++
 			return fmt.Errorf("%s: value-dependent cell in state %s × %s has no template", op, lps[i].st, rps[j].st)
 		}
+		if r, ok := uncovered(cell.ValueRule, spectables.RuleSingleOdd, spectables.RuleNullElementEnds); ok {
+			g.stats.NoTemplate[fmt.Sprintf("%s(%s %s, %s %s) rule %s", op, L.kind, lps[i].st, kindOf(R), rps[j].st, r)]++
+			return fmt.Errorf("%s: value rule %s of a SINGLE_ODD cell has no template", op, r)
+		}
 		g2 := conj(oddSide.bind(), clause{{cls: oddSide.cls(clsCheck), text: "not " + oddSide.field("n0"),
 			fact: vfact(oddSide), test: refTest(oddSide, &test{kind: "non0"})}})
 		c := conj(L.at(lps[i]), rightAt(R, rps[j]), g2)
@@ -286,6 +289,9 @@ func (g *gen) byValue(rails *leafRails, op spectables.Operator, L, R *side, cell
 		// both values known at generation: a copy of the tree for one
 		// operation compares the operation with a literal
 		v, ok := constCompare(op, L, R)
+		if _, bad := uncovered(cell.ValueRule, spectables.RuleEq, spectables.RuleInAny, spectables.RuleMatch); bad {
+			ok = false
+		}
 		if !ok {
 			g.stats.NoTemplate[fmt.Sprintf("%s(%s, %s) of two literals", op, L.kind, R.kind)]++
 			return fmt.Errorf("%s(%s, %s): no constant template", op, L.kind, R.kind)
@@ -318,6 +324,14 @@ func (g *gen) byValue(rails *leafRails, op spectables.Operator, L, R *side, cell
 		g.stats.NoTemplate[fmt.Sprintf("%s(%s %s, %s %s)", op, L.kind, lp.cl, kindOf(R), rp.cl)]++
 		return fmt.Errorf("%s(%s %s, %s %s): no template for a value-dependent cell", op, L.kind, lp.cl,
 			kindOf(R), rp.cl)
+	}
+	have := slices.Collect(maps.Keys(tp.rules))
+	if oddL || oddR {
+		have = append(have, spectables.RuleSingleOdd)
+	}
+	if r, bad := uncovered(cell.ValueRule, have...); bad {
+		g.stats.NoTemplate[fmt.Sprintf("%s(%s %s, %s %s) rule %s", op, L.kind, lp.cl, kindOf(R), rp.cl, r)]++
+		return fmt.Errorf("%s(%s %s, %s %s): value rule %s has no template", op, L.kind, lp.cl, kindOf(R), rp.cl, r)
 	}
 	// same reports whether the template's true rows are the same at every
 	// point of s whose record carries the fields they read, with the other
@@ -447,4 +461,15 @@ func withoutValueFacts(d dnf, L *side, oddL bool, R *side, oddR bool) dnf {
 		out[i] = nc
 	}
 	return out
+}
+
+// uncovered returns the first rule of the cell that have does not list, and
+// whether there is one.
+func uncovered(rules []spectables.ValueRule, have ...spectables.ValueRule) (spectables.ValueRule, bool) {
+	for _, r := range rules {
+		if !slices.Contains(have, r) {
+			return r, true
+		}
+	}
+	return "", false
 }

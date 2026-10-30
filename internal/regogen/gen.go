@@ -116,9 +116,10 @@ type simpKid struct {
 }
 
 type gen struct {
-	tab  *spectables.Table
-	tree *policyir.Tree
-	opt  Options
+	tab   *spectables.Table
+	tree  *policyir.Tree
+	opt   Options
+	nodes spectables.Nodes
 
 	refs    map[string]*Ref
 	refList []*Ref
@@ -155,6 +156,12 @@ func Generate(tree *policyir.Tree, tab *spectables.Table, opt Options) (*Module,
 		condMemo: map[string]*cond{}, decNames: map[string]string{}, decRoots: map[string]*node{},
 		groups: map[string]Group{}, groupIDs: map[string]string{}}
 	g.stats.NoTemplate = map[string]int{}
+	nodes, ok := tab.Nodes(spectables.ProfileAgent)
+	if !ok {
+		return nil, fmt.Errorf("the export of schema version %d carries no node rules for profile %s",
+			tab.SchemaVersion(), spectables.ProfileAgent)
+	}
+	g.nodes = nodes
 	tops, err := g.tops()
 	if err != nil {
 		return &Module{Stats: g.stats}, err
@@ -250,9 +257,15 @@ func (g *gen) simplified(sg *policyir.SimplifiedGroup) (*node, error) {
 				test: &test{kind: "has", ref: "sroles", val: g.fold(r)}}})
 		}
 		roles = union(roles)
-		c, err := g.cond(p.Condition, spectables.PlaceSimplified, "")
-		if err != nil {
-			return nil, err
+		// a simplified policy without a condition grants by its operation and
+		// roles: the specification evaluates no condition for it, so the
+		// profile's absent expression does not apply
+		c := g.constCond(true)
+		if p.Condition != nil {
+			var err error
+			if c, err = g.cond(p.Condition, spectables.PlaceSimplified, ""); err != nil {
+				return nil, err
+			}
 		}
 		n.simp = append(n.simp, simpKid{match: m, roles: roles, c: c})
 	}
@@ -262,11 +275,39 @@ func (g *gen) simplified(sg *policyir.SimplifiedGroup) (*node, error) {
 	return n, nil
 }
 
-func alg(a policyir.Algorithm) policyir.Algorithm {
+// alg returns the algorithm of a node, the profile's absent algorithm when
+// the node names none.
+func (g *gen) alg(a policyir.Algorithm) policyir.Algorithm {
 	if a == policyir.AlgorithmAbsent {
-		return policyir.AlgorithmDenyUnlessPermit
+		return policyir.Algorithm(g.nodes.AbsentAlgorithm)
 	}
 	return a
+}
+
+// effect returns what a rule's effect counts as: ALLOW, DENY, or NA, by the
+// profile's effects for any effect other than ALLOW and DENY.
+func (g *gen) effect(e policyir.Effect) (string, error) {
+	name := string(e)
+	if e == policyir.EffectAbsent {
+		name = g.nodes.AbsentEffect
+	}
+	switch name {
+	case "ALLOW", "DENY":
+		return name, nil
+	}
+	o, ok := g.nodes.Effects[name]
+	if !ok {
+		o = g.nodes.Effects["other"]
+	}
+	switch o {
+	case spectables.NodePermit:
+		return "ALLOW", nil
+	case spectables.NodeDeny:
+		return "DENY", nil
+	case spectables.NodeNotApplicable:
+		return "NA", nil
+	}
+	return "", fmt.Errorf("effect %q has node outcome %q", e, o)
 }
 
 func (g *gen) set(s *policyir.PolicySet) (*node, error) {
@@ -288,7 +329,7 @@ func (g *gen) set(s *policyir.PolicySet) (*node, error) {
 		}
 		return &node{kind: kindStub, id: id, setID: s.ID}, nil
 	}
-	n := &node{kind: kindSet, id: id, alg: alg(s.Algorithm), tgt: tgt}
+	n := &node{kind: kindSet, id: id, alg: g.alg(s.Algorithm), tgt: tgt}
 	for _, p := range s.Policies {
 		k, err := g.policy(p)
 		if err != nil {
@@ -311,18 +352,15 @@ func (g *gen) policy(p *policyir.Policy) (*node, error) {
 	if err != nil {
 		return nil, err
 	}
-	n := &node{kind: kindPolicy, id: g.fresh("n"), alg: alg(p.Algorithm), tgt: tgt}
+	n := &node{kind: kindPolicy, id: g.fresh("n"), alg: g.alg(p.Algorithm), tgt: tgt}
 	for _, r := range p.Rules {
 		rt, err := g.cond(r.Target, spectables.PlaceRuleTarget, "")
 		if err != nil {
 			return nil, err
 		}
-		eff := "NA"
-		switch r.Effect {
-		case policyir.EffectAllow:
-			eff = "ALLOW"
-		case policyir.EffectDeny, policyir.EffectUseFilterCondition:
-			eff = "DENY"
+		eff, err := g.effect(r.Effect)
+		if err != nil {
+			return nil, err
 		}
 		rc, err := g.cond(r.Condition, spectables.PlaceRuleCondition, r.Effect)
 		if err != nil {
@@ -350,7 +388,7 @@ func (g *gen) constCond(v bool) *cond { return &cond{g: g, isTrue: &v} }
 
 func (g *gen) cond(c *policyir.Condition, place spectables.Place, effect policyir.Effect) (*cond, error) {
 	if c == nil {
-		return g.constCond(true), nil
+		return g.constCond(g.nodes.AbsentExpression == spectables.OutcomeT), nil
 	}
 	fixed := ""
 	if g.fixedOp != nil {
@@ -360,6 +398,9 @@ func (g *gen) cond(c *policyir.Condition, place spectables.Place, effect policyi
 	if cc, ok := g.condMemo[k]; ok {
 		return cc, nil
 	}
+	// The leaf's context carries the effect as the rule writes it, which is
+	// what a leaf reads, not what the effect counts as at the node: only a
+	// written DENY is DENY, an absent effect reads as ALLOW.
 	ctx := spectables.Context{Place: place, Effect: spectables.EffectAllow, Disjunction: c.HasOr()}
 	if effect == policyir.EffectDeny {
 		ctx.Effect = spectables.EffectDeny
@@ -714,21 +755,15 @@ func (g *gen) anyKid(n *node, b, x string, negate bool) (dnf, error) {
 	return ref, nil
 }
 
-// algo is the specification's algorithm table: the outcome of a node whose
-// children include a permit only, a deny only, both, and neither.
-var algo = map[policyir.Algorithm][4]string{
-	policyir.AlgorithmDenyUnlessPermit: {"P", "D", "P", "D"},
-	policyir.AlgorithmPermitOverrides:  {"P", "D", "P", "N"},
-	policyir.AlgorithmDenyOverrides:    {"P", "D", "D", "N"},
-	policyir.AlgorithmPermitUnlessDeny: {"P", "D", "D", "P"},
-}
-
 func (g *gen) inner(n *node, b, x string) (dnf, error) {
-	row, ok := algo[n.alg]
+	row, ok := g.nodes.Algorithms[string(n.alg)]
 	if !ok {
-		return nil, fmt.Errorf("algorithm %q", n.alg)
+		return nil, fmt.Errorf("algorithm %q is not in the export's node rules", n.alg)
 	}
-	table := map[combo]string{{true, false}: row[0], {false, true}: row[1], {true, true}: row[2], {false, false}: row[3]}
+	flag := map[spectables.NodeOutcome]string{spectables.NodePermit: "P", spectables.NodeDeny: "D",
+		spectables.NodeNotApplicable: "N"}
+	table := map[combo]string{{true, false}: flag[row.Permit], {false, true}: flag[row.Deny],
+		{true, true}: flag[row.Both], {false, false}: flag[row.None]}
 	want := map[combo]bool{}
 	for c, o := range table {
 		if o == x {

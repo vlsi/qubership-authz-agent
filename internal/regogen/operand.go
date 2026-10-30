@@ -18,7 +18,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
-	"slices"
 	"strings"
 
 	"authz-agent/internal/jsonvalue"
@@ -244,17 +243,6 @@ func (g *gen) ref(o policyir.Operand, kind spectables.Kind, network bool) (*Ref,
 	dom, ok := g.tab.Domain(spectables.ProfileAgent, kind)
 	if !ok {
 		return nil, fmt.Errorf("kind %s has no domain", kind)
-	}
-	if kind == spectables.KindResource {
-		// The export's domain of the whole resource holds only an object, and
-		// a request may send a string, a number, or a list. A value of those
-		// classes takes the cells of a resource attribute (resourceKind).
-		path, _ := g.tab.Domain(spectables.ProfileAgent, spectables.KindResPath)
-		for _, cl := range path.Classes {
-			if !slices.Contains(dom.Classes, cl) {
-				dom.Classes = append(slices.Clone(dom.Classes), cl)
-			}
-		}
 	}
 	if id == "" {
 		g.nextRef++

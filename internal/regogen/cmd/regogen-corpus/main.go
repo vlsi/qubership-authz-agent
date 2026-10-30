@@ -162,7 +162,7 @@ func toRequest(q request) (regogen.Request, error) {
 
 func run(b bundle, tab *spectables.Table, opt regogen.Options, reps int, dumpDir string) result {
 	res := result{Key: b.Key, Requests: len(b.Requests)}
-	exp, err := policyir.FromRegular(wrap(b.PolicySets), wrap(b.PIPs))
+	exp, err := policyir.FromRegular(b.PolicySets, b.PIPs)
 	if err != nil {
 		res.Stage, res.Error = "export", err.Error()
 		return res
@@ -253,23 +253,6 @@ func run(b bundle, tab *spectables.Table, opt regogen.Options, reps int, dumpDir
 		}
 	}
 	return res
-}
-
-// wrap returns the GET body the bundle carries. The specification exports a
-// synthesized simplified set, policy, and rule with the ID "<generated>",
-// where the PAP writes a UUID; each gets an ID of its own, or the frontend
-// isolates the sets that share one.
-func wrap(raw json.RawMessage) []byte {
-	const ph = `"<generated>"`
-	parts := strings.Split(string(raw), ph)
-	var b strings.Builder
-	for i, p := range parts {
-		if i > 0 {
-			fmt.Fprintf(&b, `"generated-%d"`, i)
-		}
-		b.WriteString(p)
-	}
-	return []byte(b.String())
 }
 
 func pct(xs []float64, p float64) float64 {

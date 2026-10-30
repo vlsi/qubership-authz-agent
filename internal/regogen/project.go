@@ -63,7 +63,8 @@ type Record struct {
 	// TK is the key of a list's or an object's Java text, which a string
 	// equals it by.
 	TK *string
-	// O is the key two lists are equal by: their typed elements as a set.
+	// O is the key two lists are equal by, their typed elements as a set, and
+	// the key two objects are equal by, member by member.
 	O *string
 }
 
@@ -75,6 +76,25 @@ type Input struct {
 	G       []string
 	nodes   map[string][2]string
 	refs    []*Ref
+}
+
+// class is the class of a value in state VALUE that is not null: the class
+// of legacyvalue, with its one class for an object, a nested list, and a list
+// with a null element split three ways.
+func class(v jsonvalue.Value, lv legacyvalue.Record) spectables.Class {
+	switch {
+	case lv.State == legacyvalue.StateNullElement:
+		return spectables.ClassNullElement
+	case lv.State == legacyvalue.StateEmptyColl:
+		// the whole resource can be an empty list in state VALUE
+		return spectables.ClassList
+	case lv.Class != legacyvalue.ClassOther:
+		return spectables.Class(lv.Class)
+	}
+	if _, ok := v.(*jsonvalue.Object); ok {
+		return spectables.ClassObject
+	}
+	return spectables.ClassNested
 }
 
 func record(r *Ref, v Resolved) Record {
@@ -93,17 +113,21 @@ func record(r *Ref, v Resolved) Record {
 	if v.State != spectables.StateValue {
 		return rec
 	}
-	lv := legacyvalue.Of(v.Value)
-	cl := string(lv.Class)
-	if lv.Class == legacyvalue.ClassList && v.HeaderList {
-		cl = string(spectables.ClassHeaderList)
+	if v.Value == nil {
+		rec.T = string(spectables.ClassNull)
+		return rec
 	}
-	rec.T = cl
+	lv := legacyvalue.Of(v.Value)
+	cl := class(v.Value, lv)
+	if cl == spectables.ClassList && v.HeaderList {
+		cl = spectables.ClassHeaderList
+	}
+	rec.T = string(cl)
 	switch cl {
-	case "s", "n":
+	case spectables.ClassString, spectables.ClassScalar:
 		rec.K = lv.Key
 		rec.KS = []string{*lv.Key}
-	case "l", "hl", "x":
+	default:
 		rec.KS = lv.Keys
 		if rec.KS == nil {
 			rec.KS = []string{}
@@ -111,6 +135,12 @@ func record(r *Ref, v Resolved) Record {
 		rec.N0 = lv.State == legacyvalue.StateNullElement
 		rec.TK = lv.Key
 		rec.O = lv.Structure
+		if lv.State == legacyvalue.StateEmptyColl {
+			// the record of an empty list carries no keys; its Java text and
+			// its structure key are both []
+			empty := "[]"
+			rec.TK, rec.O = &empty, &empty
+		}
 	}
 	if s, ok := v.Value.(string); ok {
 		rec.Raw = &s
