@@ -119,7 +119,11 @@ func SpecKey(o policyir.Operand) (string, bool) {
 }
 
 // literal returns the record of a literal operand.
-func literal(o policyir.Operand) (*litVal, error) {
+func literal(o policyir.Operand) (*litVal, error) { return literalSplit(o, nil) }
+
+// literalSplit returns the record of a literal operand; split, when not nil,
+// reads a list of two or more quoted strings from its token.
+func literalSplit(o policyir.Operand, split func(raw string) ([]jsonvalue.Value, error)) (*litVal, error) {
 	var v jsonvalue.Value
 	var kind spectables.Kind
 	switch o := o.(type) {
@@ -149,12 +153,14 @@ func literal(o policyir.Operand) (*litVal, error) {
 			}
 		}
 		v = items
-		if strs && len(o.Items) > 1 && o.Raw != "" {
-			// the specification reads a list of two or more quoted strings
-			// from its token, split at every comma and trimmed as Java's
-			// String.trim does (string_list_split SPLIT_TRIM), so an item
-			// with a comma inside is two values
-			v = splitList(o.Raw)
+		if strs && len(o.Items) > 1 && split != nil {
+			parts, err := split(o.Raw)
+			if err != nil {
+				return nil, err
+			}
+			if parts != nil {
+				v = parts
+			}
 		}
 		switch {
 		case num && len(items) == 1:
@@ -273,7 +279,7 @@ func (g *gen) side(o policyir.Operand) (*side, error) {
 	case policyir.Pattern:
 		return &side{kind: spectables.KindPattern, pattern: o.Text}, nil
 	case policyir.String, policyir.Number, policyir.Bool, policyir.List:
-		l, err := literal(o)
+		l, err := literalSplit(o, g.splitList)
 		if err != nil {
 			return nil, err
 		}
@@ -303,17 +309,55 @@ func (g *gen) side(o policyir.Operand) (*side, error) {
 	return &side{kind: kind, ref: r}, nil
 }
 
-// splitList reads a token of quoted strings as the specification's
-// java_split_list does: quotes dropped, split at each comma, trailing empty
-// parts dropped, and each part trimmed of characters up to U+0020.
-func splitList(raw string) []jsonvalue.Value {
+// splitList reads a literal list of two or more quoted strings as the
+// profile's knobs say: string_list_split ELEMENTS keeps the items as written
+// (nil), SPLIT and SPLIT_TRIM read them from the token, quotes dropped, split
+// at every comma, trailing empty parts dropped, and SPLIT_TRIM trims each part
+// by idiom_list_item_trim, java_trim cutting characters up to U+0020 as Java's
+// String.trim does. Any other value of a knob is an error, not a default.
+func (g *gen) splitList(raw string) ([]jsonvalue.Value, error) {
+	mode, err := g.stringKnob("string_list_split")
+	if err != nil {
+		return nil, err
+	}
+	switch mode {
+	case "ELEMENTS":
+		return nil, nil
+	case "SPLIT", "SPLIT_TRIM":
+	default:
+		return nil, fmt.Errorf("knob string_list_split is %q", mode)
+	}
+	trim := func(p string) string { return p }
+	if mode == "SPLIT_TRIM" {
+		how, err := g.stringKnob("idiom_list_item_trim")
+		if err != nil {
+			return nil, err
+		}
+		if how != "java_trim" {
+			return nil, fmt.Errorf("knob idiom_list_item_trim is %q", how)
+		}
+		trim = func(p string) string { return strings.TrimFunc(p, func(r rune) bool { return r <= ' ' }) }
+	}
 	parts := strings.Split(strings.ReplaceAll(raw, "'", ""), ",")
 	for len(parts) > 0 && parts[len(parts)-1] == "" {
 		parts = parts[:len(parts)-1]
 	}
 	out := make([]jsonvalue.Value, len(parts))
 	for i, p := range parts {
-		out[i] = strings.TrimFunc(p, func(r rune) bool { return r <= ' ' })
+		out[i] = trim(p)
 	}
-	return out
+	return out, nil
+}
+
+// stringKnob returns a knob of the agent profile that holds a string.
+func (g *gen) stringKnob(name string) (string, error) {
+	raw, ok := g.tab.Knob(spectables.ProfileAgent, name)
+	if !ok {
+		return "", fmt.Errorf("the export carries no knob %s", name)
+	}
+	var v string
+	if err := json.Unmarshal(raw, &v); err != nil {
+		return "", fmt.Errorf("knob %s: %w", name, err)
+	}
+	return v, nil
 }

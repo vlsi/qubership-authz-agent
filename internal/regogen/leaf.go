@@ -15,7 +15,6 @@
 package regogen
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"maps"
@@ -508,13 +507,9 @@ func (g *gen) rightListScalarOps(tp *tpl, R *side, rp point) error {
 	if R == nil || R.ref == nil || !isListClass(rp.cl) {
 		return fmt.Errorf("value rule %s needs a list attribute on the right", spectables.RuleRightListScalarOps)
 	}
-	raw, ok := g.tab.Knob(spectables.ProfileAgent, "right_list_scalar_ops")
-	if !ok {
-		return fmt.Errorf("the export carries no knob right_list_scalar_ops")
-	}
-	var knob string
-	if err := json.Unmarshal(raw, &knob); err != nil {
-		return fmt.Errorf("knob right_list_scalar_ops: %w", err)
+	knob, err := g.stringKnob("right_list_scalar_ops")
+	if err != nil {
+		return err
 	}
 	// the setting holds a legacy outcome; the agent ends no rule and fails
 	// no decision there (an end is false, an error unknown)

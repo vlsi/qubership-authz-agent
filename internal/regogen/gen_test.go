@@ -483,6 +483,28 @@ func TestALiteralListSplitsAtCommas(t *testing.T) {
 	}
 }
 
+// How a literal list is read comes from the export's knobs: with
+// string_list_split ELEMENTS a list of two or more items keeps them as
+// written, so an item with a comma inside is one value.
+func TestTheExportDecidesHowALiteralListIsRead(t *testing.T) {
+	tree := tenantWithSet(t, "DENY_UNLESS_PERMIT", "ALLOW", "resource.a IN 'a,b', 'x'")
+	elements := editedTable(t, `"string_list_split": "SPLIT_TRIM"`, `"string_list_split": "ELEMENTS"`)
+	for _, tc := range []struct {
+		name string
+		tab  *spectables.Table
+		want bool
+	}{
+		{"a split list does not hold the item with a comma", table(t), false},
+		{"a list of items as written holds it", elements, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := decideWith(t, tree, tc.tab, DefaultOptions(), map[string]Resolved{keyA: resolved(t, "VALUE", `"a,b"`)}); got != tc.want {
+				t.Errorf("allow(resource.a = \"a,b\") = %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
+
 // CONTAINS ANY with a null element on both sides compares the values, and a
 // null equals nothing; with a null on the left only, it ends the rule, which
 // the agent reads as undefined.

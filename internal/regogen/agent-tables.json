@@ -3,7 +3,7 @@
  "spec_tag": "r71-predicted-7d6cc4b",
  "profiles": {
   "legacy": {
-   "knobs": {"eq_numeric": false, "fold": "java", "list_eq_by_value": true, "right_list_attribute": "EVAL", "right_list_scalar_ops": "ABORT", "subset_fold": false},
+   "knobs": {"eq_numeric": false, "fold": "java", "idiom_list_item_trim": "java_trim", "list_eq_by_value": true, "right_list_attribute": "EVAL", "right_list_scalar_ops": "ABORT", "string_list_split": "SPLIT_TRIM", "subset_fold": false},
    "kinds": {
     "operation": {"states": ["VALUE"], "classes": ["s"]},
     "resourceType": {"states": ["VALUE"], "classes": ["s"]},
@@ -116265,7 +116265,7 @@
    ]
   },
   "agent": {
-   "knobs": {"eq_numeric": false, "fold": "java", "list_eq_by_value": true, "right_list_attribute": "EVAL", "right_list_scalar_ops": "ABORT", "subset_fold": false},
+   "knobs": {"eq_numeric": false, "fold": "java", "idiom_list_item_trim": "java_trim", "list_eq_by_value": true, "right_list_attribute": "EVAL", "right_list_scalar_ops": "ABORT", "string_list_split": "SPLIT_TRIM", "subset_fold": false},
    "kinds": {
     "operation": {"states": ["VALUE"], "classes": ["s"]},
     "resourceType": {"states": ["VALUE"], "classes": ["s"]},
