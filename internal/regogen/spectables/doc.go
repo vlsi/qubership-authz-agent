@@ -28,10 +28,7 @@
 // The export is one JSON document, described for the exporter by schema.json in
 // this directory. Its top level carries:
 //
-//   - schema_version: 3. [Load] also reads version 2, where every combination
-//     carries cells of its own in the outcomes of its profile, and version 1,
-//     the format without value rules and node rules, with one class x for an
-//     object, a nested list, and a list with a null element.
+//   - schema_version: 3, the only version [Load] reads.
 //   - spec_tag: the tag of the specification commit the tables were computed
 //     from, such as r65. A changed decision changes a knob, the
 //     specification gets a new tag, and the export is regenerated under it.
@@ -39,14 +36,14 @@
 //     profile is what the legacy service does; the agent profile is legacy with
 //     the differences the agent makes on purpose. The generator reads the agent
 //     profile, and the registry of differences compares the two.
-//   - negates: from version 3, each negated operator and the operator it
-//     negates, exactly the pairs of [Negations].
+//   - negates: each negated operator and the operator it negates, exactly the
+//     pairs of [Negations].
 //
 // Each profile carries:
 //
 //   - knobs: the specification settings that the generator's templates for the
 //     value-by-value case need, keyed by their name in the specification:
-//     exactly fold, eq_numeric, list_eq_by_value, and subset_fold.
+//     exactly those of [RequiredKnobs].
 //   - kinds: for every operand kind of [Kinds], the states the operand can be in
 //     and, when the states include VALUE, the classes of value it can hold
 //     ([Classes]).
@@ -58,18 +55,17 @@
 //     without an effect counts as; and the value of an absent target or
 //     condition. Every algorithm and rule effect is required, and an unknown
 //     one is an error, so the generator never falls back to a default.
-//   - leaf: from version 3, the outcome of the profile that each outcome of
-//     legacy the profile lacks becomes: ABORT and ERR in the agent profile,
-//     nothing in the legacy profile.
-//   - aliases: from version 3, the operand kinds that answer as an earlier
-//     kind, their representative, which has the same domain.
+//   - leaf: the outcome of the profile that each outcome of legacy the profile
+//     lacks becomes: ABORT and ERR in the agent profile, nothing in the legacy
+//     profile.
+//   - aliases: the operand kinds that answer as an earlier kind, their
+//     representative, which has the same domain.
 //   - cells: the outcomes.
 //
 // # Derived cells
 //
-// From version 3 the cells of both profiles carry legacy's outcomes, and a
-// combination of operator and operand kinds may have no cells of its own.
-// [Load] then gives it the cells of its source: the combination over the
+// The cells of both profiles carry legacy's outcomes, and a combination of
+// operator and operand kinds may have no cells of its own. [Load] then gives it the cells of its source: the combination over the
 // representatives of its kinds when that one has cells of its own, with the
 // kinds renamed; else, for a negated operator, the cells of its positive
 // operator with T and F swapped, in outcome and in the outcomes of a by_value
@@ -102,10 +98,10 @@
 // point of the grid of contexts, left (state, class) pairs, and right (state,
 // class) pairs exactly once; a hole and an overlap are both errors.
 //
-// The outcome is one of [Outcomes] for the profile (in the file of version 3,
-// one of legacy's): T, F, or U in the agent
-// profile, where T is the true rail, F the false rail, and U neither rail; T, F,
-// ABORT, or ERR in the legacy profile. Both profiles also allow bad_request, a
+// The outcome in the file is one of legacy's [Outcomes]; after the leaf map it
+// is one of the profile's: T, F, or U in the agent profile, where T is the true
+// rail, F the false rail, and U neither rail; T, F, ABORT, or ERR in the legacy
+// profile. Both profiles also allow bad_request, a
 // request the service rejects with 400, and unsupported, a form the
 // specification does not evaluate. The outcome by_value marks a cell whose
 // outcome depends on the operand values rather than on their states; such a cell

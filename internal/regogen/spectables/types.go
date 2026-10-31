@@ -63,8 +63,8 @@ func (o Operator) Unary() bool {
 
 // Negations maps each negated operator to the operator it negates. The
 // specification evaluates a negated operator as its positive one and mirrors
-// the outcome: T and F swap, and every other outcome stays. An export of
-// schema version 3 lists the same pairs under negates, and gives a negated
+// the outcome: T and F swap, and every other outcome stays. An export lists
+// the same pairs under negates, and gives a negated
 // combination cells of its own only where legacy departs from the mirror.
 var Negations = map[Operator]Operator{
 	OpNE: OpEQ, OpIsNotNull: OpIsNull, OpIsNotEmpty: OpIsEmpty, OpNotIn: OpIn, OpNotContains: OpContains,
@@ -187,18 +187,11 @@ const (
 	// ClassNull is a null value in state VALUE, such as a whole resource that
 	// is JSON null; it differs from state NULL.
 	ClassNull Class = "z"
-	// ClassOther is the one class of schema version 1 for an object, a nested
-	// list, and a list with a null element; version 2 splits it into
-	// ClassNullElement, ClassNested, and ClassObject.
-	ClassOther Class = "x"
 )
 
-// Classes lists every value class of schema version 2.
+// Classes lists every value class.
 var Classes = []Class{ClassString, ClassScalar, ClassList, ClassHeaderList, ClassNullElement, ClassNested,
 	ClassObject, ClassNull}
-
-// classesV1 lists the value classes of schema version 1.
-var classesV1 = []Class{ClassString, ClassScalar, ClassList, ClassHeaderList, ClassOther}
 
 // ValueRule names the branch of the specification that decides a by_value
 // cell from the operand values.
@@ -394,7 +387,7 @@ func valueOutcomes(p Profile) []Outcome {
 }
 
 // RequiredKnobs lists the specification settings every profile of an export
-// of schema version 2 carries, and no other: a knob is added here and to
+// carries, and no other: a knob is added here and to
 // schema.json when a template of the generator starts to read it.
 // right_list_scalar_ops is the outcome of ==, !=, CONTAINS, and NOT CONTAINS
 // with a list of two or more values on the right that is not a literal list,
@@ -404,9 +397,6 @@ func valueOutcomes(p Profile) []Outcome {
 // comma), and idiom_list_item_trim how each part is trimmed.
 var RequiredKnobs = []string{"fold", "eq_numeric", "list_eq_by_value", "subset_fold", "right_list_scalar_ops",
 	"right_list_attribute", "string_list_split", "idiom_list_item_trim"}
-
-// knobsV1 lists the knobs of schema version 1.
-var knobsV1 = []string{"fold", "eq_numeric", "list_eq_by_value", "subset_fold"}
 
 // Domain is what an operand of one kind can resolve to: its states and, when
 // the states include VALUE, the classes of value it can hold.
@@ -445,7 +435,7 @@ type Cell struct {
 	// Outcomes lists, for an Outcome of by_value, the outcomes the operand
 	// values can produce; it is nil otherwise.
 	Outcomes []Outcome
-	// ValueRule lists, for an Outcome of by_value from schema version 2, the
+	// ValueRule lists, for an Outcome of by_value, the
 	// value rules the specification went through, sorted; it is nil otherwise.
 	ValueRule []ValueRule
 }

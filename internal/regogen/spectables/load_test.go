@@ -43,27 +43,41 @@ var (
 type doc = map[string]any
 
 // The cells of EQ(res:path, lit:str) in the agent profile of completeExport,
-// where res:path has the domain {VALUE/s, VALUE/l, NULL}. Every other
-// combination has one cell of outcome F that matches every point.
+// in legacy's outcomes, where res:path has the domain {VALUE/s, VALUE/l, NULL}.
+// The agent's leaf map takes ERR to U. Every other combination has one cell of
+// outcome F that matches every point.
 const (
 	eqNullOr           = iota // left NULL, disjunction -> F
-	eqNullIterate             // left NULL, no disjunction, in_iterate -> U
+	eqNullIterate             // left NULL, no disjunction, in_iterate -> ERR
 	eqNullDeny                // left NULL, neither, effect DENY -> T
 	eqNullAllow               // left NULL, neither, effect ALLOW -> F
 	eqValueS                  // left VALUE/s -> by_value [T, F]
 	eqValueLRuleTarget        // left VALUE/l, place rule_target -> bad_request
-	// Then left VALUE/l, one cell for each other place -> U.
+	// Then left VALUE/l, one cell for each other place -> ERR.
 )
 
 func completeExport() doc {
-	return doc{
-		"schema_version": 2,
+	d := doc{
+		"schema_version": 3,
 		"spec_tag":       "r99",
+		"negates":        negatesDoc(),
 		"profiles": doc{
 			"legacy": fixtureProfile(nil),
 			"agent":  fixtureProfile(eqResPathLitStrCells()),
 		},
 	}
+	profileOf(d, "legacy")["leaf"] = doc{}
+	profileOf(d, "agent")["leaf"] = doc{"ABORT": "F", "ERR": "U"}
+	return d
+}
+
+// negatesDoc returns Negations as the export lists them.
+func negatesDoc() doc {
+	negates := doc{}
+	for neg, pos := range Negations {
+		negates[string(neg)] = string(pos)
+	}
+	return negates
 }
 
 func eqResPathLitStrCells() []any {
@@ -78,7 +92,7 @@ func eqResPathLitStrCells() []any {
 	cells := []any{
 		eqNullOr: doc{"op": "EQ", "left": left("NULL", ""), "right": right, "disjunction": true, "outcome": "F"},
 		eqNullIterate: doc{"op": "EQ", "left": left("NULL", ""), "right": right, "disjunction": false, "in_iterate": true,
-			"outcome": "U"},
+			"outcome": "ERR"},
 		eqNullDeny: doc{"op": "EQ", "left": left("NULL", ""), "right": right, "disjunction": false, "in_iterate": false,
 			"effect": "DENY", "outcome": "T"},
 		eqNullAllow: doc{"op": "EQ", "left": left("NULL", ""), "right": right, "disjunction": false, "in_iterate": false,
@@ -89,7 +103,7 @@ func eqResPathLitStrCells() []any {
 			"outcome": "bad_request"},
 	}
 	for _, place := range []string{"simplified", "rule_condition", "policy_target", "set_target"} {
-		cells = append(cells, doc{"op": "EQ", "left": left("VALUE", "l"), "right": right, "place": place, "outcome": "U"})
+		cells = append(cells, doc{"op": "EQ", "left": left("VALUE", "l"), "right": right, "place": place, "outcome": "ERR"})
 	}
 	return cells
 }
@@ -154,28 +168,6 @@ func fixtureNodes() doc {
 }
 
 func nodesOf(d doc) doc { return profileOf(d, "agent")["nodes"].(doc) }
-
-// versionOne returns completeExport in schema version 1: no nodes, no value
-// rules, and class x.
-func versionOne() doc {
-	d := completeExport()
-	d["schema_version"] = 1
-	for _, p := range []string{"legacy", "agent"} {
-		delete(profileOf(d, p), "nodes")
-		profileOf(d, p)["kinds"].(doc)["res:path"] = doc{"states": []any{"VALUE", "NULL"}, "classes": []any{"s", "l", "x"}}
-	}
-	delete(eqCell(d, eqValueS), "value_rule")
-	for _, p := range []string{"legacy", "agent"} {
-		delete(profileOf(d, p)["knobs"].(doc), "right_list_scalar_ops")
-		delete(profileOf(d, p)["knobs"].(doc), "right_list_attribute")
-		delete(profileOf(d, p)["knobs"].(doc), "string_list_split")
-		delete(profileOf(d, p)["knobs"].(doc), "idiom_list_item_trim")
-	}
-	pr := profileOf(d, "agent")
-	pr["cells"] = append(agentCells(d), doc{"op": "EQ", "left": doc{"kind": "res:path", "state": "VALUE", "class": "x"},
-		"right": doc{"kind": "lit:str"}, "outcome": "F"})
-	return d
-}
 
 func fixtureRights(op string) []string {
 	switch {
@@ -364,7 +356,7 @@ func TestLookupRefusesAKeyOutsideTheTable(t *testing.T) {
 		},
 		{
 			name: "a class outside the kind's domain",
-			key:  Key{Op: OpIsNull, Left: Point{Kind: KindResPath, State: StateValue, Class: ClassOther}, Context: ruleCondition()},
+			key:  Key{Op: OpIsNull, Left: Point{Kind: KindResPath, State: StateValue, Class: ClassObject}, Context: ruleCondition()},
 		},
 		{
 			name: "a class beside a state other than VALUE",
@@ -412,8 +404,8 @@ func TestLoadRejectsAnIncompleteExport(t *testing.T) {
 	}{
 		{
 			name:  "an operator with no cells",
-			edit:  func(d doc) { removeCells(d, func(c doc) bool { return c["op"] == "NE" }) },
-			names: "agent: NE(operation, operation) has no cells",
+			edit:  func(d doc) { removeCells(d, func(c doc) bool { return c["op"] == "IN" }) },
+			names: "agent: IN(operation, operation) has no cells",
 		},
 		{
 			name: "one combination with no cells",
@@ -450,7 +442,7 @@ func TestLoadRejectsAnIncompleteExport(t *testing.T) {
 			names: "agent: knob subset_fold is missing",
 		},
 		{
-			name:  "a knob of schema version 2",
+			name:  "a knob a template reads",
 			edit:  func(d doc) { delete(profileOf(d, "agent")["knobs"].(doc), "right_list_scalar_ops") },
 			names: "agent: knob right_list_scalar_ops is missing",
 		},
@@ -520,21 +512,7 @@ func TestLoadRejectsAnInvalidExport(t *testing.T) {
 			edit:  func(d doc) { d["schema_version"] = 4 },
 			names: "schema_version is 4, want 3",
 		},
-		{
-			name:  "negates in schema version 2",
-			edit:  func(d doc) { d["negates"] = doc{"NE": "EQ"} },
-			names: "negates is set in schema version 2",
-		},
-		{
-			name:  "a leaf map in schema version 2",
-			edit:  func(d doc) { profileOf(d, "agent")["leaf"] = doc{"ABORT": "F", "ERR": "U"} },
-			names: "agent: leaf or aliases is set in schema version 2",
-		},
-		{
-			name:  "aliases in schema version 2",
-			edit:  func(d doc) { profileOf(d, "legacy")["aliases"] = doc{"subj.name": "subj.id"} },
-			names: "legacy: leaf or aliases is set in schema version 2",
-		},
+
 		{
 			name:  "a by_value cell without a value rule",
 			edit:  func(d doc) { delete(eqCell(d, eqValueS), "value_rule") },
@@ -566,7 +544,7 @@ func TestLoadRejectsAnInvalidExport(t *testing.T) {
 			names: "value_rule is set for outcome F",
 		},
 		{
-			name: "class x in schema version 2",
+			name: "the class x, which the format splits into xn, xl, and xo",
 			edit: func(d doc) {
 				profileOf(d, "agent")["kinds"].(doc)["res:path"] = doc{"states": []any{"VALUE", "NULL"}, "classes": []any{"s", "l", "x"}}
 			},
@@ -604,46 +582,22 @@ func TestLoadRejectsAnInvalidExport(t *testing.T) {
 			edit:  func(d doc) { nodesOf(d)["absent_expression"] = "U" },
 			names: `agent: nodes: absent_expression "U" is not T or F`,
 		},
-		{
-			name: "node rules in schema version 1",
-			edit: func(d doc) {
-				nodes := nodesOf(d)
-				for k, v := range versionOne() {
-					d[k] = v
-				}
-				profileOf(d, "agent")["nodes"] = nodes
-			},
-			names: "agent: nodes is set in schema version 1",
-		},
-		{
-			name: "a value rule in schema version 1",
-			edit: func(d doc) {
-				for k, v := range versionOne() {
-					d[k] = v
-				}
-				eqCell(d, eqValueS)["value_rule"] = []any{"eq"}
-			},
-			names: "value_rule is set in schema version 1",
-		},
+
 		{
 			name:  "an unknown profile",
 			edit:  func(d doc) { d["profiles"].(doc)["stage2"] = fixtureProfile(nil) },
 			names: `unknown profile "stage2"`,
 		},
-		{
-			name:  "a legacy outcome in the agent profile",
-			edit:  func(d doc) { eqCell(d, eqNullOr)["outcome"] = "ABORT" },
-			names: `outcome "ABORT" is not an outcome of profile agent`,
-		},
+
 		{
 			name:  "an agent outcome in the legacy profile",
 			edit:  func(d doc) { profileOf(d, "legacy")["cells"].([]any)[0].(doc)["outcome"] = "U" },
 			names: `outcome "U" is not an outcome of profile legacy`,
 		},
 		{
-			name:  "a legacy outcome in a by_value list of the agent profile",
-			edit:  func(d doc) { eqCell(d, eqValueS)["outcomes"] = []any{"T", "ABORT"} },
-			names: `by_value outcome "ABORT" is not an outcome of profile agent`,
+			name:  "an outcome of the agent profile in a by_value list",
+			edit:  func(d doc) { eqCell(d, eqValueS)["outcomes"] = []any{"T", "U"} },
+			names: `by_value outcome "U" is not an outcome of profile legacy`,
 		},
 		{
 			name:  "by_value with one outcome",
@@ -734,27 +688,6 @@ func TestLoadRejectsAnInvalidExport(t *testing.T) {
 	}
 }
 
-// An export written before version 2 still loads: class x, no value rules,
-// and no node rules.
-func TestLoadReadsSchemaVersion1(t *testing.T) {
-	t.Parallel()
-	tab, err := load(t, versionOne())
-	if err != nil {
-		t.Fatalf("Load(version 1 export) error = %v, want nil", err)
-	}
-	if got := tab.SchemaVersion(); got != 1 {
-		t.Errorf("SchemaVersion() = %d, want 1", got)
-	}
-	if _, ok := tab.Nodes(ProfileAgent); ok {
-		t.Errorf("Nodes(agent) reports node rules for a version 1 export, want none")
-	}
-	key := Key{Op: OpEQ, Left: Point{Kind: KindResPath, State: StateValue, Class: ClassOther},
-		Right: Point{Kind: KindLitStr, State: StateValue, Class: ClassString}, Context: ruleCondition()}
-	if _, err := tab.Lookup(ProfileAgent, key); err != nil {
-		t.Errorf("Lookup(agent, class x) error = %v, want nil", err)
-	}
-}
-
 func TestNodesReturnsTheNodeRulesOfTheProfile(t *testing.T) {
 	t.Parallel()
 	d := completeExport()
@@ -819,25 +752,18 @@ func TestLoadAcceptsTheExportNamedBySpectablesExport(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Load(%s) error = %v, want nil", path, err)
 	}
-	if got := tab.SchemaVersion(); got != SchemaVersion {
-		t.Fatalf("Load(%s): schema_version %d, want %d", path, got, SchemaVersion)
-	}
 	t.Logf("Load(%s): spec_tag %s", path, tab.SpecTag())
 }
 
-// versionThree returns an export of schema version 3 whose two profiles carry
+// sameCells returns an export whose two profiles carry
 // the same cells, in legacy's outcomes: those of fixtureProfile, with eq as the
 // cells of EQ(res:path, lit:str) when eq is not nil. The agent profile maps
 // ABORT to F and ERR to U, and subj.name is an alias of subj.id.
-func versionThree(eq []any) doc {
-	negates := doc{}
-	for neg, pos := range Negations {
-		negates[string(neg)] = string(pos)
-	}
+func sameCells(eq []any) doc {
 	d := doc{
 		"schema_version": 3,
 		"spec_tag":       "r99",
-		"negates":        negates,
+		"negates":        negatesDoc(),
 		"profiles":       doc{"legacy": fixtureProfile(eq), "agent": fixtureProfile(eq)},
 	}
 	profileOf(d, "legacy")["leaf"] = doc{}
@@ -888,7 +814,7 @@ func eqPositive() []any {
 	}
 }
 
-func TestLoadDerivesTheCellsOfSchemaVersion3(t *testing.T) {
+func TestLoadDerivesTheCellsAnExportLeavesOut(t *testing.T) {
 	t.Parallel()
 	resPath := func(s State, c Class) Point { return Point{Kind: KindResPath, State: s, Class: c} }
 	litStr := Point{Kind: KindLitStr, State: StateValue, Class: ClassString}
@@ -1010,7 +936,7 @@ func TestLoadDerivesTheCellsOfSchemaVersion3(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			d := versionThree(eqPositive())
+			d := sameCells(eqPositive())
 			tt.edit(d)
 			tab := mustLoad(t, d)
 			got, err := tab.Lookup(tt.prof, tt.key)
@@ -1021,7 +947,7 @@ func TestLoadDerivesTheCellsOfSchemaVersion3(t *testing.T) {
 	}
 }
 
-func TestLoadRejectsAnInvalidExportOfSchemaVersion3(t *testing.T) {
+func TestLoadRejectsAnInvalidDerivation(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
 		name  string
@@ -1079,7 +1005,7 @@ func TestLoadRejectsAnInvalidExportOfSchemaVersion3(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			d := versionThree(nil)
+			d := sameCells(nil)
 			tt.edit(d)
 			_, err := load(t, d)
 			if !errors.Is(err, ErrInvalid) || !strings.Contains(err.Error(), tt.names) {

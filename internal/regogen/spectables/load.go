@@ -27,16 +27,6 @@ import (
 // SchemaVersion is the version of the export format the exporter writes.
 const SchemaVersion = 3
 
-// schemaVersion2 is the format before negates, leaf, and aliases: every
-// combination carries cells of its own, in the outcomes of its profile.
-// [Load] still reads it, as it reads schemaVersion1.
-const schemaVersion2 = 2
-
-// schemaVersion1 is the format before value rules, the split of class x, and
-// nodes. [Load] still reads it, so that an export written before the exporter
-// moved to version 2 keeps loading.
-const schemaVersion1 = 1
-
 // maxProblems bounds how many problems an error from [Load] spells out.
 const maxProblems = 20
 
@@ -55,7 +45,6 @@ var (
 
 // Table is a loaded and validated export. It is safe for concurrent use.
 type Table struct {
-	version  int
 	specTag  string
 	profiles map[Profile]*profileTable
 }
@@ -129,23 +118,18 @@ func Load(r io.Reader) (*Table, error) {
 	if dec.More() {
 		return nil, fmt.Errorf("%w: data after the export document", ErrInvalid)
 	}
-	if doc.SchemaVersion != SchemaVersion && doc.SchemaVersion != schemaVersion2 && doc.SchemaVersion != schemaVersion1 {
-		return nil, fmt.Errorf("%w: schema_version is %d, want %d (or %d, the format before derived cells, or %d, "+
-			"the format before value rules)", ErrInvalid, doc.SchemaVersion, SchemaVersion, schemaVersion2,
-			schemaVersion1)
+	if doc.SchemaVersion != SchemaVersion {
+		return nil, fmt.Errorf("%w: schema_version is %d, want %d", ErrInvalid, doc.SchemaVersion, SchemaVersion)
 	}
 	if doc.SpecTag == "" {
 		return nil, fmt.Errorf("%w: spec_tag is empty", ErrInvalid)
 	}
 
 	var invalid, incomplete problems
-	switch {
-	case doc.SchemaVersion < SchemaVersion && doc.Negates != nil:
-		invalid.add("negates is set in schema version %d", doc.SchemaVersion)
-	case doc.SchemaVersion == SchemaVersion && !maps.Equal(doc.Negates, Negations):
+	if !maps.Equal(doc.Negates, Negations) {
 		invalid.add("negates is %v, want %v", doc.Negates, Negations)
 	}
-	t := &Table{version: doc.SchemaVersion, specTag: doc.SpecTag, profiles: map[Profile]*profileTable{}}
+	t := &Table{specTag: doc.SpecTag, profiles: map[Profile]*profileTable{}}
 	for p := range doc.Profiles {
 		if !known(Profiles, p) {
 			invalid.add("unknown profile %q", p)
@@ -157,7 +141,7 @@ func Load(r io.Reader) (*Table, error) {
 			incomplete.add("profile %s is missing", p)
 			continue
 		}
-		pt := buildProfile(p, doc.SchemaVersion, pj, &invalid, &incomplete)
+		pt := buildProfile(p, pj, &invalid, &incomplete)
 		t.profiles[p] = pt
 	}
 	if err := invalid.err(ErrInvalid); err != nil {
@@ -181,12 +165,8 @@ func Load(r io.Reader) (*Table, error) {
 // from.
 func (t *Table) SpecTag() string { return t.specTag }
 
-// SchemaVersion returns the format version of the export: [SchemaVersion], or
-// 1 for the format before value rules and nodes.
-func (t *Table) SchemaVersion() int { return t.version }
-
 // Nodes returns how the profile combines the outcomes of nodes, and false for
-// an unknown profile or an export of schema version 1, which carries none.
+// an unknown profile.
 func (t *Table) Nodes(p Profile) (Nodes, bool) {
 	pt := t.profiles[p]
 	if pt == nil || pt.nodes == nil {
@@ -257,30 +237,20 @@ func (pt *profileTable) inDomain(p Point) bool {
 	return p.Class == ""
 }
 
-func buildProfile(p Profile, version int, pj *profileJSON, invalid, incomplete *problems) *profileTable {
+func buildProfile(p Profile, pj *profileJSON, invalid, incomplete *problems) *profileTable {
 	pt := &profileTable{knobs: pj.Knobs, domains: map[Kind]Domain{}, cells: map[combo][]cellJSON{}, nodes: pj.Nodes}
-	classes := Classes
-	if version == schemaVersion1 {
-		classes = classesV1
-		if pj.Nodes != nil {
-			invalid.add("%s: nodes is set in schema version 1", p)
-		}
-	} else if pj.Nodes == nil {
+	if pj.Nodes == nil {
 		incomplete.add("%s: nodes is missing", p)
 	} else {
 		checkNodes(p, pj.Nodes, invalid, incomplete)
 	}
-	knobs := RequiredKnobs
-	if version == schemaVersion1 {
-		knobs = knobsV1
-	}
-	for _, name := range knobs {
+	for _, name := range RequiredKnobs {
 		if _, ok := pj.Knobs[name]; !ok {
 			incomplete.add("%s: knob %s is missing", p, name)
 		}
 	}
 	for name := range pj.Knobs {
-		if !slices.Contains(knobs, name) {
+		if !slices.Contains(RequiredKnobs, name) {
 			invalid.add("%s: unknown knob %q", p, name)
 		}
 	}
@@ -289,7 +259,7 @@ func buildProfile(p Profile, version int, pj *profileJSON, invalid, incomplete *
 			invalid.add("%s: unknown operand kind %q", p, k)
 			continue
 		}
-		checkDomain(p, k, d, classes, invalid)
+		checkDomain(p, k, d, invalid)
 		pt.domains[k] = d
 	}
 	for _, k := range Kinds {
@@ -297,18 +267,11 @@ func buildProfile(p Profile, version int, pj *profileJSON, invalid, incomplete *
 			incomplete.add("%s: operand kind %s has no domain", p, k)
 		}
 	}
-	// the cells of schema version 3 carry legacy's outcomes in either profile; leaf maps them to the profile's
-	alphabet := p
-	if version == SchemaVersion {
-		alphabet = ProfileLegacy
-		checkLeaf(p, pj.Leaf, invalid)
-		checkAliases(p, pj.Aliases, pt.domains, invalid)
-	} else if pj.Leaf != nil || pj.Aliases != nil {
-		invalid.add("%s: leaf or aliases is set in schema version %d", p, version)
-	}
+	checkLeaf(p, pj.Leaf, invalid)
+	checkAliases(p, pj.Aliases, pt.domains, invalid)
 	for i := range pj.Cells {
 		cj := pj.Cells[i]
-		if checkCell(p, alphabet, version, i, &cj, pt.domains, invalid) {
+		if checkCell(p, i, &cj, pt.domains, invalid) {
 			c := combo{op: cj.Op, left: cj.Left.Kind}
 			if cj.Right != nil {
 				c.right = cj.Right.Kind
@@ -316,10 +279,8 @@ func buildProfile(p Profile, version int, pj *profileJSON, invalid, incomplete *
 			pt.cells[c] = append(pt.cells[c], cj)
 		}
 	}
-	if version == SchemaVersion {
-		derive(pt, pj.Aliases)
-		applyLeaf(pt, pj.Leaf)
-	}
+	derive(pt, pj.Aliases)
+	applyLeaf(pt, pj.Leaf)
 	return pt
 }
 
@@ -358,7 +319,7 @@ func checkAliases(p Profile, aliases map[Kind]Kind, domains map[Kind]Domain, inv
 }
 
 // derive gives each combination without cells of its own the cells of its
-// source (schema version 3): the combination over the representatives of its
+// source: the combination over the representatives of its
 // kinds when that one has cells of its own, renamed; else, for a negated
 // operator, its positive operator's cells, mirrored; else the combination over
 // the representatives, renamed. A combination whose source has no cells stays
@@ -476,7 +437,7 @@ func applyLeaf(pt *profileTable, leaf map[Outcome]Outcome) {
 	}
 }
 
-func checkDomain(p Profile, k Kind, d Domain, classes []Class, invalid *problems) {
+func checkDomain(p Profile, k Kind, d Domain, invalid *problems) {
 	if len(d.States) == 0 {
 		invalid.add("%s: operand kind %s has no states", p, k)
 	}
@@ -486,7 +447,7 @@ func checkDomain(p Profile, k Kind, d Domain, classes []Class, invalid *problems
 		}
 	}
 	for i, c := range d.Classes {
-		if !known(classes, c) || slices.Contains(d.Classes[:i], c) {
+		if !known(Classes, c) || slices.Contains(d.Classes[:i], c) {
 			invalid.add("%s: operand kind %s: class %q is unknown or repeated", p, k, c)
 		}
 	}
@@ -496,7 +457,9 @@ func checkDomain(p Profile, k Kind, d Domain, classes []Class, invalid *problems
 }
 
 // checkCell reports whether the cell is well-formed, and records each problem.
-func checkCell(p, alphabet Profile, version, i int, cj *cellJSON, domains map[Kind]Domain, invalid *problems) bool {
+// The cells of either profile carry legacy's outcomes; the profile's leaf map
+// rewrites them after loading.
+func checkCell(p Profile, i int, cj *cellJSON, domains map[Kind]Domain, invalid *problems) bool {
 	before := len(invalid.list) + invalid.extra
 	where := fmt.Sprintf("%s: cell %d", p, i)
 	if !known(Operators, cj.Op) {
@@ -528,19 +491,16 @@ func checkCell(p, alphabet Profile, version, i int, cj *cellJSON, domains map[Ki
 	if cj.Effect != "" && !known(Effects, cj.Effect) {
 		invalid.add("%s: unknown effect %q", where, cj.Effect)
 	}
-	allowed, _ := Outcomes(alphabet)
+	allowed, _ := Outcomes(ProfileLegacy)
 	switch {
 	case !known(allowed, cj.Outcome):
-		invalid.add("%s: outcome %q is not an outcome of profile %s", where, cj.Outcome, alphabet)
+		invalid.add("%s: outcome %q is not an outcome of profile %s", where, cj.Outcome, ProfileLegacy)
 	case cj.Outcome == OutcomeByValue:
-		checkValueOutcomes(where, alphabet, cj.Outcomes, invalid)
+		checkValueOutcomes(where, ProfileLegacy, cj.Outcomes, invalid)
 	case len(cj.Outcomes) > 0:
 		invalid.add("%s: outcomes is set for outcome %s; only by_value lists outcomes", where, cj.Outcome)
 	}
 	switch {
-	case version == schemaVersion1 && cj.ValueRule != nil:
-		invalid.add("%s: value_rule is set in schema version 1", where)
-	case version == schemaVersion1:
 	case cj.Outcome == OutcomeByValue:
 		checkValueRule(where, cj.ValueRule, invalid)
 	case cj.ValueRule != nil:
