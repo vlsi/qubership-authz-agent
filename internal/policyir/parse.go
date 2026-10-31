@@ -558,8 +558,13 @@ func (p *parser) operand() (Operand, error) {
 	if o := p.subjectToken(path); o != nil {
 		return o, nil
 	}
-	written := path
 	dot := strings.HasSuffix(path, ".") && !strings.HasSuffix(path, "..")
+	if dot && !takesTrailingDot(path) {
+		// the dot is left for what follows the operand, where it fails
+		path, dot = path[:len(path)-1], false
+		p.i--
+	}
+	written := path
 	if dot {
 		path = strings.TrimRight(path, ".")
 	}
@@ -575,6 +580,19 @@ func (p *parser) operand() (Operand, error) {
 		return nil, p.fail("bare subject")
 	}
 	return p.resource("."+path, written, dot), nil
+}
+
+// takesTrailingDot reports whether tok, a token that ends in one dot, keeps
+// the dot: only a path that starts with resource or subject followed by a dot
+// or a bracket and more text does. In any other token, such as resource., a.,
+// a.b., or operation., the dot is not part of the operand.
+func takesTrailingDot(tok string) bool {
+	for _, prefix := range []string{"resource", "subject"} {
+		if rest, ok := strings.CutPrefix(tok, prefix); ok && len(rest) > 1 && (rest[0] == '.' || rest[0] == '[') {
+			return true
+		}
+	}
+	return false
 }
 
 // normalizeIndexes drops the spaces inside each index step of path, [ 0 ] to

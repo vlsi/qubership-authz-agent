@@ -34,6 +34,10 @@ func TestParseCondition(t *testing.T) {
 		{"resource IS EMPTY", `resource IS_EMPTY`},
 		{"resource.a.b. == 1", `resource.a.b. EQ 1`},
 		{"resource.l[0]. == 1", `resource.l[0]. EQ 1`},
+		{"resource[0]. == 1", `resource[0]. EQ 1`},
+		{"subject.x. == 1", `resource.subject.x. EQ 1`},
+		{"subject[0]. == 1", `resource.subject[0]. EQ 1`},
+		{"resource.x == resource.y.", `resource.x EQ resource.y.`},
 		{"resource.a.. == 1", `unsupported(jsonpath "resource.a..") EQ 1`},
 		{"resource[ 0 ] == 1", `resource[0] EQ 1`},
 		{"resource.a[?(@.key == '[ 0 ]')].id == 's'", `resource.a[?(@.key == '[ 0 ]')].id EQ "s"`},
@@ -204,6 +208,15 @@ func TestParseConditionRefuses(t *testing.T) {
 		{"entitledResources as a MATCH pattern", "resource.v MATCH subject.entitledResources.of('x').as('a', 'b')",
 			"MATCH pattern: subject.entitledResources.of('x').as('a', 'b') is neither a pattern nor an attribute"},
 		{"a word operator without TO", "resource.a LESS THAN OR EQUAL 5", "misspelled word operator"},
+		{"the whole resource with a dot at its end", "resource. == 1", "operator at: . == 1"},
+		{"a path without a prefix with a dot at its end", "a. == 1", "operator at: . == 1"},
+		{"a nested path without a prefix with a dot at its end", "a.b. == 1", "operator at: . == 1"},
+		{"a path with an index and no prefix with a dot at its end", "a[0]. == 1", "operator at: . == 1"},
+		{"a name that starts with resource with a dot at its end", "resourceX.a. == 1", "operator at: . == 1"},
+		{"null with a dot at its end", "null. == 1", "operator at: . == 1"},
+		{"operation with a dot at its end", "operation. == 'r'", "operator at: . == 'r'"},
+		{"resourceType with a dot at its end", "resourceType. == 'r'", "operator at: . == 'r'"},
+		{"a right operand without a prefix with a dot at its end", "resource.x == a.", "trailing text: ."},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
