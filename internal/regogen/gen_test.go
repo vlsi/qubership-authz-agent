@@ -19,6 +19,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 	"reflect"
 	"strings"
 	"testing"
@@ -1052,6 +1053,102 @@ func TestARelationalComparisonComparesTheNumbersOfTheValues(t *testing.T) {
 				t.Errorf("%s with resource.a = %s is %s, want %s", tc.condition, tc.a, got, tc.want)
 			}
 		})
+	}
+}
+
+// A resource path written with one dot at its end is a reference of its own,
+// keyed with the dot, whose state is the knob trailing_dot_path's (ERROR, an
+// unknown outcome) when the request has a resource and ABSENT when it has
+// none. The path without the dot is the control: it still reads the value.
+func TestAPathThatEndsInADotIsAStateOfItsOwn(t *testing.T) {
+	for _, tc := range []struct {
+		name, condition, key, state, value, want string
+	}{
+		{"a nested path with a resource", "resource.a.b. == 'w'", `["res",".a.b."]`, "ERROR", "", "U"},
+		{"a nested path without a resource", "resource.a.b. == 'w'", `["res",".a.b."]`, "ABSENT", "", "F"},
+		{"a path with an index", "resource.l[0]. == 'w'", `["res",".l[0]."]`, "ERROR", "", "U"},
+		{"the path without the dot", "resource.a.b == 'w'", `["res",".a.b"]`, "VALUE", `"w"`, "T"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			values := map[string]Resolved{tc.key: resolved(t, tc.state, tc.value)}
+			if got := leafOutcome(t, tc.condition, DefaultOptions(), values); got != tc.want {
+				t.Errorf("%s with %s in state %s is %s, want %s", tc.condition, tc.key, tc.state, got, tc.want)
+			}
+		})
+	}
+}
+
+// The kind of a path that ends in a dot counts the dot, as the
+// specification's does: resource.a. is a nested path, resource.a one with one
+// step.
+func TestThePathKindCountsTheTrailingDot(t *testing.T) {
+	m, err := Generate(tenantWithSet(t, "DENY_UNLESS_PERMIT", "ALLOW", "resource.a. == 'w' OR resource.a == 'v'"),
+		table(t), DefaultOptions())
+	if err != nil {
+		t.Fatalf("Generate: %v", err)
+	}
+	kinds := map[string]spectables.Kind{}
+	for _, r := range m.Refs {
+		if strings.HasPrefix(r.Key, `["res",`) {
+			kinds[r.Key] = r.Kind
+		}
+	}
+	want := map[string]spectables.Kind{`["res",".a."]`: spectables.KindResNested, keyA: spectables.KindResPath}
+	if !maps.Equal(kinds, want) {
+		t.Errorf("kinds of the references = %v, want %v", kinds, want)
+	}
+}
+
+// With trailing_dot_path ABSENT a path that ends in a dot is ABSENT whatever
+// the resource, so its comparison is known, and a path without the dot keeps
+// every state of its kind, ABSENT included.
+func TestTrailingDotPathAbsentLeavesThePathWithoutTheDotAlone(t *testing.T) {
+	absent := editedTable(t, `"trailing_dot_path": "ERROR"`, `"trailing_dot_path": "ABSENT"`)
+	for _, tc := range []struct {
+		name, condition, key, state, value string
+		want                               bool
+	}{
+		{"a path that ends in a dot", "resource.a. IS NULL", `["res",".a."]`, "ABSENT", "", true},
+		{"the path without the dot, absent", "resource.a IS NULL", keyA, "ABSENT", "", true},
+		{"the path without the dot, a value", "resource.a == 'w'", keyA, "VALUE", `"w"`, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			opt := DefaultOptions()
+			opt.Decision = true
+			m, err := Generate(tenantWithSet(t, "DENY_UNLESS_PERMIT", "ALLOW", tc.condition), absent, opt)
+			if err != nil {
+				t.Fatalf("Generate: %v", err)
+			}
+			req := Request{Operation: "read", ResourceType: "doc",
+				Values: map[string]Resolved{tc.key: resolved(t, tc.state, tc.value)}}
+			if got := evalModule(t, m, req); got != tc.want {
+				t.Errorf("allow(%s) with %s in state %s = %v, want %v:\n%s", tc.condition, tc.key, tc.state, got,
+					tc.want, m.Text)
+			}
+			if tc.key != keyA && strings.Contains(m.DecisionText, "_hiP") {
+				t.Errorf("%s under ABSENT has a hi bound:\n%s", tc.condition, m.DecisionText)
+			}
+		})
+	}
+}
+
+// An export whose trailing_dot_path holds a value the generator does not know
+// is a defect of the export, so a resource path is an error.
+func TestAnUnknownTrailingDotPathIsAnError(t *testing.T) {
+	tab := editedTable(t, `"trailing_dot_path": "ERROR"`, `"trailing_dot_path": "NULL"`)
+	if _, err := Generate(tenantWithSet(t, "DENY_UNLESS_PERMIT", "ALLOW", "resource.a == 'w'"), tab,
+		DefaultOptions()); err == nil || !strings.Contains(err.Error(), "trailing_dot_path") {
+		t.Errorf("Generate error = %v, want one that names trailing_dot_path", err)
+	}
+}
+
+// With trailing_dot_path DROP the dot is read away: resource.a. reads the
+// value of resource.a.
+func TestTrailingDotPathDropReadsThePathWithoutTheDot(t *testing.T) {
+	tree := tenantWithSet(t, "DENY_UNLESS_PERMIT", "ALLOW", "resource.a. == 'w'")
+	drop := editedTable(t, `"trailing_dot_path": "ERROR"`, `"trailing_dot_path": "DROP"`)
+	if !decideWith(t, tree, drop, DefaultOptions(), map[string]Resolved{keyA: resolved(t, "VALUE", `"w"`)}) {
+		t.Errorf("allow(resource.a. == 'w') with resource.a = \"w\" under DROP = false, want true")
 	}
 }
 
@@ -2145,8 +2242,8 @@ func TestAJSONPathOperandIsReadFromTheResource(t *testing.T) {
 // A node no unknown value reaches has its hi bound equal to its lo bound, so
 // with Decision the module reads the lo clauses for it: maybe has the clauses
 // of allow, and neither a rule of a hi bound nor the hi rule of a subject
-// allowed copy appears. A condition over a GENERAL PIP is the control that
-// keeps the hi bound.
+// allowed copy appears. A condition over a GENERAL PIP and one over a
+// resource path that ends in a dot are the controls that keep the hi bound.
 func TestAnAlwaysKnownTreeAddsNoHiBound(t *testing.T) {
 	sets := `{"policySets": [{"policySetId": "s1", "name": "s1", "status": "ACTIVE", "target": "resourceType == 'doc'",
 		"combiningAlgorithm": "DENY_UNLESS_PERMIT", "tenantId": "t1",
@@ -2162,6 +2259,7 @@ func TestAnAlwaysKnownTreeAddsNoHiBound(t *testing.T) {
 		hi              bool
 	}{
 		{"an attribute of the resource", "resource.a == 'w'", false},
+		{"an attribute of the resource written with a dot at its end", "resource.a. == 'w'", true},
 		{"a GENERAL PIP", "subject.g == 'w'", true},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

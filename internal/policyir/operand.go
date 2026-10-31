@@ -50,8 +50,12 @@ type ResourceType struct{}
 // them here with their leading dot: ".a.b", ".subject.l[0]", ".subject.x-y".
 //
 // Path is one that package jsonpath compiles; [NewCompare] checks it.
+// TrailingDot reports a path written with one dot at its end, such as
+// resource.a. or resource.l[0].: Path leaves the dot out, and legacy reads such a
+// path as a state of its own instead of the path without the dot.
 type Resource struct {
-	Path string
+	Path        string
+	TrailingDot bool
 }
 
 // SubjectAttr names a built-in attribute of the subject.

@@ -559,7 +559,8 @@ func (p *parser) operand() (Operand, error) {
 		return o, nil
 	}
 	written := path
-	if strings.HasSuffix(path, ".") && !strings.HasSuffix(path, "..") {
+	dot := strings.HasSuffix(path, ".") && !strings.HasSuffix(path, "..")
+	if dot {
 		path = strings.TrimRight(path, ".")
 	}
 	path = normalizeIndexes(path)
@@ -569,11 +570,11 @@ func (p *parser) operand() (Operand, error) {
 	case path == "resourceType":
 		return ResourceType{}, nil
 	case path == "resource" || strings.HasPrefix(path, "resource.") || strings.HasPrefix(path, "resource["):
-		return p.resource(path[len("resource"):], written), nil
+		return p.resource(path[len("resource"):], written, dot), nil
 	case path == "subject":
 		return nil, p.fail("bare subject")
 	}
-	return p.resource("."+path, written), nil
+	return p.resource("."+path, written, dot), nil
 }
 
 // normalizeIndexes drops the spaces inside each index step of path, [ 0 ] to
@@ -611,14 +612,14 @@ func normalizeIndexes(path string) string {
 	return b.String()
 }
 
-// resource returns the resource operand for path, or an [Unsupported] one
-// quoting text, the operand as written, when [jsonpath.Compile] refuses the
-// path.
-func (p *parser) resource(path, text string) Operand {
+// resource returns the resource operand for path, written with one dot at its
+// end when dot, or an [Unsupported] one quoting text, the operand as written,
+// when [jsonpath.Compile] refuses the path.
+func (p *parser) resource(path, text string, dot bool) Operand {
 	if _, err := jsonpath.Compile(path); err != nil {
 		return Unsupported{Form: FormJSONPath, Text: text}
 	}
-	return Resource{Path: path}
+	return Resource{Path: path, TrailingDot: dot}
 }
 
 // isSubjectToken reports whether the legacy lexer reads tok, the text of an

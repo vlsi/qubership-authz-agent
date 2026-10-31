@@ -25,8 +25,8 @@ import (
 	"authz-agent/internal/regogen/spectables"
 )
 
-// A resource path with brackets, .., *, ?, or a call (kind res:jsonpath) is
-// read lazily: the clause that reads it binds the record that
+// A resource path with brackets, .., *, ?, or a call (kind res:jsonpath) and
+// without one dot at its end is read lazily: the clause that reads it binds the record that
 // nc.resource_path(input.resource, path) returns, so a path only a few
 // clauses reach is not evaluated for every request. Any other resource path is
 // in the input before the query. The function has a name of its own because
@@ -86,8 +86,9 @@ var jsonPathRef = &Ref{Kind: spectables.KindResJSONPath, Subset: true}
 // index past the end is INDEX_OOB; a path that selects several values and
 // none is EMPTY_SEL; one value null is NULL and an empty list EMPTY_COLL. A
 // selection the package stops as too large, which the specification does not
-// have, is ERROR: the resource paths' domain holds no ERROR, so every
-// comparison over the record is undefined, as over a failed source.
+// have, is ERROR: the domain of a path without a dot at its end holds no
+// ERROR (pathDomain), so every comparison over the record is undefined, as
+// over a failed source.
 func JSONPathRecord(doc jsonvalue.Value, path string) (*ast.Term, error) {
 	p, err := regobuiltins.CompilePath(path)
 	if err != nil {

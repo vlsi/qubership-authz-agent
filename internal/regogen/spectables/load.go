@@ -19,17 +19,13 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"slices"
 	"strings"
 )
 
 // SchemaVersion is the version of the export format the exporter writes.
-const SchemaVersion = 2
-
-// schemaVersion1 is the format before value rules, the split of class x, and
-// nodes. [Load] still reads it, because the generator embeds an export of
-// that version until the exporter writes version 2.
-const schemaVersion1 = 1
+const SchemaVersion = 3
 
 // maxProblems bounds how many problems an error from [Load] spells out.
 const maxProblems = 20
@@ -49,7 +45,6 @@ var (
 
 // Table is a loaded and validated export. It is safe for concurrent use.
 type Table struct {
-	version  int
 	specTag  string
 	profiles map[Profile]*profileTable
 }
@@ -78,14 +73,17 @@ func (c combo) String() string {
 type exportJSON struct {
 	SchemaVersion int                      `json:"schema_version"`
 	SpecTag       string                   `json:"spec_tag"`
+	Negates       map[Operator]Operator    `json:"negates,omitempty"`
 	Profiles      map[Profile]*profileJSON `json:"profiles"`
 }
 
 type profileJSON struct {
-	Knobs map[string]json.RawMessage `json:"knobs"`
-	Kinds map[Kind]Domain            `json:"kinds"`
-	Nodes *Nodes                     `json:"nodes,omitempty"`
-	Cells []cellJSON                 `json:"cells"`
+	Knobs   map[string]json.RawMessage `json:"knobs"`
+	Kinds   map[Kind]Domain            `json:"kinds"`
+	Nodes   *Nodes                     `json:"nodes,omitempty"`
+	Leaf    map[Outcome]Outcome        `json:"leaf,omitempty"`
+	Aliases map[Kind]Kind              `json:"aliases,omitempty"`
+	Cells   []cellJSON                 `json:"cells"`
 }
 
 type sideJSON struct {
@@ -120,16 +118,18 @@ func Load(r io.Reader) (*Table, error) {
 	if dec.More() {
 		return nil, fmt.Errorf("%w: data after the export document", ErrInvalid)
 	}
-	if doc.SchemaVersion != SchemaVersion && doc.SchemaVersion != schemaVersion1 {
-		return nil, fmt.Errorf("%w: schema_version is %d, want %d (or %d, the format before value rules)", ErrInvalid,
-			doc.SchemaVersion, SchemaVersion, schemaVersion1)
+	if doc.SchemaVersion != SchemaVersion {
+		return nil, fmt.Errorf("%w: schema_version is %d, want %d", ErrInvalid, doc.SchemaVersion, SchemaVersion)
 	}
 	if doc.SpecTag == "" {
 		return nil, fmt.Errorf("%w: spec_tag is empty", ErrInvalid)
 	}
 
 	var invalid, incomplete problems
-	t := &Table{version: doc.SchemaVersion, specTag: doc.SpecTag, profiles: map[Profile]*profileTable{}}
+	if !maps.Equal(doc.Negates, Negations) {
+		invalid.add("negates is %v, want %v", doc.Negates, Negations)
+	}
+	t := &Table{specTag: doc.SpecTag, profiles: map[Profile]*profileTable{}}
 	for p := range doc.Profiles {
 		if !known(Profiles, p) {
 			invalid.add("unknown profile %q", p)
@@ -141,7 +141,7 @@ func Load(r io.Reader) (*Table, error) {
 			incomplete.add("profile %s is missing", p)
 			continue
 		}
-		pt := buildProfile(p, doc.SchemaVersion, pj, &invalid, &incomplete)
+		pt := buildProfile(p, pj, &invalid, &incomplete)
 		t.profiles[p] = pt
 	}
 	if err := invalid.err(ErrInvalid); err != nil {
@@ -165,12 +165,8 @@ func Load(r io.Reader) (*Table, error) {
 // from.
 func (t *Table) SpecTag() string { return t.specTag }
 
-// SchemaVersion returns the format version of the export: [SchemaVersion], or
-// 1 for the format before value rules and nodes.
-func (t *Table) SchemaVersion() int { return t.version }
-
 // Nodes returns how the profile combines the outcomes of nodes, and false for
-// an unknown profile or an export of schema version 1, which carries none.
+// an unknown profile.
 func (t *Table) Nodes(p Profile) (Nodes, bool) {
 	pt := t.profiles[p]
 	if pt == nil || pt.nodes == nil {
@@ -241,30 +237,20 @@ func (pt *profileTable) inDomain(p Point) bool {
 	return p.Class == ""
 }
 
-func buildProfile(p Profile, version int, pj *profileJSON, invalid, incomplete *problems) *profileTable {
+func buildProfile(p Profile, pj *profileJSON, invalid, incomplete *problems) *profileTable {
 	pt := &profileTable{knobs: pj.Knobs, domains: map[Kind]Domain{}, cells: map[combo][]cellJSON{}, nodes: pj.Nodes}
-	classes := Classes
-	if version == schemaVersion1 {
-		classes = classesV1
-		if pj.Nodes != nil {
-			invalid.add("%s: nodes is set in schema version 1", p)
-		}
-	} else if pj.Nodes == nil {
+	if pj.Nodes == nil {
 		incomplete.add("%s: nodes is missing", p)
 	} else {
 		checkNodes(p, pj.Nodes, invalid, incomplete)
 	}
-	knobs := RequiredKnobs
-	if version == schemaVersion1 {
-		knobs = knobsV1
-	}
-	for _, name := range knobs {
+	for _, name := range RequiredKnobs {
 		if _, ok := pj.Knobs[name]; !ok {
 			incomplete.add("%s: knob %s is missing", p, name)
 		}
 	}
 	for name := range pj.Knobs {
-		if !slices.Contains(knobs, name) {
+		if !slices.Contains(RequiredKnobs, name) {
 			invalid.add("%s: unknown knob %q", p, name)
 		}
 	}
@@ -273,7 +259,7 @@ func buildProfile(p Profile, version int, pj *profileJSON, invalid, incomplete *
 			invalid.add("%s: unknown operand kind %q", p, k)
 			continue
 		}
-		checkDomain(p, k, d, classes, invalid)
+		checkDomain(p, k, d, invalid)
 		pt.domains[k] = d
 	}
 	for _, k := range Kinds {
@@ -281,9 +267,11 @@ func buildProfile(p Profile, version int, pj *profileJSON, invalid, incomplete *
 			incomplete.add("%s: operand kind %s has no domain", p, k)
 		}
 	}
+	checkLeaf(p, pj.Leaf, invalid)
+	checkAliases(p, pj.Aliases, pt.domains, invalid)
 	for i := range pj.Cells {
 		cj := pj.Cells[i]
-		if checkCell(p, version, i, &cj, pt.domains, invalid) {
+		if checkCell(p, i, &cj, pt.domains, invalid) {
 			c := combo{op: cj.Op, left: cj.Left.Kind}
 			if cj.Right != nil {
 				c.right = cj.Right.Kind
@@ -291,10 +279,165 @@ func buildProfile(p Profile, version int, pj *profileJSON, invalid, incomplete *
 			pt.cells[c] = append(pt.cells[c], cj)
 		}
 	}
+	derive(pt, pj.Aliases)
+	applyLeaf(pt, pj.Leaf)
 	return pt
 }
 
-func checkDomain(p Profile, k Kind, d Domain, classes []Class, invalid *problems) {
+// checkLeaf records a leaf map that does not take every outcome of legacy the
+// profile lacks to an outcome the profile has, or maps anything else.
+func checkLeaf(p Profile, leaf map[Outcome]Outcome, invalid *problems) {
+	legacy, _ := Outcomes(ProfileLegacy)
+	own, _ := Outcomes(p)
+	for from, to := range leaf {
+		if !known(legacy, from) || known(own, from) || !known(valueOutcomes(p), to) {
+			invalid.add("%s: leaf maps %q to %q; it maps each outcome of legacy the profile lacks to T, F, or U",
+				p, from, to)
+		}
+	}
+	for _, o := range legacy {
+		if _, ok := leaf[o]; !ok && !known(own, o) {
+			invalid.add("%s: leaf does not map %s, which profile %s lacks", p, o, p)
+		}
+	}
+}
+
+// checkAliases records an alias whose kind or representative is unknown or
+// takes no side, that names itself or another alias, or whose domain is not
+// its representative's.
+func checkAliases(p Profile, aliases map[Kind]Kind, domains map[Kind]Domain, invalid *problems) {
+	for a, r := range aliases {
+		switch {
+		case !known(Kinds, a) || !known(Kinds, r) || !admitsLeft(a) || !admitsLeft(r):
+			invalid.add("%s: alias %q of %q names an unknown kind or the pattern", p, a, r)
+		case aliases[r] != "": // an alias of itself names an alias too
+			invalid.add("%s: alias %s names %s, which is itself or another alias", p, a, r)
+		case !slices.Equal(domains[a].States, domains[r].States) || !slices.Equal(domains[a].Classes, domains[r].Classes):
+			invalid.add("%s: alias %s has another domain than its representative %s", p, a, r)
+		}
+	}
+}
+
+// derive gives each combination without cells of its own the cells of its
+// source: the combination over the representatives of its
+// kinds when that one has cells of its own, renamed; else, for a negated
+// operator, its positive operator's cells, mirrored; else the combination over
+// the representatives, renamed. A combination whose source has no cells stays
+// without them, and checkCoverage reports it.
+func derive(pt *profileTable, aliases map[Kind]Kind) {
+	own := map[combo]bool{}
+	for c := range pt.cells {
+		own[c] = true
+	}
+	rep := func(k Kind) Kind {
+		if r, ok := aliases[k]; ok {
+			return r
+		}
+		return k
+	}
+	var cellsOf func(c combo) []cellJSON
+	cellsOf = func(c combo) []cellJSON {
+		if cells, ok := pt.cells[c]; ok {
+			return cells
+		}
+		r := combo{op: c.op, left: rep(c.left), right: rep(c.right)}
+		var out []cellJSON
+		switch pos, negated := Negations[c.op]; {
+		case r != c && own[r]:
+			out = copyCells(pt.cells[r], c, false)
+		case negated:
+			out = copyCells(cellsOf(combo{op: pos, left: c.left, right: c.right}), c, true)
+		case r != c:
+			out = copyCells(cellsOf(r), c, false)
+		}
+		if len(out) > 0 {
+			pt.cells[c] = out
+		}
+		return out
+	}
+	for _, c := range combos() {
+		cellsOf(c)
+	}
+}
+
+// copyCells returns the cells as cells of the combination c, their outcomes
+// mirrored when mirror is set: T and F swap, and a by_value cell lists the
+// mirrored outcomes in the order of valueOutcomes.
+func copyCells(cells []cellJSON, c combo, mirror bool) []cellJSON {
+	out := make([]cellJSON, len(cells))
+	for i, cj := range cells {
+		left := *cj.Left
+		left.Kind = c.left
+		cj.Left = &left
+		if cj.Right != nil {
+			right := *cj.Right
+			right.Kind = c.right
+			cj.Right = &right
+		}
+		cj.Op = c.op
+		if mirror {
+			cj.Outcome = mirrorOutcome(cj.Outcome)
+			outs := make([]Outcome, 0, len(cj.Outcomes))
+			for _, o := range valueOutcomes(ProfileLegacy) {
+				if slices.ContainsFunc(cj.Outcomes, func(x Outcome) bool { return mirrorOutcome(x) == o }) {
+					outs = append(outs, o)
+				}
+			}
+			if cj.Outcomes != nil {
+				cj.Outcomes = outs
+			}
+		}
+		out[i] = cj
+	}
+	return out
+}
+
+func mirrorOutcome(o Outcome) Outcome {
+	switch o {
+	case OutcomeT:
+		return OutcomeF
+	case OutcomeF:
+		return OutcomeT
+	default:
+		return o
+	}
+}
+
+// applyLeaf maps the outcome of every cell through the profile's leaf map. A
+// by_value cell whose outcomes map to one becomes a cell of that outcome.
+func applyLeaf(pt *profileTable, leaf map[Outcome]Outcome) {
+	if len(leaf) == 0 {
+		return
+	}
+	mapped := func(o Outcome) Outcome {
+		if to, ok := leaf[o]; ok {
+			return to
+		}
+		return o
+	}
+	for c, cells := range pt.cells {
+		out := make([]cellJSON, len(cells))
+		for i, cj := range cells {
+			cj.Outcome = mapped(cj.Outcome)
+			if cj.Outcome == OutcomeByValue {
+				var outs []Outcome
+				for _, o := range cj.Outcomes {
+					if m := mapped(o); !slices.Contains(outs, m) {
+						outs = append(outs, m)
+					}
+				}
+				cj.Outcomes = outs
+				if len(outs) == 1 {
+					cj.Outcome, cj.Outcomes, cj.ValueRule = outs[0], nil, nil
+				}
+			}
+			out[i] = cj
+		}
+		pt.cells[c] = out
+	}
+}
+
+func checkDomain(p Profile, k Kind, d Domain, invalid *problems) {
 	if len(d.States) == 0 {
 		invalid.add("%s: operand kind %s has no states", p, k)
 	}
@@ -304,7 +447,7 @@ func checkDomain(p Profile, k Kind, d Domain, classes []Class, invalid *problems
 		}
 	}
 	for i, c := range d.Classes {
-		if !known(classes, c) || slices.Contains(d.Classes[:i], c) {
+		if !known(Classes, c) || slices.Contains(d.Classes[:i], c) {
 			invalid.add("%s: operand kind %s: class %q is unknown or repeated", p, k, c)
 		}
 	}
@@ -314,7 +457,9 @@ func checkDomain(p Profile, k Kind, d Domain, classes []Class, invalid *problems
 }
 
 // checkCell reports whether the cell is well-formed, and records each problem.
-func checkCell(p Profile, version, i int, cj *cellJSON, domains map[Kind]Domain, invalid *problems) bool {
+// The cells of either profile carry legacy's outcomes; the profile's leaf map
+// rewrites them after loading.
+func checkCell(p Profile, i int, cj *cellJSON, domains map[Kind]Domain, invalid *problems) bool {
 	before := len(invalid.list) + invalid.extra
 	where := fmt.Sprintf("%s: cell %d", p, i)
 	if !known(Operators, cj.Op) {
@@ -346,19 +491,16 @@ func checkCell(p Profile, version, i int, cj *cellJSON, domains map[Kind]Domain,
 	if cj.Effect != "" && !known(Effects, cj.Effect) {
 		invalid.add("%s: unknown effect %q", where, cj.Effect)
 	}
-	allowed, _ := Outcomes(p)
+	allowed, _ := Outcomes(ProfileLegacy)
 	switch {
 	case !known(allowed, cj.Outcome):
-		invalid.add("%s: outcome %q is not an outcome of profile %s", where, cj.Outcome, p)
+		invalid.add("%s: outcome %q is not an outcome of profile %s", where, cj.Outcome, ProfileLegacy)
 	case cj.Outcome == OutcomeByValue:
-		checkValueOutcomes(where, p, cj.Outcomes, invalid)
+		checkValueOutcomes(where, ProfileLegacy, cj.Outcomes, invalid)
 	case len(cj.Outcomes) > 0:
 		invalid.add("%s: outcomes is set for outcome %s; only by_value lists outcomes", where, cj.Outcome)
 	}
 	switch {
-	case version == schemaVersion1 && cj.ValueRule != nil:
-		invalid.add("%s: value_rule is set in schema version 1", where)
-	case version == schemaVersion1:
 	case cj.Outcome == OutcomeByValue:
 		checkValueRule(where, cj.ValueRule, invalid)
 	case cj.ValueRule != nil:
@@ -478,42 +620,48 @@ func checkNodes(p Profile, n *Nodes, invalid, incomplete *problems) {
 func checkCoverage(p Profile, pt *profileTable, invalid, incomplete *problems) {
 	contexts := allContexts()
 	var counts []uint8
+	for _, c := range combos() {
+		cells := pt.cells[c]
+		if len(cells) == 0 {
+			incomplete.add("%s: %s has no cells", p, c)
+			continue
+		}
+		lps := points(c.left, pt.domains[c.left])
+		rps := []Point{{}}
+		if c.right != "" {
+			rps = points(c.right, pt.domains[c.right])
+		}
+		n := len(contexts) * len(lps) * len(rps)
+		counts = slices.Grow(counts[:0], n)[:n]
+		clear(counts)
+		for i := range cells {
+			cells[i].mark(counts, contexts, lps, rps)
+		}
+		reportGrid(p, c, counts, contexts, lps, rps, invalid, incomplete)
+	}
+}
+
+// combos lists every combination of operator and operand kinds a profile must
+// answer.
+func combos() []combo {
+	var out []combo
 	for _, op := range Operators {
 		for _, lk := range Kinds {
 			if !admitsLeft(lk) {
 				continue
 			}
-			rights := []Kind{""}
-			if !op.Unary() {
-				rights = rights[:0]
-				for _, rk := range Kinds {
-					if admitsRight(op, rk) {
-						rights = append(rights, rk)
-					}
-				}
+			if op.Unary() {
+				out = append(out, combo{op: op, left: lk})
+				continue
 			}
-			for _, rk := range rights {
-				c := combo{op: op, left: lk, right: rk}
-				cells := pt.cells[c]
-				if len(cells) == 0 {
-					incomplete.add("%s: %s has no cells", p, c)
-					continue
+			for _, rk := range Kinds {
+				if admitsRight(op, rk) {
+					out = append(out, combo{op: op, left: lk, right: rk})
 				}
-				lps := points(lk, pt.domains[lk])
-				rps := []Point{{}}
-				if rk != "" {
-					rps = points(rk, pt.domains[rk])
-				}
-				n := len(contexts) * len(lps) * len(rps)
-				counts = slices.Grow(counts[:0], n)[:n]
-				clear(counts)
-				for i := range cells {
-					cells[i].mark(counts, contexts, lps, rps)
-				}
-				reportGrid(p, c, counts, contexts, lps, rps, invalid, incomplete)
 			}
 		}
 	}
+	return out
 }
 
 func (cj *cellJSON) mark(counts []uint8, contexts []Context, lps, rps []Point) {

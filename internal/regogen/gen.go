@@ -202,8 +202,7 @@ func Generate(tree *policyir.Tree, tab *spectables.Table, opt Options) (*Module,
 	}
 	nodes, ok := tab.Nodes(spectables.ProfileAgent)
 	if !ok {
-		return nil, fmt.Errorf("the export of schema version %d carries no node rules for profile %s",
-			tab.SchemaVersion(), spectables.ProfileAgent)
+		return nil, fmt.Errorf("the leaf-outcome tables carry no node rules for profile %s", spectables.ProfileAgent)
 	}
 	g.nodes = nodes
 	tops, err := g.tops()

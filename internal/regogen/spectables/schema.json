@@ -1,12 +1,18 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Leaf-outcome tables of the policy language specification",
-  "description": "The export the Rego generator reads. This schema checks the shape of the document. The Go loader (load.go) also checks what the schema cannot: every kind has a domain; a cell's state and class lie in its kind's domain; outcomes and value_rule are present exactly when outcome is by_value, and value_rule is sorted; nodes names every algorithm and rule effect; pattern appears only on the right of MATCH and NOT_MATCH; and every combination of operator and operand kinds is answered at every point exactly once. See doc.go.",
+  "description": "The export the Rego generator reads. This schema checks the shape of the document. The Go loader (load.go) also checks what the schema cannot: every kind has a domain; a cell's state and class lie in its kind's domain; outcomes and value_rule are present exactly when outcome is by_value, and value_rule is sorted; nodes names every algorithm and rule effect; pattern appears only on the right of MATCH and NOT_MATCH; and every combination of operator and operand kinds is answered at every point exactly once, after the loader derives the cells a combination does not carry (negates, aliases) and maps outcomes through the profile's leaf. See doc.go.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "spec_tag", "profiles"],
+  "required": ["schema_version", "spec_tag", "negates", "profiles"],
   "properties": {
-    "schema_version": {"const": 2},
+    "schema_version": {"const": 3},
+    "negates": {
+      "type": "object",
+      "description": "Each negated operator and the operator it negates. A negated combination without cells takes its positive operator's cells with T and F swapped.",
+      "propertyNames": {"$ref": "#/$defs/operator"},
+      "additionalProperties": {"$ref": "#/$defs/operator"}
+    },
     "spec_tag": {"type": "string", "minLength": 1, "description": "Tag of the specification commit the tables were computed from, such as r65."},
     "profiles": {
       "type": "object",
@@ -89,10 +95,10 @@
       "type": "object",
       "additionalProperties": false,
       "required": ["fold", "eq_numeric", "list_eq_by_value", "subset_fold", "right_list_scalar_ops",
-                   "right_list_attribute", "string_list_split", "idiom_list_item_trim"],
+                   "right_list_attribute", "string_list_split", "idiom_list_item_trim", "trailing_dot_path"],
       "properties": {"fold": {}, "eq_numeric": {}, "list_eq_by_value": {}, "subset_fold": {},
                      "right_list_scalar_ops": {}, "right_list_attribute": {}, "string_list_split": {},
-                     "idiom_list_item_trim": {}},
+                     "idiom_list_item_trim": {}, "trailing_dot_path": {}},
       "description": "Specification settings keyed by their name in the specification, with that profile's values."
     },
     "domain": {
@@ -150,33 +156,42 @@
         "outcomes": {"items": {"$ref": "#/$defs/legacyValueOutcome"}}
       }
     },
-    "agentCell": {
-      "allOf": [{"$ref": "#/$defs/cell"}],
-      "properties": {
-        "outcome": {"$ref": "#/$defs/agentOutcome"},
-        "outcomes": {"items": {"$ref": "#/$defs/agentValueOutcome"}}
-      }
+    "aliases": {
+      "type": "object",
+      "description": "Kinds that answer as an earlier kind of the same domain, their representative. A combination over an alias without cells takes its representative's cells, renamed.",
+      "propertyNames": {"$ref": "#/$defs/kind"},
+      "additionalProperties": {"$ref": "#/$defs/kind"}
     },
     "legacyProfile": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["knobs", "kinds", "nodes", "cells"],
+      "required": ["knobs", "kinds", "nodes", "leaf", "aliases", "cells"],
       "properties": {
         "knobs": {"$ref": "#/$defs/knobs"},
         "kinds": {"$ref": "#/$defs/kinds"},
         "nodes": {"$ref": "#/$defs/nodes"},
+        "leaf": {"type": "object", "maxProperties": 0, "description": "Legacy has every outcome of its cells."},
+        "aliases": {"$ref": "#/$defs/aliases"},
         "cells": {"type": "array", "items": {"$ref": "#/$defs/legacyCell"}}
       }
     },
     "agentProfile": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["knobs", "kinds", "nodes", "cells"],
+      "required": ["knobs", "kinds", "nodes", "leaf", "aliases", "cells"],
       "properties": {
         "knobs": {"$ref": "#/$defs/knobs"},
         "kinds": {"$ref": "#/$defs/kinds"},
         "nodes": {"$ref": "#/$defs/nodes"},
-        "cells": {"type": "array", "items": {"$ref": "#/$defs/agentCell"}}
+        "leaf": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["ABORT", "ERR"],
+          "description": "The agent's outcome for each outcome of legacy the agent lacks; the loader maps every cell through it.",
+          "properties": {"ABORT": {"$ref": "#/$defs/agentValueOutcome"}, "ERR": {"$ref": "#/$defs/agentValueOutcome"}}
+        },
+        "aliases": {"$ref": "#/$defs/aliases"},
+        "cells": {"type": "array", "items": {"$ref": "#/$defs/legacyCell"}}
       }
     }
   }

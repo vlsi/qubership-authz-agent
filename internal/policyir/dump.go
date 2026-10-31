@@ -216,10 +216,14 @@ func FormatOperand(o Operand) string {
 	case ResourceType:
 		return "resourceType"
 	case Resource:
-		if strings.ContainsFunc(v.Path, func(r rune) bool { return r < ' ' || r > '~' }) {
-			return "resource" + strconv.Quote(v.Path)
+		path := v.Path
+		if v.TrailingDot {
+			path += "."
 		}
-		return "resource" + v.Path
+		if strings.ContainsFunc(path, func(r rune) bool { return r < ' ' || r > '~' }) {
+			return "resource" + strconv.Quote(path)
+		}
+		return "resource" + path
 	case Subject:
 		if v.Key != "" {
 			return fmt.Sprintf("subject.%s[%q]", v.Attr, v.Key)

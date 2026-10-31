@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
+	"slices"
 	"strings"
 
 	"authz-agent/internal/jsonvalue"
@@ -105,6 +106,16 @@ func resourceKind(path string) spectables.Kind {
 	}
 }
 
+// specPath returns the path of a resource operand as the specification keeps
+// it: with the one dot at its end it was written with. The kind of a path
+// counts that dot, so resource.a. is a nested path.
+func specPath(o policyir.Resource) string {
+	if o.TrailingDot {
+		return o.Path + "."
+	}
+	return o.Path
+}
+
 func specKey(parts ...any) string {
 	b, err := json.Marshal(parts)
 	if err != nil {
@@ -118,10 +129,10 @@ func specKey(parts ...any) string {
 func SpecKey(o policyir.Operand) (string, bool) {
 	switch o := o.(type) {
 	case policyir.Resource:
-		if o.Path == ".null" {
+		if o.Path == ".null" && !o.TrailingDot {
 			return specKey("null"), true
 		}
-		return specKey("res", o.Path), true
+		return specKey("res", specPath(o)), true
 	case policyir.Subject:
 		if o.Attr == policyir.SubjectPermissionScope {
 			return specKey("subj", "permissionScope."+o.Key), true
@@ -236,10 +247,10 @@ func (g *gen) operandKind(o policyir.Operand) (kind spectables.Kind, network, de
 	case policyir.ResourceType:
 		return spectables.KindResourceType, false, true, nil
 	case policyir.Resource:
-		if o.Path == ".null" {
+		if o.Path == ".null" && !o.TrailingDot {
 			return spectables.KindNull, false, true, nil
 		}
-		return resourceKind(o.Path), false, true, nil
+		return resourceKind(specPath(o)), false, true, nil
 	case policyir.Subject:
 		return spectables.Kind("subj." + string(o.Attr)), false, true, nil
 	case policyir.Entitled:
@@ -300,13 +311,19 @@ func (g *gen) ref(o policyir.Operand, kind spectables.Kind, network bool) (*Ref,
 	if !ok {
 		return nil, fmt.Errorf("kind %s has no domain", kind)
 	}
+	if res, ok := o.(policyir.Resource); ok && kind != spectables.KindNull && kind != spectables.KindResource {
+		var err error
+		if dom, err = g.pathDomain(dom, res.TrailingDot); err != nil {
+			return nil, err
+		}
+	}
 	if id == "" {
 		g.nextRef++
 		id = fmt.Sprintf("r%d", g.nextRef)
 	}
 	_, pass := o.(policyir.PassValue)
 	r := &Ref{ID: id, Key: key, Kind: kind, Network: network, Pass: pass, domain: dom}
-	if res, ok := o.(policyir.Resource); ok && kind == spectables.KindResJSONPath {
+	if res, ok := o.(policyir.Resource); ok && kind == spectables.KindResJSONPath && !res.TrailingDot {
 		r.Network, r.Path = true, res.Path
 	}
 	g.refs[key] = r
@@ -334,6 +351,17 @@ func (g *gen) side(o policyir.Operand) (*side, error) {
 	case policyir.Subject:
 		if o.Attr == policyir.SubjectPermissionScope {
 			return &side{kind: spectables.KindSubjPermissionScope, fixed: spectables.StateScopeOutside}, nil
+		}
+	case policyir.Resource:
+		if o.TrailingDot {
+			state, err := g.stringKnob("trailing_dot_path")
+			if err != nil {
+				return nil, err
+			}
+			if state == "DROP" {
+				o.TrailingDot = false
+				return g.side(o)
+			}
 		}
 	}
 	kind, network, declared, err := g.operandKind(o)
@@ -388,6 +416,39 @@ func (g *gen) splitList(raw string) ([]jsonvalue.Value, error) {
 		out[i] = trim(p)
 	}
 	return out, nil
+}
+
+// pathDomain narrows dom, the domain of a resource path kind, to the states a
+// path takes when it ends in one dot (dot) or does not. The knob
+// trailing_dot_path names the state legacy gives the first: a path that ends
+// in a dot is that state with a resource in the request and ABSENT without
+// one. DROP reads the dot away before this point, and ABSENT adds no state of
+// its own. With ERROR, a path without the dot loses ERROR from its domain:
+// the other states the specification adds to a path kind, of a path through
+// null and of a path that starts with a bracket, are ABSENT, as
+// [JSONPathRecord] reads them too. Any other value of the knob is an error.
+func (g *gen) pathDomain(dom spectables.Domain, dot bool) (spectables.Domain, error) {
+	v, err := g.stringKnob("trailing_dot_path")
+	if err != nil {
+		return dom, err
+	}
+	state := spectables.State(v)
+	switch {
+	case v == "DROP" || state == spectables.StateAbsent:
+		if !dot {
+			return dom, nil
+		}
+	case state != spectables.StateError:
+		return dom, fmt.Errorf("knob trailing_dot_path: unknown value %q", v)
+	}
+	if dot {
+		return spectables.Domain{States: slices.DeleteFunc(slices.Clone(dom.States), func(s spectables.State) bool {
+			return s != spectables.StateAbsent && s != state
+		})}, nil
+	}
+	return spectables.Domain{States: slices.DeleteFunc(slices.Clone(dom.States), func(s spectables.State) bool {
+		return s == state
+	}), Classes: dom.Classes}, nil
 }
 
 // stringKnob returns a knob of the agent profile that holds a string.
