@@ -121,6 +121,9 @@ var (
 	constAtomRE    = regexp.MustCompile(`^(TRUE|FALSE|true|false)`)
 	filteredRE     = regexp.MustCompile(`^ FILTERED '([^']*)'`)
 	listMoreRE     = regexp.MustCompile(`^ *,`)
+	functionRE     = regexp.MustCompile(`\.(?:length|min|max|avg|sum|first|last|keys)$`)
+	bracketStepRE  = regexp.MustCompile(`^\[[^\]]*\]`)
+	subjectStepRE  = regexp.MustCompile(`^subject\.(?:id|name|type|serviceAccount)\.`)
 
 	// scopeTokenRE and pipTokenRE match the starts of the lexer's
 	// subject.permissionScope.<key> token and the whole of its PIP token.
@@ -554,6 +557,13 @@ func (p *parser) operand() (Operand, error) {
 	if path == "" || keywords[path] {
 		return nil, p.fail("operand: " + truncate(rest, 30))
 	}
+	path = path[:pathLen(path)]
+	if m := bracketStepRE.FindString(rest[len(path):]); !strings.HasSuffix(path, ".") && (m == "[]" || strings.Contains(m, `"`)) {
+		return nil, p.fail("operand: empty brackets or double quotes in a path")
+	}
+	if path == "subject.entitledResources" || subjectStepRE.MatchString(path) {
+		return nil, p.fail("operand: a step after a subject attribute")
+	}
 	p.i += len(path)
 	if o := p.subjectToken(path); o != nil {
 		return o, nil
@@ -593,6 +603,64 @@ func takesTrailingDot(tok string) bool {
 		}
 	}
 	return false
+}
+
+// pathLen returns the length of the operand path at the start of tok, an
+// attribute token. The path ends before the first step it cannot take: one dot
+// or two dots followed by neither a letter, a digit, '_', nor '@', and a
+// parenthesis outside brackets. One dot at the end of tok is a trailing dot,
+// two dots are such a step. Only a path that starts with resource or subject
+// followed by a dot or a bracket takes a function such as .length(), and in
+// such a path the dot that starts the step it cannot take stays in the path;
+// [takesTrailingDot] decides whether the operand keeps it. Text in brackets is
+// not checked.
+func pathLen(tok string) int {
+	prefixed := false
+	for _, w := range []string{"resource", "subject"} {
+		if rest, ok := strings.CutPrefix(tok, w); ok && rest != "" && (rest[0] == '.' || rest[0] == '[') {
+			prefixed = true
+		}
+	}
+	depth, quoted := 0, false
+	for i := 0; i < len(tok); i++ {
+		c := tok[i]
+		switch {
+		case depth > 0:
+			switch {
+			case c == '\'':
+				quoted = !quoted
+			case quoted:
+			case c == '[':
+				depth++
+			case c == ']':
+				depth--
+			}
+		case c == '[':
+			depth++
+		case c == '.':
+			j := i + 1
+			if j < len(tok) && tok[j] == '.' {
+				j++
+			}
+			if j == len(tok) && j == i+1 || j < len(tok) && isKeyStart(tok[j]) {
+				i = j - 1
+				continue
+			}
+			if prefixed {
+				return i + 1
+			}
+			return i
+		case c == '(' && prefixed && functionRE.MatchString(tok[:i]) && strings.HasPrefix(tok[i:], "()"):
+			i++
+		case c == '(' || c == ')':
+			return i
+		}
+	}
+	return len(tok)
+}
+
+func isKeyStart(c byte) bool {
+	return isNameStart(c) || c >= '0' && c <= '9' || c == '@'
 }
 
 // normalizeIndexes drops the spaces inside each index step of path, [ 0 ] to
