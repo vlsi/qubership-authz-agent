@@ -395,8 +395,11 @@ func valueOutcomes(p Profile) []Outcome {
 // compared instead (EVAL). string_list_split says how a literal list of two
 // or more quoted strings is read (SPLIT_TRIM: from its token, split at every
 // comma), and idiom_list_item_trim how each part is trimmed.
+// trailing_dot_path is what a resource path that ends in one dot reads as:
+// the state it gives, ABSENT as a path Jayway cannot compile, or DROP, the
+// path without the dot; a path without the dot never gives that state.
 var RequiredKnobs = []string{"fold", "eq_numeric", "list_eq_by_value", "subset_fold", "right_list_scalar_ops",
-	"right_list_attribute", "string_list_split", "idiom_list_item_trim"}
+	"right_list_attribute", "string_list_split", "idiom_list_item_trim", "trailing_dot_path"}
 
 // Domain is what an operand of one kind can resolve to: its states and, when
 // the states include VALUE, the classes of value it can hold.

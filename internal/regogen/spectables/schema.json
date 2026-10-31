@@ -95,10 +95,10 @@
       "type": "object",
       "additionalProperties": false,
       "required": ["fold", "eq_numeric", "list_eq_by_value", "subset_fold", "right_list_scalar_ops",
-                   "right_list_attribute", "string_list_split", "idiom_list_item_trim"],
+                   "right_list_attribute", "string_list_split", "idiom_list_item_trim", "trailing_dot_path"],
       "properties": {"fold": {}, "eq_numeric": {}, "list_eq_by_value": {}, "subset_fold": {},
                      "right_list_scalar_ops": {}, "right_list_attribute": {}, "string_list_split": {},
-                     "idiom_list_item_trim": {}},
+                     "idiom_list_item_trim": {}, "trailing_dot_path": {}},
       "description": "Specification settings keyed by their name in the specification, with that profile's values."
     },
     "domain": {

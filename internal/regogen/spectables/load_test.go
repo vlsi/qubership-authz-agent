@@ -141,7 +141,7 @@ func fixtureProfile(eq []any) doc {
 	return doc{
 		"knobs": doc{"fold": "java", "eq_numeric": false, "list_eq_by_value": true, "subset_fold": false,
 			"right_list_scalar_ops": "ABORT", "right_list_attribute": "EVAL", "string_list_split": "SPLIT_TRIM",
-			"idiom_list_item_trim": "java_trim"},
+			"idiom_list_item_trim": "java_trim", "trailing_dot_path": "ERROR"},
 		"kinds": kinds,
 		"nodes": fixtureNodes(),
 		"cells": cells,
