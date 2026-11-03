@@ -102,7 +102,8 @@ type Subject struct {
 // subject, and ANONYMOUS for an anonymous request. subject.serviceAccount is
 // NULL. subject.scopes splits the claim scope at white space, and is PIP_NULL
 // where the claim is not a string or holds no scope. subject.roles reads
-// realm_access.roles: a string there is ERROR, and no role is ABSENT.
+// realm_access.roles: a string there is ERROR, and an empty list, any other
+// value, or no such member is ABSENT.
 // subject.isM2M holds for a subject of type SERVICE and for one whose claim
 // level is m2m in any case.
 func SubjectOf(claims *jsonvalue.Object, anonymous bool, rules SubjectRules) Subject {

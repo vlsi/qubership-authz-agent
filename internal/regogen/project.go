@@ -107,7 +107,10 @@ type Record struct {
 
 // Input is the projection of a request into the input of a module.
 type Input struct {
-	Records map[string]Record // by reference ID, network PIPs included, pass values and lazy paths not
+	// Records holds the record of each reference by its ID, network PIPs
+	// included, pass values and lazy paths not. The input of an item of a
+	// bulk request holds the item's own records only ([Bulk.Item]).
+	Records map[string]Record
 	SRoles  []string
 	M2M     bool
 	G       []string

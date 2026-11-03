@@ -122,13 +122,19 @@ func evalModule(t *testing.T, m *Module, req Request) bool {
 // undefined.
 func evalRule(t *testing.T, m *Module, req Request, rule string) any {
 	t.Helper()
-	pkg, text := DefaultOptions().Package, m.Text
-	if rule == "decision" || rule == "maybe" {
-		pkg, text = pkg+"_decision", m.DecisionText
-	}
 	in, err := Project(m, req)
 	if err != nil {
 		t.Fatalf("Project: %v", err)
+	}
+	return evalInput(t, m, in, rule)
+}
+
+// evalInput is evalRule on the input in.
+func evalInput(t *testing.T, m *Module, in *Input, rule string) any {
+	t.Helper()
+	pkg, text := DefaultOptions().Package, m.Text
+	if rule == "decision" || rule == "maybe" {
+		pkg, text = pkg+"_decision", m.DecisionText
 	}
 	// nc.pip answers a network PIP from the projection, as the agent's
 	// built-in would after its call
@@ -2226,7 +2232,7 @@ func TestAnUnknownKnobValueIsNoRejection(t *testing.T) {
 // iterateTree is a tenant whose one set iterates over the permission scope
 // under algorithm, with one ALLOW rule whose condition compares the pass's
 // domain with the resource's.
-func iterateTree(t *testing.T, algorithm, condition string) *policyir.Tree {
+func iterateTree(t testing.TB, algorithm, condition string) *policyir.Tree {
 	t.Helper()
 	sets := fmt.Sprintf(`{"policySets": [{"policySetId": "s1", "status": "ACTIVE", "target": "resourceType == 'doc'",
 		"combiningAlgorithm": "DENY_UNLESS_PERMIT", "tenantId": "t1",

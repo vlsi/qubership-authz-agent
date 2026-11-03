@@ -75,7 +75,8 @@ func TestReadBodyRefusesABodyThatIsNotAnObject(t *testing.T) {
 }
 
 // A resource that is null differs from a body without the member resource
-// only for the whole resource, which is then VALUE null.
+// for the whole resource, which is then VALUE null, and for a path that ends
+// in a dot, which is then ERROR.
 func TestResolveReadsTheResourceOperandsOfTheBody(t *testing.T) {
 	m, err := Generate(tenantWithSet(t, "DENY_UNLESS_PERMIT", "ALLOW",
 		"resource == 'x' OR resource.a == 'x' OR resource.a.b == 'x' OR resource.a. == 'x' OR null == 'x' "+
@@ -105,6 +106,7 @@ func TestResolveReadsTheResourceOperandsOfTheBody(t *testing.T) {
 		{"a string parent", `{"resource": {"a": "s"}}`, ab, spectables.StateAbsent, ""},
 		{"a dot at the end", `{"resource": {"a": "x"}}`, dot, spectables.StateError, ""},
 		{"a dot at the end, no resource", `{}`, dot, spectables.StateAbsent, ""},
+		{"a dot at the end, a null resource", `{"resource": null}`, dot, spectables.StateError, ""},
 		{"null, a member null", `{"resource": {"null": "x"}}`, null, spectables.StateValue, `"x"`},
 		{"null, a null member null", `{"resource": {"null": null}}`, null, spectables.StateNull, ""},
 		{"null, no member null", `{"resource": {"a": "x"}}`, null, spectables.StateAbsent, ""},
@@ -146,5 +148,39 @@ func TestResolveLeavesOutALazilyReadPath(t *testing.T) {
 	}
 	if _, ok := values[keyA]; !ok {
 		t.Errorf("Resolve: no value of %s", keyA)
+	}
+}
+
+// The knob trailing_dot_path names the state of a path that ends in a dot,
+// and DROP reads the path without it.
+func TestResolveReadsAPathThatEndsInADotByTheKnob(t *testing.T) {
+	const dot = `["res",".a."]`
+	for _, tc := range []struct {
+		knob, key string
+		state     spectables.State
+		value     string
+	}{
+		{"ERROR", dot, spectables.StateError, ""},
+		{"ABSENT", dot, spectables.StateAbsent, ""},
+		{"DROP", keyA, spectables.StateValue, `"w"`},
+	} {
+		t.Run(tc.knob, func(t *testing.T) {
+			tab := editedTable(t, `"trailing_dot_path": "ERROR"`, `"trailing_dot_path": "`+tc.knob+`"`)
+			m, err := Generate(tenantWithSet(t, "DENY_UNLESS_PERMIT", "ALLOW", "resource.a. == 'w'"), tab,
+				DefaultOptions())
+			if err != nil {
+				t.Fatalf("Generate: %v", err)
+			}
+			values := map[string]Resolved{}
+			m.Resolve(Body{HasResource: true, Resource: claimsOf(t, `{"a": "w"}`)}, values)
+			got := values[tc.key]
+			value := ""
+			if got.State == spectables.StateValue {
+				value = jsonText(got.Value)
+			}
+			if got.State != tc.state || value != tc.value || len(values) != 1 {
+				t.Errorf("Resolve under %s = %v, want %s: %s %s", tc.knob, values, tc.key, tc.state, tc.value)
+			}
+		})
 	}
 }
