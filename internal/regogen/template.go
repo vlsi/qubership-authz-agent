@@ -500,7 +500,7 @@ func valueTemplate(op spectables.Operator, L, R *side, cl, cr spectables.Class) 
 					text: fmt.Sprintf("every x in %s { not x in %s }", eb, setLit(toks))}})
 				return out(spectables.RuleContainsAny, union(ts), dnf{f})
 			}
-			v := "e_" + L.ref.ID + "_" + R.ref.ID
+			v := "e_" + L.ref.Var + "_" + R.ref.Var
 			bind := conj(L.bind(), R.bind())
 			var t dnf
 			var f clause
@@ -564,7 +564,7 @@ func valueTemplate(op spectables.Operator, L, R *side, cl, cr spectables.Class) 
 		if net {
 			c = clsAfterBuilt
 		}
-		v := "x_" + L.ref.ID + "_" + R.ref.ID
+		v := "x_" + L.ref.Var + "_" + R.ref.Var
 		bind := conj(L.bind(), R.bind())
 		t := conj(bind, clause{{cls: c, text: fmt.Sprintf("some %s in %s", v, b.ks(L)), fact: vfact(L),
 			test: pairTest("overlap", L, R)},
@@ -633,7 +633,7 @@ func segmentGuards(pattern, ref string) clause {
 	}
 	var out clause
 	if first < 0 {
-		out = append(out, expr{cls: clsIndexEq, text: fmt.Sprintf("input.nseg.%s == %d", ref, len(segs))})
+		out = append(out, expr{cls: clsIndexEq, text: fmt.Sprintf("input.nseg%s == %d", refIndex(ref), len(segs))})
 	}
 	head := segs
 	if first >= 0 {
@@ -642,7 +642,7 @@ func segmentGuards(pattern, ref string) clause {
 	n := 0
 	for i := len(head) - 1; i >= 0 && n < most; i-- {
 		if head[i] != "" && !isMeta(head[i]) {
-			out = append(out, expr{cls: clsIndexEq, text: fmt.Sprintf("input.seg.%s[%d] == %s", ref, i, lit(head[i]))})
+			out = append(out, expr{cls: clsIndexEq, text: fmt.Sprintf("input.seg%s[%d] == %s", refIndex(ref), i, lit(head[i]))})
 			n++
 		}
 	}
@@ -651,7 +651,7 @@ func segmentGuards(pattern, ref string) clause {
 		for j := 0; j < len(tail) && len(out) < most+1; j++ {
 			x := tail[len(tail)-1-j]
 			if x != "" && !isMeta(x) {
-				out = append(out, expr{cls: clsIndexEq, text: fmt.Sprintf("input.eseg.%s[%d] == %s", ref, j, lit(x))})
+				out = append(out, expr{cls: clsIndexEq, text: fmt.Sprintf("input.eseg%s[%d] == %s", refIndex(ref), j, lit(x))})
 			}
 		}
 	}

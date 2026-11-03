@@ -177,6 +177,28 @@ func TestEqualityOfAnAttributeAndALiteral(t *testing.T) {
 	}
 }
 
+// A record is keyed by the operand's text, and the module reads a text that
+// is not a Rego identifier, such as resource.a$b, by a bracketed string. A
+// comparison of two such operands binds a variable named after both.
+func TestAnOperandThatIsNotAnIdentifierReadsItsRecordByItsText(t *testing.T) {
+	tree := tenantWithSet(t, "DENY_UNLESS_PERMIT", "ALLOW", "resource.a$b CONTAINS ANY resource.c$d")
+	for _, tc := range []struct {
+		name, right string
+		want        bool
+	}{
+		{"a shared element allows", `["y"]`, true},
+		{"no shared element denies", `["z"]`, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			values := map[string]Resolved{`["res",".a$b"]`: resolved(t, "VALUE", `["x", "y"]`),
+				`["res",".c$d"]`: resolved(t, "VALUE", tc.right)}
+			if got := decideValues(t, tree, DefaultOptions(), values); got != tc.want {
+				t.Errorf("allow(resource.c$d = %s) = %v, want %v", tc.right, got, tc.want)
+			}
+		})
+	}
+}
+
 // A request may send the whole resource as a string, and the resource then
 // compares by value. An export whose domain of the whole resource held only
 // an object answered every such leaf with a constant false.

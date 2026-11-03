@@ -278,10 +278,10 @@ func Project(m *Module, req Request) (*Input, error) {
 			continue
 		}
 		var v Resolved
-		switch r.ID {
-		case "op":
+		switch r.Kind {
+		case spectables.KindOperation:
 			v = Resolved{State: spectables.StateValue, Value: req.Operation}
-		case "rt":
+		case spectables.KindResourceType:
 			v = Resolved{State: spectables.StateValue, Value: req.ResourceType}
 		default:
 			var ok bool

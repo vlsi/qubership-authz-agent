@@ -73,12 +73,12 @@ func (s *side) points() []point {
 // field is the expression that reads one field of the side's value record.
 func (s *side) field(f string) string {
 	if s.ref.Network {
-		return "p_" + s.ref.ID + "." + f
+		return "p_" + s.ref.Var + "." + f
 	}
 	if s.ref.Pass {
-		return "p." + f + "." + s.ref.ID
+		return "p." + f + refIndex(s.ref.ID)
 	}
-	return "input." + f + "." + s.ref.ID
+	return "input." + f + refIndex(s.ref.ID)
 }
 
 // bind is the clause that binds the record of a network PIP or of a lazily
@@ -88,10 +88,10 @@ func (s *side) bind() clause {
 		return nil
 	}
 	if s.ref.Path != "" {
-		return clause{{cls: clsBuiltin, text: fmt.Sprintf("p_%s := nc.resource_path(input.resource, %s)", s.ref.ID,
+		return clause{{cls: clsBuiltin, text: fmt.Sprintf("p_%s := nc.resource_path(input.resource, %s)", s.ref.Var,
 			lit(s.ref.Path))}}
 	}
-	return clause{{cls: clsBuiltin, text: fmt.Sprintf("p_%s := nc.pip(%q)", s.ref.ID, s.ref.ID)}}
+	return clause{{cls: clsBuiltin, text: fmt.Sprintf("p_%s := nc.pip(%s)", s.ref.Var, lit(s.ref.ID))}}
 }
 
 // cls is the class of a check of the side: after the binding for a network PIP.

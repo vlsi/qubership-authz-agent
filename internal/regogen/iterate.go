@@ -18,9 +18,10 @@ package regogen
 // assignment of the subject's permission scope, and combines the passes by
 // the iterate's algorithm. The projection writes the passes to input.ps, each
 // with the records of the scope keys the module reads in the layout of the
-// input (p.s.rN, p.k.rN, ...), and sets input.psf when the permission scope
-// cannot be read. The subtree of the set is translated with the pass as a
-// parameter: its rules are functions of p, and a pass value reads p.
+// input (p.s["subject.permissionScope.x"], ...), and sets input.psf when the
+// permission scope cannot be read. The subtree of the set is translated with
+// the pass as a parameter: its rules are functions of p, and a pass value
+// reads p.
 //
 // No pass is no kid, so an empty scope gives the algorithm's outcome over no
 // children; a failed scope leaves the node unknown, [deny, permit], as a

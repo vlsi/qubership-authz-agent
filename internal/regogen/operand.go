@@ -15,6 +15,8 @@
 package regogen
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"regexp"
@@ -33,8 +35,17 @@ import (
 // each pass of input.ps for a pass value; for a network PIP the stub nc.pip
 // returns it, and for a lazily read resource path nc.resource_path.
 type Ref struct {
-	// ID is the name of the reference in the module: op, rt, or rN.
+	// ID is the name of the reference in the module and the key of its
+	// record in each field map of the input: the operand as a policy writes
+	// it, such as resource.owner.id, subject.roles, operation, or
+	// resourceType. Two spellings of one operand share an ID.
 	ID string
+	// Var is the Rego variable a clause binds a network record to, p_<Var>,
+	// and part of the names of the variables a comparison of two references
+	// binds: ID with every character other than a letter or a digit replaced
+	// by _, and, where ID has a character other than a letter, a digit, or a
+	// dot, a hash of ID after it.
+	Var string
 	// Key identifies the operand across the generator and the projection: the
 	// operand as the specification writes it, as JSON, such as
 	// ["res", ".a.b"] or ["subj", "roles"].
@@ -289,14 +300,74 @@ func (g *gen) operandKind(o policyir.Operand) (kind spectables.Kind, network, de
 	return "", false, true, fmt.Errorf("operand %T", o)
 }
 
+// refText returns the operand of a [SpecKey] as a policy writes it: the ID of
+// its reference.
+func refText(key string) (string, error) {
+	var parts []any
+	if err := json.Unmarshal([]byte(key), &parts); err != nil {
+		return "", err
+	}
+	str := func(i int) string { s, _ := parts[i].(string); return s }
+	switch {
+	case len(parts) == 1:
+		return str(0), nil
+	case len(parts) == 2 && str(0) == "res":
+		return "resource" + str(1), nil
+	case len(parts) == 2 && str(0) == "subj":
+		return "subject." + str(1), nil
+	case len(parts) == 3 && str(0) == "ent":
+		as, _ := parts[2].([]any)
+		quoted := make([]string, len(as))
+		for i, a := range as {
+			quoted[i] = "'" + fmt.Sprint(a) + "'"
+		}
+		return fmt.Sprintf("subject.entitledResources.of('%s').as(%s)", str(1), strings.Join(quoted, ", ")), nil
+	}
+	return "", fmt.Errorf("operand key %s has no text", key)
+}
+
+// refVar returns the [Ref.Var] of a reference ID.
+func refVar(id string) string {
+	plain := true
+	v := strings.Map(func(r rune) rune {
+		switch {
+		case r >= 'a' && r <= 'z', r >= 'A' && r <= 'Z', r >= '0' && r <= '9':
+			return r
+		case r != '.':
+			plain = false
+		}
+		return '_'
+	}, id)
+	if !plain {
+		sum := sha256.Sum256([]byte(id))
+		v += "_" + hex.EncodeToString(sum[:4])
+	}
+	return v
+}
+
+// refIndex is the Rego reference of a reference's record in a field map:
+// .id where id is an identifier, ["id"] otherwise.
+func refIndex(id string) string {
+	if identRE.MatchString(id) && !regoKeywords[id] {
+		return "." + id
+	}
+	return "[" + lit(id) + "]"
+}
+
+var identRE = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*$`)
+
+var regoKeywords = map[string]bool{"as": true, "contains": true, "default": true, "else": true, "every": true,
+	"false": true, "if": true, "import": true, "in": true, "not": true, "null": true, "package": true,
+	"some": true, "true": true, "with": true}
+
 // ref returns the reference of an operand, creating it on first use.
 func (g *gen) ref(o policyir.Operand, kind spectables.Kind, network bool) (*Ref, error) {
-	var key, id string
+	var key string
 	switch o.(type) {
 	case policyir.Operation:
-		key, id = specKey("operation"), "op"
+		key = specKey("operation")
 	case policyir.ResourceType:
-		key, id = specKey("resourceType"), "rt"
+		key = specKey("resourceType")
 	default:
 		k, ok := SpecKey(o)
 		if !ok {
@@ -317,12 +388,17 @@ func (g *gen) ref(o policyir.Operand, kind spectables.Kind, network bool) (*Ref,
 			return nil, err
 		}
 	}
-	if id == "" {
-		g.nextRef++
-		id = fmt.Sprintf("r%d", g.nextRef)
+	id, err := refText(key)
+	if err != nil {
+		return nil, err
 	}
+	v := refVar(id)
+	if other, ok := g.vars[v]; ok {
+		return nil, fmt.Errorf("operands %s and %s share the variable name %s", other, id, v)
+	}
+	g.vars[v] = id
 	_, pass := o.(policyir.PassValue)
-	r := &Ref{ID: id, Key: key, Kind: kind, Network: network, Pass: pass, domain: dom}
+	r := &Ref{ID: id, Var: v, Key: key, Kind: kind, Network: network, Pass: pass, domain: dom}
 	if res, ok := o.(policyir.Resource); ok && kind == spectables.KindResJSONPath && !res.TrailingDot {
 		r.Network, r.Path = true, res.Path
 	}

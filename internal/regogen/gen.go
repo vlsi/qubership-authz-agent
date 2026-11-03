@@ -148,7 +148,8 @@ type gen struct {
 
 	refs    map[string]*Ref
 	refList []*Ref
-	nextRef int
+	// vars maps the [Ref.Var] of each reference to its ID.
+	vars map[string]string
 
 	rules     map[string]dnf
 	order     []string
@@ -188,7 +189,7 @@ type gen struct {
 // statistics gathered up to it. A part of the tree that fails as a source does
 // generates, and [Module.Failures] lists it.
 func Generate(tree *policyir.Tree, tab *spectables.Table, opt Options) (*Module, error) {
-	g := &gen{tab: tab, tree: tree, opt: opt, refs: map[string]*Ref{}, rules: map[string]dnf{},
+	g := &gen{tab: tab, tree: tree, opt: opt, refs: map[string]*Ref{}, vars: map[string]string{}, rules: map[string]dnf{},
 		memo: map[string]string{}, counters: map[string]int{}, anyBodies: map[string]dnf{},
 		condMemo: map[string]*cond{}, decNames: map[string]string{}, decRoots: map[string]*node{},
 		groups: map[string]Group{}, groupIDs: map[string]string{}, params: map[string]bool{}, uncertainMemo: map[*node]bool{}}
@@ -295,10 +296,11 @@ func (g *gen) simplified(sg *policyir.SimplifiedGroup) (*node, error) {
 		g.where = whereNow{set: sg.ID, policy: p.ID}
 		var m clause
 		if sg.ResourceType != "ALL" {
-			if _, err := g.ref(policyir.ResourceType{}, spectables.KindResourceType, false); err != nil {
+			r, err := g.ref(policyir.ResourceType{}, spectables.KindResourceType, false)
+			if err != nil {
 				return nil, err
 			}
-			m = conj(m, clause{{cls: clsIndexEq, text: "input.k.rt == " + lit(g.fold(sg.ResourceType))}})
+			m = conj(m, clause{{cls: clsIndexEq, text: "input.k" + refIndex(r.ID) + " == " + lit(g.fold(sg.ResourceType))}})
 		}
 		op := p.Operation
 		if g.fixedOp != nil {
@@ -306,10 +308,11 @@ func (g *gen) simplified(sg *policyir.SimplifiedGroup) (*node, error) {
 				continue
 			}
 		} else if op != "ALL" {
-			if _, err := g.ref(policyir.Operation{}, spectables.KindOperation, false); err != nil {
+			r, err := g.ref(policyir.Operation{}, spectables.KindOperation, false)
+			if err != nil {
 				return nil, err
 			}
-			m = conj(m, clause{{cls: clsIndexEq, text: "input.k.op == " + lit(g.fold(op))}})
+			m = conj(m, clause{{cls: clsIndexEq, text: "input.k" + refIndex(r.ID) + " == " + lit(g.fold(op))}})
 		}
 		var roles dnf
 		for _, r := range p.Roles {
