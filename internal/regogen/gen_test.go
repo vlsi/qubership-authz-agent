@@ -108,7 +108,7 @@ func decideWith(t *testing.T, tree *policyir.Tree, tab *spectables.Table, opt Op
 	if err != nil {
 		t.Fatalf("Generate: %v", err)
 	}
-	return evalModule(t, m, Request{Operation: "read", ResourceType: "doc", Values: values})
+	return evalModule(t, m, Request{Body: Body{Operation: "read", ResourceType: "doc"}, Values: values})
 }
 
 // evalModule compiles the module and evaluates allow for the request.
@@ -388,7 +388,7 @@ func TestAnAbsentConditionTakesTheExportsAbsentExpression(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Generate: %v", err)
 			}
-			got := evalModule(t, m, Request{Operation: "read", ResourceType: tc.rtype, Roles: []string{"reader"}})
+			got := evalModule(t, m, Request{Body: Body{Operation: "read", ResourceType: tc.rtype}, Roles: []string{"reader"}})
 			if got != tc.want {
 				t.Errorf("allow(read %s) = %v, want %v", tc.rtype, got, tc.want)
 			}
@@ -1165,7 +1165,7 @@ func TestTrailingDotPathAbsentLeavesThePathWithoutTheDotAlone(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Generate: %v", err)
 			}
-			req := Request{Operation: "read", ResourceType: "doc",
+			req := Request{Body: Body{Operation: "read", ResourceType: "doc"},
 				Values: map[string]Resolved{tc.key: resolved(t, tc.state, tc.value)}}
 			if got := evalModule(t, m, req); got != tc.want {
 				t.Errorf("allow(%s) with %s in state %s = %v, want %v:\n%s", tc.condition, tc.key, tc.state, got,
@@ -2113,7 +2113,7 @@ func TestAnIsolatedSetFailsUnderItsTargetOnly(t *testing.T) {
 		resourceType string
 		want         bool
 	}{{"r1", false}, {"r2", false}, {"other", true}} {
-		if got := evalModule(t, m, Request{Operation: "read", ResourceType: tc.resourceType}); got != tc.want {
+		if got := evalModule(t, m, Request{Body: Body{Operation: "read", ResourceType: tc.resourceType}}); got != tc.want {
 			t.Errorf("allow(read %s) = %v, want %v", tc.resourceType, got, tc.want)
 		}
 	}
@@ -2126,7 +2126,7 @@ func TestAnIsolatedSetFailsUnderItsTargetOnly(t *testing.T) {
 	if m, err = Generate(exp.Trees["t1"], table(t), DefaultOptions()); err != nil {
 		t.Fatalf("Generate of the set alone: %v", err)
 	}
-	if !evalModule(t, m, Request{Operation: "read", ResourceType: "r1"}) {
+	if !evalModule(t, m, Request{Body: Body{Operation: "read", ResourceType: "r1"}}) {
 		t.Errorf("allow(read r1) of the set alone = false, want true: only its isolation denies")
 	}
 }
@@ -2157,7 +2157,7 @@ func TestAnIsolatedOrUndeclaredPIPFails(t *testing.T) {
 				t.Errorf("Failures = %+v, want %+v", m.Failures, tc.failures)
 			}
 			values := map[string]Resolved{`["subj","x"]`: resolved(t, "VALUE", `"v"`)}
-			if got := evalModule(t, m, Request{Operation: "read", ResourceType: "doc", Values: values}); got != tc.want {
+			if got := evalModule(t, m, Request{Body: Body{Operation: "read", ResourceType: "doc"}, Values: values}); got != tc.want {
 				t.Errorf("allow(subject.x = v) = %v, want %v", got, tc.want)
 			}
 		})
@@ -2272,7 +2272,7 @@ func TestAnIterateCombinesItsPasses(t *testing.T) {
 			{"a scope that cannot be read", Scope{Failed: true}, false},
 		} {
 			t.Run(form.name+"/"+tc.name, func(t *testing.T) {
-				req := Request{Operation: "read", ResourceType: "doc", Scope: &tc.scope,
+				req := Request{Body: Body{Operation: "read", ResourceType: "doc"}, Scope: &tc.scope,
 					Values: map[string]Resolved{`["res",".domain"]`: resolved(t, "VALUE", `"d"`)}}
 				if got := evalModule(t, m, req); got != tc.want {
 					t.Errorf("allow(resource.domain = d, scope %+v) = %v, want %v", tc.scope, got, tc.want)
@@ -2296,7 +2296,7 @@ func TestAnEmptyScopeAndAFailedScopeDiffer(t *testing.T) {
 		want  bool
 	}{{"no pass", Scope{Passes: []map[string]Resolved{}}, true}, {"a failed scope", Scope{Failed: true}, false}} {
 		t.Run(tc.name, func(t *testing.T) {
-			req := Request{Operation: "read", ResourceType: "doc", Scope: &tc.scope,
+			req := Request{Body: Body{Operation: "read", ResourceType: "doc"}, Scope: &tc.scope,
 				Values: map[string]Resolved{`["res",".domain"]`: resolved(t, "VALUE", `"d"`)}}
 			if got := evalModule(t, m, req); got != tc.want {
 				t.Errorf("allow(scope %+v) = %v, want %v", tc.scope, got, tc.want)
@@ -2372,7 +2372,7 @@ func TestTheOutcomeOfAnIterateNode(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Generate: %v", err)
 			}
-			req := Request{Operation: "read", ResourceType: tc.resourceType, Scope: &tc.scope,
+			req := Request{Body: Body{Operation: "read", ResourceType: tc.resourceType}, Scope: &tc.scope,
 				Values: map[string]Resolved{`["res",".domain"]`: resolved(t, "VALUE", `"d"`)}}
 			if got := evalModule(t, m, req); got != tc.want {
 				t.Errorf("allow(%s, scope %+v) = %v, want %v", tc.resourceType, tc.scope, got, tc.want)
@@ -2433,7 +2433,7 @@ func TestAnIterateInEveryFormOfTheModule(t *testing.T) {
 			{"the same condition false outside the iterate permits", "note", `["q"]`, `"y"`, true},
 		} {
 			t.Run(form.name+"/"+tc.name, func(t *testing.T) {
-				req := Request{Operation: "read", ResourceType: tc.resourceType, Roles: []string{"r"},
+				req := Request{Body: Body{Operation: "read", ResourceType: tc.resourceType}, Roles: []string{"r"},
 					Scope: &Scope{Passes: []map[string]Resolved{{domain: resolved(t, "VALUE", `["d"]`)}}},
 					Values: map[string]Resolved{`["res",".domain"]`: resolved(t, "VALUE", `"d"`),
 						`["subj","roles"]`: resolved(t, "VALUE", tc.roles), `["subj","g"]`: resolved(t, "VALUE", tc.g)}}
@@ -2503,7 +2503,7 @@ func TestTheDecisionTellsAnUnknownDenialApart(t *testing.T) {
 				if err != nil {
 					t.Fatalf("Generate: %v", err)
 				}
-				req := Request{Operation: "read", ResourceType: "doc",
+				req := Request{Body: Body{Operation: "read", ResourceType: "doc"},
 					Values: map[string]Resolved{`["subj","g"]`: resolved(t, tc.state, tc.value)}}
 				if strings.Contains(m.Text, "maybe") {
 					t.Errorf("the module of allow holds maybe; the decision module should:\n%s", m.Text)
@@ -2624,7 +2624,7 @@ func TestAJSONPathOperandIsReadFromTheResource(t *testing.T) {
 					if !strings.Contains(m.Text, "nc.resource_path(input.resource") {
 						t.Fatalf("the module does not read the path through nc.resource_path:\n%s", m.Text)
 					}
-					if evalModule(t, m, Request{Operation: "read", ResourceType: "doc", Resource: doc}) {
+					if evalModule(t, m, Request{Body: Body{Operation: "read", ResourceType: "doc", Resource: doc, HasResource: doc != nil}}) {
 						got = rail.outcome
 					}
 				}
@@ -2708,13 +2708,13 @@ func TestEachSourceOfAnUnknownLeavesTheDenialUnknown(t *testing.T) {
 		tree *policyir.Tree
 		req  Request
 	}{
-		{"an isolated set", tree(isolated), Request{Operation: "read", ResourceType: "doc"}},
+		{"an isolated set", tree(isolated), Request{Body: Body{Operation: "read", ResourceType: "doc"}}},
 		{"an iterate over a failed scope", iterateTree(t, "DENY_UNLESS_PERMIT",
 			"subject.permissionScope.domain CONTAINS resource.domain"),
-			Request{Operation: "read", ResourceType: "doc", Scope: &Scope{Failed: true},
+			Request{Body: Body{Operation: "read", ResourceType: "doc"}, Scope: &Scope{Failed: true},
 				Values: map[string]Resolved{`["res",".domain"]`: resolved(t, "VALUE", `"d"`)}}},
 		{"a simplified policy over a failed PIP", tree(simplified),
-			Request{Operation: "read", ResourceType: "doc", Roles: []string{"reader"},
+			Request{Body: Body{Operation: "read", ResourceType: "doc"}, Roles: []string{"reader"},
 				Values: map[string]Resolved{`["subj","g"]`: resolved(t, "ERROR", "")}}},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -2764,7 +2764,7 @@ func TestSubjectDeniedOverACopyOfTheTree(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Generate: %v", err)
 			}
-			req := Request{Operation: "read", ResourceType: "doc",
+			req := Request{Body: Body{Operation: "read", ResourceType: "doc"},
 				Values: map[string]Resolved{tc.key: resolved(t, tc.state, tc.value)}}
 			if got := evalRule(t, m, req, "decision"); got != tc.want {
 				t.Errorf("decision(%s with %s %s) = %v, want %s", tc.condition, tc.state, tc.value, got, tc.want)

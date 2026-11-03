@@ -32,7 +32,8 @@
 // no oracle answer for that split.
 //
 // A request carries the resolved values of its operands and, where the bundle
-// has it, the resource document, which a lazily read resource path reads.
+// has it, the body of the request, which gives the operation, the resource
+// type, and the resource document that a lazily read resource path reads.
 //
 // A request whose projection or evaluation fails is counted in proj_errors,
 // not as a disagreement.
@@ -80,6 +81,7 @@ type request struct {
 	Vals     map[string][3]json.RawMessage `json:"vals"`
 	Scope    json.RawMessage               `json:"scope"`
 	Resource *string                       `json:"resource"`
+	Body     *string                       `json:"body"`
 	Agent    bool                          `json:"agent"`
 	Legacy   map[string]any                `json:"legacy"`
 }
@@ -127,20 +129,29 @@ func stubs() []func(*rego.Rego) {
 
 func toRequest(q request) (regogen.Request, error) {
 	r := regogen.Request{Roles: q.Roles, M2M: q.M2M}
-	if q.Op != nil {
-		r.Operation = *q.Op
-	}
-	if q.RT != nil {
-		r.ResourceType = *q.RT
-	}
 	var err error
+	if q.Body != nil {
+		if r.Body, err = regogen.ReadBody([]byte(*q.Body)); err != nil {
+			return r, fmt.Errorf("body: %w", err)
+		}
+	} else {
+		// a bundle without the body: the operation and the resource type the
+		// specification read from it
+		if q.Op != nil {
+			r.Body.Operation = *q.Op
+		}
+		if q.RT != nil {
+			r.Body.ResourceType = *q.RT
+		}
+		if q.Resource != nil {
+			r.Body.HasResource = true
+			if r.Body.Resource, err = jsonvalue.Decode([]byte(*q.Resource)); err != nil {
+				return r, fmt.Errorf("resource: %w", err)
+			}
+		}
+	}
 	if r.Values, err = resolvedValues(q.Vals); err != nil {
 		return r, err
-	}
-	if q.Resource != nil {
-		if r.Resource, err = jsonvalue.Decode([]byte(*q.Resource)); err != nil {
-			return r, fmt.Errorf("resource: %w", err)
-		}
 	}
 	// scope is "ERROR", null for a tenant without iterate, or the passes
 	var failed string

@@ -40,23 +40,21 @@ type Resolved struct {
 	HeaderList bool // a HEADER or GENERAL list, class hl
 }
 
-// Request is what the projection reads of a check/resource request. Resolving
-// the operands (reading the token, calling PIPs, walking the resource) is not
-// the generator's job; the prototype takes the values the specification
-// resolved.
+// Request is what the projection reads of a check/resource request: the
+// body, which gives the operation, the resource type, and the document a
+// lazily read resource path reads, and the resolved values of the other
+// operands. [Module.Resolve] resolves the operands of the resource.
 type Request struct {
-	Operation, ResourceType string
-	Roles                   []string
-	M2M                     bool
-	// Values holds the resolved value of each operand but the pass values,
-	// by [Ref.Key].
+	Body  Body
+	Roles []string
+	M2M   bool
+	// Values holds the resolved value of each operand but the operation, the
+	// resource type, the pass values, and the lazily read resource paths, by
+	// [Ref.Key].
 	Values map[string]Resolved
 	// Scope is the subject's permission scope that an iterate runs over,
 	// read when the module iterates ([Module.Iterates]).
 	Scope *Scope
-	// Resource is the resource document, nil for a request without one; a
-	// lazily read resource path ([Ref.Path]) reads it.
-	Resource jsonvalue.Value
 }
 
 // Scope is the permission scope of a request's subject as the passes of an
@@ -265,11 +263,13 @@ func eqToken(e jsonvalue.Value) (string, bool) {
 }
 
 // Project builds the input of the module for a request. It fails when the
-// request lacks the value of an operand the module reads, or the permission
-// scope of a module that iterates.
+// request lacks the resolved value of an operand the module reads, or the
+// permission scope of a module that iterates.
 func Project(m *Module, req Request) (*Input, error) {
-	in := &Input{Records: map[string]Record{}, M2M: req.M2M, refs: m.Refs, resource: req.Resource,
-		docs: regobuiltins.NewDocuments()}
+	in := &Input{Records: map[string]Record{}, M2M: req.M2M, refs: m.Refs, docs: regobuiltins.NewDocuments()}
+	if req.Body.HasResource {
+		in.resource = req.Body.Resource
+	}
 	for _, r := range req.Roles {
 		in.SRoles = append(in.SRoles, legacyvalue.Fold(r))
 	}
@@ -280,9 +280,9 @@ func Project(m *Module, req Request) (*Input, error) {
 		var v Resolved
 		switch r.Kind {
 		case spectables.KindOperation:
-			v = Resolved{State: spectables.StateValue, Value: req.Operation}
+			v = Resolved{State: spectables.StateValue, Value: req.Body.Operation}
 		case spectables.KindResourceType:
-			v = Resolved{State: spectables.StateValue, Value: req.ResourceType}
+			v = Resolved{State: spectables.StateValue, Value: req.Body.ResourceType}
 		default:
 			var ok bool
 			if v, ok = req.Values[r.Key]; !ok {

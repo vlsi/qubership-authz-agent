@@ -23,6 +23,7 @@ import (
 	"slices"
 	"strings"
 
+	"authz-agent/internal/jsonpath"
 	"authz-agent/internal/jsonvalue"
 	"authz-agent/internal/legacyvalue"
 	"authz-agent/internal/policyir"
@@ -68,6 +69,11 @@ type Ref struct {
 	// set: nc.resource_path(input.resource, Path) returns its record.
 	Path   string
 	domain spectables.Domain
+	// sel is the compiled path of a resource operand that the projection
+	// reads, and dotState the state of one that ends in a dot
+	// ([Body.resolve]).
+	sel      *jsonpath.Path
+	dotState spectables.State
 }
 
 // litVal is a literal operand with its record.
@@ -399,8 +405,12 @@ func (g *gen) ref(o policyir.Operand, kind spectables.Kind, network bool) (*Ref,
 	g.vars[v] = id
 	_, pass := o.(policyir.PassValue)
 	r := &Ref{ID: id, Var: v, Key: key, Kind: kind, Network: network, Pass: pass, domain: dom}
-	if res, ok := o.(policyir.Resource); ok && kind == spectables.KindResJSONPath && !res.TrailingDot {
-		r.Network, r.Path = true, res.Path
+	if res, ok := o.(policyir.Resource); ok {
+		if kind == spectables.KindResJSONPath && !res.TrailingDot {
+			r.Network, r.Path = true, res.Path
+		} else if err := g.compileResourcePath(r, res.Path, res.TrailingDot); err != nil {
+			return nil, err
+		}
 	}
 	g.refs[key] = r
 	g.refList = append(g.refList, r)
