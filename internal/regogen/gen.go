@@ -15,6 +15,8 @@
 package regogen
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"maps"
@@ -167,6 +169,10 @@ type gen struct {
 	// another operation reads: the decision's name and _; empty in the tree
 	// itself.
 	copyPrefix string
+	// hashedKeys maps each name hashed gave to its key; collision is the
+	// first name two keys share.
+	hashedKeys map[string]string
+	collision  error
 	// light holds the rules that are not a node's or a product's: condition
 	// rails and decisions for another operation.
 	light map[string]bool
@@ -207,7 +213,8 @@ func Generate(tree *policyir.Tree, tab *spectables.Table, opt Options) (*Module,
 		memo: map[string]string{}, counters: map[string]int{}, anyBodies: map[string]dnf{},
 		condMemo: map[string]*cond{}, decNames: map[string]string{}, decRoots: map[string]*node{},
 		groups: map[string]Group{}, groupIDs: map[string]string{}, params: map[string]bool{}, uncertainMemo: map[*node]bool{},
-		sources: map[string]nodeSource{}, shared: map[string]bool{}, ruleAtoms: map[string][]string{}, light: map[string]bool{}}
+		sources: map[string]nodeSource{}, shared: map[string]bool{}, ruleAtoms: map[string][]string{}, light: map[string]bool{},
+		hashedKeys: map[string]string{}}
 	g.stats.NoTemplate = map[string]int{}
 	if fs := tree.Unsupported(); len(fs) > 0 {
 		rej := &RejectedError{}
@@ -253,6 +260,9 @@ func Generate(tree *policyir.Tree, tab *spectables.Table, opt Options) (*Module,
 			maybe = union(maybe, d)
 		}
 	}
+	if g.collision != nil {
+		return &Module{Stats: g.stats}, g.collision
+	}
 	m := &Module{Refs: g.refList, Iterates: g.stats.Iterates > 0, Groups: g.groups, Report: g.report,
 		Failures: g.failures}
 	if g.opt.Decision {
@@ -268,6 +278,20 @@ func Generate(tree *policyir.Tree, tab *spectables.Table, opt Options) (*Module,
 	}
 	m.Stats = g.stats
 	return m, nil
+}
+
+// hashed returns the name of a rule or a group that any node of the tenant
+// may read: prefix, _, and the first 12 hex digits of the SHA-256 of key, the
+// text of what it holds. The name depends on the content alone, so an edit
+// elsewhere leaves it as it is. Two keys with one name fail the generation.
+func (g *gen) hashed(prefix, key string) string {
+	sum := sha256.Sum256([]byte(key))
+	name := prefix + "_" + hex.EncodeToString(sum[:6])
+	if other, ok := g.hashedKeys[name]; ok && other != key && g.collision == nil {
+		g.collision = fmt.Errorf("two different bodies share the name %s", name)
+	}
+	g.hashedKeys[name] = key
+	return name
 }
 
 func (g *gen) fresh(p string) string {
@@ -795,7 +819,11 @@ func (g *gen) refRule(d dnf, prefix string, negate bool) dnf {
 	k := fmt.Sprintf("%s|%t|%s", prefix, g.pass, d.key())
 	name, ok := g.memo[k]
 	if !ok {
-		name = g.rule(g.fresh(prefix), d)
+		if prefix == "m" || prefix == "c" {
+			name = g.rule(g.hashed(prefix, k), d)
+		} else {
+			name = g.rule(g.fresh(prefix), d)
+		}
 		g.memo[k] = name
 		if prefix == "c" {
 			g.light[name] = true

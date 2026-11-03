@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"maps"
 	"reflect"
+	"regexp"
+	"slices"
 	"strings"
 	"testing"
 
@@ -1627,6 +1629,55 @@ func TestALabelReadsBackToTheSetID(t *testing.T) {
 	}
 	if !isBelow("set_a_p1_r2", "set_a_p1") {
 		t.Errorf("set_a_p1_r2 is not below set_a_p1")
+	}
+}
+
+// The name of a rule that any node may read is a hash of its clauses, so a
+// set added before the one that reads it, with a shared rule of its own, does
+// not rename it. A condition over a PIP may be unknown, and a DENY rule reads
+// its false rail through such a rule.
+func TestASharedRuleKeepsItsNameWhenAnotherSetIsAdded(t *testing.T) {
+	set := func(id, condition string) string {
+		return fmt.Sprintf(`{"policySetId": %q, "status": "ACTIVE", "target": "resourceType == 'doc'",
+			"combiningAlgorithm": "PERMIT_UNLESS_DENY", "tenantId": "t1",
+			"policies": [{"policyId": "p1", "target": "true", "combiningAlgorithm": "PERMIT_UNLESS_DENY",
+				"tenantId": "t1", "rules": [{"ruleId": "r1", "target": "true",
+					"condition": %q, "effect": "DENY", "tenantId": "t1"}]}]}`, id, condition)
+	}
+	shared := regexp.MustCompile(`(?m)^c_[0-9a-f]{12}\b`)
+	names := func(sets ...string) []string {
+		t.Helper()
+		exp, err := policyir.FromRegular([]byte(`{"policySets": [`+strings.Join(sets, ", ")+`]}`),
+			[]byte(`{"pips": [{"tenantId": "t1", "name": "subject.g", "pipType": "GENERAL", "url": "http://g"}]}`))
+		if err != nil {
+			t.Fatalf("FromRegular: %v", err)
+		}
+		m, err := Generate(exp.Trees["t1"], table(t), DefaultOptions())
+		if err != nil {
+			t.Fatalf("Generate: %v", err)
+		}
+		got := shared.FindAllString(m.Text, -1)
+		slices.Sort(got)
+		return slices.Compact(got)
+	}
+	s1, s2 := set("s1", "subject.g == 'x'"), set("s2", "subject.g == 'y'")
+	want := append(names(s1), names(s2)...)
+	slices.Sort(want)
+	if got := names(s1, s2); len(want) != 2 || !slices.Equal(got, want) {
+		t.Errorf("the shared rules of s1 and s2 together are %v, want those of s1 and of s2 alone, %v", got, want)
+	}
+}
+
+// Two different bodies whose hashed names agree fail the generation rather
+// than read each other's clauses.
+func TestTwoBodiesWithOneHashedNameFailTheGeneration(t *testing.T) {
+	g := &gen{hashedKeys: map[string]string{}}
+	name := g.hashed("m", "a")
+	g.hashedKeys[name] = "b"
+	g.hashed("m", "a")
+	want := "two different bodies share the name " + name
+	if g.collision == nil || g.collision.Error() != want {
+		t.Errorf("collision = %v, want %s", g.collision, want)
 	}
 }
 

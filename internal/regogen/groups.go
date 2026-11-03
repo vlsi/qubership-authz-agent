@@ -15,7 +15,6 @@
 package regogen
 
 import (
-	"fmt"
 	"maps"
 	"slices"
 	"strings"
@@ -45,7 +44,8 @@ type test struct {
 }
 
 // Group is a subject group: a conjunction of factors, each a disjunction of
-// clauses of tests. The module reads it as "gN" in input.g.
+// clauses of tests. The module reads it as "g_<hash>" in input.g, where
+// <hash> is the first 12 hex digits of the SHA-256 of its factors.
 type Group struct {
 	Factors [][][]*test
 }
@@ -99,7 +99,7 @@ func (g *gen) group(factors ...dnf) dnf {
 	key := strings.Join(keys, "\x02")
 	id, ok := g.groupIDs[key]
 	if !ok {
-		id = fmt.Sprintf("g%d", len(g.groupIDs)+1)
+		id = g.hashed("g", key)
 		g.groupIDs[key] = id
 		var grp Group
 		for _, x := range fs {

@@ -241,9 +241,10 @@ const legend = `# Generated from the policies of one tenant; the comments name t
 # <node>_any_<b><x> when some child of the node has bound b equal to x.
 # dec_<operation>_<depth>_<b><x> is that bound of the decision for another
 # operation (subject allowed or denied), read from a copy of the tree whose
-# nodes are named dec_<operation>_<depth>_<label>. mN and cN hold a product or
-# a condition rail that several clauses share; <rule>__body holds the clauses
-# of a long rule.
+# nodes are named dec_<operation>_<depth>_<label>. m_<hash> and c_<hash> hold
+# a product or a condition rail that several clauses share, and g_<hash> in
+# input.g a subject group; <hash> is the first 12 hex digits of the SHA-256 of
+# what they hold. <rule>__body holds the clauses of a long rule.
 #
 # input.<field>[<operand>] is a field of the value record of an operand,
 # keyed by the operand as a policy writes it: s state, t class, k key, ks
