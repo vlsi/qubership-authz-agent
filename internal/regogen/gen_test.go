@@ -628,6 +628,28 @@ func TestMatchAPathPattern(t *testing.T) {
 	}
 }
 
+// The right operand of MATCH that starts with resource. is a resource path,
+// and its text is the pattern. A number on its left ends the rule, as over
+// any number: 1e400 is not read as the text Infinity, which a pattern of
+// literal text compares instead.
+func TestANumberLeftOfAResourcePathInMatchEndsTheRule(t *testing.T) {
+	tree := tenantWithSet(t, "DENY_UNLESS_PERMIT", "ALLOW", "resource.a NOT MATCH resource.q")
+	for _, tc := range []struct {
+		name, value string
+		want        bool
+	}{
+		{"a number beyond the double range denies", `1e400`, false},
+		{"the string Infinity allows", `"Infinity"`, true},
+		{"the path text itself denies", `"resource.q"`, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := decide(t, tree, DefaultOptions(), keyA, resolved(t, "VALUE", tc.value)); got != tc.want {
+				t.Errorf("allow(resource.a = %s) = %v, want %v", tc.value, got, tc.want)
+			}
+		})
+	}
+}
+
 // subject allowed 'write' on resource reads the decision for operation write
 // from a copy of the tree where the operation is that constant.
 func TestSubjectAllowedReadsTheDecisionForAnotherOperation(t *testing.T) {
