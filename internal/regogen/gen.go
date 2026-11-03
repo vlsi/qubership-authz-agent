@@ -15,6 +15,7 @@
 package regogen
 
 import (
+	"cmp"
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
@@ -346,7 +347,51 @@ func (g *gen) tops() ([]*node, error) {
 		}
 		tops = append(tops, n)
 	}
+	// the module lists the sets by label, so where a set stands depends
+	// on its ID alone, not on the sets before it or on whether it is
+	// simplified
+	slices.SortStableFunc(tops, func(a, b *node) int { return naturalCompare(a.id, b.id) })
 	return tops, nil
+}
+
+// naturalCompare orders a and b as strings, but a run of digits by its
+// number: set_x_p2 before set_x_p10. Strings that differ only in leading
+// zeros stand in byte order.
+func naturalCompare(a, b string) int {
+	if c := naturalRuns(a, b); c != 0 {
+		return c
+	}
+	return strings.Compare(a, b)
+}
+
+func naturalRuns(a, b string) int {
+	for a != "" && b != "" {
+		da, db := digitRun(a), digitRun(b)
+		if da > 0 && db > 0 {
+			na, nb := strings.TrimLeft(a[:da], "0"), strings.TrimLeft(b[:db], "0")
+			if c := cmp.Compare(len(na), len(nb)); c != 0 {
+				return c
+			}
+			if c := strings.Compare(na, nb); c != 0 {
+				return c
+			}
+			a, b = a[da:], b[db:]
+			continue
+		}
+		if a[0] != b[0] {
+			return cmp.Compare(a[0], b[0])
+		}
+		a, b = a[1:], b[1:]
+	}
+	return cmp.Compare(len(a), len(b))
+}
+
+func digitRun(s string) int {
+	i := 0
+	for i < len(s) && s[i] >= '0' && s[i] <= '9' {
+		i++
+	}
+	return i
 }
 
 func (g *gen) fold(s string) string {
@@ -1182,7 +1227,12 @@ func (g *gen) module(pkg string, allow, maybe dnf, decision bool) (string, int) 
 	if !decision {
 		g.stats.Rules = len(used)
 	}
-	for _, name := range g.order {
+	// the rules stand in the order of their names, which depend on a node's
+	// label or on a body's content, not on the order the generator met
+	// them in
+	names := slices.Clone(g.order)
+	slices.SortFunc(names, naturalCompare)
+	for _, name := range names {
 		if !used[name] {
 			continue
 		}

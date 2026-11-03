@@ -1681,6 +1681,68 @@ func TestTwoBodiesWithOneHashedNameFailTheGeneration(t *testing.T) {
 	}
 }
 
+// The module lists the sets by label and the rules by name, so the order of
+// the sets in the export does not change the text, and a simplified set
+// stands where its label puts it rather than ahead of every other set. The
+// copies of the tree for subject allowed are made as the conditions are read,
+// in the order of the export.
+func TestTheModuleListsTheSetsByLabel(t *testing.T) {
+	regular := func(id, condition string) string {
+		return fmt.Sprintf(`{"policySetId": %q, "status": "ACTIVE", "target": "resourceType == 'doc'",
+			"combiningAlgorithm": "DENY_UNLESS_PERMIT", "tenantId": "t1",
+			"policies": [{"policyId": "p1", "target": "true", "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+				"tenantId": "t1", "rules": [{"ruleId": "r1", "target": "operation == 'read'",
+					"condition": %q, "effect": "ALLOW", "tenantId": "t1"}]}]}`, id, condition)
+	}
+	a, c := regular("a", "subject allowed 'z' on resource"), regular("c", "subject allowed 'w' on resource")
+	simplified := `{"policySetId": "b", "status": "ACTIVE", "type": "SIMPLIFIED",
+		"target": "resourceType == 'doc'", "combiningAlgorithm": "DENY_UNLESS_PERMIT", "tenantId": "t1",
+		"policies": [{"policyId": "p1", "target": "operation == 'read'", "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+			"tenantId": "t1", "rules": [{"ruleId": "r1", "target": "subject.roles CONTAINS ANY 'reader'",
+				"condition": "resource.b == 'y'", "effect": "ALLOW", "tenantId": "t1"}]}]}`
+	text := func(sets ...string) string {
+		t.Helper()
+		exp, err := policyir.FromRegular([]byte(`{"policySets": [`+strings.Join(sets, ", ")+`]}`), []byte(`{"pips": []}`))
+		if err != nil {
+			t.Fatalf("FromRegular: %v", err)
+		}
+		opt := DefaultOptions()
+		opt.Flat = false
+		m, err := Generate(exp.Trees["t1"], table(t), opt)
+		if err != nil {
+			t.Fatalf("Generate: %v", err)
+		}
+		return m.Text
+	}
+	ac := text(a, simplified, c)
+	if ca := text(c, simplified, a); ca != ac {
+		t.Errorf("sets c, b, a give another module than a, b, c:\n%s\nwant:\n%s", ca, ac)
+	}
+	at := []int{strings.Index(ac, "\n# set_a: "), strings.Index(ac, "\n# set_b: "), strings.Index(ac, "\n# set_c: ")}
+	if slices.Contains(at, -1) || !slices.IsSorted(at) {
+		t.Errorf("the sources of set_a, set_b, set_c stand at %v, want in that order; module:\n%s", at, ac)
+	}
+}
+
+func TestNaturalCompareOrdersARunOfDigitsByItsNumber(t *testing.T) {
+	for _, tc := range []struct {
+		a, b string
+		want int
+	}{
+		{"set_x_p2", "set_x_p10", -1},
+		{"set_x_p10", "set_x_p2", 1},
+		{"set_x_p2_r1", "set_x_p2_r1", 0},
+		{"set_x_any_loP", "set_x_p1_loP_1", -1},
+		{"a01", "a1", -1},
+		{"a1", "a01", 1},
+		{"set_x", "set_x_p1", -1},
+	} {
+		if got := naturalCompare(tc.a, tc.b); got != tc.want {
+			t.Errorf("naturalCompare(%q, %q) = %d, want %d", tc.a, tc.b, got, tc.want)
+		}
+	}
+}
+
 // The module names, above the clauses read from a rule, the rule's label and,
 // at its first clause, the IDs, names, targets, and condition of the rule and
 // of the policy and the set above it. A check of a state ends with the
