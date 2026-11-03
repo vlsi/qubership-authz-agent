@@ -23,7 +23,7 @@
 // generation, and timing to the -out file.
 //
 //	regogen-corpus -bundles bundles.jsonl -out results.jsonl [-workers 4] [-reps 3] [-flat=false] [-groups]
-//	               [-budget 16] [-decision] [-limit N] [-only key,...] [-dump DIR] [-explain]
+//	               [-budget 16] [-decision] [-resolve] [-limit N] [-only key,...] [-dump DIR] [-explain]
 //
 // With -decision the decision module is compiled beside the module of allow,
 // and a denied request also evaluates its maybe; the summary gives the
@@ -34,6 +34,13 @@
 // A request carries the resolved values of its operands and, where the bundle
 // has it, the body of the request, which gives the operation, the resource
 // type, and the resource document that a lazily read resource path reads.
+//
+// With -resolve the module evaluates the values the projection resolves from
+// the body of the request ([regogen.Module.Resolve]) in place of the
+// specification's, and every record of the input is compared with the record
+// the specification's values give; a request whose records differ is counted
+// in record_mismatch, by reference in the output file. The bundle must carry
+// the body.
 //
 // A request whose projection or evaluation fails is counted in proj_errors,
 // not as a disagreement.
@@ -47,6 +54,7 @@ import (
 	"fmt"
 	"maps"
 	"os"
+	"reflect"
 	"runtime"
 	"slices"
 	"sort"
@@ -93,6 +101,10 @@ type result struct {
 	Requests   int      `json:"requests"`
 	Mismatch   []string `json:"mismatch,omitempty"`
 	ProjErrors []string `json:"projErrors,omitempty"`
+	// RecordMismatch lists, with -resolve, each reference whose record the
+	// projection's values give differently from the specification's.
+	RecordMismatch []string  `json:"recordMismatch,omitempty"`
+	ResolveUs      []float64 `json:"resolveUs,omitempty"`
 	GenMs      float64  `json:"genMs"`
 	CompileMs  float64  `json:"compileMs"`
 	// DecisionCompileMs and DenyUs are the compilation of the decision
@@ -207,7 +219,34 @@ func resolvedValues(vals map[string][3]json.RawMessage) (map[string]regogen.Reso
 	return out, nil
 }
 
-func run(b bundle, tab *spectables.Table, opt regogen.Options, reps int, dumpDir string) result {
+// resolveRequest replaces the values of rq that the projection resolves
+// itself, and returns the references whose records differ from those of in,
+// the input the specification's values give.
+func resolveRequest(m *regogen.Module, rq *regogen.Request, in *regogen.Input) (*regogen.Input, []string,
+	float64, error) {
+	values := maps.Clone(rq.Values)
+	t0 := time.Now()
+	m.Resolve(rq.Body, values)
+	us := float64(time.Since(t0).Nanoseconds()) / 1000
+	rq.Values = values
+	got, err := regogen.Project(m, *rq)
+	if err != nil {
+		return nil, nil, us, err
+	}
+	var diff []string
+	for _, r := range m.Refs {
+		want, okW := in.Records[r.ID]
+		have, okH := got.Records[r.ID]
+		if okW != okH || !reflect.DeepEqual(want, have) {
+			w, _ := json.Marshal(want)
+			h, _ := json.Marshal(have)
+			diff = append(diff, fmt.Sprintf("%s: spec %s, projection %s", r.ID, w, h))
+		}
+	}
+	return got, diff, us, nil
+}
+
+func run(b bundle, tab *spectables.Table, opt regogen.Options, reps int, dumpDir string, resolve bool) result {
 	res := result{Key: b.Key, Requests: len(b.Requests)}
 	exp, err := policyir.FromRegular(b.PolicySets, b.PIPs)
 	if err != nil {
@@ -284,6 +323,22 @@ func run(b bundle, tab *spectables.Table, opt regogen.Options, reps int, dumpDir
 			res.ProjErrors = append(res.ProjErrors, q.ID+": "+err.Error())
 			continue
 		}
+		if resolve {
+			if q.Body == nil {
+				res.ProjErrors = append(res.ProjErrors, q.ID+": -resolve: the bundle carries no body")
+				continue
+			}
+			got, diff, us, err := resolveRequest(m, &rq, in)
+			if err != nil {
+				res.ProjErrors = append(res.ProjErrors, q.ID+": resolve: "+err.Error())
+				continue
+			}
+			res.ResolveUs = append(res.ResolveUs, us)
+			for _, d := range diff {
+				res.RecordMismatch = append(res.RecordMismatch, q.ID+": "+d)
+			}
+			in = got
+		}
 		v := in.Value()
 		ctx := in.Context(context.WithValue(context.Background(), ctxKey{}, in))
 		best, bestDeny := -1.0, -1.0
@@ -353,6 +408,7 @@ func main() {
 	dump := flag.String("dump", "", "directory to write modules to")
 	budget := flag.Int("budget", 16, "product limit")
 	decision := flag.Bool("decision", false, "evaluate decision == \"permit\" instead of allow")
+	resolve := flag.Bool("resolve", false, "resolve the resource operands from the body and compare the records")
 	flag.BoolVar(&explain, "explain", false, "print the export's tenants, the tree, and the module to stderr")
 	flag.Parse()
 
@@ -382,7 +438,7 @@ func main() {
 		go func() {
 			defer wg.Done()
 			for b := range jobs {
-				results <- run(b, tab, opt, *reps, *dump)
+				results <- run(b, tab, opt, *reps, *dump, *resolve)
 			}
 		}()
 	}
@@ -420,7 +476,7 @@ func main() {
 	}
 	defer func() { _ = w.Close() }()
 	enc := json.NewEncoder(w)
-	var evals, groupUs, compiles, denies, dcompiles []float64
+	var evals, groupUs, compiles, denies, dcompiles, resolveUs []float64
 	sum := map[string]int{}
 	noTpl := map[string]int{}
 	errClasses := map[string]int{}
@@ -447,6 +503,8 @@ func main() {
 		}
 		sum["mismatch"] += len(r.Mismatch)
 		sum["proj_errors"] += len(r.ProjErrors)
+		sum["record_mismatch"] += len(r.RecordMismatch)
+		resolveUs = append(resolveUs, r.ResolveUs...)
 		sum["evaluated"] += len(r.EvalUs)
 		sum["clauses"] += r.Stats.Clauses
 		sum["allow_clauses"] += r.Stats.AllowClauses
@@ -476,7 +534,7 @@ func main() {
 	}
 	s, _ := json.MarshalIndent(map[string]any{
 		"counts": sum, "table_load_ms": loadMs, "spec_tag": tab.SpecTag(),
-		"eval_us": q(evals), "project_us": q(groupUs), "compile_ms": q(compiles), "clauses": q(clauses),
+		"eval_us": q(evals), "project_us": q(groupUs), "resolve_us": q(resolveUs), "compile_ms": q(compiles), "clauses": q(clauses),
 		"deny_eval_us": q(denies), "decision_compile_ms": q(dcompiles),
 		"errors": errClasses, "no_template": noTpl, "seconds": time.Since(t0).Seconds(),
 	}, "", " ")
