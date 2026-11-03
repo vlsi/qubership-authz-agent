@@ -124,14 +124,17 @@ type result struct {
 	// DecisionCompileMs and DenyUs are the compilation of the decision
 	// module and the evaluation of each denied request, allow and maybe;
 	// EvalUs times allow alone.
-	DecisionCompileMs float64        `json:"decisionCompileMs,omitempty"`
-	DenyUs            []float64      `json:"denyUs,omitempty"`
-	Unknown           int            `json:"unknown,omitempty"`
-	EvalUs            []float64      `json:"evalUs,omitempty"`
-	GroupsUs          []float64      `json:"groupsUs,omitempty"`
-	Stats             regogen.Stats  `json:"stats"`
-	Groups            int            `json:"groups"`
-	NoTemplate        map[string]int `json:"noTemplate,omitempty"`
+	DecisionCompileMs float64   `json:"decisionCompileMs,omitempty"`
+	DenyUs            []float64 `json:"denyUs,omitempty"`
+	Unknown           int       `json:"unknown,omitempty"`
+	EvalUs            []float64 `json:"evalUs,omitempty"`
+	// GroupsUs times Project, the subject groups included, and
+	// EvalGroupsUs the subject groups alone.
+	GroupsUs     []float64      `json:"groupsUs,omitempty"`
+	EvalGroupsUs []float64      `json:"evalGroupsUs,omitempty"`
+	Stats        regogen.Stats  `json:"stats"`
+	Groups       int            `json:"groups"`
+	NoTemplate   map[string]int `json:"noTemplate,omitempty"`
 }
 
 type ctxKey struct{}
@@ -233,10 +236,6 @@ func resolvedValues(vals map[string][3]json.RawMessage) (map[string]regogen.Reso
 	return out, nil
 }
 
-// resolveRequest replaces the values of rq that the projection resolves
-// itself, the subject's where q carries the claims, and returns the
-// references whose records differ from those of in, the input the
-// specification's values give.
 // resolution is what resolveRequest found for one request.
 type resolution struct {
 	in *regogen.Input
@@ -247,6 +246,11 @@ type resolution struct {
 	resolveUs, bulkUs, itemUs float64
 }
 
+// resolveRequest replaces the values of rq that the projection resolves
+// itself, the subject's where q carries the claims, and projects rq. It
+// compares the records with those of in, the input the specification's
+// values give, and the input of rq as the one item of a bulk request with
+// rq's own.
 func resolveRequest(m *regogen.Module, q request, rq *regogen.Request, in *regogen.Input) (resolution, error) {
 	var res resolution
 	var claims *jsonvalue.Object
@@ -379,6 +383,9 @@ func run(b bundle, tab *spectables.Table, opt regogen.Options, reps int, dumpDir
 			res.ProjErrors = append(res.ProjErrors, q.ID+": "+err.Error())
 			continue
 		}
+		g0 = time.Now()
+		regogen.EvalGroups(m, in)
+		res.EvalGroupsUs = append(res.EvalGroupsUs, float64(time.Since(g0).Nanoseconds())/1000)
 		if resolve {
 			if q.Body == nil {
 				res.ProjErrors = append(res.ProjErrors, q.ID+": -resolve: the bundle carries no body")
@@ -537,7 +544,7 @@ func main() {
 	}
 	defer func() { _ = w.Close() }()
 	enc := json.NewEncoder(w)
-	var evals, groupUs, compiles, denies, dcompiles, resolveUs, bulkUs, itemUs []float64
+	var evals, groupUs, compiles, denies, dcompiles, resolveUs, bulkUs, itemUs, evalGroupsUs []float64
 	sum := map[string]int{}
 	noTpl := map[string]int{}
 	errClasses := map[string]int{}
@@ -591,6 +598,7 @@ func main() {
 		}
 		evals = append(evals, r.EvalUs...)
 		groupUs = append(groupUs, r.GroupsUs...)
+		evalGroupsUs = append(evalGroupsUs, r.EvalGroupsUs...)
 		compiles = append(compiles, r.CompileMs)
 	}
 	q := func(xs []float64) map[string]float64 {
@@ -598,7 +606,7 @@ func main() {
 	}
 	s, _ := json.MarshalIndent(map[string]any{
 		"counts": sum, "table_load_ms": loadMs, "spec_tag": tab.SpecTag(),
-		"eval_us": q(evals), "project_us": q(groupUs), "resolve_us": q(resolveUs),
+		"eval_us": q(evals), "project_us": q(groupUs), "groups_us": q(evalGroupsUs), "resolve_us": q(resolveUs),
 		"bulk_us": q(bulkUs), "item_us": q(itemUs), "compile_ms": q(compiles), "clauses": q(clauses),
 		"deny_eval_us": q(denies), "decision_compile_ms": q(dcompiles),
 		"errors": errClasses, "no_template": noTpl, "seconds": time.Since(t0).Seconds(),
