@@ -33,7 +33,7 @@ const (
 		"scope": "profile", "realm_access": {"roles": ["ROLE_M2M"]}}`
 )
 
-func claimsOf(t *testing.T, text string) *jsonvalue.Object {
+func claimsOf(t testing.TB, text string) *jsonvalue.Object {
 	t.Helper()
 	v, err := jsonvalue.Decode([]byte(text))
 	if err != nil {

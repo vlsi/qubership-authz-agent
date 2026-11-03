@@ -41,7 +41,9 @@
 // in place of the specification's. Every record of the input, the subject's
 // roles, and subject.isM2M are compared with what the specification's values
 // give; each difference is counted in record_mismatch and listed in the
-// output file. The bundle must carry the body.
+// output file. The input of the request as the one item of a bulk request
+// ([regogen.NewBulk]) is compared with the request's own, and a difference
+// is counted in bulk_mismatch. The bundle must carry the body.
 //
 // A request whose projection or evaluation fails is counted in proj_errors,
 // not as a disagreement.
@@ -110,8 +112,15 @@ type result struct {
 	// projection's values give differently from the specification's.
 	RecordMismatch []string  `json:"recordMismatch,omitempty"`
 	ResolveUs      []float64 `json:"resolveUs,omitempty"`
-	GenMs          float64   `json:"genMs"`
-	CompileMs      float64   `json:"compileMs"`
+	// BulkMismatch lists, with -resolve, each request whose input as an item
+	// of a bulk request differs from its own; BulkUs and ItemUs are the
+	// projection of the shared part and of the item, its input value
+	// included.
+	BulkMismatch []string  `json:"bulkMismatch,omitempty"`
+	BulkUs       []float64 `json:"bulkUs,omitempty"`
+	ItemUs       []float64 `json:"itemUs,omitempty"`
+	GenMs        float64   `json:"genMs"`
+	CompileMs    float64   `json:"compileMs"`
 	// DecisionCompileMs and DenyUs are the compilation of the decision
 	// module and the evaluation of each denied request, allow and maybe;
 	// EvalUs times allow alone.
@@ -228,17 +237,27 @@ func resolvedValues(vals map[string][3]json.RawMessage) (map[string]regogen.Reso
 // itself, the subject's where q carries the claims, and returns the
 // references whose records differ from those of in, the input the
 // specification's values give.
-func resolveRequest(m *regogen.Module, q request, rq *regogen.Request, in *regogen.Input) (*regogen.Input,
-	[]string, float64, error) {
+// resolution is what resolveRequest found for one request.
+type resolution struct {
+	in *regogen.Input
+	// diff lists the records that differ from the specification's, and
+	// bulk is set when the input as an item of a bulk request differs.
+	diff                      []string
+	bulk                      bool
+	resolveUs, bulkUs, itemUs float64
+}
+
+func resolveRequest(m *regogen.Module, q request, rq *regogen.Request, in *regogen.Input) (resolution, error) {
+	var res resolution
 	var claims *jsonvalue.Object
 	if q.Claims != nil {
 		c, err := jsonvalue.Decode([]byte(*q.Claims))
 		if err != nil {
-			return nil, nil, 0, fmt.Errorf("claims: %w", err)
+			return res, fmt.Errorf("claims: %w", err)
 		}
 		var ok bool
 		if claims, ok = c.(*jsonvalue.Object); !ok {
-			return nil, nil, 0, fmt.Errorf("claims: not an object")
+			return res, fmt.Errorf("claims: not an object")
 		}
 	}
 	rq.Values = maps.Clone(rq.Values)
@@ -247,17 +266,17 @@ func resolveRequest(m *regogen.Module, q request, rq *regogen.Request, in *regog
 	if claims != nil {
 		regogen.SubjectOf(claims, q.Anonymous, regogen.DefaultSubjectRules).Apply(rq)
 	}
-	us := float64(time.Since(t0).Nanoseconds()) / 1000
+	res.resolveUs = float64(time.Since(t0).Nanoseconds()) / 1000
 	got, err := regogen.Project(m, *rq)
 	if err != nil {
-		return nil, nil, us, err
+		return res, err
 	}
-	var diff []string
+	res.in = got
 	if !slices.Equal(in.SRoles, got.SRoles) {
-		diff = append(diff, fmt.Sprintf("sroles: spec %q, projection %q", in.SRoles, got.SRoles))
+		res.diff = append(res.diff, fmt.Sprintf("sroles: spec %q, projection %q", in.SRoles, got.SRoles))
 	}
 	if in.M2M != got.M2M {
-		diff = append(diff, fmt.Sprintf("m2m: spec %v, projection %v", in.M2M, got.M2M))
+		res.diff = append(res.diff, fmt.Sprintf("m2m: spec %v, projection %v", in.M2M, got.M2M))
 	}
 	for _, r := range m.Refs {
 		want, okW := in.Records[r.ID]
@@ -265,10 +284,22 @@ func resolveRequest(m *regogen.Module, q request, rq *regogen.Request, in *regog
 		if okW != okH || !reflect.DeepEqual(want, have) {
 			w, _ := json.Marshal(want)
 			h, _ := json.Marshal(have)
-			diff = append(diff, fmt.Sprintf("%s: spec %s, projection %s", r.ID, w, h))
+			res.diff = append(res.diff, fmt.Sprintf("%s: spec %s, projection %s", r.ID, w, h))
 		}
 	}
-	return got, diff, us, nil
+	shared := *rq
+	shared.Body = regogen.Body{}
+	t0 = time.Now()
+	bulk, err := regogen.NewBulk(m, shared)
+	res.bulkUs = float64(time.Since(t0).Nanoseconds()) / 1000
+	if err != nil {
+		return res, fmt.Errorf("bulk: %w", err)
+	}
+	t0 = time.Now()
+	item := bulk.Item(rq.Body).Value()
+	res.itemUs = float64(time.Since(t0).Nanoseconds()) / 1000
+	res.bulk = item.Compare(got.Value()) != 0
+	return res, nil
 }
 
 func run(b bundle, tab *spectables.Table, opt regogen.Options, reps int, dumpDir string, resolve bool) result {
@@ -353,16 +384,21 @@ func run(b bundle, tab *spectables.Table, opt regogen.Options, reps int, dumpDir
 				res.ProjErrors = append(res.ProjErrors, q.ID+": -resolve: the bundle carries no body")
 				continue
 			}
-			got, diff, us, err := resolveRequest(m, q, &rq, in)
+			r, err := resolveRequest(m, q, &rq, in)
 			if err != nil {
 				res.ProjErrors = append(res.ProjErrors, q.ID+": resolve: "+err.Error())
 				continue
 			}
-			res.ResolveUs = append(res.ResolveUs, us)
-			for _, d := range diff {
+			res.ResolveUs = append(res.ResolveUs, r.resolveUs)
+			res.BulkUs = append(res.BulkUs, r.bulkUs)
+			res.ItemUs = append(res.ItemUs, r.itemUs)
+			for _, d := range r.diff {
 				res.RecordMismatch = append(res.RecordMismatch, q.ID+": "+d)
 			}
-			in = got
+			if r.bulk {
+				res.BulkMismatch = append(res.BulkMismatch, q.ID)
+			}
+			in = r.in
 		}
 		v := in.Value()
 		ctx := in.Context(context.WithValue(context.Background(), ctxKey{}, in))
@@ -501,7 +537,7 @@ func main() {
 	}
 	defer func() { _ = w.Close() }()
 	enc := json.NewEncoder(w)
-	var evals, groupUs, compiles, denies, dcompiles, resolveUs []float64
+	var evals, groupUs, compiles, denies, dcompiles, resolveUs, bulkUs, itemUs []float64
 	sum := map[string]int{}
 	noTpl := map[string]int{}
 	errClasses := map[string]int{}
@@ -530,6 +566,9 @@ func main() {
 		sum["proj_errors"] += len(r.ProjErrors)
 		sum["record_mismatch"] += len(r.RecordMismatch)
 		resolveUs = append(resolveUs, r.ResolveUs...)
+		sum["bulk_mismatch"] += len(r.BulkMismatch)
+		bulkUs = append(bulkUs, r.BulkUs...)
+		itemUs = append(itemUs, r.ItemUs...)
 		sum["evaluated"] += len(r.EvalUs)
 		sum["clauses"] += r.Stats.Clauses
 		sum["allow_clauses"] += r.Stats.AllowClauses
@@ -559,7 +598,8 @@ func main() {
 	}
 	s, _ := json.MarshalIndent(map[string]any{
 		"counts": sum, "table_load_ms": loadMs, "spec_tag": tab.SpecTag(),
-		"eval_us": q(evals), "project_us": q(groupUs), "resolve_us": q(resolveUs), "compile_ms": q(compiles), "clauses": q(clauses),
+		"eval_us": q(evals), "project_us": q(groupUs), "resolve_us": q(resolveUs),
+		"bulk_us": q(bulkUs), "item_us": q(itemUs), "compile_ms": q(compiles), "clauses": q(clauses),
 		"deny_eval_us": q(denies), "decision_compile_ms": q(dcompiles),
 		"errors": errClasses, "no_template": noTpl, "seconds": time.Since(t0).Seconds(),
 	}, "", " ")

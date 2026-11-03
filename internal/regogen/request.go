@@ -91,17 +91,22 @@ func empty(v jsonvalue.Value) bool {
 // lazily, and Resolve leaves it out.
 func (m *Module) Resolve(b Body, values map[string]Resolved) {
 	for _, r := range m.Refs {
-		switch r.Kind {
-		case spectables.KindResource, spectables.KindResPath, spectables.KindResNested, spectables.KindNull:
-		case spectables.KindResJSONPath:
-			if r.Path != "" {
-				continue
-			}
-		default:
-			continue
+		if resourceOperand(r) {
+			values[r.Key] = b.resolve(r)
 		}
-		values[r.Key] = b.resolve(r)
 	}
+}
+
+// resourceOperand reports whether r is an operand that [Module.Resolve]
+// resolves.
+func resourceOperand(r *Ref) bool {
+	switch r.Kind {
+	case spectables.KindResource, spectables.KindResPath, spectables.KindResNested, spectables.KindNull:
+		return true
+	case spectables.KindResJSONPath:
+		return r.Path == ""
+	}
+	return false
 }
 
 // resolve returns the value of a resource operand, r of kind resource,

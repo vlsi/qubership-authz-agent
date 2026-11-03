@@ -38,14 +38,14 @@ import (
 // tenantWithSet returns the tree of a tenant whose export holds one set with
 // one policy, both of the algorithm given, and one rule of the effect and
 // condition given.
-func tenantWithSet(t *testing.T, algorithm, effect, condition string) *policyir.Tree {
+func tenantWithSet(t testing.TB, algorithm, effect, condition string) *policyir.Tree {
 	t.Helper()
 	return tenantWithSetAndPIPs(t, algorithm, effect, condition, "")
 }
 
 // tenantWithSetAndPIPs is tenantWithSet with the PIP declarations given, a
 // comma-separated list of JSON objects without their tenantId.
-func tenantWithSetAndPIPs(t *testing.T, algorithm, effect, condition, pips string) *policyir.Tree {
+func tenantWithSetAndPIPs(t testing.TB, algorithm, effect, condition, pips string) *policyir.Tree {
 	t.Helper()
 	sets := fmt.Sprintf(`{"policySets": [{"policySetId": "s1", "name": "s1", "status": "ACTIVE",
 		"target": "resourceType == 'doc'", "combiningAlgorithm": %[1]q, "tenantId": "t1",
@@ -64,7 +64,7 @@ func tenantWithSetAndPIPs(t *testing.T, algorithm, effect, condition, pips strin
 	return tree
 }
 
-func table(t *testing.T) *spectables.Table {
+func table(t testing.TB) *spectables.Table {
 	t.Helper()
 	tab, err := DefaultTable()
 	if err != nil {

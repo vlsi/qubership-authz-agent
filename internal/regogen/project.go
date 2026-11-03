@@ -118,6 +118,9 @@ type Input struct {
 	resource    jsonvalue.Value
 	docs        *regobuiltins.Documents
 	refs        []*Ref
+	// bulk is set on the input of an item of a bulk request, whose Records
+	// then hold the item's own records only ([Bulk.Item]).
+	bulk *Bulk
 }
 
 // class is the class of a value in state VALUE that is not null: the class
@@ -380,6 +383,9 @@ func (r Record) term() *ast.Term {
 // resource, the document. A network PIP's record is not in it: nc.pip
 // returns it.
 func (in *Input) Value() ast.Value {
+	if in.bulk != nil {
+		return in.bulk.value(in)
+	}
 	o := fieldMaps(in.refs, func(r *Ref) (Record, bool) {
 		rec, ok := in.Records[r.ID]
 		return rec, ok && !r.Network && !r.Pass
@@ -396,7 +402,7 @@ func (in *Input) Value() ast.Value {
 	}
 	o.Insert(strTerm("ps"), ast.ArrayTerm(passes...))
 	o.Insert(strTerm("psf"), ast.BooleanTerm(in.ScopeFailed))
-	if slices.ContainsFunc(in.refs, func(r *Ref) bool { return r.Path != "" }) {
+	if in.resourceMember() {
 		res := ast.NullTerm()
 		if in.resource != nil {
 			// a jsonvalue.Value always has a term
@@ -407,6 +413,12 @@ func (in *Input) Value() ast.Value {
 	return o
 }
 
+// resourceMember reports whether the input carries the member resource: the
+// module reads a resource path lazily.
+func (in *Input) resourceMember() bool {
+	return slices.ContainsFunc(in.refs, func(r *Ref) bool { return r.Path != "" })
+}
+
 // Context returns ctx with what nc.jsonpath needs to read input.resource as
 // the document it was built from; evaluate the module's query with it.
 func (in *Input) Context(ctx context.Context) context.Context { return in.docs.Context(ctx) }
@@ -414,72 +426,87 @@ func (in *Input) Context(ctx context.Context) context.Context { return in.docs.C
 // fieldMaps returns the object of the maps from a reference ID to a field of
 // its record, for each reference whose record rec gives.
 func fieldMaps(refs []*Ref, rec func(*Ref) (Record, bool)) ast.Object {
-	fields := map[string]ast.Object{}
-	for _, f := range []string{"s", "t", "k", "ks", "raw", "seg", "eseg", "nseg", "n0", "tk", "o", "ln", "ea",
-		"eb", "nk", "sa", "sb"} {
-		fields[f] = ast.NewObject()
-	}
-	for _, r := range refs {
-		rec, ok := rec(r)
-		if !ok {
-			continue
-		}
-		id := strTerm(r.ID)
-		fields["s"].Insert(id, strTerm(rec.S))
-		if rec.T != "" {
-			fields["t"].Insert(id, strTerm(rec.T))
-		}
-		if rec.K != nil {
-			fields["k"].Insert(id, strTerm(*rec.K))
-		}
-		if rec.KS != nil {
-			fields["ks"].Insert(id, strsTerm(rec.KS))
-		}
-		if rec.Raw != nil {
-			fields["raw"].Insert(id, strTerm(*rec.Raw))
-		}
-		if rec.N0 {
-			fields["n0"].Insert(id, ast.BooleanTerm(true))
-		}
-		if rec.TK != nil {
-			fields["tk"].Insert(id, strTerm(*rec.TK))
-		}
-		if rec.O != nil {
-			fields["o"].Insert(id, strTerm(*rec.O))
-		}
-		if rec.Len != nil {
-			fields["ln"].Insert(id, ast.IntNumberTerm(*rec.Len))
-		}
-		if rec.EA != nil {
-			fields["ea"].Insert(id, strsTerm(rec.EA))
-			fields["eb"].Insert(id, strsTerm(rec.EB))
-		}
-		if rec.N != nil {
-			fields["nk"].Insert(id, orderKey(*rec.N))
-		}
-		if rec.SA != nil {
-			fields["sa"].Insert(id, setsTerm(rec.SA))
-			fields["sb"].Insert(id, strsTerm(rec.SB))
-		}
-		if rec.Segs != nil {
-			fields["seg"].Insert(id, strsTerm(rec.Segs))
-			rev := slices.Clone(rec.Segs)
-			slices.Reverse(rev)
-			fields["eseg"].Insert(id, strsTerm(rev))
-			fields["nseg"].Insert(id, ast.IntNumberTerm(len(rec.Segs)))
-		}
-	}
 	o := ast.NewObject()
-	for f, v := range fields {
+	for f, v := range fieldObjects(refs, rec) {
 		o.Insert(strTerm(f), ast.NewTerm(v))
 	}
 	return o
+}
+
+// recordFields names the maps of [fieldMaps].
+var recordFields = []string{"s", "t", "k", "ks", "raw", "seg", "eseg", "nseg", "n0", "tk", "o", "ln", "ea", "eb",
+	"nk", "sa", "sb"}
+
+// fieldObjects returns the maps of [fieldMaps] by their names.
+func fieldObjects(refs []*Ref, rec func(*Ref) (Record, bool)) map[string]ast.Object {
+	fields := make(map[string]ast.Object, len(recordFields))
+	for _, f := range recordFields {
+		fields[f] = ast.NewObject()
+	}
+	for _, r := range refs {
+		if rec, ok := rec(r); ok {
+			id := strTerm(r.ID)
+			rec.fields(func(f string, v *ast.Term) { fields[f].Insert(id, v) })
+		}
+	}
+	return fields
+}
+
+// fields gives put each entry of the record in the maps of [fieldMaps]: the
+// name of the map and the value under the reference's ID.
+func (rec Record) fields(put func(field string, v *ast.Term)) {
+	put("s", strTerm(rec.S))
+	if rec.T != "" {
+		put("t", strTerm(rec.T))
+	}
+	if rec.K != nil {
+		put("k", strTerm(*rec.K))
+	}
+	if rec.KS != nil {
+		put("ks", strsTerm(rec.KS))
+	}
+	if rec.Raw != nil {
+		put("raw", strTerm(*rec.Raw))
+	}
+	if rec.N0 {
+		put("n0", ast.BooleanTerm(true))
+	}
+	if rec.TK != nil {
+		put("tk", strTerm(*rec.TK))
+	}
+	if rec.O != nil {
+		put("o", strTerm(*rec.O))
+	}
+	if rec.Len != nil {
+		put("ln", ast.IntNumberTerm(*rec.Len))
+	}
+	if rec.EA != nil {
+		put("ea", strsTerm(rec.EA))
+		put("eb", strsTerm(rec.EB))
+	}
+	if rec.N != nil {
+		put("nk", orderKey(*rec.N))
+	}
+	if rec.SA != nil {
+		put("sa", setsTerm(rec.SA))
+		put("sb", strsTerm(rec.SB))
+	}
+	if rec.Segs != nil {
+		put("seg", strsTerm(rec.Segs))
+		rev := slices.Clone(rec.Segs)
+		slices.Reverse(rev)
+		put("eseg", strsTerm(rev))
+		put("nseg", ast.IntNumberTerm(len(rec.Segs)))
+	}
 }
 
 // PIPRecord returns the record nc.pip returns for a network reference, and
 // false for an unknown one.
 func (in *Input) PIPRecord(id string) (*ast.Term, bool) {
 	r, ok := in.Records[id]
+	if !ok && in.bulk != nil {
+		r, ok = in.bulk.in.Records[id]
+	}
 	if !ok {
 		return nil, false
 	}
