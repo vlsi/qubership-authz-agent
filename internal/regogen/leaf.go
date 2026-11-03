@@ -43,6 +43,15 @@ type point struct {
 	cl spectables.Class
 }
 
+// text is the point as a comment names it: the class of a value, or the
+// state.
+func (p point) text() string {
+	if p.st == spectables.StateValue {
+		return "class " + string(p.cl)
+	}
+	return string(p.st)
+}
+
 func (p point) spec(k spectables.Kind) spectables.Point {
 	return spectables.Point{Kind: k, State: p.st, Class: p.cl}
 }
@@ -177,7 +186,10 @@ func (g *gen) compare(c policyir.Compare, ctx spectables.Context) (leafRails, er
 	g.stats.Lookups += len(lps) * len(rps)
 
 	var rails leafRails
-	add := func(o spectables.Outcome, c clause) {
+	// add puts c on the rail of outcome o, and writes on its checks of a
+	// state or a class the points they stand for and the outcome
+	add := func(o spectables.Outcome, c clause, points string) {
+		c = withCell(c, points+" -> "+string(o))
 		switch o {
 		case spectables.OutcomeT:
 			rails.t = union(rails.t, dnf{c})
@@ -209,13 +221,13 @@ func (g *gen) compare(c policyir.Compare, ctx spectables.Context) (leafRails, er
 		}
 		if o, ok := constant(col); ok && R != nil && R.ref != nil {
 			coveredR[j] = true
-			add(o, R.at(rps[j]))
+			add(o, R.at(rps[j]), "right "+rps[j].text())
 		}
 	}
 	for i := range lps {
 		if o, ok := constant(cells[i]); ok {
 			coveredL[i] = true
-			add(o, L.at(lps[i]))
+			add(o, L.at(lps[i]), lps[i].text())
 		}
 	}
 	for i, lp := range lps {
@@ -228,7 +240,7 @@ func (g *gen) compare(c policyir.Compare, ctx spectables.Context) (leafRails, er
 			}
 			cell := cells[i][j]
 			if cell.Outcome != spectables.OutcomeByValue {
-				add(cell.Outcome, conj(L.at(lp), rightAt(R, rp)))
+				add(cell.Outcome, conj(L.at(lp), rightAt(R, rp)), lp.text()+", right "+rp.text())
 				continue
 			}
 			tmpl, err := g.byValue(&rails, op, L, R, cells, lps, rps, i, j)

@@ -43,6 +43,13 @@ type expr struct {
 	test *test
 	// rule names the rule the expression references, or is empty.
 	rule string
+	// src is the leaf the expression came from, for the comments of the
+	// module; nil for an expression no leaf wrote.
+	src *exprSrc
+	// cell is the comment after the expression: for a check of a state or a
+	// class, the point and the outcome of its cell; for a subject group, the
+	// comparisons it holds.
+	cell string
 }
 
 // fact is the requirement an expression puts on a reference: a state, a class

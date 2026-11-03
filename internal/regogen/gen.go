@@ -167,6 +167,13 @@ type gen struct {
 	groups   map[string]Group
 	groupIDs map[string]string
 
+	// sources holds what the comments say of each node, by label; shared
+	// holds the rules several nodes may read, and ruleAtoms the comparisons
+	// their clauses came from.
+	sources   map[string]nodeSource
+	shared    map[string]bool
+	ruleAtoms map[string][]string
+
 	stats Stats
 	// pass is set while the generator translates the subtree of an iterate
 	// set, whose rules are functions of the pass p.
@@ -192,7 +199,8 @@ func Generate(tree *policyir.Tree, tab *spectables.Table, opt Options) (*Module,
 	g := &gen{tab: tab, tree: tree, opt: opt, refs: map[string]*Ref{}, vars: map[string]string{}, rules: map[string]dnf{},
 		memo: map[string]string{}, counters: map[string]int{}, anyBodies: map[string]dnf{},
 		condMemo: map[string]*cond{}, decNames: map[string]string{}, decRoots: map[string]*node{},
-		groups: map[string]Group{}, groupIDs: map[string]string{}, params: map[string]bool{}, uncertainMemo: map[*node]bool{}}
+		groups: map[string]Group{}, groupIDs: map[string]string{}, params: map[string]bool{}, uncertainMemo: map[*node]bool{},
+		sources: map[string]nodeSource{}, shared: map[string]bool{}, ruleAtoms: map[string][]string{}}
 	g.stats.NoTemplate = map[string]int{}
 	if fs := tree.Unsupported(); len(fs) > 0 {
 		rej := &RejectedError{}
@@ -274,7 +282,7 @@ func (g *gen) tops() ([]*node, error) {
 		}
 	}
 	for _, s := range g.tree.Sets {
-		n, err := g.set(s)
+		n, err := g.set(s, setLabel(s.ID), "")
 		if err != nil {
 			return nil, err
 		}
@@ -292,15 +300,22 @@ func (g *gen) simplified(sg *policyir.SimplifiedGroup) (*node, error) {
 	n := &node{kind: kindSimplified, id: g.fresh("n")}
 	saved := g.where
 	defer func() { g.where = saved }()
-	for _, p := range sg.Policies {
-		g.where = whereNow{set: sg.ID, policy: p.ID}
+	label := setLabel(sg.ID)
+	g.source(label, "", fmt.Sprintf("simplified %q %q, resourceType %q", sg.ID, commentLine(sg.Name), sg.ResourceType))
+	for i, p := range sg.Policies {
+		pl := fmt.Sprintf("%s_p%d", label, i+1)
+		g.where = whereNow{set: sg.ID, policy: p.ID, label: pl}
+		g.source(pl, label, fmt.Sprintf("simplified policy %q, operation %q, roles %q", p.ID, p.Operation, p.Roles),
+			"condition: "+condText(p.Condition))
+		simpSrc := func(atom string) *exprSrc { return &exprSrc{node: pl, atom: atom} }
 		var m clause
 		if sg.ResourceType != "ALL" {
 			r, err := g.ref(policyir.ResourceType{}, spectables.KindResourceType, false)
 			if err != nil {
 				return nil, err
 			}
-			m = conj(m, clause{{cls: clsIndexEq, text: "input.k" + refIndex(r.ID) + " == " + lit(g.fold(sg.ResourceType))}})
+			m = conj(m, clause{{cls: clsIndexEq, text: "input.k" + refIndex(r.ID) + " == " + lit(g.fold(sg.ResourceType)),
+				src: simpSrc("resourceType == " + lit(sg.ResourceType))}})
 		}
 		op := p.Operation
 		if g.fixedOp != nil {
@@ -312,12 +327,13 @@ func (g *gen) simplified(sg *policyir.SimplifiedGroup) (*node, error) {
 			if err != nil {
 				return nil, err
 			}
-			m = conj(m, clause{{cls: clsIndexEq, text: "input.k" + refIndex(r.ID) + " == " + lit(g.fold(op))}})
+			m = conj(m, clause{{cls: clsIndexEq, text: "input.k" + refIndex(r.ID) + " == " + lit(g.fold(op)),
+				src: simpSrc("operation == " + lit(op))}})
 		}
 		var roles dnf
 		for _, r := range p.Roles {
 			roles = append(roles, clause{{cls: clsIndexIn, text: lit(g.fold(r)) + " in input.sroles",
-				test: &test{kind: "has", ref: "sroles", val: g.fold(r)}}})
+				test: &test{kind: "has", ref: "sroles", val: g.fold(r)}, src: simpSrc("role " + lit(r))}})
 		}
 		roles = union(roles)
 		// a simplified policy without a condition grants by its operation and
@@ -373,11 +389,15 @@ func (g *gen) effect(e policyir.Effect) (string, error) {
 	return "", fmt.Errorf("effect %q has node outcome %q", e, o)
 }
 
-func (g *gen) set(s *policyir.PolicySet) (*node, error) {
+// set translates a policy set whose node has label, under the node parent,
+// empty for a top-level set.
+func (g *gen) set(s *policyir.PolicySet, label, parent string) (*node, error) {
 	id := g.fresh("n")
 	saved := g.where
 	defer func() { g.where = saved }()
-	g.where = whereNow{set: s.ID}
+	g.where = whereNow{set: s.ID, label: label}
+	g.source(label, parent, fmt.Sprintf("set %q %q, %s", s.ID, commentLine(s.Name), s.Algorithm),
+		"target: "+condText(s.Target))
 	tgt, err := g.cond(s.Target, spectables.PlaceSetTarget, "")
 	if err != nil {
 		return nil, err
@@ -401,28 +421,29 @@ func (g *gen) set(s *policyir.PolicySet) (*node, error) {
 		defer func() { g.pass = saved }()
 		n.tgt = g.constCond(true)
 		it := &node{kind: kindIterate, id: g.fresh("n"), alg: g.alg(s.Iterate.Algorithm), tgt: tgt, kids: []*node{n}}
-		if err := g.setKids(n, s); err != nil {
+		if err := g.setKids(n, s, label); err != nil {
 			return nil, err
 		}
 		return it, nil
 	}
-	if err := g.setKids(n, s); err != nil {
+	if err := g.setKids(n, s, label); err != nil {
 		return nil, err
 	}
 	return n, nil
 }
 
-// setKids translates the policies and the nested sets of s into the kids of n.
-func (g *gen) setKids(n *node, s *policyir.PolicySet) error {
-	for _, p := range s.Policies {
-		k, err := g.policy(p)
+// setKids translates the policies and the nested sets of s, whose node has
+// label, into the kids of n.
+func (g *gen) setKids(n *node, s *policyir.PolicySet, label string) error {
+	for i, p := range s.Policies {
+		k, err := g.policy(p, fmt.Sprintf("%s_p%d", label, i+1), label)
 		if err != nil {
 			return err
 		}
 		n.kids = append(n.kids, k)
 	}
-	for _, c := range s.Sets {
-		k, err := g.set(c)
+	for i, c := range s.Sets {
+		k, err := g.set(c, fmt.Sprintf("%s_s%d", label, i+1), label)
 		if err != nil {
 			return err
 		}
@@ -431,16 +452,22 @@ func (g *gen) setKids(n *node, s *policyir.PolicySet) error {
 	return nil
 }
 
-func (g *gen) policy(p *policyir.Policy) (*node, error) {
+// policy translates a policy whose node has label, under the set parent.
+func (g *gen) policy(p *policyir.Policy, label, parent string) (*node, error) {
 	set := g.where.set
-	g.where = whereNow{set: set, policy: p.ID}
+	g.where = whereNow{set: set, policy: p.ID, label: label}
+	g.source(label, parent, fmt.Sprintf("policy %q %q, %s", p.ID, commentLine(p.Name), p.Algorithm),
+		"target: "+condText(p.Target))
 	tgt, err := g.cond(p.Target, spectables.PlacePolicyTarget, "")
 	if err != nil {
 		return nil, err
 	}
 	n := &node{kind: kindPolicy, id: g.fresh("n"), alg: g.alg(p.Algorithm), tgt: tgt}
-	for _, r := range p.Rules {
-		g.where = whereNow{set: set, policy: p.ID, rule: r.ID}
+	for j, r := range p.Rules {
+		rl := fmt.Sprintf("%s_r%d", label, j+1)
+		g.where = whereNow{set: set, policy: p.ID, rule: r.ID, label: rl}
+		g.source(rl, label, fmt.Sprintf("rule %q %q, %s", r.ID, commentLine(r.Name), r.Effect),
+			"target: "+condText(r.Target), "condition: "+condText(r.Condition))
 		rt, err := g.cond(r.Target, spectables.PlaceRuleTarget, "")
 		if err != nil {
 			return nil, err
@@ -508,6 +535,8 @@ func (g *gen) cond(c *policyir.Condition, place spectables.Place, effect policyi
 				}
 				return nil, fmt.Errorf("%s: %w", policyir.FormatCondition(c), err)
 			}
+			src := &exprSrc{node: g.where.label, atom: atomText(a)}
+			l.t, l.f = stamp(l.t, src), stamp(l.f, src)
 			g.stats.Leaves++
 			cc.three = cc.three || l.threeValued
 			leaves = append(leaves, l)
@@ -734,11 +763,22 @@ func (g *gen) refRule(d dnf, prefix string, negate bool) dnf {
 		name = g.rule(g.fresh(prefix), d)
 		g.memo[k] = name
 	}
+	if prefix == "m" || prefix == "c" {
+		// several nodes read the rule: its comment names the comparisons
+		// of every reader, in an order no reader decides
+		g.shared[name] = true
+		for _, a := range atoms(d) {
+			if !slices.Contains(g.ruleAtoms[name], a) {
+				g.ruleAtoms[name] = append(g.ruleAtoms[name], a)
+			}
+		}
+		slices.Sort(g.ruleAtoms[name])
+	}
 	text := g.call(name)
 	if negate {
 		text = "not " + text
 	}
-	return dnf{{{cls: clsCheck, text: text, rule: name}}}
+	return dnf{{{cls: clsCheck, text: text, rule: name, src: &exprSrc{nodes: dnfNodes(d)}}}}
 }
 
 // product is a × b. Over the budget one factor becomes a helper rule; the
@@ -1040,7 +1080,11 @@ func clauseText(name string, c clause) string {
 	var b strings.Builder
 	b.WriteString(name + " if {\n")
 	for _, e := range es {
-		b.WriteString("\t" + e.text + "\n")
+		b.WriteString("\t" + e.text)
+		if c := lineComment(e); c != "" {
+			b.WriteString(" # " + commentLine(c))
+		}
+		b.WriteString("\n")
 	}
 	b.WriteString("}\n")
 	return b.String()
@@ -1051,15 +1095,19 @@ func clauseText(name string, c clause) string {
 // rules maybe and decision and what maybe reads.
 func (g *gen) module(pkg string, allow, maybe dnf, decision bool) (string, int) {
 	var b strings.Builder
-	b.WriteString("package " + pkg + "\n\ndefault allow := false\n\n")
+	b.WriteString("package " + pkg + "\n\n" + legend + "\ndefault allow := false\n\n")
+	cm := &commenter{g: g, b: &b, printed: map[string]bool{}}
 	for _, c := range allow {
+		cm.clause(c)
 		b.WriteString(clauseText("allow", c))
 	}
 	clauses := len(allow)
 	if decision {
 		b.WriteString(decisionText)
 		b.WriteString("\ndefault maybe := false\n\n")
+		cm.last = ""
 		for _, c := range maybe {
+			cm.clause(c)
 			b.WriteString(clauseText("maybe", c))
 		}
 		clauses += len(maybe)
@@ -1085,6 +1133,12 @@ func (g *gen) module(pkg string, allow, maybe dnf, decision bool) (string, int) 
 			}
 		}
 		b.WriteString("\n")
+		cm.last = ""
+		if g.shared[name] {
+			for _, a := range g.ruleAtoms[name] {
+				b.WriteString("# " + commentLine(a) + "\n")
+			}
+		}
 		if len(body) == 0 {
 			b.WriteString("default " + any + " := false\n")
 			continue
@@ -1099,6 +1153,9 @@ func (g *gen) module(pkg string, allow, maybe dnf, decision bool) (string, int) 
 			clauses++
 		}
 		for _, c := range body {
+			if !g.shared[name] {
+				cm.clause(c)
+			}
 			if len(c) == 0 && g.params[name] {
 				b.WriteString(clauseText(strings.TrimSuffix(target, "(p)")+"(_)", c))
 				continue

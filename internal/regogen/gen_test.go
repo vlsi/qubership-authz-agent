@@ -1547,6 +1547,28 @@ func TestTheSameTreeGivesTheSameModule(t *testing.T) {
 	}
 }
 
+// The module names, above the clauses read from a rule, the rule's label and,
+// at its first clause, the IDs, names, targets, and condition of the rule and
+// of the policy and the set above it. A check of a state ends with the
+// comparison it belongs to, the point it tests, and the outcome there.
+func TestTheModuleNamesThePolicyEachClauseCameFrom(t *testing.T) {
+	m, err := Generate(tenantWithSet(t, "DENY_UNLESS_PERMIT", "ALLOW", "resource.a IS EMPTY"), table(t), DefaultOptions())
+	if err != nil {
+		t.Fatalf("Generate: %v", err)
+	}
+	for _, want := range []string{
+		"# set_s1: set \"s1\" \"s1\", DENY_UNLESS_PERMIT\n#   target: resourceType EQ \"doc\"\n" +
+			"# set_s1_p1: policy \"p1\" \"\", DENY_UNLESS_PERMIT\n#   target: TRUE\n" +
+			"# set_s1_p1_r1: rule \"r1\" \"\", ALLOW\n#   target: operation EQ \"read\"\n" +
+			"#   condition: resource.a IS_EMPTY\n# set_s1_p1_r1\nallow if {\n",
+		`input.s["resource.a"] == "EMPTY_COLL" # resource.a IS_EMPTY: EMPTY_COLL -> T` + "\n",
+	} {
+		if !strings.Contains(m.Text, want) {
+			t.Errorf("the module lacks\n%s\nmodule:\n%s", want, m.Text)
+		}
+	}
+}
+
 // With Report set, the module carries a report entry for every comparison: the
 // set, policy, and rule of its condition, where the condition stands, the
 // comparison as written, and for each pair of operand points the cell's

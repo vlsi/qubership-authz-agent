@@ -111,7 +111,15 @@ func (g *gen) group(factors ...dnf) dnf {
 		}
 		g.groups[id] = grp
 	}
-	return dnf{{{cls: clsIndexIn, text: lit(id) + " in input.g"}}}
+	var as []string
+	var all dnf
+	for _, x := range fs {
+		as = append(as, atoms(x.d)...)
+		all = append(all, x.d...)
+	}
+	slices.Sort(as)
+	return dnf{{{cls: clsIndexIn, text: lit(id) + " in input.g", cell: "group: " + strings.Join(slices.Compact(as), "; "),
+		src: &exprSrc{nodes: dnfNodes(all)}}}}
 }
 
 func (l leafRails) grouped() bool {

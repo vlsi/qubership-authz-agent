@@ -68,6 +68,9 @@ type CellReport struct {
 type whereNow struct {
 	set, policy, rule string
 	place             spectables.Place
+	// label is the node label of the innermost node, as comment.go
+	// describes it.
+	label string
 }
 
 // reportLeaf records one comparison when the options ask for a report.
