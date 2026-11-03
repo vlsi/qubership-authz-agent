@@ -96,7 +96,7 @@ type nodeSource struct {
 	lines  []string
 }
 
-// condText is a condition as one line of a comment, or TRUE without one.
+// condText is a condition as one line of a comment, or (none) without one.
 func condText(c *policyir.Condition) string {
 	if c == nil {
 		return "(none)"
@@ -230,15 +230,18 @@ const legend = `# Generated from the policies of one tenant; the comments name t
 # each line came from.
 #
 # A node label names a policy set by set_, the first 8 hex digits of its
-# UUID, and 4 hex digits of the SHA-256 of the UUID, then _sK the K-th nested
-# set, _pK the K-th policy, and _rK the K-th rule in it; _dupK marks the K-th set of a repeated ID, and _each the set an
-# iterate evaluates once per pass. A comment block with the IDs, names,
-# targets, and conditions stands above the first clause read from a node,
-# and "# <label>" above each run of clauses from one node.
+# UUID, and 4 hex digits of the SHA-256 of the UUID; an ID that is not a UUID
+# follows set_ with _ doubled and any character but a letter or a digit as
+# _<hex code>_. Then _sK names the K-th nested set, _pK the K-th policy, and
+# _rK the K-th rule in it; _dupK marks the K-th set of a repeated ID, and
+# _each the set an iterate evaluates once per pass. A comment block with the
+# IDs, names, targets, and conditions stands above the first clause read from
+# a node, and "# <label>" above each run of clauses from one node.
 #
 # Rules: <node>_<b><x>_K holds when bound b (lo, hi) of the node equals x (P
 # permit, D deny), <node>_in_<b><x>_K when its children combine to x, and
-# <node>_any_<b><x> when some child of the node has bound b equal to x.
+# <node>_any_<b><x> when some child of the node has bound b equal to x; for
+# an iterate, <node>_pass_<b><x>(p) is that bound in pass p.
 # dec_<operation>_<depth>_<b><x> is that bound of the decision for another
 # operation (subject allowed or denied), read from a copy of the tree whose
 # nodes are named dec_<operation>_<depth>_<label>. m_<hash> and c_<hash> hold
@@ -256,8 +259,8 @@ const legend = `# Generated from the policies of one tenant; the comments name t
 # number or boolean, l list, hl list from a header, xn list with null, xl
 # nested list, xo object, z null. input.sroles holds the folded roles,
 # input.g the subject groups the request is in, input.m2m whether the subject
-# is machine-to-machine, and input.ps the passes of an iterate over the
-# permission scope.
+# is machine-to-machine, input.ps the passes of an iterate over the
+# permission scope, and input.psf whether reading the scope failed.
 `
 
 // commenter writes the comments above the clauses of one module text.

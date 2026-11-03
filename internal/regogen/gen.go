@@ -240,7 +240,7 @@ func Generate(tree *policyir.Tree, tab *spectables.Table, opt Options) (*Module,
 			if err != nil {
 				return nil, err
 			}
-			g.light[g.rule(name+"_"+f, body)] = true
+			g.rule(name+"_"+f, body)
 		}
 	}
 	allow := dnfFalse
@@ -306,6 +306,8 @@ func (g *gen) fresh(p string) string {
 // rules.
 func (g *gen) nodeID(label string) string { return g.copyPrefix + label }
 
+// tops translates the top-level sets and simplified groups into nodes in the
+// order of their labels. Two IDs with one label fail the generation.
 func (g *gen) tops() ([]*node, error) {
 	var tops []*node
 	// ids maps a label to the ID it was given to; seen counts the sets of
@@ -699,6 +701,9 @@ func (g *gen) access(a policyir.Access) (leafRails, error) {
 	if !ok {
 		name = fmt.Sprintf("dec_%s_%d", escapeID(g.fold(a.Operation)), depth)
 		g.decNames[key] = name
+		for _, f := range []string{"loP", "loD", "hiP", "hiD"} {
+			g.light[name+"_"+f] = true
+		}
 		g.decOrder = append(g.decOrder, name)
 		savedOp, savedDepth, savedCopy := g.fixedOp, g.fixedDepth, g.copyPrefix
 		op := a.Operation
@@ -853,7 +858,10 @@ func (g *gen) call(name string) string {
 }
 
 // refRule returns a one-clause disjunction that reads a rule with these
-// clauses, or its negation.
+// clauses, or its negation. The rule of a node is named by prefix and a
+// counter; a product (prefix m) or a condition rail (prefix c), which any node
+// may read, by prefix and a hash of its clauses, and its comment lists the
+// comparisons of every reader.
 func (g *gen) refRule(d dnf, prefix string, negate bool) dnf {
 	switch {
 	case d.isTrue() && negate, d.isFalse() && !negate:

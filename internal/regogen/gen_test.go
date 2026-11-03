@@ -1656,6 +1656,9 @@ func TestASharedRuleKeepsItsNameWhenAnotherSetIsAdded(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Generate: %v", err)
 		}
+		if !strings.Contains(m.Text, "\n# pip(\"subject.g\") EQ ") {
+			t.Errorf("the module names no comparison above a shared rule; module:\n%s", m.Text)
+		}
 		got := shared.FindAllString(m.Text, -1)
 		slices.Sort(got)
 		return slices.Compact(got)
@@ -1780,6 +1783,79 @@ func TestAnEditOfOneSetChangesNoLineOfTheOthers(t *testing.T) {
 	}
 	if got := change(lines(a, b0, c), lines(a, b1, c)); !reflect.DeepEqual(got, own) {
 		t.Errorf("the edit of b changes the lines of the tenant by\n%v\nwant those of the module of b alone:\n%v", got, own)
+	}
+}
+
+// A product with a factor that reads a node's rule is materialized past
+// RefFanout clauses; a decision for another operation is not a node's rule,
+// so a rule whose target reads one and whose condition has 9 disjuncts keeps
+// its product inline.
+func TestADecisionForAnotherOperationDoesNotMaterializeAProduct(t *testing.T) {
+	var ors []string
+	for i := range 9 {
+		ors = append(ors, fmt.Sprintf("resource.a == '%d'", i))
+	}
+	tree := tenantWithSet(t, "DENY_UNLESS_PERMIT", "ALLOW", strings.Join(ors, " OR "))
+	allowed := tenantWithSet(t, "DENY_UNLESS_PERMIT", "ALLOW", "subject allowed 'w' on resource")
+	tree.Sets[0].Policies[0].Rules[0].Target = allowed.Sets[0].Policies[0].Rules[0].Condition
+	m, err := Generate(tree, table(t), DefaultOptions())
+	if err != nil {
+		t.Fatalf("Generate: %v", err)
+	}
+	if n := strings.Count(m.Text, "\nm_"); n != 0 {
+		t.Errorf("the module has %d m_ rules, want none; module:\n%s", n, m.Text)
+	}
+}
+
+// The second set of a repeated ID is labeled _dup2, and the set an iterate
+// evaluates per pass _each; the rules of both start with their labels.
+func TestARepeatedIDAndAnIterateSetHaveLabelsOfTheirOwn(t *testing.T) {
+	sets := `{"policySets": [
+		{"policySetId": "s", "status": "ACTIVE", "target": "resourceType == 'r1'", "tenantId": "t1",
+		 "combiningAlgorithm": "PERMIT_UNLESS_DENY"},
+		{"policySetId": "s", "status": "ACTIVE", "target": "resourceType == 'r2'", "tenantId": "t1",
+		 "combiningAlgorithm": "PERMIT_UNLESS_DENY"}]}`
+	exp, err := policyir.FromRegular([]byte(sets), []byte(`{"pips": []}`))
+	if err != nil {
+		t.Fatalf("FromRegular: %v", err)
+	}
+	opt := DefaultOptions()
+	opt.Flat, opt.Decision = false, true
+	m, err := Generate(exp.Trees["t1"], table(t), opt)
+	if err != nil {
+		t.Fatalf("Generate: %v", err)
+	}
+	for _, want := range []string{"\nset_s_hiP_1 if {", "\nset_s_dup2_hiP_1 if {"} {
+		if !strings.Contains(m.DecisionText, want) {
+			t.Errorf("the decision module lacks %q; module:\n%s", want, m.DecisionText)
+		}
+	}
+	m, err = Generate(iterateTree(t, "DENY_UNLESS_PERMIT", "subject.permissionScope.domain CONTAINS resource.domain"),
+		table(t), opt)
+	if err != nil {
+		t.Fatalf("Generate: %v", err)
+	}
+	if want := "\nset_s1_each_any_loP(p) if {"; !strings.Contains(m.Text, want) {
+		t.Errorf("the module lacks %q; module:\n%s", want, m.Text)
+	}
+}
+
+// A subject group is named by a hash of its factors, and its membership names
+// the comparisons it holds.
+func TestASubjectGroupIsNamedByItsContent(t *testing.T) {
+	opt := DefaultOptions()
+	opt.Groups = true
+	m, err := Generate(tenantWithSet(t, "DENY_UNLESS_PERMIT", "ALLOW", "subject.roles CONTAINS ANY 'reader'"), table(t), opt)
+	if err != nil {
+		t.Fatalf("Generate: %v", err)
+	}
+	re := regexp.MustCompile(`(?m)^\t"(g_[0-9a-f]{12})" in input\.g # group: subject\.roles CONTAINS_ANY \["reader"\]$`)
+	g := re.FindStringSubmatch(m.Text)
+	if g == nil {
+		t.Fatalf("the module has no membership of a group named by its content; module:\n%s", m.Text)
+	}
+	if _, ok := m.Groups[g[1]]; !ok {
+		t.Errorf("Groups = %v, want a group %s", slices.Collect(maps.Keys(m.Groups)), g[1])
 	}
 }
 
