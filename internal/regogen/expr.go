@@ -200,11 +200,12 @@ func guarded(d dnf) bool {
 }
 
 // refsNodeRule reports whether a clause of d references the rule of a node or
-// a materialized rule.
-func refsNodeRule(d dnf) bool {
+// a materialized rule: any rule but a condition rail's and a decision for
+// another operation's.
+func (g *gen) refsNodeRule(d dnf) bool {
 	for _, c := range d {
 		for _, e := range c {
-			if e.rule != "" && (strings.HasPrefix(e.rule, "n") || strings.HasPrefix(e.rule, "m")) {
+			if e.rule != "" && !g.light[e.rule] {
 				return true
 			}
 		}

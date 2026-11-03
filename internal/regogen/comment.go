@@ -15,6 +15,8 @@
 package regogen
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"regexp"
 	"slices"
@@ -25,12 +27,14 @@ import (
 
 // The module text carries comments that lead a reader from a line back to
 // the policy it came from. Every node of the tree has a label: setLabel of
-// its set's ID for a top-level set or simplified group, then _sK for the K-th
-// nested set, _pK for the K-th policy, and _rK for the K-th rule, counting
-// from 1 within the parent. A label depends on the IDs and positions inside
-// one top-level set alone, so an edit of one set leaves the labels of the
-// others as they were. The first clause that reads a node writes the node's
-// source above it: the IDs, the names, the target, and the condition.
+// its set's ID for a top-level set or simplified group (with _dupK for the
+// K-th set of a repeated ID), then _sK for the K-th nested set, _pK for the
+// K-th policy, and _rK for the K-th rule, counting from 1 within the parent.
+// The label also starts the names of the node's rules. A label depends on
+// the IDs and positions inside one top-level set alone, so an edit of one set
+// leaves the labels and the rule names of the others as they were. The first
+// clause that reads a node writes the node's source above it: the IDs, the
+// names, the target, and the condition.
 
 // exprSrc is the leaf an expression of a condition came from.
 type exprSrc struct {
@@ -47,13 +51,16 @@ type exprSrc struct {
 
 var uuidRE = regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`)
 
-// setLabel returns the label of a top-level set or simplified group: set_
-// and the first 8 hex digits of a UUID, or for any other ID, set_ and the ID
-// with each _ doubled and each character other than a letter or a digit
-// written as _<hex code>_, which reads back to the ID.
+// setLabel returns the label of a top-level set or simplified group. For a
+// UUID it is set_, the first 8 hex digits, _, and the first 4 hex digits of
+// the SHA-256 of the whole ID: hand-made IDs in one tenant often share the
+// first 8 digits and differ anywhere after them. For any other ID it is set_
+// and the ID with each _ doubled and each character other than a letter or a
+// digit written as _<hex code>_, which reads back to the ID.
 func setLabel(id string) string {
 	if uuidRE.MatchString(id) {
-		return "set_" + strings.ToLower(id[:8])
+		sum := sha256.Sum256([]byte(id))
+		return "set_" + strings.ToLower(id[:8]) + "_" + hex.EncodeToString(sum[:2])
 	}
 	return "set_" + escapeID(id)
 }
@@ -149,12 +156,21 @@ func clauseNodes(c clause) []string {
 	}
 	out := labels[:0:0]
 	for _, l := range labels {
-		if !slices.ContainsFunc(labels, func(o string) bool { return strings.HasPrefix(o, l+"_") }) {
+		if !slices.ContainsFunc(labels, func(o string) bool { return isBelow(o, l) }) {
 			out = append(out, l)
 		}
 	}
 	slices.Sort(out)
 	return out
+}
+
+// isBelow reports whether the node with label o is below the node with label
+// l: o extends l by _ and a step _sK, _pK, or _rK. An escaped ID never puts
+// s, p, or r after a single _, so a set whose ID extends another's is not
+// below it.
+func isBelow(o, l string) bool {
+	rest, ok := strings.CutPrefix(o, l+"_")
+	return ok && len(rest) > 1 && strings.ContainsRune("spr", rune(rest[0])) && rest[1] >= '0' && rest[1] <= '9'
 }
 
 // dnfNodes returns the labels of the innermost nodes the clauses of d came
@@ -202,7 +218,7 @@ func lineComment(e expr) string {
 // commentLine makes s fit on one comment line.
 func commentLine(s string) string {
 	return strings.Map(func(r rune) rune {
-		if r < ' ' || r == 0x7f || r == ' ' || r == ' ' {
+		if r < ' ' || r == 0x7f || r == '\u2028' || r == '\u2029' {
 			return ' '
 		}
 		return r
@@ -213,17 +229,21 @@ func commentLine(s string) string {
 const legend = `# Generated from the policies of one tenant; the comments name the policy
 # each line came from.
 #
-# A node label names a policy set by set_ and the first 8 hex digits of its
-# ID, then _sK the K-th nested set, _pK the K-th policy, and _rK the K-th rule
-# in it. A comment block with the IDs, names, targets, and conditions stands
-# above the first clause read from a node, and "# <label>" above each run of
-# clauses from one node.
+# A node label names a policy set by set_, the first 8 hex digits of its
+# UUID, and 4 hex digits of the SHA-256 of the UUID, then _sK the K-th nested
+# set, _pK the K-th policy, and _rK the K-th rule in it; _dupK marks the K-th set of a repeated ID, and _each the set an
+# iterate evaluates once per pass. A comment block with the IDs, names,
+# targets, and conditions stands above the first clause read from a node,
+# and "# <label>" above each run of clauses from one node.
 #
-# Rules: <node>_any_<b><x> holds when some child of the node has bound b (lo,
-# hi) equal to x (P permit, D deny); decN_<b><x> is that bound of the
-# decision for another operation (subject allowed or denied); mN and cN hold
-# a product or a condition rail that several clauses share; <rule>__body
-# holds the clauses of a long rule.
+# Rules: <node>_<b><x>_K holds when bound b (lo, hi) of the node equals x (P
+# permit, D deny), <node>_in_<b><x>_K when its children combine to x, and
+# <node>_any_<b><x> when some child of the node has bound b equal to x.
+# dec_<operation>_<depth>_<b><x> is that bound of the decision for another
+# operation (subject allowed or denied), read from a copy of the tree whose
+# nodes are named dec_<operation>_<depth>_<label>. mN and cN hold a product or
+# a condition rail that several clauses share; <rule>__body holds the clauses
+# of a long rule.
 #
 # input.<field>[<operand>] is a field of the value record of an operand,
 # keyed by the operand as a policy writes it: s state, t class, k key, ks

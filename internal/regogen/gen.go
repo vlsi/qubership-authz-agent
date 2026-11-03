@@ -163,6 +163,13 @@ type gen struct {
 	decNames   map[string]string
 	decRoots   map[string]*node
 	decOrder   []string
+	// copyPrefix starts the node IDs of the copy of the tree a decision for
+	// another operation reads: the decision's name and _; empty in the tree
+	// itself.
+	copyPrefix string
+	// light holds the rules that are not a node's or a product's: condition
+	// rails and decisions for another operation.
+	light map[string]bool
 
 	groups   map[string]Group
 	groupIDs map[string]string
@@ -200,7 +207,7 @@ func Generate(tree *policyir.Tree, tab *spectables.Table, opt Options) (*Module,
 		memo: map[string]string{}, counters: map[string]int{}, anyBodies: map[string]dnf{},
 		condMemo: map[string]*cond{}, decNames: map[string]string{}, decRoots: map[string]*node{},
 		groups: map[string]Group{}, groupIDs: map[string]string{}, params: map[string]bool{}, uncertainMemo: map[*node]bool{},
-		sources: map[string]nodeSource{}, shared: map[string]bool{}, ruleAtoms: map[string][]string{}}
+		sources: map[string]nodeSource{}, shared: map[string]bool{}, ruleAtoms: map[string][]string{}, light: map[string]bool{}}
 	g.stats.NoTemplate = map[string]int{}
 	if fs := tree.Unsupported(); len(fs) > 0 {
 		rej := &RejectedError{}
@@ -225,7 +232,7 @@ func Generate(tree *policyir.Tree, tab *spectables.Table, opt Options) (*Module,
 			if err != nil {
 				return nil, err
 			}
-			g.rule(name+"_"+f, body)
+			g.light[g.rule(name+"_"+f, body)] = true
 		}
 	}
 	allow := dnfFalse
@@ -270,10 +277,33 @@ func (g *gen) fresh(p string) string {
 
 // -- tree -------------------------------------------------------------------
 
+// nodeID returns the ID of the node with label, which starts the names of its
+// rules.
+func (g *gen) nodeID(label string) string { return g.copyPrefix + label }
+
 func (g *gen) tops() ([]*node, error) {
 	var tops []*node
+	// ids maps a label to the ID it was given to; seen counts the sets of
+	// each ID, as a tenant may hold several under one ID
+	ids, seen := map[string]string{}, map[string]int{}
+	label := func(id string) (string, error) {
+		seen[id]++
+		l := setLabel(id)
+		if k := seen[id]; k > 1 {
+			l = fmt.Sprintf("%s_dup%d", l, k)
+		}
+		if other, ok := ids[l]; ok && other != id {
+			return "", fmt.Errorf("policy sets %q and %q share the label %s", other, id, l)
+		}
+		ids[l] = id
+		return l, nil
+	}
 	for _, sg := range g.tree.Simplified {
-		n, err := g.simplified(sg)
+		l, err := label(sg.ID)
+		if err != nil {
+			return nil, err
+		}
+		n, err := g.simplified(sg, l)
 		if err != nil {
 			return nil, err
 		}
@@ -282,7 +312,11 @@ func (g *gen) tops() ([]*node, error) {
 		}
 	}
 	for _, s := range g.tree.Sets {
-		n, err := g.set(s, setLabel(s.ID), "")
+		l, err := label(s.ID)
+		if err != nil {
+			return nil, err
+		}
+		n, err := g.set(s, l, "")
 		if err != nil {
 			return nil, err
 		}
@@ -296,11 +330,11 @@ func (g *gen) fold(s string) string {
 	return l.key
 }
 
-func (g *gen) simplified(sg *policyir.SimplifiedGroup) (*node, error) {
-	n := &node{kind: kindSimplified, id: g.fresh("n")}
+// simplified translates a simplified group whose node has label.
+func (g *gen) simplified(sg *policyir.SimplifiedGroup, label string) (*node, error) {
+	n := &node{kind: kindSimplified, id: g.nodeID(label)}
 	saved := g.where
 	defer func() { g.where = saved }()
-	label := setLabel(sg.ID)
 	g.source(label, "", fmt.Sprintf("simplified %q %q, resourceType %q", sg.ID, commentLine(sg.Name), sg.ResourceType))
 	for i, p := range sg.Policies {
 		pl := fmt.Sprintf("%s_p%d", label, i+1)
@@ -392,7 +426,7 @@ func (g *gen) effect(e policyir.Effect) (string, error) {
 // set translates a policy set whose node has label, under the node parent,
 // empty for a top-level set.
 func (g *gen) set(s *policyir.PolicySet, label, parent string) (*node, error) {
-	id := g.fresh("n")
+	id := g.nodeID(label)
 	saved := g.where
 	defer func() { g.where = saved }()
 	g.where = whereNow{set: s.ID, label: label}
@@ -420,7 +454,8 @@ func (g *gen) set(s *policyir.PolicySet, label, parent string) (*node, error) {
 		g.pass = true
 		defer func() { g.pass = saved }()
 		n.tgt = g.constCond(true)
-		it := &node{kind: kindIterate, id: g.fresh("n"), alg: g.alg(s.Iterate.Algorithm), tgt: tgt, kids: []*node{n}}
+		n.id = id + "_each"
+		it := &node{kind: kindIterate, id: id, alg: g.alg(s.Iterate.Algorithm), tgt: tgt, kids: []*node{n}}
 		if err := g.setKids(n, s, label); err != nil {
 			return nil, err
 		}
@@ -462,7 +497,7 @@ func (g *gen) policy(p *policyir.Policy, label, parent string) (*node, error) {
 	if err != nil {
 		return nil, err
 	}
-	n := &node{kind: kindPolicy, id: g.fresh("n"), alg: g.alg(p.Algorithm), tgt: tgt}
+	n := &node{kind: kindPolicy, id: g.nodeID(label), alg: g.alg(p.Algorithm), tgt: tgt}
 	for j, r := range p.Rules {
 		rl := fmt.Sprintf("%s_r%d", label, j+1)
 		g.where = whereNow{set: set, policy: p.ID, rule: r.ID, label: rl}
@@ -480,7 +515,7 @@ func (g *gen) policy(p *policyir.Policy, label, parent string) (*node, error) {
 		if err != nil {
 			return nil, err
 		}
-		n.kids = append(n.kids, &node{kind: kindRule, id: g.fresh("n"), tgt: rt, cond: rc, effect: eff})
+		n.kids = append(n.kids, &node{kind: kindRule, id: g.nodeID(rl), tgt: rt, cond: rc, effect: eff})
 	}
 	return n, nil
 }
@@ -593,18 +628,18 @@ func (g *gen) access(a policyir.Access) (leafRails, error) {
 	key := fmt.Sprintf("%s/%d", g.fold(a.Operation), depth)
 	name, ok := g.decNames[key]
 	if !ok {
-		name = fmt.Sprintf("dec%d", len(g.decNames)+1)
+		name = fmt.Sprintf("dec_%s_%d", escapeID(g.fold(a.Operation)), depth)
 		g.decNames[key] = name
 		g.decOrder = append(g.decOrder, name)
-		savedOp, savedDepth := g.fixedOp, g.fixedDepth
+		savedOp, savedDepth, savedCopy := g.fixedOp, g.fixedDepth, g.copyPrefix
 		op := a.Operation
-		g.fixedOp, g.fixedDepth = &op, depth
+		g.fixedOp, g.fixedDepth, g.copyPrefix = &op, depth, name+"_"
 		tops, err := g.tops()
-		g.fixedOp, g.fixedDepth = savedOp, savedDepth
+		g.fixedOp, g.fixedDepth, g.copyPrefix = savedOp, savedDepth, savedCopy
 		if err != nil {
 			return leafRails{}, err
 		}
-		g.decRoots[name] = &node{kind: kindSet, id: g.fresh("n"), alg: policyir.AlgorithmPermitOverrides,
+		g.decRoots[name] = &node{kind: kindSet, id: name, alg: policyir.AlgorithmPermitOverrides,
 			tgt: g.constCond(true), kids: tops}
 		g.stats.AccessCopies++
 	}
@@ -762,6 +797,9 @@ func (g *gen) refRule(d dnf, prefix string, negate bool) dnf {
 	if !ok {
 		name = g.rule(g.fresh(prefix), d)
 		g.memo[k] = name
+		if prefix == "c" {
+			g.light[name] = true
+		}
 	}
 	if prefix == "m" || prefix == "c" {
 		// several nodes read the rule: its comment names the comparisons
@@ -790,7 +828,7 @@ func (g *gen) refRule(d dnf, prefix string, negate bool) dnf {
 func (g *gen) product(a, b dnf) dnf {
 	for _, p := range [][2]dnf{{a, b}, {b, a}} {
 		x, y := p[0], p[1]
-		if len(y) > g.opt.RefFanout && refsNodeRule(x) {
+		if len(y) > g.opt.RefFanout && g.refsNodeRule(x) {
 			g.stats.Materialized++
 			return prod(x, g.refRule(y, "m", false), true)
 		}

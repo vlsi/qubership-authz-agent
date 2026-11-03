@@ -1547,6 +1547,89 @@ func TestTheSameTreeGivesTheSameModule(t *testing.T) {
 	}
 }
 
+// twoSets returns the tree of a tenant with two sets of these IDs on resource
+// type doc: the first permits any operation when resource.a is x, the second
+// permits read when subject allowed 'write' on resource.
+func twoSets(t *testing.T, id1, id2 string) *policyir.Tree {
+	t.Helper()
+	set := func(id, target, condition string) string {
+		return fmt.Sprintf(`{"policySetId": %q, "status": "ACTIVE", "target": "resourceType == 'doc'",
+			"combiningAlgorithm": "DENY_UNLESS_PERMIT", "tenantId": "t1",
+			"policies": [{"policyId": "p1", "target": "true", "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+				"tenantId": "t1", "rules": [{"ruleId": "r1", "target": %q,
+					"condition": %q, "effect": "ALLOW", "tenantId": "t1"}]}]}`, id, target, condition)
+	}
+	sets := `{"policySets": [` + set(id1, "true", "resource.a == 'x'") + ", " +
+		set(id2, "operation == 'read'", "subject allowed 'write' on resource") + `]}`
+	exp, err := policyir.FromRegular([]byte(sets), []byte(`{"pips": []}`))
+	if err != nil {
+		t.Fatalf("FromRegular: %v", err)
+	}
+	tree, ok := exp.Trees["t1"]
+	if !ok {
+		t.Fatalf("FromRegular: no tree of t1; failed %v, dropped %v", exp.Failed, exp.Dropped)
+	}
+	return tree
+}
+
+// The rules of a node are named by its set's label and the node's position in
+// the set, and the rules of the copy of the tree that
+// subject allowed 'write' reads by the operation and the depth before that.
+func TestTheRulesOfANodeAreNamedByItsSetAndPosition(t *testing.T) {
+	opt := DefaultOptions()
+	opt.Flat = false
+	m, err := Generate(twoSets(t, "D5F62EC4-1111-4111-8111-111111111111", "0a1b2c3d-2222-4222-8222-222222222222"),
+		table(t), opt)
+	if err != nil {
+		t.Fatalf("Generate: %v", err)
+	}
+	for _, want := range []string{"\nset_d5f62ec4_4aa3_p1_loP_1 if {", "\nset_0a1b2c3d_356f_p1_loP_1 if {",
+		"\ndec_write_1_set_d5f62ec4_4aa3_any_loP if {", "\ndec_write_1_loP if {"} {
+		if !strings.Contains(m.Text, want) {
+			t.Errorf("the module lacks %q; module:\n%s", want, m.Text)
+		}
+	}
+}
+
+// A label is a function of one set's ID, so two IDs with one label would read
+// each other's rules; the generation fails instead. IDs that share the first
+// 8 hex digits alone get labels that differ in the hash.
+func TestSetsWhoseIDsShareALabelFailTheGeneration(t *testing.T) {
+	// the SHA-256 of either ID starts with af87
+	_, err := Generate(twoSets(t, "d5f62ec4-1111-4111-8111-000000000183", "d5f62ec4-1111-4111-8111-0000000001a3"),
+		table(t), DefaultOptions())
+	want := `policy sets "d5f62ec4-1111-4111-8111-000000000183" and "d5f62ec4-1111-4111-8111-0000000001a3" share the label set_d5f62ec4_af87`
+	if err == nil || err.Error() != want {
+		t.Errorf("Generate error = %v, want %s", err, want)
+	}
+	if _, err := Generate(twoSets(t, "d5f62ec4-1111-4111-8111-111111111111", "d5f62ec4-2222-4222-8222-222222222222"),
+		table(t), DefaultOptions()); err != nil {
+		t.Errorf("Generate of IDs that share the first 8 hex digits only: %v", err)
+	}
+}
+
+// An ID that is not a UUID is written into the label so that it reads back:
+// _ doubled, any other character but a letter or a digit as _<hex>_.
+func TestALabelReadsBackToTheSetID(t *testing.T) {
+	for id, want := range map[string]string{
+		"d5f62ec4-1111-4111-8111-111111111111": "set_d5f62ec4_ebc4",
+		"plain7":                               "set_plain7",
+		"a_p1":                                 "set_a__p1",
+		"spec:set:x-1":                         "set_spec_3a_set_3a_x_2d_1",
+		"\u0439":                               "set__439_",
+	} {
+		if got := setLabel(id); got != want {
+			t.Errorf("setLabel(%q) = %s, want %s", id, got, want)
+		}
+	}
+	if isBelow("set_a__p1", "set_a") {
+		t.Errorf("set_a__p1, the set of ID a_p1, is below set_a")
+	}
+	if !isBelow("set_a_p1_r2", "set_a_p1") {
+		t.Errorf("set_a_p1_r2 is not below set_a_p1")
+	}
+}
+
 // The module names, above the clauses read from a rule, the rule's label and,
 // at its first clause, the IDs, names, targets, and condition of the rule and
 // of the policy and the set above it. A check of a state ends with the
