@@ -1724,6 +1724,65 @@ func TestTheModuleListsTheSetsByLabel(t *testing.T) {
 	}
 }
 
+// An edit of one set changes the module of the tenant by the lines it changes
+// in the module of that set alone: the rule names and the shared rules of the
+// other sets stay as they were. The nodes have rules of their own when the
+// module is not flat. The lines are compared as multisets, so a
+// block that moves goes unseen here; TestTheModuleListsTheSetsByLabel covers
+// the positions. The edit gives a condition over a
+// PIP to the DENY rule of set b, which then reads a shared rule; sets a and c
+// read shared rules of their own.
+func TestAnEditOfOneSetChangesNoLineOfTheOthers(t *testing.T) {
+	regular := func(id, condition string) string {
+		return fmt.Sprintf(`{"policySetId": %q, "status": "ACTIVE", "target": "resourceType == 'doc'",
+			"combiningAlgorithm": "PERMIT_UNLESS_DENY", "tenantId": "t1",
+			"policies": [{"policyId": "p1", "target": "true", "combiningAlgorithm": "PERMIT_UNLESS_DENY",
+				"tenantId": "t1", "rules": [{"ruleId": "r1", "target": "operation == 'read'",
+					"condition": %q, "effect": "DENY", "tenantId": "t1"}]}]}`, id, condition)
+	}
+	lines := func(sets ...string) map[string]int {
+		t.Helper()
+		exp, err := policyir.FromRegular([]byte(`{"policySets": [`+strings.Join(sets, ", ")+`]}`),
+			[]byte(`{"pips": [{"tenantId": "t1", "name": "subject.g", "pipType": "GENERAL", "url": "http://g"}]}`))
+		if err != nil {
+			t.Fatalf("FromRegular: %v", err)
+		}
+		opt := DefaultOptions()
+		opt.Flat = false
+		m, err := Generate(exp.Trees["t1"], table(t), opt)
+		if err != nil {
+			t.Fatalf("Generate: %v", err)
+		}
+		n := map[string]int{}
+		for _, l := range strings.Split(m.Text, "\n") {
+			n[l]++
+		}
+		return n
+	}
+	// change returns the lines that after holds more or fewer times than
+	// before, with the difference.
+	change := func(before, after map[string]int) map[string]int {
+		d := map[string]int{}
+		for l := range maps.Keys(before) {
+			d[l] = after[l] - before[l]
+		}
+		for l := range maps.Keys(after) {
+			d[l] = after[l] - before[l]
+		}
+		maps.DeleteFunc(d, func(_ string, n int) bool { return n == 0 })
+		return d
+	}
+	a, c := regular("a", "subject.g == 'x'"), regular("c", "subject.g == 'z'")
+	b0, b1 := regular("b", "resource.b == 'y'"), regular("b", "resource.b == 'y' AND subject.g == 'y'")
+	own := change(lines(b0), lines(b1))
+	if len(own) == 0 {
+		t.Fatalf("the edit of b changes no line of the module of b alone")
+	}
+	if got := change(lines(a, b0, c), lines(a, b1, c)); !reflect.DeepEqual(got, own) {
+		t.Errorf("the edit of b changes the lines of the tenant by\n%v\nwant those of the module of b alone:\n%v", got, own)
+	}
+}
+
 func TestNaturalCompareOrdersARunOfDigitsByItsNumber(t *testing.T) {
 	for _, tc := range []struct {
 		a, b string
