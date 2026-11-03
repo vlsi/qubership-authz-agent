@@ -36,11 +36,12 @@
 // type, and the resource document that a lazily read resource path reads.
 //
 // With -resolve the module evaluates the values the projection resolves from
-// the body of the request ([regogen.Module.Resolve]) in place of the
-// specification's, and every record of the input is compared with the record
-// the specification's values give; a request whose records differ is counted
-// in record_mismatch, by reference in the output file. The bundle must carry
-// the body.
+// the body of the request ([regogen.Module.Resolve]) and, where the bundle
+// carries them, from the claims of the subject's token ([regogen.SubjectOf])
+// in place of the specification's. Every record of the input, the subject's
+// roles, and subject.isM2M are compared with what the specification's values
+// give; each difference is counted in record_mismatch and listed in the
+// output file. The bundle must carry the body.
 //
 // A request whose projection or evaluation fails is counted in proj_errors,
 // not as a disagreement.
@@ -90,8 +91,12 @@ type request struct {
 	Scope    json.RawMessage               `json:"scope"`
 	Resource *string                       `json:"resource"`
 	Body     *string                       `json:"body"`
-	Agent    bool                          `json:"agent"`
-	Legacy   map[string]any                `json:"legacy"`
+	// Claims and Anonymous are the claims of the subject's token and
+	// whether the request is anonymous, which the subject is read from.
+	Claims    *string        `json:"claims"`
+	Anonymous bool           `json:"anonymous"`
+	Agent     bool           `json:"agent"`
+	Legacy    map[string]any `json:"legacy"`
 }
 
 type result struct {
@@ -105,8 +110,8 @@ type result struct {
 	// projection's values give differently from the specification's.
 	RecordMismatch []string  `json:"recordMismatch,omitempty"`
 	ResolveUs      []float64 `json:"resolveUs,omitempty"`
-	GenMs      float64  `json:"genMs"`
-	CompileMs  float64  `json:"compileMs"`
+	GenMs          float64   `json:"genMs"`
+	CompileMs      float64   `json:"compileMs"`
 	// DecisionCompileMs and DenyUs are the compilation of the decision
 	// module and the evaluation of each denied request, allow and maybe;
 	// EvalUs times allow alone.
@@ -220,20 +225,40 @@ func resolvedValues(vals map[string][3]json.RawMessage) (map[string]regogen.Reso
 }
 
 // resolveRequest replaces the values of rq that the projection resolves
-// itself, and returns the references whose records differ from those of in,
-// the input the specification's values give.
-func resolveRequest(m *regogen.Module, rq *regogen.Request, in *regogen.Input) (*regogen.Input, []string,
-	float64, error) {
-	values := maps.Clone(rq.Values)
+// itself, the subject's where q carries the claims, and returns the
+// references whose records differ from those of in, the input the
+// specification's values give.
+func resolveRequest(m *regogen.Module, q request, rq *regogen.Request, in *regogen.Input) (*regogen.Input,
+	[]string, float64, error) {
+	var claims *jsonvalue.Object
+	if q.Claims != nil {
+		c, err := jsonvalue.Decode([]byte(*q.Claims))
+		if err != nil {
+			return nil, nil, 0, fmt.Errorf("claims: %w", err)
+		}
+		var ok bool
+		if claims, ok = c.(*jsonvalue.Object); !ok {
+			return nil, nil, 0, fmt.Errorf("claims: not an object")
+		}
+	}
+	rq.Values = maps.Clone(rq.Values)
 	t0 := time.Now()
-	m.Resolve(rq.Body, values)
+	m.Resolve(rq.Body, rq.Values)
+	if claims != nil {
+		regogen.SubjectOf(claims, q.Anonymous, regogen.DefaultSubjectRules).Apply(rq)
+	}
 	us := float64(time.Since(t0).Nanoseconds()) / 1000
-	rq.Values = values
 	got, err := regogen.Project(m, *rq)
 	if err != nil {
 		return nil, nil, us, err
 	}
 	var diff []string
+	if !slices.Equal(in.SRoles, got.SRoles) {
+		diff = append(diff, fmt.Sprintf("sroles: spec %q, projection %q", in.SRoles, got.SRoles))
+	}
+	if in.M2M != got.M2M {
+		diff = append(diff, fmt.Sprintf("m2m: spec %v, projection %v", in.M2M, got.M2M))
+	}
 	for _, r := range m.Refs {
 		want, okW := in.Records[r.ID]
 		have, okH := got.Records[r.ID]
@@ -328,7 +353,7 @@ func run(b bundle, tab *spectables.Table, opt regogen.Options, reps int, dumpDir
 				res.ProjErrors = append(res.ProjErrors, q.ID+": -resolve: the bundle carries no body")
 				continue
 			}
-			got, diff, us, err := resolveRequest(m, &rq, in)
+			got, diff, us, err := resolveRequest(m, q, &rq, in)
 			if err != nil {
 				res.ProjErrors = append(res.ProjErrors, q.ID+": resolve: "+err.Error())
 				continue
