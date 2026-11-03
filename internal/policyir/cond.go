@@ -141,8 +141,8 @@ func (Unsupported) atom() {}
 //
 //   - a [List] or a [Pattern] never stands on the left;
 //   - a [Pattern] stands only on the right of MATCH and NOT MATCH, and the right
-//     of those holds a [Pattern] whose text is one attribute token or one
-//     wildcard token of the legacy lexer;
+//     of those holds a [Pattern] whose text the parser reads there as one
+//     pattern, with Path set exactly when the text starts with resource.;
 //   - a [PIPRef] with Filtered set stands only on the right;
 //   - a [List] stands only on the right of an operator that [Operator.TakesList],
 //     and a [String], [Number], or [Bool] never does, because a single literal
@@ -193,7 +193,7 @@ func validateCompare(c Compare) error {
 		if !ok {
 			return fmt.Errorf("%s: right: %T is not a pattern", c.Op, c.Right)
 		}
-		return patternText(c.Op, r.Text)
+		return patternText(c.Op, r)
 	}
 	if err := compiles(c.Right); err != nil {
 		return fmt.Errorf("%s: right: %w", c.Op, err)
@@ -226,12 +226,17 @@ func compiles(o Operand) error {
 	return nil
 }
 
-// patternText returns an error when the legacy lexer does not read text as one
-// attribute token or one wildcard token.
-func patternText(op Operator, text string) error {
-	n, reason := patternToken(text, newAttrScanner(text).tokenLen(0))
+// patternText returns an error when [readPattern] does not read the whole of
+// r.Text as one pattern, refuses it, or reads it as a resource path exactly
+// when r.Path is unset.
+func patternText(op Operator, r Pattern) error {
+	text := r.Text
+	n, path, reason := readPattern(text)
 	if reason == "" && n != len(text) {
 		reason = "more than one token"
+	}
+	if reason == "" && path != r.Path {
+		reason = fmt.Sprintf("Path is %v, want %v", r.Path, path)
 	}
 	if reason != "" {
 		return fmt.Errorf("%s: right: pattern %q: %s", op, text, reason)

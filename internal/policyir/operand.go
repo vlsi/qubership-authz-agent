@@ -154,6 +154,12 @@ type List struct {
 // not read.
 type Pattern struct {
 	Text string
+	// Path is set when Text starts with "resource.": legacy reads it as a
+	// resource path. The attribute is still not read, and the path text is
+	// matched as written, except that a number on the left beyond the range of
+	// a double ends the rule, while against any other pattern it matches as the
+	// text Infinity.
+	Path bool
 }
 
 func (Operation) operand()    {}

@@ -98,8 +98,16 @@ type parser struct {
 	s       string
 	i       int
 	iterVar string
-	attr    *attrScanner
 }
+
+// The regular expressions of an operand path, as the specification's parser
+// reads one: pathKey is a key after a dot, jpFilter a filter of up to two
+// levels, and jpFunction a function step.
+const (
+	pathKey    = `[A-Za-z0-9_@][A-Za-z0-9_/:$~@!&|-]*`
+	jpFilter   = `\[\?\((?:[^\[\]()]|\([^()]*\)|\[[^\[\]?]*\]|\[\?\((?:[^\[\]()]|\([^()]*\)|\[[^\[\]?]*\])*\)\])*\)\]`
+	jpFunction = `\.(?:length|min|max|avg|sum|first|last|keys)\(\)`
+)
 
 var (
 	quotedRE       = regexp.MustCompile(`'[^']*'`)
@@ -121,12 +129,24 @@ var (
 	constAtomRE    = regexp.MustCompile(`^(TRUE|FALSE|true|false)`)
 	filteredRE     = regexp.MustCompile(`^ FILTERED '([^']*)'`)
 	listMoreRE     = regexp.MustCompile(`^ *,`)
-	functionRE     = regexp.MustCompile(`\.(?:length|min|max|avg|sum|first|last|keys)$`)
-	bracketStepRE  = regexp.MustCompile(`^\[[^\]]*\]`)
-	subjectStepRE  = regexp.MustCompile(`^subject\.(?:id|name|type|serviceAccount)\.`)
+	boolAttrRE     = regexp.MustCompile(`^(?:TRUE|true|FALSE|false)[$@,:?*(=)~<>/&|!'-][A-Za-z0-9_$@,:?*(=)~<>/&|!'.-]*`)
+	boolLitRE      = regexp.MustCompile(`^(?:TRUE|true|FALSE|false)`)
 
-	// scopeTokenRE and pipTokenRE match the starts of the lexer's
-	// subject.permissionScope.<key> token and the whole of its PIP token.
+	// prefixedPathRE and plainPathRE match an operand path that starts with
+	// resource or subject, and one that does not.
+	prefixedPathRE = regexp.MustCompile(`^(?:resource|subject)(?:` + jpFunction + `|\.\.?` + pathKey + `|` + jpFilter +
+		`|\[[^\]]*\]|\])+\.?`)
+	plainPathRE = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_*-]*(?:\.\.?` + pathKey + `|\[[^\]]*\])*`)
+
+	// matchTokenRE matches the right operand of MATCH and NOT MATCH, and
+	// matchBracketsRE the same operand when it is a path with spaces inside
+	// its brackets.
+	matchTokenRE    = regexp.MustCompile(`^[^ \t\n\v\f\r]+`)
+	matchBracketsRE = regexp.MustCompile(`^[^\[\] ]*(?:\[[^\]]*\][^\[\] ]*)+`)
+	matchNumberRE   = regexp.MustCompile(`^-?[0-9]+(?:\.[0-9]+)?$`)
+
+	// scopeTokenRE and pipTokenRE match the start of a
+	// subject.permissionScope.<key> token and the whole of a PIP token.
 	scopeTokenRE = regexp.MustCompile(`^subject\.permissionScope\.[A-Za-z_]`)
 	pipTokenRE   = regexp.MustCompile(`^subject(?:\.[A-Za-z_][A-Za-z0-9_]*)+$`)
 )
@@ -182,14 +202,14 @@ func newParser(text string) (*parser, error) {
 	}
 	bare := bracketParenRE.ReplaceAllString(masked, "_")
 	if tightCompareRE.MatchString(bare) {
-		return fail("no space around a comparison")
+		return fail("operator at: no space around a comparison")
 	}
 	for _, loc := range connectiveRE.FindAllStringIndex(bare, -1) {
 		if loc[0] == 0 || !isSpaceOrWord(lastRune(bare[:loc[0]])) {
-			return fail("no space before a connective")
+			return fail("trailing: no space before a connective")
 		}
 	}
-	return &parser{text: text, s: s, attr: newAttrScanner(s)}, nil
+	return &parser{text: text, s: s}, nil
 }
 
 // dropLineBreaks drops a tab, a line feed, or a carriage return outside a
@@ -329,7 +349,7 @@ func (p *parser) expr() ([][]Atom, error) {
 		if lowerKeywordRE.MatchString(p.rest()) {
 			return nil, p.fail("lower-case keyword")
 		}
-		return nil, p.fail("trailing text: " + truncate(p.rest(), 30))
+		return nil, p.fail("trailing: " + truncate(p.rest(), 30))
 	}
 	return ors, nil
 }
@@ -437,45 +457,63 @@ func (p *parser) compare(op Operator, left, right Operand) (Atom, error) {
 	return c, nil
 }
 
-// pattern reads the right operand of MATCH and NOT MATCH: the token the legacy
-// lexer reads there, an attribute token or a wildcard token, is a pattern of
-// its text, and the attribute is not read. A token of any other category, such
-// as a number, a keyword, a subject attribute, a PIP name, or a permission
-// scope, is refused.
+// pattern reads the right operand of MATCH and NOT MATCH as [readPattern]
+// reads it.
 func (p *parser) pattern() (Operand, error) {
-	n, reason := patternToken(p.rest(), p.attr.tokenLen(p.i))
+	n, path, reason := readPattern(p.rest())
 	if reason != "" {
 		return nil, p.fail(reason)
 	}
 	tok := p.rest()[:n]
 	p.i += n
-	return Pattern{Text: tok}, nil
+	return Pattern{Text: tok, Path: path}, nil
 }
 
-// patternToken returns the length of the token the legacy lexer reads at the
-// start of rest where a MATCH pattern stands, given attr, the length of the
-// attribute token there, and the reason that token is not a pattern, or "" when
-// it is one: an attribute token or a wildcard token.
-func patternToken(rest string, attr int) (int, string) {
-	n := max(attr, wildcardLen(rest))
+// readPattern returns the length of the MATCH pattern at the start of rest,
+// whether the pattern is a resource path, and the reason it is refused, or ""
+// when it is not. The pattern is the text up to the next space; in a path that
+// starts with resource. or subject. and opens more brackets than it closes,
+// the spaces inside brackets belong to the pattern too. A pattern is refused
+// when it is quoted, holds '{', '+', or a character beyond ASCII, is a number,
+// is a word such as resource, true, or NULL that the PAP refuses there, is
+// subject.entitledResources.of(...).as(...), or starts with subject. and is a
+// permission scope, a built-in subject attribute, or a PIP name.
+func readPattern(rest string) (n int, path bool, reason string) {
+	tok := matchTokenRE.FindString(rest)
+	if tok == "" {
+		return 0, false, "MATCH without a pattern"
+	}
+	prefixed := strings.HasPrefix(tok, "resource.") || strings.HasPrefix(tok, "subject.")
+	if prefixed && strings.Count(tok, "[") > strings.Count(tok, "]") {
+		if b := matchBracketsRE.FindString(rest); b != "" {
+			tok = b
+		}
+	}
+	n = len(tok)
 	switch {
-	case strings.HasPrefix(rest, "'") || strings.HasPrefix(rest, `"`):
-		return 0, "quoted MATCH pattern"
-	case n == 0:
-		return 0, "MATCH without a pattern"
-	case strings.HasPrefix(rest[n:], "{"):
-		return n, "placeholder in MATCH pattern"
-	case len(numberLitRE.FindString(rest)) >= n:
-		return n, "number as a MATCH pattern"
+	case strings.HasPrefix(tok, "'") || strings.HasPrefix(tok, `"`):
+		return n, false, "quoted MATCH pattern"
+	case strings.Contains(tok, "{"):
+		return n, false, "placeholder in MATCH pattern"
+	case matchNumberRE.MatchString(tok):
+		return n, false, "number as a MATCH pattern"
+	case !isASCII(tok) || strings.Contains(tok, "+") || tok == "resource" || tok == "subject":
+		return n, false, "MATCH pattern: " + tok
+	case patternReserved[tok] || len(entitledRE.FindString(rest)) == n:
+		return n, false, "MATCH pattern: " + tok + " is neither a pattern nor an attribute"
+	case strings.HasPrefix(tok, "subject.") && isSubjectToken(tok):
+		return n, false, "MATCH pattern: a subject operand"
 	}
-	if e := entitledRE.FindString(rest); len(e) >= n {
-		return len(e), "MATCH pattern: " + e + " is neither a pattern nor an attribute"
+	return n, strings.HasPrefix(tok, "resource."), ""
+}
+
+func isASCII(s string) bool {
+	for i := 0; i < len(s); i++ {
+		if s[i] >= utf8.RuneSelf {
+			return false
+		}
 	}
-	tok := rest[:n]
-	if patternReserved[tok] || n == attr && isSubjectToken(tok) {
-		return n, "MATCH pattern: " + tok + " is neither a pattern nor an attribute"
-	}
-	return n, ""
+	return true
 }
 
 // list reads the rest of a list whose first literal, first, has just been
@@ -509,7 +547,9 @@ func (p *parser) list(first Literal, start int) (List, error) {
 }
 
 // literal reads a literal at the current position, and returns nil with no
-// error when there is none.
+// error when there is none. TRUE, true, FALSE, or false followed by a
+// character of a path, such as true,false, is not a literal but the path of
+// a resource attribute of that whole text.
 func (p *parser) literal() (Operand, error) {
 	rest := p.rest()
 	if m := stringLitRE.FindStringSubmatch(rest); m != nil {
@@ -526,11 +566,13 @@ func (p *parser) literal() (Operand, error) {
 	if numberStartRE.MatchString(rest) {
 		return nil, p.fail("number: " + truncate(rest, 10))
 	}
-	for _, w := range []string{"TRUE", "true", "FALSE", "false"} {
-		if strings.HasPrefix(rest, w) && p.attr.tokenLen(p.i) == len(w) {
-			p.i += len(w)
-			return Bool{Value: strings.EqualFold(w, "true")}, nil
-		}
+	if m := boolAttrRE.FindString(rest); m != "" {
+		p.i += len(m)
+		return p.resource("."+m, m, false), nil
+	}
+	if m := boolLitRE.FindString(rest); m != "" && endsToken(rest[len(m):]) {
+		p.i += len(m)
+		return Bool{Value: strings.EqualFold(m, "true")}, nil
 	}
 	return nil, nil
 }
@@ -553,30 +595,28 @@ func (p *parser) operand() (Operand, error) {
 	if strings.HasPrefix(rest, "NOT ") {
 		return nil, p.fail("standalone NOT")
 	}
-	path := rest[:p.attr.tokenLen(p.i)]
-	if path == "" || keywords[path] {
+	tok := pathToken(rest)
+	if strings.HasPrefix(rest, "null") && endsToken(rest[len("null"):]) {
+		// null ends where a literal does, so null* is null and then *
+		tok = "null"
+	}
+	if tok == "" || keywords[tok] {
 		return nil, p.fail("operand: " + truncate(rest, 30))
 	}
-	path = path[:pathLen(path)]
-	if m := bracketStepRE.FindString(rest[len(path):]); !strings.HasSuffix(path, ".") && (m == "[]" || strings.Contains(m, `"`)) {
+	if strings.Contains(tok, "[]") || strings.Contains(tok, `"`) {
 		return nil, p.fail("operand: empty brackets or double quotes in a path")
 	}
-	if path == "subject.entitledResources" || subjectStepRE.MatchString(path) {
-		return nil, p.fail("operand: a step after a subject attribute")
+	p.i += len(tok)
+	if isScopeToken(tok) && (strings.Contains(tok, "[") || strings.HasSuffix(tok, ".")) {
+		return p.subjectToken(tok), nil
 	}
-	p.i += len(path)
-	if o := p.subjectToken(path); o != nil {
-		return o, nil
-	}
-	dot := strings.HasSuffix(path, ".") && !strings.HasSuffix(path, "..")
-	if dot && !takesTrailingDot(path) {
-		// the dot is left for what follows the operand, where it fails
-		path, dot = path[:len(path)-1], false
-		p.i--
-	}
-	written := path
+	path := tok
+	dot := strings.HasSuffix(tok, ".") && !strings.HasSuffix(tok, "..")
 	if dot {
-		path = strings.TrimRight(path, ".")
+		path = tok[:len(tok)-1]
+		if strings.HasPrefix(path, "subject.") {
+			return p.resource("."+path, tok, true), nil
+		}
 	}
 	path = normalizeIndexes(path)
 	switch {
@@ -585,82 +625,31 @@ func (p *parser) operand() (Operand, error) {
 	case path == "resourceType":
 		return ResourceType{}, nil
 	case path == "resource" || strings.HasPrefix(path, "resource.") || strings.HasPrefix(path, "resource["):
-		return p.resource(path[len("resource"):], written, dot), nil
+		return p.resource(path[len("resource"):], tok, dot), nil
+	case strings.HasPrefix(path, "subject.") && !strings.ContainsAny(path, "[]") && isSubjectToken(path):
+		return p.subjectToken(path), nil
 	case path == "subject":
 		return nil, p.fail("bare subject")
 	}
-	return p.resource("."+path, written, dot), nil
+	return p.resource("."+path, tok, dot), nil
 }
 
-// takesTrailingDot reports whether tok, a token that ends in one dot, keeps
-// the dot: only a path that starts with resource or subject followed by a dot
-// or a bracket and more text does. In any other token, such as resource., a.,
-// a.b., or operation., the dot is not part of the operand.
-func takesTrailingDot(tok string) bool {
-	for _, prefix := range []string{"resource", "subject"} {
-		if rest, ok := strings.CutPrefix(tok, prefix); ok && len(rest) > 1 && (rest[0] == '.' || rest[0] == '[') {
-			return true
-		}
+// pathToken returns the operand path at the start of s, or "" when none
+// starts there. A path that starts with resource or subject takes keys,
+// two-dot keys, functions such as .length(), filters, brackets, and a ']'
+// without its '[', and keeps one dot at its end; resource alone is a path
+// where neither a word character, a dot, nor a bracket follows it. Any other
+// path is a name of letters, digits, '_', '*', and '-' followed by keys,
+// two-dot keys, and brackets. A key is a letter, a digit, '_', or '@',
+// followed by those and the characters of "/:$~!&|-".
+func pathToken(s string) string {
+	if m := prefixedPathRE.FindString(s); m != "" {
+		return m
 	}
-	return false
-}
-
-// pathLen returns the length of the operand path at the start of tok, an
-// attribute token. The path ends before the first step it cannot take: one dot
-// or two dots followed by neither a letter, a digit, '_', nor '@', and a
-// parenthesis outside brackets. One dot at the end of tok is a trailing dot,
-// two dots are such a step. Only a path that starts with resource or subject
-// followed by a dot or a bracket takes a function such as .length(), and in
-// such a path the dot that starts the step it cannot take stays in the path;
-// [takesTrailingDot] decides whether the operand keeps it. Text in brackets is
-// not checked.
-func pathLen(tok string) int {
-	prefixed := false
-	for _, w := range []string{"resource", "subject"} {
-		if rest, ok := strings.CutPrefix(tok, w); ok && rest != "" && (rest[0] == '.' || rest[0] == '[') {
-			prefixed = true
-		}
+	if rest, ok := strings.CutPrefix(s, "resource"); ok && (rest == "" || !isWord(firstRune(rest)) && rest[0] != '.' && rest[0] != '[') {
+		return "resource"
 	}
-	depth, quoted := 0, false
-	for i := 0; i < len(tok); i++ {
-		c := tok[i]
-		switch {
-		case depth > 0:
-			switch {
-			case c == '\'':
-				quoted = !quoted
-			case quoted:
-			case c == '[':
-				depth++
-			case c == ']':
-				depth--
-			}
-		case c == '[':
-			depth++
-		case c == '.':
-			j := i + 1
-			if j < len(tok) && tok[j] == '.' {
-				j++
-			}
-			if j == len(tok) && j == i+1 || j < len(tok) && isKeyStart(tok[j]) {
-				i = j - 1
-				continue
-			}
-			if prefixed {
-				return i + 1
-			}
-			return i
-		case c == '(' && prefixed && functionRE.MatchString(tok[:i]) && strings.HasPrefix(tok[i:], "()"):
-			i++
-		case c == '(' || c == ')':
-			return i
-		}
-	}
-	return len(tok)
-}
-
-func isKeyStart(c byte) bool {
-	return isNameStart(c) || c >= '0' && c <= '9' || c == '@'
+	return plainPathRE.FindString(s)
 }
 
 // normalizeIndexes drops the spaces inside each index step of path, [ 0 ] to
@@ -708,32 +697,29 @@ func (p *parser) resource(path, text string, dot bool) Operand {
 	return Resource{Path: path, TrailingDot: dot}
 }
 
-// isSubjectToken reports whether the legacy lexer reads tok, the text of an
-// attribute token, as a permission scope, a built-in subject attribute, or a
-// PIP name of the same length, which wins the tie.
+// isSubjectToken reports whether tok, a path that starts with "subject.", is
+// a permission scope, a built-in subject attribute, or a PIP name, rather
+// than the path of a resource attribute.
 func isSubjectToken(tok string) bool {
 	return isScopeToken(tok) || pipTokenRE.MatchString(tok)
 }
 
-// isScopeToken reports whether tok is one subject.permissionScope.<key>
-// token, whose key is an attribute token of its own. The key "a]" is not one,
-// so subject.permissionScope.a] is an attribute token.
+// isScopeToken reports whether tok is a subject.permissionScope.<key> token: a
+// key that starts with a letter or '_' and has no ']' without its '['. The key
+// "a]" is not one, so subject.permissionScope.a] is the path of a resource
+// attribute.
 func isScopeToken(tok string) bool {
-	n := len("subject.permissionScope.")
-	return scopeTokenRE.MatchString(tok) && n+newAttrScanner(tok).tokenLen(n) == len(tok)
+	return scopeTokenRE.MatchString(tok) && strings.Count(tok, "]") <= strings.Count(tok, "[")
 }
 
-// subjectToken returns the operand for tok, a token that starts with
-// "subject.", when the legacy lexer reads it as a permission scope, a built-in
-// subject attribute, or a PIP name, and nil when it reads tok as a resource
-// attribute. The key of a permission scope is the rest of tok as written, so
-// subject.permissionScope.a[0] reads the key "a[0]" and
+// subjectToken returns the operand for tok, a token for which
+// [isSubjectToken] holds. The key of a permission scope is the rest of tok as
+// written, so subject.permissionScope.a[0] reads the key "a[0]" and
 // subject.permissionScope.a. the key "a."; inside an iterate it is a key of
-// the pass. subject.permissionScope without a key is a PIP name.
+// the pass. A name that is not exactly a built-in attribute is a PIP name, so
+// subject.id.region and subject.entitledResources are PIP names, and so is
+// subject.permissionScope without a key.
 func (p *parser) subjectToken(tok string) Operand {
-	if !isSubjectToken(tok) {
-		return nil
-	}
 	name := tok[len("subject."):]
 	if isScopeToken(tok) {
 		key := name[len("permissionScope."):]

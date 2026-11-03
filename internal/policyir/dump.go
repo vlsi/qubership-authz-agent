@@ -259,6 +259,9 @@ func FormatOperand(o Operand) string {
 		}
 		return s
 	case Pattern:
+		if v.Path {
+			return fmt.Sprintf("pattern(%q, path)", v.Text)
+		}
 		return fmt.Sprintf("pattern(%q)", v.Text)
 	case Unsupported:
 		return formatUnsupported(v)
