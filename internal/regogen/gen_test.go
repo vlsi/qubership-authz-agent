@@ -30,7 +30,6 @@ import (
 
 	"github.com/open-policy-agent/opa/v1/ast"
 	"github.com/open-policy-agent/opa/v1/rego"
-	"github.com/open-policy-agent/opa/v1/types"
 
 	"authz-agent/internal/jsonvalue"
 	"authz-agent/internal/policyir"
@@ -140,19 +139,8 @@ func evalInput(t *testing.T, m *Module, in *Input, rule string) any {
 	if rule == "decision" || rule == "maybe" {
 		pkg, text = pkg+"_decision", m.DecisionText
 	}
-	// nc.pip answers subject.entitledResources from the projection, as the
-	// agent's built-in would after its call, and the replay transport the
-	// call of a GENERAL or FILTERED PIP
-	pip := rego.Function1(&rego.Function{Name: "nc.pip", Decl: types.NewFunction(types.Args(types.S), types.A)},
-		func(_ rego.BuiltinContext, a *ast.Term) (*ast.Term, error) {
-			r, ok := in.PIPRecord(string(a.Value.(ast.String)))
-			if !ok {
-				return nil, fmt.Errorf("nc.pip: no record of %v", a)
-			}
-			return r, nil
-		})
 	pq, err := rego.New(append([]func(*rego.Rego){rego.Query("data." + pkg + "." + rule),
-		rego.Module("gen.rego", text), pip}, Builtins()...)...).PrepareForEval(context.Background())
+		rego.Module("gen.rego", text)}, Builtins()...)...).PrepareForEval(context.Background())
 	if err != nil {
 		t.Fatalf("PrepareForEval: %v\n%s", err, text)
 	}

@@ -395,3 +395,36 @@ func TestHTTPSend_AQueryThatEndsLeavesNoAnswer(t *testing.T) {
 		t.Errorf("requests at the PIP = %d, want 2: the cancelled call is no answer", got)
 	}
 }
+
+// TestFailedPIPs_NamesThePIPsWhoseCallFailed: a call that ends in an error
+// of the function, one without a response, and one answered with a failure
+// status each name their PIP; an answered call does not.
+func TestFailedPIPs_NamesThePIPsWhoseCallFailed(t *testing.T) {
+	srv, _ := pipServer(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/fail" {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		_, _ = w.Write([]byte(`1`))
+	})
+	noToken := func() (string, error) { return "", errors.New("m2m token: no token yet") }
+	for _, tt := range []struct {
+		name, req string
+		token     func() (string, error)
+		want      []string
+	}{
+		{"an error of the function", `{"url": "` + srv.URL + `", "pip": "subject.a"}`, noToken, []string{"subject.a"}},
+		{"no response", `{"url": "` + srv.URL + `", "pip": "subject.a", "raise_error": false}`, noToken, []string{"subject.a"}},
+		{"a failure status", `{"url": "` + srv.URL + `/fail", "pip": "subject.a", "raise_error": false}`, ownToken, []string{"subject.a"}},
+		{"an answer", `{"url": "` + srv.URL + `", "pip": "subject.a", "raise_error": false}`, ownToken, nil},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := WithCalls((&HTTP{Token: tt.token}).Context(context.Background()))
+
+			_, _ = sendEval(t, ctx, "nc.http.send("+tt.req+")")
+
+			if got := FailedPIPs(ctx); strings.Join(got, ",") != strings.Join(tt.want, ",") {
+				t.Errorf("FailedPIPs = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}

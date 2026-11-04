@@ -16,7 +16,6 @@ package regogen
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"regexp"
@@ -325,7 +324,8 @@ func eqToken(e jsonvalue.Value) (string, bool) {
 
 // Project builds the input of the module for a request. It fails when the
 // request lacks the resolved value of an operand the module reads, or the
-// permission scope of a module that iterates.
+// permission scope of a module that iterates. A GENERAL or FILTERED PIP
+// needs no value, since the module calls it.
 func Project(m *Module, req Request) (*Input, error) {
 	in := &Input{Records: map[string]Record{}, M2M: req.M2M, refs: m.Refs, docs: regobuiltins.NewDocuments()}
 	if req.Body.HasResource {
@@ -347,6 +347,10 @@ func Project(m *Module, req Request) (*Input, error) {
 		default:
 			var ok bool
 			if v, ok = req.Values[r.Key]; !ok {
+				if r.pip != nil {
+					// the module calls the PIP itself
+					continue
+				}
 				return nil, fmt.Errorf("no resolved value of %s (%s)", r.Key, r.ID)
 			}
 		}
@@ -505,10 +509,6 @@ func (in *Input) Value() ast.Value {
 func (in *Input) resourceMember() bool {
 	return slices.ContainsFunc(in.refs, func(r *Ref) bool { return r.Path != "" })
 }
-
-// Context returns ctx with what nc.jsonpath needs to read input.resource as
-// the document it was built from; evaluate the module's query with it.
-func (in *Input) Context(ctx context.Context) context.Context { return in.docs.Context(ctx) }
 
 // subjectMembers returns the members sroles, m2m, g, ps, and psf of the
 // input's Value.

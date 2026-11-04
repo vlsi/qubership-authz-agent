@@ -21,7 +21,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"net/http"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -49,6 +51,9 @@ type HTTP struct {
 	// Timeout bounds a call whose request names no timeout; zero means
 	// [DefaultTimeout].
 	Timeout time.Duration
+	// Shared reuses the answer of a request that names a cache_key across
+	// decision requests; nil reuses nothing beyond one decision request.
+	Shared *Shared
 }
 
 type httpKey struct{}
@@ -66,6 +71,9 @@ type calls struct {
 	m  map[string]*call
 	// sent counts the requests that went to the network.
 	sent int
+	// failed holds the PIPs whose call failed or was answered with a status
+	// of 400 or above, for the reason of a decision.
+	failed map[string]bool
 }
 
 type call struct {
@@ -88,6 +96,18 @@ type call struct {
 // outlives the request.
 func WithCalls(ctx context.Context) context.Context {
 	return context.WithValue(ctx, callsKey{}, &calls{m: map[string]*call{}})
+}
+
+// FailedPIPs returns the PIPs whose call under the cache of ctx failed, or
+// was answered with a status of 400 or above, in lexical order.
+func FailedPIPs(ctx context.Context) []string {
+	c, ok := ctx.Value(callsKey{}).(*calls)
+	if !ok {
+		return nil
+	}
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return slices.Sorted(maps.Keys(c.failed))
 }
 
 // Sent returns how many requests nc.http.send sent to the network under the
@@ -118,6 +138,10 @@ type sendRequest struct {
 	Timeout    string            `json:"timeout"`
 	RaiseError *bool             `json:"raise_error"`
 	PIP        string            `json:"pip"`
+	// CacheKey, when not empty, names the answer [Shared] keeps across
+	// decision requests: two requests with one key share an answer
+	// whatever else differs between them.
+	CacheKey string `json:"cache_key"`
 }
 
 // Failure codes in the error member of a response of nc.http.send.
@@ -161,6 +185,7 @@ func httpSend(bctx rego.BuiltinContext, a *ast.Term) (*ast.Term, error) {
 		c.mu.Unlock()
 		if !ok {
 			e.resp, e.err = send(bctx.Context, a)
+			c.note(a, e.resp, e.err)
 			if bctx.Context.Err() != nil {
 				c.mu.Lock()
 				delete(c.m, key)
@@ -181,11 +206,52 @@ func httpSend(bctx rego.BuiltinContext, a *ast.Term) (*ast.Term, error) {
 	}
 }
 
+// note records in c a failed call of a PIP.
+func (c *calls) note(a, resp *ast.Term, err error) {
+	obj, ok := a.Value.(ast.Object)
+	if !ok {
+		return
+	}
+	t := obj.Get(ast.InternedTerm("pip"))
+	if t == nil {
+		return
+	}
+	pip, ok := t.Value.(ast.String)
+	if !ok || pip == "" {
+		return
+	}
+	failed := err != nil || resp == nil
+	if !failed {
+		if r, ok := resp.Value.(ast.Object); ok {
+			if t := r.Get(ast.InternedTerm("status_code")); t != nil {
+				code, _ := t.Value.(ast.Number)
+				n, _ := code.Int()
+				failed = n == 0 || n >= 400
+			}
+		}
+	}
+	if !failed {
+		return
+	}
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.failed == nil {
+		c.failed = map[string]bool{}
+	}
+	c.failed[string(pip)] = true
+}
+
 func send(ctx context.Context, a *ast.Term) (*ast.Term, error) {
 	var req sendRequest
 	if err := util.UnmarshalJSON([]byte(a.String()), &req); err != nil {
 		return nil, fmt.Errorf("nc.http.send: the request is not an object of method, url, headers, body, timeout, "+
-			"raise_error, and pip: %w", err)
+			"raise_error, pip, and cache_key: %w", err)
+	}
+	h, _ := ctx.Value(httpKey{}).(*HTTP)
+	if req.CacheKey != "" && h != nil && h.Shared != nil {
+		if resp, ok := h.Shared.get(req.CacheKey); ok {
+			return resp, nil
+		}
 	}
 	if req.URL == "" {
 		return nil, errors.New("nc.http.send: the request has no url")
@@ -200,6 +266,9 @@ func send(ctx context.Context, a *ast.Term) (*ast.Term, error) {
 	raise := req.RaiseError == nil || *req.RaiseError
 	resp, code, err := do(ctx, req, timeout)
 	if err == nil {
+		if req.CacheKey != "" && h != nil && h.Shared != nil {
+			h.Shared.put(req.CacheKey, resp)
+		}
 		return resp, nil
 	}
 	err = fmt.Errorf("nc.http.send %s %s%s: %w", req.method(), req.URL, req.pipText(), err)

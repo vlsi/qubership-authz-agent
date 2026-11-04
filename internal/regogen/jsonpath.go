@@ -46,7 +46,7 @@ var JSONPathDecl = &ast.Builtin{
 // once per path; and nc.pip.record, which reads the response of a GENERAL or
 // FILTERED PIP into its record.
 func Builtins() []func(*rego.Rego) {
-	return append(regobuiltins.Options(), pipRecordFunction(), jsonPathFunction())
+	return append(regobuiltins.Options(), pipRecordFunction(), jsonPathFunction(), pipFunction())
 }
 
 // jsonPathFunction is the implementation of nc.resource_path.
@@ -66,11 +66,11 @@ func jsonPathFunction() func(*rego.Rego) {
 }
 
 // Capabilities returns the capabilities of [regobuiltins] with
-// nc.resource_path and nc.pip.record added, for a compiler that checks
+// nc.resource_path, nc.pip.record, and nc.pip added, for a compiler that checks
 // generated modules.
 func Capabilities() *ast.Capabilities {
 	c := regobuiltins.Capabilities()
-	c.Builtins = append(c.Builtins, JSONPathDecl, PIPRecordDecl)
+	c.Builtins = append(c.Builtins, JSONPathDecl, PIPRecordDecl, PIPDecl)
 	return c
 }
 
