@@ -108,13 +108,9 @@ func main() {
 		logger.Errorf("specification table: %v", err)
 		os.Exit(1)
 	}
-	cacheTTL := cfg.PIPCacheTTL
-	if cacheTTL == 0 {
-		cacheTTL = -1
-	}
 	snapshots := snapshot.New(snapshot.Config{
-		HTTP:     &regobuiltins.HTTP{Client: &http.Client{}, Token: ownToken, Timeout: cfg.PIPTimeout},
-		CacheTTL: cacheTTL,
+		HTTP:         &regobuiltins.HTTP{Client: &http.Client{}, Token: ownToken, Timeout: cfg.PIPTimeout},
+		Entitlements: cfg.EntitlementsURL,
 	}, table, logger)
 	cfg.Pull.Snapshots = snapshots
 	tenant := newDefaultTenant(cfg.DefaultTenant, cfg.Authn.TenantManagerURL)

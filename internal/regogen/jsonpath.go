@@ -40,13 +40,14 @@ var JSONPathDecl = &ast.Builtin{
 		types.Named("record", types.NewObject(nil, types.NewDynamicProperty(types.S, types.A)))),
 }
 
-// Builtins returns the built-in functions a generated module calls but nc.pip,
-// which stands for subject.entitledResources: those of [regobuiltins];
-// nc.resource_path, which [JSONPathRecord] answers, and which one query calls
-// once per path; and nc.pip.record, which reads the response of a GENERAL or
-// FILTERED PIP into its record.
+// Builtins returns the built-in functions a generated module calls: those of
+// [regobuiltins]; nc.resource_path, which [JSONPathRecord] answers, and which
+// one query calls once per path; nc.pip.record, which reads the response of a
+// GENERAL or FILTERED PIP into its record; nc.ent.record, which reads the
+// answer of the entitlements service; and nc.pip, which returns a record the
+// input carries.
 func Builtins() []func(*rego.Rego) {
-	return append(regobuiltins.Options(), pipRecordFunction(), jsonPathFunction(), pipFunction())
+	return append(regobuiltins.Options(), pipRecordFunction(), jsonPathFunction(), pipFunction(), entRecordFunction())
 }
 
 // jsonPathFunction is the implementation of nc.resource_path.
@@ -66,11 +67,11 @@ func jsonPathFunction() func(*rego.Rego) {
 }
 
 // Capabilities returns the capabilities of [regobuiltins] with
-// nc.resource_path, nc.pip.record, and nc.pip added, for a compiler that checks
-// generated modules.
+// nc.resource_path, nc.pip.record, nc.pip, and nc.ent.record added, for a
+// compiler that checks generated modules.
 func Capabilities() *ast.Capabilities {
 	c := regobuiltins.Capabilities()
-	c.Builtins = append(c.Builtins, JSONPathDecl, PIPRecordDecl, PIPDecl)
+	c.Builtins = append(c.Builtins, JSONPathDecl, PIPRecordDecl, PIPDecl, EntRecordDecl)
 	return c
 }
 

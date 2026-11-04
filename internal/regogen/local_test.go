@@ -100,16 +100,46 @@ func TestResolveSubject_ReadsATokenPIP(t *testing.T) {
 	}
 }
 
-// A MAPPING PIP is a source the agent does not read: its operand is ERROR
-// and its key is returned. A GENERAL PIP is left to the module.
-func TestResolveSubject_SetsAnUnreadSourceToError(t *testing.T) {
+// A MAPPING PIP read by its own name is ABSENT, and a GENERAL PIP is left to
+// the module, which calls it.
+func TestResolveSubject_ReadsAMappingPIPByNameAsAbsent(t *testing.T) {
 	got, unread := resolveSubject(t, `{"name": "subject.r", "pipType": "MAPPING", "productMapping": {"x": ["R"]}}`, `{}`, nil)
-	if want := (Resolved{State: "ERROR"}); got != want || !slices.Equal(unread, []string{keyR}) {
-		t.Errorf("MAPPING: value %+v, unread %v; want %+v, [%s]", got, unread, want, keyR)
+	if want := (Resolved{State: "ABSENT"}); got != want || len(unread) != 0 {
+		t.Errorf("MAPPING: value %+v, unread %v; want %+v, none", got, unread, want)
 	}
 
 	got, unread = resolveSubject(t, `{"name": "subject.r", "pipType": "GENERAL", "url": "http://pip/r"}`, `{}`, nil)
 	if got != (Resolved{}) || len(unread) != 0 {
 		t.Errorf("GENERAL: value %+v, unread %v; want no value and none unread", got, unread)
+	}
+}
+
+// subject.entitledResources is left to the module where the request names
+// the entitlements service, and is ERROR, named for the reason of a denial,
+// where it does not.
+func TestResolveSubject_LeavesEntitlementsToTheModuleWithAService(t *testing.T) {
+	m, err := Generate(tenantWithSetAndPIPs(t, "DENY_UNLESS_PERMIT", "ALLOW",
+		"subject.entitledResources.of('order').as('owner') CONTAINS resource.id", ""), table(t), DefaultOptions())
+	if err != nil {
+		t.Fatalf("Generate: %v", err)
+	}
+	key := ""
+	for _, r := range m.Refs {
+		if r.ent != nil {
+			key = r.Key
+		}
+	}
+	if key == "" {
+		t.Fatalf("the module has no entitlements operand: %+v", m.Refs)
+	}
+
+	with := Request{Entitlements: "http://ent"}
+	if unread := m.ResolveSubject(&with); len(unread) != 0 || with.Values[key] != (Resolved{}) {
+		t.Errorf("with a service: value %+v, unread %v; want no value and none unread", with.Values[key], unread)
+	}
+	var without Request
+	unread := m.ResolveSubject(&without)
+	if want := (Resolved{State: "ERROR"}); without.Values[key] != want || !slices.Equal(unread, []string{key}) {
+		t.Errorf("without a service: value %+v, unread %v; want %+v, [%s]", without.Values[key], unread, want, key)
 	}
 }

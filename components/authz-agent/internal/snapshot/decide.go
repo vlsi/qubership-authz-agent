@@ -76,21 +76,23 @@ func (r *Registry) Decide(ctx context.Context, req Request) ([]Result, error) {
 		return out, nil
 	}
 	m := s.Module
-	base := regogen.Request{Tenant: req.Tenant, Anonymous: req.Anonymous, Claims: req.Claims, Headers: req.Headers}
+	base := regogen.Request{Tenant: req.Tenant, Anonymous: req.Anonymous, Claims: req.Claims, Headers: req.Headers,
+		Entitlements: r.cfg.Entitlements}
 	claims := req.Claims
 	if claims == nil {
 		claims = jsonvalue.NewObject()
 	}
 	regogen.SubjectOf(claims, req.Anonymous, regogen.DefaultSubjectRules).Apply(&base)
 	unread := m.ResolveSubject(&base)
-	if m.Iterates {
-		// the permission scope is not read yet: every pass fails
-		base.Scope = &regogen.Scope{Failed: true}
-		unread = append(unread, `["subj","permissionScope"]`)
-	}
 	ctx = regobuiltins.WithCalls(ctx)
 	if r.cfg.HTTP != nil {
 		ctx = r.cfg.HTTP.Context(ctx)
+	}
+	if m.Iterates {
+		base.Scope = m.ReadScope(ctx, &base)
+		if base.Scope.Failed {
+			unread = append(unread, regogen.ScopePIP)
+		}
 	}
 	var inputs []*regogen.Input
 	if len(req.Items) == 1 {
@@ -171,7 +173,8 @@ func (r *Registry) evalItem(ctx context.Context, s *Snapshot, in *regogen.Input,
 
 // unknownReason names the sources a denial may rest on: the PIPs whose call
 // failed in this decision request, the parts of the snapshot that fail
-// permanently, and the operands the agent does not read yet. The items of a
+// permanently, and the operands that failed for want of a source: no
+// entitlements URL, no PERMISSION_SCOPE PIP, or a failed read of the scope. The items of a
 // bulk request share their calls, so a PIP that failed for one item is named
 // in the reason of every item denied on an unknown operand.
 func unknownReason(ctx context.Context, s *Snapshot, unread []string) string {

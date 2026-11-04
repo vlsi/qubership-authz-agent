@@ -73,6 +73,9 @@ type Ref struct {
 	// [pipPath] gives for it.
 	pip     *policyir.PIP
 	pipPath string
+	// ent is the operand of subject.entitledResources whose record the
+	// function ent_<Var> of the module returns.
+	ent *policyir.Entitled
 	// read holds the record fields the module reads of the reference, by
 	// the clauses of the module and of its subject groups; a record holds no
 	// other field that is costly to build. A reference the generator did not
@@ -487,6 +490,9 @@ func (g *gen) side(o policyir.Operand) (*side, error) {
 		(kind == spectables.KindPIPGeneral || kind == spectables.KindPIPFiltered) {
 		r.pip, _ = g.tree.PIP(p.Name)
 		r.pipPath, _ = pipPath(r.pip)
+	}
+	if e, ok := o.(policyir.Entitled); ok && r.ent == nil {
+		r.ent = &policyir.Entitled{ResourceType: e.ResourceType, As: e.As}
 	}
 	return &side{kind: kind, ref: r}, nil
 }

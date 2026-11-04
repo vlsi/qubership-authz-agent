@@ -273,22 +273,21 @@ AUTHZ_PAP_CLIENT_PULL_INTERVAL: 30
 #   default is where the platform's charts mount the netcracker-audience token.
 AUTHZ_PAP_CLIENT_TOKEN_FILE: /var/run/secrets/tokens/netcracker/token
 
-# Entitlements resolver.
+# Entitlements service.
 #
-# The ENTITLEMENT PIP is container-pinned: it cannot arrive through the pull
-# loop, the agent materialises it at startup from these
-# values. The Rego resolver then calls
+# A condition on `subject.entitledResources` calls
 # `<AUTHZ_ENTITLEMENTS_URL>/api/v3/user-entitlements/user/<subject id>` once per
-# decision request.
-#
-# Empty (default) leaves the resolver off. Policies that read
-# `entitledResources` then evaluate against an empty set, which is also what the
-# legacy service did with the aggregator unavailable: CONTAINS is false,
-# IS EMPTY is true. Nothing is logged for that, so set the URL wherever
+# decision request, within AUTHZ_PIP_TIMEOUT and without retries. With the URL
+# empty (default) such a condition's operand fails, and check/resource and bulk
+# deny the item with the reason `PIP resolution failed`: set the URL wherever
 # entitlements-based policies are in use.
+#
+# check/filter reads entitlements through the ENTITLEMENT PIP, which the agent
+# pins at startup from these values; there an empty URL adds no PIP, and
+# `entitledResources` evaluates against an empty set.
 AUTHZ_ENTITLEMENTS_URL: ''
-# Per-request timeout and retry count for the aggregator call. Same shape as
-# the AUTHZ_JWKS_HTTP_* knobs above.
+# Per-request timeout and retry count of the pinned ENTITLEMENT PIP that
+# check/filter calls. Same shape as the AUTHZ_JWKS_HTTP_* knobs above.
 AUTHZ_ENTITLEMENTS_HTTP_TIMEOUT: 5
 AUTHZ_ENTITLEMENTS_HTTP_RETRIES: 3
 

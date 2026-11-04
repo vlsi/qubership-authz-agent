@@ -27,15 +27,18 @@ import (
 )
 
 // ResolveSubject sets in req.Values the value of each operand of m that
-// the subject's token and the request's headers give without a call: a
-// TOKEN PIP from req.Claims and a HEADER PIP from req.Headers, as the
-// specification's resolve_pip does under the agent profile. Every other
-// operand of the subject that [SubjectOf] does not give is set to ERROR,
-// a source the agent does not read yet: a MAPPING PIP, subject.permissions,
-// a PIP of type PERMISSION_SCOPE read as a value, and
-// subject.entitledResources. It returns their keys. A placeholder a PIP's
-// request reads and nothing gives is ABSENT. An operand req.Values already
-// holds is left as it is.
+// the subject's token, the request's headers, and the tenant's mapping
+// tables give without a call, as the specification's resolve_subject does
+// under the agent profile: a TOKEN PIP from req.Claims, a HEADER PIP from
+// req.Headers, and subject.permissions from the MAPPING PIPs
+// ([Module.permissions]). A MAPPING PIP read by its own name is ABSENT
+// (mapping_own_name=ABSENT), and a PIP of type PERMISSION_SCOPE read as a
+// value is ERROR, as a failed PIP is. subject.entitledResources is left to
+// the module, which calls the entitlements service, unless req names no
+// such service: then it is ERROR. It returns the keys of the operands set to
+// ERROR for want of a source, which the reason of a denial names. A
+// placeholder a PIP's request reads and nothing gives is ABSENT. An operand
+// req.Values already holds is left as it is.
 //
 // The knobs of the agent profile these follow, which the export of the
 // tables does not carry: header_lookup=fold, header_charset=latin1,
@@ -73,8 +76,18 @@ func (m *Module) ResolveSubject(req *Request) []string {
 		case spectables.KindPIPGeneral, spectables.KindPIPFiltered:
 			// the module calls them itself
 			continue
-		case spectables.KindPIPMapping, spectables.KindSubjPermissions, spectables.KindEntitled,
-			spectables.KindSubjPermissionScope:
+		case spectables.KindSubjPermissions:
+			v = m.permissions(req)
+		case spectables.KindPIPMapping:
+			v = Resolved{State: spectables.StateAbsent}
+		case spectables.KindSubjPermissionScope:
+			v = Resolved{State: spectables.StateError}
+			unread = append(unread, r.Key)
+		case spectables.KindEntitled:
+			if req.Entitlements != "" {
+				// the module calls the service itself
+				continue
+			}
 			v = Resolved{State: spectables.StateError}
 			unread = append(unread, r.Key)
 		default:

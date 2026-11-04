@@ -51,9 +51,6 @@ type HTTP struct {
 	// Timeout bounds a call whose request names no timeout; zero means
 	// [DefaultTimeout].
 	Timeout time.Duration
-	// Shared reuses the answer of a request that names a cache_key across
-	// decision requests; nil reuses nothing beyond one decision request.
-	Shared *Shared
 }
 
 type httpKey struct{}
@@ -138,10 +135,6 @@ type sendRequest struct {
 	Timeout    string            `json:"timeout"`
 	RaiseError *bool             `json:"raise_error"`
 	PIP        string            `json:"pip"`
-	// CacheKey, when not empty, names the answer [Shared] keeps across
-	// decision requests: two requests with one key share an answer
-	// whatever else differs between them.
-	CacheKey string `json:"cache_key"`
 }
 
 // Failure codes in the error member of a response of nc.http.send.
@@ -206,6 +199,12 @@ func httpSend(bctx rego.BuiltinContext, a *ast.Term) (*ast.Term, error) {
 	}
 }
 
+// Send makes the call nc.http.send makes for req, under the calls and the
+// HTTP of ctx, for a caller outside a query.
+func Send(ctx context.Context, req *ast.Term) (*ast.Term, error) {
+	return httpSend(rego.BuiltinContext{Context: ctx}, req)
+}
+
 // note records in c a failed call of a PIP.
 func (c *calls) note(a, resp *ast.Term, err error) {
 	obj, ok := a.Value.(ast.Object)
@@ -245,13 +244,7 @@ func send(ctx context.Context, a *ast.Term) (*ast.Term, error) {
 	var req sendRequest
 	if err := util.UnmarshalJSON([]byte(a.String()), &req); err != nil {
 		return nil, fmt.Errorf("nc.http.send: the request is not an object of method, url, headers, body, timeout, "+
-			"raise_error, pip, and cache_key: %w", err)
-	}
-	h, _ := ctx.Value(httpKey{}).(*HTTP)
-	if req.CacheKey != "" && h != nil && h.Shared != nil {
-		if resp, ok := h.Shared.get(req.CacheKey); ok {
-			return resp, nil
-		}
+			"raise_error, and pip: %w", err)
 	}
 	if req.URL == "" {
 		return nil, errors.New("nc.http.send: the request has no url")
@@ -266,9 +259,6 @@ func send(ctx context.Context, a *ast.Term) (*ast.Term, error) {
 	raise := req.RaiseError == nil || *req.RaiseError
 	resp, code, err := do(ctx, req, timeout)
 	if err == nil {
-		if req.CacheKey != "" && h != nil && h.Shared != nil {
-			h.Shared.put(req.CacheKey, resp)
-		}
 		return resp, nil
 	}
 	err = fmt.Errorf("nc.http.send %s %s%s: %w", req.method(), req.URL, req.pipText(), err)

@@ -64,6 +64,9 @@ type Request struct {
 	Anonymous bool
 	Claims    *jsonvalue.Object
 	Headers   map[string]string
+	// Entitlements is the base URL of the entitlements service, which
+	// subject.entitledResources calls; empty fails such an operand.
+	Entitlements string
 }
 
 // Scope is the permission scope of a request's subject as the passes of an
@@ -347,7 +350,7 @@ func Project(m *Module, req Request) (*Input, error) {
 		default:
 			var ok bool
 			if v, ok = req.Values[r.Key]; !ok {
-				if r.pip != nil {
+				if r.pip != nil || r.ent != nil {
 					// the module calls the PIP itself
 					continue
 				}
@@ -393,12 +396,16 @@ func (in *Input) setCalls(m *Module, req *Request) error {
 		}
 	}
 	for _, r := range m.Refs {
-		if r.pip == nil {
+		if r.pip == nil && r.ent == nil {
 			continue
 		}
 		if in.calls == nil {
 			in.calls = ast.NewObject()
 			in.pipValues = map[string]Resolved{}
+		}
+		if r.ent != nil {
+			in.calls.Insert(strTerm(r.ID), entCall(req))
+			continue
 		}
 		in.calls.Insert(strTerm(r.ID), pipCall(r, req, m.pips))
 		if v, ok := req.Values[r.Key]; ok {

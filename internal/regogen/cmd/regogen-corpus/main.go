@@ -45,12 +45,13 @@
 // ([regogen.NewBulk]) is compared with the request's own, and a difference
 // is counted in bulk_mismatch. The bundle must carry the body.
 //
-// With -service as well, a TOKEN or HEADER PIP takes the value the agent's
-// service reads from the claims and the headers of the request
-// ([regogen.Module.ResolveSubject]) in place of the specification's. A
-// source the service does not read, such as a MAPPING PIP, keeps the
-// specification's value, and the requests of a module that reads one are
-// counted in service_unread. The bundle must carry the headers.
+// With -service as well, the subject's operands take the values the agent's
+// service gives them ([regogen.Module.ResolveSubject]) in place of the
+// specification's: a TOKEN or HEADER PIP from the claims and the headers of
+// the request, subject.permissions from the tenant's MAPPING PIPs, and the
+// passes of an iterate from the permission scope service's answer the
+// bundle recorded ([regogen.Module.ReadScope]), which are compared with the
+// specification's passes too. The bundle must carry the headers.
 //
 // A GENERAL or FILTERED PIP calls nc.http.send, whose transport replays the
 // value the specification resolved for the PIP ([regogen.ReplayTransport]):
@@ -58,7 +59,9 @@
 // response and the calls the agent does not make are. A value no response
 // gives, two PIPs whose calls are one HTTP request with different values
 // recorded, and a url Go does not parse are counted in replay_errors, and the
-// request is not compared.
+// request is not compared. The calls of the entitlements service and of the
+// permission scope service are answered with what the bundle recorded the
+// specification's stubs answering, by the path of the call.
 //
 // A request whose projection or evaluation fails is counted in proj_errors,
 // not as a disagreement.
@@ -70,6 +73,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"maps"
 	"net/http"
 	"os"
@@ -114,8 +118,12 @@ type request struct {
 	Anonymous bool    `json:"anonymous"`
 	// Headers are the headers of the request by name.
 	Headers map[string]string `json:"headers"`
-	Agent   bool              `json:"agent"`
-	Legacy  map[string]any    `json:"legacy"`
+	// HTTP holds, by path, the status and the body text, null for none,
+	// the stubs of the entitlements service and of the permission scope
+	// service answer the request's calls with.
+	HTTP   map[string][2]json.RawMessage `json:"http"`
+	Agent  bool                          `json:"agent"`
+	Legacy map[string]any                `json:"legacy"`
 }
 
 type result struct {
@@ -138,14 +146,11 @@ type result struct {
 	// of a bulk request differs from its own; BulkUs and ItemUs are the
 	// projection of the shared part and of the item, its input value
 	// included.
-	BulkMismatch []string `json:"bulkMismatch,omitempty"`
-	// ServiceUnread counts, with -service, the requests of a module that
-	// reads a source the service does not read.
-	ServiceUnread int       `json:"serviceUnread,omitempty"`
-	BulkUs        []float64 `json:"bulkUs,omitempty"`
-	ItemUs        []float64 `json:"itemUs,omitempty"`
-	GenMs         float64   `json:"genMs"`
-	CompileMs     float64   `json:"compileMs"`
+	BulkMismatch []string  `json:"bulkMismatch,omitempty"`
+	BulkUs       []float64 `json:"bulkUs,omitempty"`
+	ItemUs       []float64 `json:"itemUs,omitempty"`
+	GenMs        float64   `json:"genMs"`
+	CompileMs    float64   `json:"compileMs"`
 	// DecisionCompileMs and DenyUs are the compilation of the decision
 	// module and the evaluation of each denied request, allow and maybe;
 	// EvalUs times allow alone.
@@ -169,7 +174,8 @@ var explain bool
 // is ABSENT: the replay of the PIP's call answers by its request, which q
 // does not record either.
 func toRequest(q request, tenant string, m *regogen.Module) (regogen.Request, error) {
-	r := regogen.Request{Roles: q.Roles, M2M: q.M2M, Tenant: tenant, Anonymous: q.Anonymous}
+	r := regogen.Request{Roles: q.Roles, M2M: q.M2M, Tenant: tenant, Anonymous: q.Anonymous,
+		Entitlements: replayEntitlements}
 	var err error
 	if q.Claims != nil {
 		c, err := jsonvalue.Decode([]byte(*q.Claims))
@@ -306,6 +312,11 @@ func resolveRequest(m *regogen.Module, q request, rq *regogen.Request, in *regog
 			rq.Headers[strings.ToLower(k)] = v
 		}
 		m.ResolveSubject(rq)
+		if m.Iterates {
+			h := &regobuiltins.HTTP{Client: &http.Client{Transport: recorded{paths: q.HTTP}},
+				Token: func() (string, error) { return "own", nil }}
+			rq.Scope = m.ReadScope(regobuiltins.WithCalls(h.Context(context.Background())), rq)
+		}
 	}
 	res.resolveUs = float64(time.Since(t0).Nanoseconds()) / 1000
 	got, err := regogen.Project(m, *rq)
@@ -327,6 +338,11 @@ func resolveRequest(m *regogen.Module, q request, rq *regogen.Request, in *regog
 			h, _ := json.Marshal(have)
 			res.diff = append(res.diff, fmt.Sprintf("%s: spec %s, projection %s", r.ID, w, h))
 		}
+	}
+	if in.ScopeFailed != got.ScopeFailed || !reflect.DeepEqual(in.Passes, got.Passes) {
+		w, _ := json.Marshal(map[string]any{"failed": in.ScopeFailed, "passes": in.Passes})
+		h, _ := json.Marshal(map[string]any{"failed": got.ScopeFailed, "passes": got.Passes})
+		res.diff = append(res.diff, fmt.Sprintf("scope: spec %s, projection %s", w, h))
 	}
 	shared := *rq
 	shared.Body = regogen.Body{}
@@ -378,14 +394,6 @@ func run(b bundle, tab *spectables.Table, opt regogen.Options, reps int, dumpDir
 	}
 	res.Stats = m.Stats
 	res.Groups = len(m.Groups)
-	// the service fails the permission scope and these sources
-	unread := m.Iterates
-	for _, r := range m.Refs {
-		switch r.Kind {
-		case spectables.KindPIPMapping, spectables.KindSubjPermissions, spectables.KindEntitled, spectables.KindSubjPermissionScope:
-			unread = true
-		}
-	}
 	res.NoTemplate = m.Stats.NoTemplate
 	if explain {
 		fmt.Fprintln(os.Stderr, tree.Dump())
@@ -440,9 +448,6 @@ func run(b bundle, tab *spectables.Table, opt regogen.Options, reps int, dumpDir
 				res.ProjErrors = append(res.ProjErrors, q.ID+": -service: the bundle carries no headers")
 				continue
 			}
-			if service && unread {
-				res.ServiceUnread++
-			}
 			r, err := resolveRequest(m, q, &rq, in, service)
 			if err != nil {
 				res.ProjErrors = append(res.ProjErrors, q.ID+": resolve: "+err.Error())
@@ -468,7 +473,8 @@ func run(b bundle, tab *spectables.Table, opt regogen.Options, reps int, dumpDir
 			// the replay answers a call otherwise than the recording did
 			continue
 		}
-		h := &regobuiltins.HTTP{Client: &http.Client{Transport: tr}, Token: func() (string, error) { return "own", nil }}
+		h := &regobuiltins.HTTP{Client: &http.Client{Transport: recorded{paths: q.HTTP, next: tr}},
+			Token: func() (string, error) { return "own", nil }}
 		ctx := in.Context(h.Context(context.Background()))
 		best, bestDeny := -1.0, -1.0
 		var got, maybe bool
@@ -515,6 +521,42 @@ func run(b bundle, tab *spectables.Table, opt regogen.Options, reps int, dumpDir
 		}
 	}
 	return res
+}
+
+// replayEntitlements is the base URL of the entitlements service the
+// projection calls, which [recorded] answers by path.
+const replayEntitlements = "http://entitlements.replay"
+
+// recorded answers a POST whose path paths holds with the status and the
+// body recorded there, and passes any other request to next, or answers it
+// with 404 without next.
+type recorded struct {
+	paths map[string][2]json.RawMessage
+	next  http.RoundTripper
+}
+
+func (t recorded) RoundTrip(r *http.Request) (*http.Response, error) {
+	if a, ok := t.paths[r.URL.Path]; ok && r.Method == http.MethodPost {
+		var status int
+		if err := json.Unmarshal(a[0], &status); err != nil {
+			return nil, fmt.Errorf("recorded status of %s: %w", r.URL.Path, err)
+		}
+		var body *string
+		if err := json.Unmarshal(a[1], &body); err != nil {
+			return nil, fmt.Errorf("recorded body of %s: %w", r.URL.Path, err)
+		}
+		text := ""
+		if body != nil {
+			text = *body
+		}
+		return &http.Response{StatusCode: status, Header: http.Header{}, Request: r,
+			Body: io.NopCloser(strings.NewReader(text))}, nil
+	}
+	if t.next != nil {
+		return t.next.RoundTrip(r)
+	}
+	return &http.Response{StatusCode: http.StatusNotFound, Header: http.Header{}, Request: r,
+		Body: io.NopCloser(strings.NewReader(""))}, nil
 }
 
 func pct(xs []float64, p float64) float64 {
@@ -639,7 +681,6 @@ func main() {
 		sum["record_mismatch"] += len(r.RecordMismatch)
 		resolveUs = append(resolveUs, r.ResolveUs...)
 		sum["bulk_mismatch"] += len(r.BulkMismatch)
-		sum["service_unread"] += r.ServiceUnread
 		bulkUs = append(bulkUs, r.BulkUs...)
 		itemUs = append(itemUs, r.ItemUs...)
 		sum["evaluated"] += len(r.EvalUs)

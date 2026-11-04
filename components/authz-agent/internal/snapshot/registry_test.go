@@ -22,7 +22,6 @@ import (
 	"strings"
 	"sync/atomic"
 	"testing"
-	"time"
 
 	"authz-agent/internal/jsonvalue"
 	"authz-agent/internal/regobuiltins"
@@ -215,14 +214,7 @@ func pipServer(t *testing.T, status int, body string) (*httptest.Server, *atomic
 
 func pipRegistry(t *testing.T) *Registry {
 	t.Helper()
-	return pipRegistryTTL(t, 0)
-}
-
-// pipRegistryTTL is pipRegistry with the cache TTL given, negative for no
-// cache between decision requests.
-func pipRegistryTTL(t *testing.T, ttl time.Duration) *Registry {
-	t.Helper()
-	return New(Config{CacheTTL: ttl, HTTP: &regobuiltins.HTTP{Client: &http.Client{},
+	return New(Config{HTTP: &regobuiltins.HTTP{Client: &http.Client{},
 		Token: func() (string, error) { return "own", nil }}}, tab(t), quiet{})
 }
 
@@ -231,35 +223,13 @@ func generalPIP(url, cacheable string) string {
 		`", "httpMethod": "GET"` + cacheable + `}`
 }
 
-// A cacheable GENERAL PIP is called once for the subject within the TTL:
-// the items of a bulk request and a later decision request reuse the
-// answer, and another subject's request calls it again.
-func TestACacheablePIPIsCalledOncePerSubject(t *testing.T) {
-	srv, calls := pipServer(t, http.StatusOK, `["x"]`)
-	r := pipRegistry(t)
-	load(t, r, generalPIP(srv.URL, ""), set("a", "subject.g == 'x'"))
-
-	first := decide(t, r, readDoc(t, "a", "y", 3))
-	second := decide(t, r, readDoc(t, "a", "z", 1))
-
-	if !first[0].Allowed || !first[2].Allowed || !second[0].Allowed {
-		t.Errorf("Decide = %+v then %+v, want every item allowed", first, second)
-	}
-	if n := calls.Load(); n != 1 {
-		t.Errorf("calls of the PIP = %d, want 1", n)
-	}
-	decide(t, r, readDocAs(t, "u2", "a", "z", 1))
-	if n := calls.Load(); n != 2 {
-		t.Errorf("calls of the PIP after another subject's request = %d, want 2", n)
-	}
-}
-
-// Without a cache between decision requests, the items of one bulk request
-// still share one call of the PIP, and the next request calls it again.
+// The items of one bulk request share one call of the PIP, and the next
+// decision request calls it again, though the PIP declares itself
+// cacheable: no answer outlives its decision request.
 func TestTheItemsOfABulkRequestShareOneCall(t *testing.T) {
 	srv, calls := pipServer(t, http.StatusOK, `["x"]`)
-	r := pipRegistryTTL(t, -1)
-	load(t, r, generalPIP(srv.URL, ""), set("a", "subject.g == 'x'"))
+	r := pipRegistry(t)
+	load(t, r, generalPIP(srv.URL, `, "cacheable": true`), set("a", "subject.g == 'x'"))
 
 	decide(t, r, readDoc(t, "a", "y", 5))
 	if n := calls.Load(); n != 1 {
@@ -271,17 +241,21 @@ func TestTheItemsOfABulkRequestShareOneCall(t *testing.T) {
 	}
 }
 
-// A denial that rests on a source the agent does not read yet names it.
+// A denial that rests on a source the agent cannot read names it.
 func TestADenialOnAnUnreadSourceNamesIt(t *testing.T) {
 	for _, tc := range []struct {
-		name, pips, condition, want string
+		name, pips, set, want string
 	}{
-		{"subject.permissions", ``, "subject.permissions == 'x'", ReasonUnknown + `: ["subj","permissions"]`},
-		{"subject.entitledResources", ``, "subject.entitledResources == 'x'", ReasonUnknown + ": subject.entitledResources"},
+		{"an undeclared PIP", ``, set("a", "subject.entitledResources == 'x'"),
+			ReasonUnknown + ": subject.entitledResources"},
+		{"entitlements without the service's URL", ``,
+			set("a", "subject.entitledResources.of('doc').as('owner') CONTAINS resource.a"),
+			ReasonUnknown + `: ["ent","doc",["owner"]]`},
+		{"a permission scope without a PERMISSION_SCOPE PIP", ``, scopeSet("a"), ReasonUnknown + ": subject.permissionScope"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			r := New(Config{}, tab(t), quiet{})
-			load(t, r, tc.pips, set("a", tc.condition))
+			load(t, r, tc.pips, tc.set)
 
 			got := decide(t, r, readDoc(t, "a", "y", 1))
 
@@ -289,21 +263,6 @@ func TestADenialOnAnUnreadSourceNamesIt(t *testing.T) {
 				t.Errorf("Decide = %+v, want %+v", got[0], want)
 			}
 		})
-	}
-}
-
-// A PIP declared with cacheable false is called again by the next decision
-// request.
-func TestAPIPDeclaredNotCacheableIsCalledByEveryRequest(t *testing.T) {
-	srv, calls := pipServer(t, http.StatusOK, `["x"]`)
-	r := pipRegistry(t)
-	load(t, r, generalPIP(srv.URL, `, "cacheable": false`), set("a", "subject.g == 'x'"))
-
-	decide(t, r, readDoc(t, "a", "y", 1))
-	decide(t, r, readDoc(t, "a", "y", 1))
-
-	if n := calls.Load(); n != 2 {
-		t.Errorf("calls of the PIP = %d, want 2", n)
 	}
 }
 
@@ -317,5 +276,95 @@ func TestADenialOnAFailedPIPNamesIt(t *testing.T) {
 
 	if want := (Result{Reason: "PIP resolution failed: subject.g"}); got[0] != want {
 		t.Errorf("Decide = %+v, want %+v", got[0], want)
+	}
+}
+
+// scopeSet is a policy set of tenant that iterates over the permission
+// scope and allows the operation read on a doc whose member a is a domain
+// of the pass.
+func scopeSet(tenant string) string {
+	return fmt.Sprintf(`{"policySetId": "s-%[1]s", "name": "s", "status": "ACTIVE", "tenantId": %[1]q,
+		"target": "resourceType == 'doc'", "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+		"iterate": {"foreach": "subject.permissionScope", "combiningAlgorithm": "DENY_UNLESS_PERMIT"},
+		"policies": [{"policyId": "p", "target": "true", "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+			"tenantId": %[1]q, "rules": [{"ruleId": "r", "target": "operation == 'read'",
+				"condition": "subject.permissionScope.domain CONTAINS resource.a", "effect": "ALLOW", "tenantId": %[1]q}]}]}`,
+		tenant)
+}
+
+// A role the tenant's MAPPING PIP maps grants its permissions, which a
+// condition on subject.permissions reads.
+func TestTheMappingTablesGrantPermissions(t *testing.T) {
+	r := New(Config{}, tab(t), quiet{})
+	load(t, r, `{"tenantId": "a", "name": "subject.permissions", "pipType": "MAPPING",
+		"customMapping": {"subject.roles": {"r": ["p1"]}}}`,
+		set("a", "subject.permissions CONTAINS 'p1'"), set("b", "subject.permissions CONTAINS 'p1'"))
+
+	if got := decide(t, r, readDoc(t, "a", "y", 1)); !got[0].Allowed {
+		t.Errorf("Decide with the role R mapped to p1 = %+v, want allowed", got[0])
+	}
+	if got := decide(t, r, readDoc(t, "b", "y", 1)); got[0] != (Result{Reason: ReasonDenied}) {
+		t.Errorf("Decide in a tenant without the mapping = %+v, want %+v", got[0], Result{Reason: ReasonDenied})
+	}
+}
+
+// countingServer answers every POST of path with body, any other request
+// with 404, and counts the requests.
+func countingServer(t *testing.T, path, body string) (*httptest.Server, *atomic.Int32) {
+	t.Helper()
+	var calls atomic.Int32
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls.Add(1)
+		if r.Method != http.MethodPost || r.URL.Path != path {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		_, _ = w.Write([]byte(body))
+	}))
+	t.Cleanup(srv.Close)
+	return srv, &calls
+}
+
+// The items of a bulk request share one call of the entitlements service.
+func TestTheEntitlementsServiceIsCalledOncePerRequest(t *testing.T) {
+	srv, calls := countingServer(t, "/api/v3/user-entitlements/user/u1", `{"entitlements": [{"resourceType": "doc",
+		"references": [{"name": "owner", "resources": [{"resourceId": "y"}]}]}]}`)
+	r := New(Config{Entitlements: srv.URL, HTTP: &regobuiltins.HTTP{Client: &http.Client{},
+		Token: func() (string, error) { return "own", nil }}}, tab(t), quiet{})
+	load(t, r, ``, set("a", "subject.entitledResources.of('doc').as('owner') CONTAINS resource.a"))
+
+	got := decide(t, r, readDoc(t, "a", "y", 3))
+
+	if !got[0].Allowed || !got[2].Allowed {
+		t.Errorf("Decide of the entitled doc y = %+v, want every item allowed", got)
+	}
+	if n := calls.Load(); n != 1 {
+		t.Errorf("calls of the entitlements service = %d, want 1", n)
+	}
+	if got := decide(t, r, readDoc(t, "a", "z", 1)); got[0].Allowed {
+		t.Errorf("Decide of the doc z the service does not grant = %+v, want denied", got[0])
+	}
+}
+
+// The items of a bulk request share one read of the permission scope, at
+// the url of the tenant's PERMISSION_SCOPE PIP.
+func TestThePermissionScopeIsReadOncePerRequest(t *testing.T) {
+	srv, calls := countingServer(t, "/api/v1/permission-scope/user/u1/policies",
+		`{"permissionScope": [{"policies": [{"scopeItems": [{"key": "domain", "values": [{"id": "y"}]}]}]}]}`)
+	r := New(Config{HTTP: &regobuiltins.HTTP{Client: &http.Client{},
+		Token: func() (string, error) { return "own", nil }}}, tab(t), quiet{})
+	load(t, r, `{"tenantId": "a", "name": "subject.permissionScope", "pipType": "PERMISSION_SCOPE", "url": "`+srv.URL+`"}`,
+		scopeSet("a"))
+
+	got := decide(t, r, readDoc(t, "a", "y", 2))
+
+	if !got[0].Allowed || !got[1].Allowed {
+		t.Errorf("Decide of the doc y in the scope = %+v, want every item allowed", got)
+	}
+	if n := calls.Load(); n != 1 {
+		t.Errorf("reads of the permission scope = %d, want 1", n)
+	}
+	if got := decide(t, r, readDoc(t, "a", "z", 1)); got[0].Allowed {
+		t.Errorf("Decide of the doc z outside the scope = %+v, want denied", got[0])
 	}
 }

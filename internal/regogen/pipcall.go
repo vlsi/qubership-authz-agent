@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"regexp"
 	"slices"
-	"strconv"
 	"strings"
 
 	"github.com/open-policy-agent/opa/v1/ast"
@@ -116,10 +115,8 @@ var (
 //
 // The functions do not follow pip_one_call_per_request=false: nc.http.send
 // answers an equal request of one decision request from its cache, so a PIP
-// that two operands read is called once. Across decision requests the
-// request names a cache_key (cacheable_absent=true, cache_key=
-// tenant_name_subject, cache_period_unit=ignore), and the agent's
-// [regobuiltins.Shared] keeps the answer for cacheable_ttl_ms.
+// that two operands read is called once. No answer is reused across
+// decision requests, whatever the declaration's cacheable says.
 
 // pipPlaceholders returns the keys of the subject's operands that the url or
 // the requestAttributes of decl put into its request, which [Project] needs
@@ -221,42 +218,7 @@ func pipCall(r *Ref, req *Request, pips func(string) (*policyir.PIP, bool)) *ast
 		items = append(items, ast.Item(ast.StringTerm("body"),
 			ast.ObjectTerm(ast.Item(ast.StringTerm("requestAttributes"), body))))
 	}
-	if cacheable(decl) {
-		items = append(items, ast.Item(ast.StringTerm("cache_key"), ast.StringTerm(cacheKey(decl, req))))
-	}
 	return ast.ObjectTerm(items...)
-}
-
-// cacheable reports whether the answer of decl is kept across decision
-// requests: a declaration without cacheable is (ECFG cacheable_absent
-// true), and one with cacheable is where the value is true as the
-// specification reads it, so every value but false, null, 0, "", [], and
-// {}. cachePeriod sets nothing (cache_period_unit ignore).
-func cacheable(decl *policyir.PIP) bool {
-	switch decl.Cacheable {
-	case "false", "null", "0", `""`, "[]", "{}":
-		return false
-	case "":
-		return true
-	}
-	if d, ok := jsonvalue.ParseDecimal(decl.Cacheable); ok {
-		return !d.IsZero()
-	}
-	return true
-}
-
-// cacheKey is the key the answer of decl's call is kept under across
-// decision requests: the tenant, the PIP's name, and subject.id (ECFG
-// cache_key tenant_name_subject). The request's other values are not in
-// it, so a call that reads the resource answers every resource of the
-// subject with the first answer, as the specification's agent profile does.
-func cacheKey(decl *policyir.PIP, req *Request) string {
-	id := req.Values[specKey("subj", "id")]
-	text := string(id.State)
-	if id.State == spectables.StateValue {
-		text += ":" + legacyvalue.Text(id.Value)
-	}
-	return strconv.Quote(req.Tenant) + " " + strconv.Quote(decl.Name) + " " + strconv.Quote(text)
 }
 
 func mapsKeys(m map[string]string) func(func(string) bool) {

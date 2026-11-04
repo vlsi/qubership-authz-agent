@@ -26,10 +26,8 @@ import (
 	"github.com/open-policy-agent/opa/v1/tester"
 
 	"authz-agent/internal/jsonvalue"
-	"authz-agent/internal/policyir"
 	"authz-agent/internal/regobuiltins"
 	"authz-agent/internal/regobuiltins/regotest"
-	"authz-agent/internal/regogen/spectables"
 )
 
 // pipCase is one Rego test of the function of the PIP subject.g: the
@@ -438,36 +436,5 @@ func BenchmarkPIPCall(b *testing.B) {
 				}
 			}
 		})
-	}
-}
-
-func TestCacheable_FollowsTheDeclaration(t *testing.T) {
-	for raw, want := range map[string]bool{
-		"": true, "true": true, "1": true, `"no"`: true,
-		"false": false, "null": false, "0": false, "0.0": false, `""`: false, "[]": false, "{}": false,
-	} {
-		if got := cacheable(&policyir.PIP{Cacheable: raw}); got != want {
-			t.Errorf("cacheable(%q) = %t, want %t", raw, got, want)
-		}
-	}
-}
-
-// The cache key tells tenants, PIPs, and subjects apart and nothing else.
-func TestCacheKey_IsTheTenantTheNameAndTheSubject(t *testing.T) {
-	key := func(tenant, name, subject, region string) string {
-		v := map[string]Resolved{
-			specKey("subj", "id"):     {State: spectables.StateValue, Value: subject},
-			specKey("subj", "region"): {State: spectables.StateValue, Value: region},
-		}
-		return cacheKey(&policyir.PIP{Name: name}, &Request{Tenant: tenant, Values: v})
-	}
-	base := key("t", "subject.g", "u1", "eu")
-	if got := key("t", "subject.g", "u1", "us"); got != base {
-		t.Errorf("key with another region = %s, want %s", got, base)
-	}
-	for _, other := range []string{key("t2", "subject.g", "u1", "eu"), key("t", "subject.h", "u1", "eu"), key("t", "subject.g", "u2", "eu")} {
-		if other == base {
-			t.Errorf("key %s is the key of another tenant, PIP, or subject", other)
-		}
 	}
 }

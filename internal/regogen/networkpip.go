@@ -23,9 +23,9 @@ import (
 	"github.com/open-policy-agent/opa/v1/types"
 )
 
-// PIPDecl is nc.pip, which returns the record of a network reference other
-// than a GENERAL or FILTERED PIP, such as subject.entitledResources, from
-// the input the query was given ([Input.PIPRecord]).
+// PIPDecl is nc.pip, which returns the record of a network reference that
+// has no function of its own in the module from the input the query was
+// given ([Input.PIPRecord]).
 var PIPDecl = &ast.Builtin{
 	Name: "nc.pip",
 	Decl: types.NewFunction(types.Args(types.Named("id", types.S)),

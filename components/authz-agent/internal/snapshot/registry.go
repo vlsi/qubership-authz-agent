@@ -63,16 +63,10 @@ type Config struct {
 	// BulkWorkers bounds the items of one bulk request evaluated at once;
 	// zero or less means 4.
 	BulkWorkers int
-	// CacheTTL is how long the answer of a cacheable PIP call is reused
-	// across decision requests; zero means [DefaultCacheTTL], and a
-	// negative value turns the cache off.
-	CacheTTL time.Duration
+	// Entitlements is the base URL of the entitlements service, which
+	// subject.entitledResources calls; empty fails every such operand.
+	Entitlements string
 }
-
-// DefaultCacheTTL is how long a cacheable PIP answer is reused across
-// decision requests: 60 seconds, the TTL the agent profile gives a PIP that
-// declares no cachePeriod.
-const DefaultCacheTTL = 60 * time.Second
 
 // Snapshot is the compiled module of one tenant.
 type Snapshot struct {
@@ -128,16 +122,8 @@ func New(cfg Config, tab *spectables.Table, log Logger) *Registry {
 	if cfg.BulkWorkers <= 0 {
 		cfg.BulkWorkers = 4
 	}
-	if cfg.CacheTTL == 0 {
-		cfg.CacheTTL = DefaultCacheTTL
-	}
 	opt := regogen.DefaultOptions()
 	opt.Groups, opt.Decision = true, true
-	if cfg.HTTP != nil && cfg.CacheTTL > 0 {
-		h := *cfg.HTTP
-		h.Shared = regobuiltins.NewShared(cfg.CacheTTL, 0)
-		cfg.HTTP = &h
-	}
 	r := &Registry{cfg: cfg, tab: tab, opt: opt, log: log}
 	r.cur.Store(&state{snapshots: map[string]*Snapshot{}, tenants: map[string]TenantHealth{}})
 	return r

@@ -18,12 +18,11 @@
 // claims, the headers, and the body it carries ([snapshot.Registry.Decide]).
 //
 // A request is compared with the answer of the agent profile unless its
-// module reads a source the service resolves differently from the
-// specification's run: a GENERAL or FILTERED PIP, which the service calls
-// over the network, a MAPPING PIP, subject.permissions,
-// subject.entitledResources, or the permission scope, which it does not
-// read yet. A request in a tenant the export does not name is compared too:
-// the service denies it. Disagreements are counted in mismatch, requests
+// module reads a GENERAL or FILTERED PIP, whose answers the bundle does not
+// carry. The calls of the entitlements service and of the permission scope
+// are answered with the status and the body the bundle recorded for their
+// path, and any other call with 200 and a null body. A request in a tenant
+// the export does not name is compared too: the service denies it. Disagreements are counted in mismatch, requests
 // not compared in skipped; regogen-corpus -resolve -service checks those.
 // A tenant whose candidate the registry rejects is counted in rejected.
 //
@@ -73,6 +72,9 @@ type request struct {
 	Anonymous bool              `json:"anonymous"`
 	Headers   map[string]string `json:"headers"`
 	Agent     bool              `json:"agent"`
+	// HTTP is the status and the body, or null for none, the specification's
+	// services answered a POST of each path with.
+	HTTP map[string][2]json.RawMessage `json:"http"`
 }
 
 type quiet struct{}
@@ -89,9 +91,44 @@ func (nullPIP) RoundTrip(r *http.Request) (*http.Response, error) {
 		Body: io.NopCloser(strings.NewReader("null")), Request: r}, nil
 }
 
-func newRegistry(tab *spectables.Table, bulkWorkers int) *snapshot.Registry {
-	return snapshot.New(snapshot.Config{BulkWorkers: bulkWorkers, CacheTTL: -1,
-		HTTP: &regobuiltins.HTTP{Client: &http.Client{Transport: nullPIP{}},
+// replay answers a POST of a path the current request recorded with the
+// recorded status and body, and any other call as nullPIP does.
+type replay struct {
+	paths atomic.Pointer[map[string][2]json.RawMessage]
+}
+
+func (t *replay) RoundTrip(r *http.Request) (*http.Response, error) {
+	var a [2]json.RawMessage
+	ok := false
+	if paths := t.paths.Load(); paths != nil {
+		a, ok = (*paths)[r.URL.Path]
+	}
+	if !ok || r.Method != http.MethodPost {
+		return nullPIP{}.RoundTrip(r)
+	}
+	var status int
+	if err := json.Unmarshal(a[0], &status); err != nil {
+		return nil, fmt.Errorf("recorded status of %s: %w", r.URL.Path, err)
+	}
+	var body *string
+	if err := json.Unmarshal(a[1], &body); err != nil {
+		return nil, fmt.Errorf("recorded body of %s: %w", r.URL.Path, err)
+	}
+	text := ""
+	if body != nil {
+		text = *body
+	}
+	return &http.Response{StatusCode: status, Header: http.Header{}, Request: r,
+		Body: io.NopCloser(strings.NewReader(text))}, nil
+}
+
+// replayEntitlements is the URL of the entitlements service the requests of
+// the bundles recorded the answers of.
+const replayEntitlements = "http://entitlements.replay"
+
+func newRegistry(tab *spectables.Table, bulkWorkers int, tr http.RoundTripper) *snapshot.Registry {
+	return snapshot.New(snapshot.Config{BulkWorkers: bulkWorkers, Entitlements: replayEntitlements,
+		HTTP: &regobuiltins.HTTP{Client: &http.Client{Transport: tr},
 			Token: func() (string, error) { return "own", nil }}}, tab, quiet{})
 }
 
@@ -118,16 +155,12 @@ func body(q request) (regogen.Body, error) {
 	return regogen.ReadBody([]byte(*q.Body))
 }
 
-// comparable reports whether m reads only sources the service resolves as
-// the specification's run did.
+// comparable reports whether m reads only sources whose answers the bundle
+// carries.
 func comparable(m *regogen.Module) bool {
-	if m.Iterates {
-		return false
-	}
 	for _, r := range m.Refs {
 		switch r.Kind {
-		case spectables.KindPIPGeneral, spectables.KindPIPFiltered, spectables.KindPIPMapping,
-			spectables.KindSubjPermissions, spectables.KindEntitled, spectables.KindSubjPermissionScope:
+		case spectables.KindPIPGeneral, spectables.KindPIPFiltered:
 			return false
 		}
 	}
@@ -146,7 +179,8 @@ type outcome struct {
 
 func run(b bundle, tab *spectables.Table, reps int) outcome {
 	o := outcome{key: b.Key, requests: len(b.Requests)}
-	r := newRegistry(tab, 1)
+	tr := &replay{}
+	r := newRegistry(tab, 1, tr)
 	t0 := time.Now()
 	sum, err := r.Load(context.Background(), b.PolicySets, b.PIPs)
 	o.loadMs = float64(time.Since(t0).Microseconds()) / 1000
@@ -178,6 +212,7 @@ func run(b bundle, tab *spectables.Table, reps int) outcome {
 			o.errors = append(o.errors, q.ID+": "+err.Error())
 			continue
 		}
+		tr.paths.Store(&q.HTTP)
 		best := -1.0
 		var got []snapshot.Result
 		for range reps {
@@ -225,7 +260,7 @@ func q(xs []float64) map[string]float64 {
 // bulk times Decide of n items of the subject of b's first request, the
 // bodies of b's requests in turn, with workers evaluating them.
 func bulk(b bundle, tab *spectables.Table, n, workers, reps int) ([]float64, error) {
-	r := newRegistry(tab, workers)
+	r := newRegistry(tab, workers, nullPIP{})
 	if _, err := r.Load(context.Background(), b.PolicySets, b.PIPs); err != nil {
 		return nil, err
 	}
@@ -259,7 +294,7 @@ func bulk(b bundle, tab *spectables.Table, n, workers, reps int) ([]float64, err
 // underLoad times Decide of the requests of probe, one item each, while
 // another goroutine loads big into registries of its own, if load is set.
 func underLoad(probe, big bundle, tab *spectables.Table, rounds int, load bool) ([]float64, error) {
-	r := newRegistry(tab, 1)
+	r := newRegistry(tab, 1, nullPIP{})
 	if _, err := r.Load(context.Background(), probe.PolicySets, probe.PIPs); err != nil {
 		return nil, err
 	}
@@ -282,7 +317,7 @@ func underLoad(probe, big bundle, tab *spectables.Table, rounds int, load bool) 
 		go func() {
 			defer wg.Done()
 			for !stop.Load() {
-				_, _ = newRegistry(tab, 1).Load(context.Background(), big.PolicySets, big.PIPs)
+				_, _ = newRegistry(tab, 1, nullPIP{}).Load(context.Background(), big.PolicySets, big.PIPs)
 			}
 		}()
 	}
@@ -308,7 +343,7 @@ func liveHeap(b bundle, tab *spectables.Table) float64 {
 	var before, after runtime.MemStats
 	runtime.GC()
 	runtime.ReadMemStats(&before)
-	r := newRegistry(tab, 1)
+	r := newRegistry(tab, 1, nullPIP{})
 	_, _ = r.Load(context.Background(), b.PolicySets, b.PIPs)
 	runtime.GC()
 	runtime.ReadMemStats(&after)

@@ -104,6 +104,11 @@ type Module struct {
 	// subject's operands those requests put into them.
 	pips         func(string) (*policyir.PIP, bool)
 	placeholders []string
+	// mappings holds the tenant's MAPPING PIPs in the order of the export,
+	// which subject.permissions reads, and scopePIP the first PERMISSION_SCOPE
+	// PIP, whose url [Module.ReadScope] calls; nil for none.
+	mappings []*policyir.PIP
+	scopePIP *policyir.PIP
 
 	ixOnce sync.Once
 	ix     *groupIndex
@@ -275,6 +280,15 @@ func Generate(tree *policyir.Tree, tab *spectables.Table, opt Options) (*Module,
 	}
 	m := &Module{Refs: g.refList, Iterates: g.stats.Iterates > 0, Groups: g.groups, Report: g.report,
 		Failures: g.failures, pips: tree.PIP}
+	for _, p := range tree.PIPs {
+		switch {
+		case p.Isolated != "":
+		case p.Type == policyir.PIPMapping:
+			m.mappings = append(m.mappings, p)
+		case p.Type == policyir.PIPPermissionScope && m.scopePIP == nil:
+			m.scopePIP = p
+		}
+	}
 	for _, r := range g.refList {
 		if r.pip == nil {
 			continue
@@ -1312,13 +1326,18 @@ func (g *gen) module(pkg string, allow, maybe dnf, decision bool) (string, int) 
 	}
 	pips := false
 	for _, r := range g.refList {
-		if r.pip != nil {
-			if !pips {
-				b.WriteString("\n")
-			}
-			b.WriteString(pipText(r))
-			pips = true
+		if r.pip == nil && r.ent == nil {
+			continue
 		}
+		if !pips {
+			b.WriteString("\n")
+		}
+		if r.pip != nil {
+			b.WriteString(pipText(r))
+		} else {
+			b.WriteString(entText(r))
+		}
+		pips = true
 	}
 	if pips {
 		b.WriteString(pipSendText)

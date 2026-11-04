@@ -104,6 +104,9 @@ func (s *side) bind() clause {
 	if s.ref.pip != nil {
 		return clause{{cls: clsBuiltin, text: fmt.Sprintf("p_%s := pip_%s", s.ref.Var, s.ref.Var)}}
 	}
+	if s.ref.ent != nil {
+		return clause{{cls: clsBuiltin, text: fmt.Sprintf("p_%s := ent_%s", s.ref.Var, s.ref.Var)}}
+	}
 	return clause{{cls: clsBuiltin, text: fmt.Sprintf("p_%s := nc.pip(%s)", s.ref.Var, lit(s.ref.ID))}}
 }
 
