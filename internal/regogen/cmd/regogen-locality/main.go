@@ -92,13 +92,13 @@ func main() {
 		if dir, err = os.MkdirTemp("", "regogen-locality"); err != nil {
 			fail(err)
 		}
-		defer os.RemoveAll(dir)
+		defer func() { _ = os.RemoveAll(dir) }()
 	}
 	f, err := os.Open(*path)
 	if err != nil {
 		fail(err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	dec := json.NewDecoder(f)
 	enc := json.NewEncoder(os.Stdout)
 	totals := map[string]*result{}
