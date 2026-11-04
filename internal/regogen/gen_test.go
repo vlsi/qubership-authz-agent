@@ -257,15 +257,20 @@ func TestANullElementLeavesContainsUndefined(t *testing.T) {
 	}
 }
 
+// relAsArrayEq loads the embedded table with every cell of rule rel, < of two
+// string attributes among them, naming array_eq instead, which no template
+// implements.
+func relAsArrayEq(t *testing.T) *spectables.Table {
+	t.Helper()
+	const result = `{"outcome": "by_value", "outcomes": ["T", "F"], "value_rule": [`
+	return editedTable(t, result+`"rel"]}`, result+`"array_eq"]}`)
+}
+
 // A value-dependent cell whose value rule no template implements is a
 // generation error that names the operator and the kinds, never a false rail.
-// The export is edited so that < of two string attributes names array_eq,
-// which no template implements; the same leaf generates from the export as
-// it is.
+// The same leaf generates from the table as it is.
 func TestAValueDependentCellWithoutATemplateFailsGeneration(t *testing.T) {
-	const cell = `{"op":"LT","left":{"kind":"res:path","state":"VALUE","class":"s"},` +
-		`"right":{"kind":"res:path","state":"VALUE","class":"s"},"outcome":"by_value","outcomes":["T","F"],"value_rule":[`
-	tab := editedTable(t, cell+`"rel"]}`, cell+`"array_eq"]}`)
+	tab := relAsArrayEq(t)
 	tree := tenantWithSet(t, "DENY_UNLESS_PERMIT", "ALLOW", "resource.a < resource.b")
 	_, err := Generate(tree, tab, DefaultOptions())
 	if err == nil || !strings.Contains(err.Error(), "LT(res:path ") {
@@ -347,16 +352,16 @@ func TestAnObjectIsInAnEqualObject(t *testing.T) {
 	}
 }
 
-// editedTable loads the embedded export with every occurrence of from
-// replaced by to; the test fails when the export no longer holds from.
+// editedTable loads the embedded table with every occurrence of from
+// replaced by to; the test fails when the table no longer holds from.
 func editedTable(t *testing.T, from, to string) *spectables.Table {
 	t.Helper()
 	if !bytes.Contains(agentTables, []byte(from)) {
-		t.Fatalf("the embedded export has no text %s", from)
+		t.Fatalf("the embedded table has no text %s", from)
 	}
 	tab, err := spectables.Load(bytes.NewReader(bytes.ReplaceAll(agentTables, []byte(from), []byte(to))))
 	if err != nil {
-		t.Fatalf("Load(edited export): %v", err)
+		t.Fatalf("Load(edited table): %v", err)
 	}
 	return tab
 }
@@ -2195,9 +2200,7 @@ func TestAFormTheAgentCannotExecuteRejectsTheTenant(t *testing.T) {
 // A comparison the generator does not translate rejects the tenant too, and
 // the rejection names the place of its condition.
 func TestAComparisonWithoutATemplateRejectsTheTenantAtItsPlace(t *testing.T) {
-	const cell = `{"op":"LT","left":{"kind":"res:path","state":"VALUE","class":"s"},` +
-		`"right":{"kind":"res:path","state":"VALUE","class":"s"},"outcome":"by_value","outcomes":["T","F"],"value_rule":[`
-	tab := editedTable(t, cell+`"rel"]}`, cell+`"array_eq"]}`)
+	tab := relAsArrayEq(t)
 	_, err := Generate(tenantWithSet(t, "DENY_UNLESS_PERMIT", "ALLOW", "resource.a < resource.b"), tab,
 		DefaultOptions())
 	var rej *RejectedError
@@ -2314,9 +2317,7 @@ func TestASetLegacyNeverEvaluatesIsAFailure(t *testing.T) {
 // A comparison the generator cannot translate inside the copy of the tree
 // that subject allowed reads rejects the tenant once, placed in that copy.
 func TestARejectionInACopyOfTheTreeNamesTheCopy(t *testing.T) {
-	const cell = `{"op":"LT","left":{"kind":"res:path","state":"VALUE","class":"s"},` +
-		`"right":{"kind":"res:path","state":"VALUE","class":"s"},"outcome":"by_value","outcomes":["T","F"],"value_rule":[`
-	tab := editedTable(t, cell+`"rel"]}`, cell+`"array_eq"]}`)
+	tab := relAsArrayEq(t)
 	sets := `{"policySets": [{"policySetId": "s1", "name": "s1", "status": "ACTIVE",
 		"target": "resourceType == 'doc'", "combiningAlgorithm": "DENY_UNLESS_PERMIT", "tenantId": "t1",
 		"policies": [{"policyId": "p1", "target": "true", "combiningAlgorithm": "DENY_UNLESS_PERMIT",

@@ -44,7 +44,7 @@ const (
 	OpNotMatch       Operator = "NOT_MATCH"
 )
 
-// Operators lists every comparison operator. An export must cover each one.
+// Operators lists every comparison operator. A table must cover each one.
 var Operators = []Operator{
 	OpEQ, OpNE, OpLT, OpLE, OpGT, OpGE, OpIsNull, OpIsNotNull, OpIsEmpty, OpIsNotEmpty,
 	OpIn, OpNotIn, OpContains, OpNotContains, OpContainsAny, OpNotContainsAny,
@@ -63,9 +63,9 @@ func (o Operator) Unary() bool {
 
 // Negations maps each negated operator to the operator it negates. The
 // specification evaluates a negated operator as its positive one and mirrors
-// the outcome: T and F swap, and every other outcome stays. An export lists
-// the same pairs under negates, and gives a negated
-// combination cells of its own only where legacy departs from the mirror.
+// the outcome: T and F swap, and every other outcome stays. A table lists
+// the same pairs under negates, and gives a negated combination lines of its
+// own only where the specification departs from the mirror.
 var Negations = map[Operator]Operator{
 	OpNE: OpEQ, OpIsNotNull: OpIsNull, OpIsNotEmpty: OpIsEmpty, OpNotIn: OpIn, OpNotContains: OpContains,
 	OpNotContainsAny: OpContainsAny, OpIsNotSubset: OpIsSubset, OpNotMatch: OpMatch,
@@ -124,7 +124,7 @@ const (
 	KindPattern Kind = "pattern"
 )
 
-// Kinds lists every operand kind. An export must declare a domain for each one
+// Kinds lists every operand kind. A table must declare a domain for each one
 // and cover each one in every position its operators admit.
 var Kinds = []Kind{
 	KindOperation, KindResourceType,
@@ -325,7 +325,9 @@ const (
 // Effects lists every effect.
 var Effects = []Effect{EffectAllow, EffectDeny}
 
-// Profile names a behavior the tables describe.
+// Profile names a behavior the specification computes. A table file holds
+// the agent profile, its results written in the legacy profile's outcomes,
+// and [Load] maps them to the agent profile's.
 type Profile string
 
 // The profiles.
@@ -336,9 +338,6 @@ const (
 	// makes on purpose; the generator reads this profile.
 	ProfileAgent Profile = "agent"
 )
-
-// Profiles lists every profile. An export must carry each one.
-var Profiles = []Profile{ProfileLegacy, ProfileAgent}
 
 // Outcome is what a leaf evaluates to.
 type Outcome string
@@ -386,8 +385,8 @@ func valueOutcomes(p Profile) []Outcome {
 	return []Outcome{OutcomeT, OutcomeF, OutcomeAbort, OutcomeErr}
 }
 
-// RequiredKnobs lists the specification settings every profile of an export
-// carries, and no other: a knob is added here and to
+// RequiredKnobs lists the specification settings a table carries, and no
+// other: a knob is added here and to
 // schema.json when a template of the generator starts to read it.
 // right_list_scalar_ops is the outcome of ==, !=, CONTAINS, and NOT CONTAINS
 // with a list of two or more values on the right that is not a literal list,
@@ -434,13 +433,13 @@ type Key struct {
 
 // Cell is the answer to a [Key].
 type Cell struct {
-	Outcome Outcome
+	Outcome Outcome `json:"outcome"`
 	// Outcomes lists, for an Outcome of by_value, the outcomes the operand
 	// values can produce; it is nil otherwise.
-	Outcomes []Outcome
+	Outcomes []Outcome `json:"outcomes,omitempty"`
 	// ValueRule lists, for an Outcome of by_value, the
 	// value rules the specification went through, sorted; it is nil otherwise.
-	ValueRule []ValueRule
+	ValueRule []ValueRule `json:"value_rule,omitempty"`
 }
 
 func admitsRight(op Operator, k Kind) bool {

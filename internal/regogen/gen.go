@@ -305,11 +305,7 @@ func newGen(tree *policyir.Tree, tab *spectables.Table, opt Options) (*gen, erro
 		}
 		return g, rej
 	}
-	nodes, ok := tab.Nodes(spectables.ProfileAgent)
-	if !ok {
-		return g, fmt.Errorf("the leaf-outcome tables carry no node rules for profile %s", spectables.ProfileAgent)
-	}
-	g.nodes = nodes
+	g.nodes = tab.Nodes()
 	return g, nil
 }
 

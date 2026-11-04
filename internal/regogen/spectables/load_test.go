@@ -15,9 +15,9 @@
 package spectables
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"reflect"
 	"slices"
@@ -25,7 +25,7 @@ import (
 	"testing"
 )
 
-// The operators and operand kinds every export must cover, written out here
+// The operators and operand kinds every table must cover, written out here
 // rather than taken from the package, so that a list shrunk in the package
 // leaves combinations of the fixture uncovered by the loader's check.
 var (
@@ -42,36 +42,36 @@ var (
 
 type doc = map[string]any
 
-// The cells of EQ(res:path, lit:str) in the agent profile of completeExport,
-// in legacy's outcomes, where res:path has the domain {VALUE/s, VALUE/l, NULL}.
-// The agent's leaf map takes ERR to U. Every other combination has one cell of
-// outcome F that matches every point.
-const (
-	eqNullOr           = iota // left NULL, disjunction -> F
-	eqNullIterate             // left NULL, no disjunction, in_iterate -> ERR
-	eqNullDeny                // left NULL, neither, effect DENY -> T
-	eqNullAllow               // left NULL, neither, effect ALLOW -> F
-	eqValueS                  // left VALUE/s -> by_value [T, F]
-	eqValueLRuleTarget        // left VALUE/l, place rule_target -> bad_request
-	// Then left VALUE/l, one cell for each other place -> ERR.
-)
+// completeTable returns a table whose EQ(res:path, lit:str) has the lines of
+// eqLines, and every other combination the one line of fixtureTable.
+func completeTable() doc { return fixtureTable(eqLines()) }
 
-func completeExport() doc {
-	d := doc{
-		"schema_version": 3,
-		"spec_tag":       "r99",
-		"negates":        negatesDoc(),
-		"profiles": doc{
-			"legacy": fixtureProfile(nil),
-			"agent":  fixtureProfile(eqResPathLitStrCells()),
-		},
+// eqLines returns the lines of EQ(res:path, lit:str) in completeTable, in
+// legacy's outcomes, where res:path has the points VALUE/s, VALUE/l, and NULL,
+// and lit:str the point VALUE/s. Every place has four lines: the row of NULL
+// answers F under OR, ERR in a pass of iterate, and otherwise T for DENY and F
+// for ALLOW. The row of VALUE/s answers by value (code a) and the row of
+// VALUE/l ERR, except bad_request in place rule_target.
+func eqLines() []string {
+	var lines []string
+	for _, place := range []string{"simplified", "rule_condition", "rule_target", "policy_target", "set_target"} {
+		list := "E"
+		if place == "rule_target" {
+			list = "B"
+		}
+		for _, q := range []struct{ qualifiers, null string }{
+			{"effect=ALLOW disjunction=false in_iterate=false", "F"},
+			{"disjunction=false in_iterate=true", "E"},
+			{"disjunction=true", "F"},
+			{"effect=DENY disjunction=false in_iterate=false", "T"},
+		} {
+			lines = append(lines, fmt.Sprintf("EQ res:path lit:str place=%s %s a %s %s", place, q.qualifiers, list, q.null))
+		}
 	}
-	profileOf(d, "legacy")["leaf"] = doc{}
-	profileOf(d, "agent")["leaf"] = doc{"ABORT": "F", "ERR": "U"}
-	return d
+	return lines
 }
 
-// negatesDoc returns Negations as the export lists them.
+// negatesDoc returns Negations as the table lists them.
 func negatesDoc() doc {
 	negates := doc{}
 	for neg, pos := range Negations {
@@ -80,37 +80,12 @@ func negatesDoc() doc {
 	return negates
 }
 
-func eqResPathLitStrCells() []any {
-	left := func(state, class string) doc {
-		s := doc{"kind": "res:path", "state": state}
-		if class != "" {
-			s["class"] = class
-		}
-		return s
-	}
-	right := doc{"kind": "lit:str"}
-	cells := []any{
-		eqNullOr: doc{"op": "EQ", "left": left("NULL", ""), "right": right, "disjunction": true, "outcome": "F"},
-		eqNullIterate: doc{"op": "EQ", "left": left("NULL", ""), "right": right, "disjunction": false, "in_iterate": true,
-			"outcome": "ERR"},
-		eqNullDeny: doc{"op": "EQ", "left": left("NULL", ""), "right": right, "disjunction": false, "in_iterate": false,
-			"effect": "DENY", "outcome": "T"},
-		eqNullAllow: doc{"op": "EQ", "left": left("NULL", ""), "right": right, "disjunction": false, "in_iterate": false,
-			"effect": "ALLOW", "outcome": "F"},
-		eqValueS: doc{"op": "EQ", "left": left("VALUE", "s"), "right": right, "outcome": "by_value", "outcomes": []any{"T", "F"},
-			"value_rule": []any{"eq"}},
-		eqValueLRuleTarget: doc{"op": "EQ", "left": left("VALUE", "l"), "right": right, "place": "rule_target",
-			"outcome": "bad_request"},
-	}
-	for _, place := range []string{"simplified", "rule_condition", "policy_target", "set_target"} {
-		cells = append(cells, doc{"op": "EQ", "left": left("VALUE", "l"), "right": right, "place": place, "outcome": "ERR"})
-	}
-	return cells
-}
-
-// fixtureProfile covers every combination with a cell of outcome F that matches
-// every point, except EQ(res:path, lit:str) when eq is not nil.
-func fixtureProfile(eq []any) doc {
+// fixtureTable covers every combination with one line of code F, except
+// EQ(res:path, lit:str), which takes eq when eq is not nil. Every kind has the
+// points VALUE/s and NULL, except res:path with VALUE/s, VALUE/l, and NULL,
+// and lit:str and pattern with VALUE/s alone. The agent maps ABORT to F and ERR
+// to U, and subj.name is an alias of subj.id.
+func fixtureTable(eq []string) doc {
 	kinds := doc{}
 	for _, k := range fixtureKinds {
 		kinds[k] = doc{"states": []any{"VALUE", "NULL"}, "classes": []any{"s"}}
@@ -126,25 +101,42 @@ func fixtureProfile(eq []any) doc {
 				continue
 			}
 			for _, rk := range fixtureRights(op) {
-				if op == "EQ" && lk == "res:path" && rk == "lit:str" && eq != nil {
-					cells = append(cells, eq...)
+				head := strings.TrimSpace(op + " " + lk + " " + rk)
+				if head == "EQ res:path lit:str" && eq != nil {
+					for _, l := range eq {
+						cells = append(cells, l)
+					}
 					continue
 				}
-				c := doc{"op": op, "left": doc{"kind": lk}, "outcome": "F"}
-				if rk != "" {
-					c["right"] = doc{"kind": rk}
-				}
-				cells = append(cells, c)
+				cells = append(cells, head+" F")
 			}
 		}
 	}
 	return doc{
+		"schema_version": 4,
+		"spec_tag":       "r99",
+		"negates":        negatesDoc(),
 		"knobs": doc{"fold": "java", "eq_numeric": false, "list_eq_by_value": true, "subset_fold": false,
 			"right_list_scalar_ops": "ABORT", "right_list_attribute": "EVAL", "string_list_split": "SPLIT_TRIM",
 			"idiom_list_item_trim": "java_trim", "trailing_dot_path": "ERROR"},
-		"kinds": kinds,
-		"nodes": fixtureNodes(),
-		"cells": cells,
+		"kinds":   kinds,
+		"nodes":   fixtureNodes(),
+		"leaf":    doc{"ABORT": "F", "ERR": "U"},
+		"aliases": doc{"subj.name": "subj.id"},
+		"codes":   fixtureCodes(),
+		"cells":   cells,
+	}
+}
+
+// fixtureCodes returns a code for each result the fixtures use.
+func fixtureCodes() doc {
+	byValue := func(outcomes ...any) doc {
+		return doc{"outcome": "by_value", "outcomes": outcomes, "value_rule": []any{"eq"}}
+	}
+	return doc{
+		"T": doc{"outcome": "T"}, "F": doc{"outcome": "F"}, "A": doc{"outcome": "ABORT"},
+		"E": doc{"outcome": "ERR"}, "B": doc{"outcome": "bad_request"}, "X": doc{"outcome": "unsupported"},
+		"a": byValue("T", "F"), "b": byValue("T", "ABORT"), "c": byValue("T", "ERR"),
 	}
 }
 
@@ -167,8 +159,6 @@ func fixtureNodes() doc {
 	}
 }
 
-func nodesOf(d doc) doc { return profileOf(d, "agent")["nodes"].(doc) }
-
 func fixtureRights(op string) []string {
 	switch {
 	case slices.Contains(fixtureUnary, op):
@@ -180,40 +170,36 @@ func fixtureRights(op string) []string {
 	}
 }
 
-func profileOf(d doc, p string) doc { return d["profiles"].(doc)[p].(doc) }
+func nodesOf(d doc) doc { return d["nodes"].(doc) }
 
-func agentCells(d doc) []any { return profileOf(d, "agent")["cells"].([]any) }
+func codeOf(d doc, code string) doc { return d["codes"].(doc)[code].(doc) }
 
-// removeCells drops the agent cells for which drop returns true.
-func removeCells(d doc, drop func(c doc) bool) {
-	pr := profileOf(d, "agent")
-	pr["cells"] = slices.DeleteFunc(agentCells(d), func(c any) bool { return drop(c.(doc)) })
-}
-
-func kindOf(side any) string {
-	if side == nil {
-		return ""
+// setLines replaces the lines of the combination head, such as
+// "EQ res:path lit:str", with lines; no lines leaves the combination to its
+// source.
+func setLines(d doc, head string, lines ...string) {
+	kept := slices.DeleteFunc(d["cells"].([]any), func(c any) bool { return strings.HasPrefix(c.(string), head+" ") })
+	for _, l := range lines {
+		kept = append(kept, l)
 	}
-	return side.(doc)["kind"].(string)
+	d["cells"] = kept
 }
 
-func isCombo(c doc, op, left, right string) bool {
-	return c["op"] == op && kindOf(c["left"]) == left && kindOf(c["right"]) == right
+// dropLines removes the lines that contain every one of parts.
+func dropLines(d doc, parts ...string) {
+	d["cells"] = slices.DeleteFunc(d["cells"].([]any), func(c any) bool {
+		return !slices.ContainsFunc(parts, func(p string) bool { return !strings.Contains(c.(string), p) })
+	})
 }
 
-// eqCell returns cell i of EQ(res:path, lit:str) in the agent profile, one of
-// the eq constants.
-func eqCell(d doc, i int) doc {
-	n := 0
-	for _, c := range agentCells(d) {
-		if isCombo(c.(doc), "EQ", "res:path", "lit:str") {
-			if n == i {
-				return c.(doc)
-			}
-			n++
-		}
+// replaceLine replaces the line from with to; from must be a line of d.
+func replaceLine(d doc, from, to string) {
+	cells := d["cells"].([]any)
+	i := slices.Index(cells, any(from))
+	if i < 0 {
+		panic("no line " + from)
 	}
-	panic("no such cell")
+	cells[i] = to
 }
 
 func load(t *testing.T, d doc) (*Table, error) {
@@ -222,14 +208,14 @@ func load(t *testing.T, d doc) (*Table, error) {
 	if err != nil {
 		t.Fatalf("json.Marshal(fixture): %v", err)
 	}
-	return Load(bytes.NewReader(b))
+	return Load(strings.NewReader(string(b)))
 }
 
 func mustLoad(t *testing.T, d doc) *Table {
 	t.Helper()
 	tab, err := load(t, d)
 	if err != nil {
-		t.Fatalf("Load(complete export) error = %v, want nil", err)
+		t.Fatalf("Load(fixture) error = %v, want nil", err)
 	}
 	return tab
 }
@@ -240,7 +226,7 @@ func ruleCondition() Context {
 
 func TestLookupFindsTheCellThatCoversTheKey(t *testing.T) {
 	t.Parallel()
-	tab := mustLoad(t, completeExport())
+	tab := mustLoad(t, completeTable())
 	resPath := func(s State, c Class) Point { return Point{Kind: KindResPath, State: s, Class: c} }
 	litStr := Point{Kind: KindLitStr, State: StateValue, Class: ClassString}
 	tests := []struct {
@@ -292,63 +278,38 @@ func TestLookupFindsTheCellThatCoversTheKey(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			got, err := tab.Lookup(ProfileAgent, tt.key)
+			got, err := tab.Lookup(tt.key)
 			if err != nil {
-				t.Fatalf("Lookup(agent, %+v) error = %v, want nil", tt.key, err)
+				t.Fatalf("Lookup(%+v) error = %v, want nil", tt.key, err)
 			}
 			if got.Outcome != tt.want.Outcome || !slices.Equal(got.Outcomes, tt.want.Outcomes) ||
 				!slices.Equal(got.ValueRule, tt.want.ValueRule) {
-				t.Errorf("Lookup(agent, %+v) = %+v, want %+v", tt.key, got, tt.want)
+				t.Errorf("Lookup(%+v) = %+v, want %+v", tt.key, got, tt.want)
 			}
 		})
 	}
 }
 
-func TestLookupReadsTheProfileItIsGiven(t *testing.T) {
-	t.Parallel()
-	tab := mustLoad(t, completeExport())
-	key := Key{
-		Op:      OpEQ,
-		Left:    Point{Kind: KindResPath, State: StateNull},
-		Right:   Point{Kind: KindLitStr, State: StateValue, Class: ClassString},
-		Context: Context{Place: PlaceRuleCondition, Effect: EffectDeny},
-	}
-	tests := []struct {
-		prof Profile
-		want Outcome
-	}{
-		{ProfileAgent, OutcomeT},
-		{ProfileLegacy, OutcomeF},
-	}
-	for _, tt := range tests {
-		got, err := tab.Lookup(tt.prof, key)
-		if err != nil || got.Outcome != tt.want {
-			t.Errorf("Lookup(%s, %+v) = %+v, %v, want outcome %s", tt.prof, key, got, err, tt.want)
-		}
-	}
-}
-
 func TestLoadKeepsTheSpecTagAndKnobs(t *testing.T) {
 	t.Parallel()
-	tab := mustLoad(t, completeExport())
+	tab := mustLoad(t, completeTable())
 	if got := tab.SpecTag(); got != "r99" {
 		t.Errorf("SpecTag() = %q, want %q", got, "r99")
 	}
-	if got, ok := tab.Knob(ProfileAgent, "fold"); !ok || string(got) != `"java"` {
-		t.Errorf(`Knob(agent, "fold") = %s, %t, want "java", true`, got, ok)
+	if got, ok := tab.Knob("fold"); !ok || string(got) != `"java"` {
+		t.Errorf(`Knob("fold") = %s, %t, want "java", true`, got, ok)
 	}
 }
 
 func TestLookupRefusesAKeyOutsideTheTable(t *testing.T) {
 	t.Parallel()
-	tab := mustLoad(t, completeExport())
+	tab := mustLoad(t, completeTable())
 	litStr := Point{Kind: KindLitStr, State: StateValue, Class: ClassString}
-	// IS_NULL(res:path) has one cell that matches every state, class, and
+	// IS_NULL(res:path) has one line that matches every state, class, and
 	// context, so only the check of the key itself can refuse the keys on it.
 	tests := []struct {
 		name string
 		key  Key
-		prof Profile // agent when empty
 	}{
 		{
 			name: "a state outside the kind's domain",
@@ -371,11 +332,6 @@ func TestLookupRefusesAKeyOutsideTheTable(t *testing.T) {
 			key:  Key{Op: OpEQ, Left: Point{Kind: KindResPath, State: StateNull}, Context: ruleCondition()},
 		},
 		{
-			name: "an unknown profile",
-			key:  Key{Op: OpIsNull, Left: Point{Kind: KindResPath, State: StateNull}, Context: ruleCondition()},
-			prof: "stage2",
-		},
-		{
 			name: "an unknown place",
 			key:  Key{Op: OpIsNull, Left: Point{Kind: KindResPath, State: StateNull}, Context: Context{Place: "filter", Effect: EffectAllow}},
 		},
@@ -383,19 +339,49 @@ func TestLookupRefusesAKeyOutsideTheTable(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			prof := tt.prof
-			if prof == "" {
-				prof = ProfileAgent
-			}
-			got, err := tab.Lookup(prof, tt.key)
+			got, err := tab.Lookup(tt.key)
 			if !errors.Is(err, ErrNotCovered) {
-				t.Errorf("Lookup(%s, %+v) = %+v, %v, want ErrNotCovered", prof, tt.key, got, err)
+				t.Errorf("Lookup(%+v) = %+v, %v, want ErrNotCovered", tt.key, got, err)
 			}
 		})
 	}
 }
 
-func TestLoadRejectsAnIncompleteExport(t *testing.T) {
+// The grid of a line has a row per left point and a code per right point, the
+// points in the order of the domains: res:path VALUE/s, VALUE/l, NULL on the
+// left, operation VALUE/s, NULL on the right. A single row stands for every
+// left point.
+func TestLookupReadsTheGridByLeftRowAndRightColumn(t *testing.T) {
+	t.Parallel()
+	d := completeTable()
+	setLines(d, "EQ res:path operation", "EQ res:path operation TF EB XA")
+	setLines(d, "NE res:path operation", "NE res:path operation BX")
+	tab := mustLoad(t, d)
+	resPath := func(s State, c Class) Point { return Point{Kind: KindResPath, State: s, Class: c} }
+	operation := func(s State, c Class) Point { return Point{Kind: KindOperation, State: s, Class: c} }
+	tests := []struct {
+		op          Operator
+		left, right Point
+		want        Outcome
+	}{
+		{OpEQ, resPath(StateValue, ClassString), operation(StateValue, ClassString), OutcomeT},
+		{OpEQ, resPath(StateValue, ClassString), operation(StateNull, ""), OutcomeF},
+		{OpEQ, resPath(StateValue, ClassList), operation(StateValue, ClassString), OutcomeU},
+		{OpEQ, resPath(StateValue, ClassList), operation(StateNull, ""), OutcomeBadRequest},
+		{OpEQ, resPath(StateNull, ""), operation(StateValue, ClassString), OutcomeUnsupported},
+		{OpEQ, resPath(StateNull, ""), operation(StateNull, ""), OutcomeF},
+		{OpNE, resPath(StateValue, ClassList), operation(StateValue, ClassString), OutcomeBadRequest},
+		{OpNE, resPath(StateNull, ""), operation(StateNull, ""), OutcomeUnsupported},
+	}
+	for _, tt := range tests {
+		key := Key{Op: tt.op, Left: tt.left, Right: tt.right, Context: ruleCondition()}
+		if got, err := tab.Lookup(key); err != nil || got.Outcome != tt.want {
+			t.Errorf("Lookup(%+v) = %+v, %v, want outcome %s", key, got, err, tt.want)
+		}
+	}
+}
+
+func TestLoadRejectsAnIncompleteTable(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
 		name  string
@@ -403,79 +389,77 @@ func TestLoadRejectsAnIncompleteExport(t *testing.T) {
 		names string // the part of the error that names what is missing
 	}{
 		{
-			name:  "an operator with no cells",
-			edit:  func(d doc) { removeCells(d, func(c doc) bool { return c["op"] == "IN" }) },
-			names: "agent: IN(operation, operation) has no cells",
+			name:  "an operator with no lines",
+			edit:  func(d doc) { dropLines(d, "IN ") },
+			names: "IN(operation, operation) has no cells",
 		},
 		{
-			name: "one combination with no cells",
-			edit: func(d doc) {
-				removeCells(d, func(c doc) bool { return isCombo(c, "CONTAINS", "pip:GENERAL", "list:strn") })
-			},
-			names: "agent: CONTAINS(pip:GENERAL, list:strn) has no cells",
+			name:  "one combination with no lines",
+			edit:  func(d doc) { setLines(d, "CONTAINS pip:GENERAL list:strn") },
+			names: "CONTAINS(pip:GENERAL, list:strn) has no cells",
 		},
 		{
 			name:  "an operand kind with no domain",
-			edit:  func(d doc) { delete(profileOf(d, "agent")["kinds"].(doc), "pip:MAPPING") },
-			names: "agent: operand kind pip:MAPPING has no domain",
+			edit:  func(d doc) { delete(d["kinds"].(doc), "pip:MAPPING") },
+			names: "operand kind pip:MAPPING has no domain",
 		},
 		{
-			name: "a hole in one context",
-			edit: func(d doc) {
-				removeCells(d, func(c doc) bool { return c["place"] == "rule_condition" && isCombo(c, "EQ", "res:path", "lit:str") })
-			},
-			names: "agent: EQ(res:path, lit:str): no cell covers 8 points, the first at left VALUE/l, right VALUE/s, place rule_condition",
+			name:  "a hole in one place",
+			edit:  func(d doc) { dropLines(d, "EQ res:path lit:str ", "place=rule_condition") },
+			names: "EQ(res:path, lit:str): no line covers 8 contexts, the first at place rule_condition, effect ALLOW, disjunction false, in_iterate false",
 		},
 		{
 			name:  "a hole in one effect",
-			edit:  func(d doc) { removeCells(d, func(c doc) bool { return c["effect"] == "DENY" }) },
-			names: "agent: EQ(res:path, lit:str): no cell covers 5 points, the first at left NULL, right VALUE/s, place simplified, effect DENY, disjunction false, in_iterate false",
+			edit:  func(d doc) { dropLines(d, "effect=DENY") },
+			names: "EQ(res:path, lit:str): no line covers 5 contexts, the first at place simplified, effect DENY, disjunction false, in_iterate false",
 		},
 		{
-			name:  "a profile",
-			edit:  func(d doc) { delete(d["profiles"].(doc), "agent") },
-			names: "profile agent is missing",
+			name: "a hole that a qualifier leaves",
+			edit: func(d doc) {
+				replaceLine(d, "EQ operation operation F", "EQ operation operation in_iterate=true F")
+			},
+			names: "EQ(operation, operation): no line covers 20 contexts, the first at place simplified, effect ALLOW, disjunction false, in_iterate false",
 		},
 		{
 			name:  "a knob",
-			edit:  func(d doc) { delete(profileOf(d, "agent")["knobs"].(doc), "subset_fold") },
-			names: "agent: knob subset_fold is missing",
+			edit:  func(d doc) { delete(d["knobs"].(doc), "subset_fold") },
+			names: "knob subset_fold is missing",
 		},
 		{
 			name:  "a knob a template reads",
-			edit:  func(d doc) { delete(profileOf(d, "agent")["knobs"].(doc), "right_list_scalar_ops") },
-			names: "agent: knob right_list_scalar_ops is missing",
+			edit:  func(d doc) { delete(d["knobs"].(doc), "right_list_scalar_ops") },
+			names: "knob right_list_scalar_ops is missing",
 		},
 		{
 			name:  "the node rules",
-			edit:  func(d doc) { delete(profileOf(d, "agent"), "nodes") },
-			names: "agent: nodes is missing",
+			edit:  func(d doc) { delete(d, "nodes") },
+			names: "nodes is missing",
 		},
 		{
 			name:  "an algorithm",
 			edit:  func(d doc) { delete(nodesOf(d)["algorithms"].(doc), "PERMIT_UNLESS_DENY") },
-			names: "agent: nodes: algorithm PERMIT_UNLESS_DENY is missing",
+			names: "nodes: algorithm PERMIT_UNLESS_DENY is missing",
 		},
 		{
 			name:  "a rule effect",
 			edit:  func(d doc) { delete(nodesOf(d)["effects"].(doc), "other") },
-			names: "agent: nodes: rule effect other is missing",
+			names: "nodes: rule effect other is missing",
 		},
 		{
 			name:  "one outcome of an algorithm",
 			edit:  func(d doc) { delete(nodesOf(d)["algorithms"].(doc)["DENY_OVERRIDES"].(doc), "none") },
-			names: "agent: nodes: DENY_OVERRIDES.none is missing",
+			names: "nodes: DENY_OVERRIDES.none is missing",
 		},
 		{
 			name:  "the absent algorithm",
 			edit:  func(d doc) { delete(nodesOf(d), "absent_algorithm") },
-			names: "agent: nodes: absent_algorithm is missing",
+			names: "nodes: absent_algorithm is missing",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			d := completeExport()
+			d := completeTable()
 			tt.edit(d)
 			_, err := load(t, d)
 			if !errors.Is(err, ErrIncomplete) || !strings.Contains(err.Error(), tt.names) {
@@ -485,7 +469,7 @@ func TestLoadRejectsAnIncompleteExport(t *testing.T) {
 	}
 }
 
-func TestLoadRejectsAnInvalidExport(t *testing.T) {
+func TestLoadRejectsAnInvalidTable(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
 		name  string
@@ -494,13 +478,13 @@ func TestLoadRejectsAnInvalidExport(t *testing.T) {
 	}{
 		{
 			name:  "a provenance field",
-			edit:  func(d doc) { eqCell(d, eqNullOr)["prov"] = "recorded by case 17" },
+			edit:  func(d doc) { d["prov"] = "recorded by case 17" },
 			names: `unknown field "prov"`,
 		},
 		{
 			name:  "a provenance knob",
-			edit:  func(d doc) { profileOf(d, "agent")["knobs"].(doc)["fold_prov"] = "recorded by case 17" },
-			names: `agent: unknown knob "fold_prov"`,
+			edit:  func(d doc) { d["knobs"].(doc)["fold_prov"] = "recorded by case 17" },
+			names: `unknown knob "fold_prov"`,
 		},
 		{
 			name:  "an empty spec tag",
@@ -508,177 +492,207 @@ func TestLoadRejectsAnInvalidExport(t *testing.T) {
 			names: "spec_tag is empty",
 		},
 		{
-			name:  "another schema version",
-			edit:  func(d doc) { d["schema_version"] = 4 },
-			names: "schema_version is 4, want 3",
+			name:  "the schema version of the earlier export",
+			edit:  func(d doc) { d["schema_version"] = 3 },
+			names: "schema_version is 3, want 4",
+		},
+		{
+			name:  "the cells of the earlier export",
+			edit:  func(d doc) { d["cells"] = []any{doc{"op": "EQ", "left": doc{"kind": "operation"}, "outcome": "F"}} },
+			names: "cannot unmarshal object",
 		},
 
 		{
-			name:  "a by_value cell without a value rule",
-			edit:  func(d doc) { delete(eqCell(d, eqValueS), "value_rule") },
-			names: "by_value has no value_rule",
+			name:  "a code of two letters",
+			edit:  func(d doc) { d["codes"].(doc)["FF"] = doc{"outcome": "F"} },
+			names: `code "FF" is not one ASCII letter or digit`,
+		},
+		{
+			name:  "a code that is not a letter or digit",
+			edit:  func(d doc) { d["codes"].(doc)["-"] = doc{"outcome": "F"} },
+			names: `code "-" is not one ASCII letter or digit`,
+		},
+		{
+			name:  "a code the codes do not define",
+			edit:  func(d doc) { replaceLine(d, "EQ operation operation F", "EQ operation operation Q") },
+			names: `cells[0] EQ(operation, operation): row "Q" names code "Q", which codes does not define`,
+		},
+		{
+			name:  "a code of an outcome of the agent profile",
+			edit:  func(d doc) { codeOf(d, "F")["outcome"] = "U" },
+			names: `code "F": outcome "U" is not an outcome of profile legacy`,
+		},
+		{
+			name:  "a by_value code without a value rule",
+			edit:  func(d doc) { delete(codeOf(d, "a"), "value_rule") },
+			names: `code "a": by_value has no value_rule`,
 		},
 		{
 			name:  "an unknown value rule",
-			edit:  func(d doc) { eqCell(d, eqValueS)["value_rule"] = []any{"eq", "regex_lookahead"} },
+			edit:  func(d doc) { codeOf(d, "a")["value_rule"] = []any{"eq", "regex_lookahead"} },
 			names: `unknown value rule "regex_lookahead"`,
 		},
 		{
 			name:  "value rules out of order",
-			edit:  func(d doc) { eqCell(d, eqValueS)["value_rule"] = []any{"null_element_ends", "in_any"} },
+			edit:  func(d doc) { codeOf(d, "a")["value_rule"] = []any{"null_element_ends", "in_any"} },
 			names: "is not sorted, or repeats a rule",
 		},
 		{
 			name:  "a repeated value rule",
-			edit:  func(d doc) { eqCell(d, eqValueS)["value_rule"] = []any{"eq", "eq"} },
+			edit:  func(d doc) { codeOf(d, "a")["value_rule"] = []any{"eq", "eq"} },
 			names: "is not sorted, or repeats a rule",
 		},
 		{
-			name:  "an unknown outcome of a rule effect",
-			edit:  func(d doc) { nodesOf(d)["effects"].(doc)["other"] = "indeterminate" },
-			names: `agent: nodes: effects.other has unknown node outcome "indeterminate"`,
-		},
-		{
-			name:  "a value rule on a constant cell",
-			edit:  func(d doc) { eqCell(d, eqNullOr)["value_rule"] = []any{"eq"} },
+			name:  "a value rule on a constant code",
+			edit:  func(d doc) { codeOf(d, "F")["value_rule"] = []any{"eq"} },
 			names: "value_rule is set for outcome F",
 		},
 		{
+			name:  "an outcome of the agent profile in a by_value list",
+			edit:  func(d doc) { codeOf(d, "a")["outcomes"] = []any{"T", "U"} },
+			names: `by_value outcome "U" is not an outcome of profile legacy`,
+		},
+		{
+			name:  "by_value with one outcome",
+			edit:  func(d doc) { codeOf(d, "a")["outcomes"] = []any{"T"} },
+			names: "by_value lists 1 outcomes, want at least 2",
+		},
+		{
+			name:  "outcomes beside an outcome other than by_value",
+			edit:  func(d doc) { codeOf(d, "F")["outcomes"] = []any{"T", "F"} },
+			names: "outcomes is set for outcome F",
+		},
+
+		{
+			name:  "a row with more codes than right points",
+			edit:  func(d doc) { replaceLine(d, "EQ operation operation F", "EQ operation operation FFF") },
+			names: `row "FFF" has 3 codes, want 2 or 1`,
+		},
+		{
+			name:  "more rows than left points",
+			edit:  func(d doc) { replaceLine(d, "EQ operation operation F", "EQ operation operation F F F") },
+			names: "EQ(operation, operation): has 3 rows, want 2 or 1",
+		},
+		{
+			name:  "a line without a grid",
+			edit:  func(d doc) { replaceLine(d, "EQ operation operation F", "EQ operation operation in_iterate=true") },
+			names: "has 0 rows, want 2 or 1",
+		},
+		{
+			name:  "a line of one word",
+			edit:  func(d doc) { replaceLine(d, "EQ operation operation F", "EQ") },
+			names: `"EQ" has no operator, kind, or grid`,
+		},
+		{
+			name:  "an unknown qualifier",
+			edit:  func(d doc) { replaceLine(d, "EQ operation operation F", "EQ operation operation scope=tenant F") },
+			names: `qualifier "scope=tenant" is unknown or repeated`,
+		},
+		{
+			name: "a repeated qualifier",
+			edit: func(d doc) {
+				replaceLine(d, "EQ operation operation F", "EQ operation operation in_iterate=true in_iterate=false F")
+			},
+			names: `qualifier "in_iterate=false" is unknown or repeated`,
+		},
+		{
+			name:  "an unknown place",
+			edit:  func(d doc) { replaceLine(d, "EQ operation operation F", "EQ operation operation place=filter F") },
+			names: `qualifier "place=filter" is unknown or repeated`,
+		},
+		{
+			name:  "an unknown effect",
+			edit:  func(d doc) { replaceLine(d, "EQ operation operation F", "EQ operation operation effect=PERMIT F") },
+			names: `qualifier "effect=PERMIT" is unknown or repeated`,
+		},
+		{
+			name:  "a flag that is not true or false",
+			edit:  func(d doc) { replaceLine(d, "EQ operation operation F", "EQ operation operation disjunction=yes F") },
+			names: `qualifier "disjunction=yes" is unknown or repeated`,
+		},
+		{
+			name: "two lines that cover one context",
+			edit: func(d doc) {
+				d["cells"] = append(d["cells"].([]any), "EQ operation operation in_iterate=true T")
+			},
+			names: "EQ(operation, operation): several lines cover 20 contexts, the first at place simplified, effect ALLOW, disjunction false, in_iterate true",
+		},
+		{
+			name:  "an unknown operator",
+			edit:  func(d doc) { replaceLine(d, "EQ operation operation F", "LIKE operation operation F") },
+			names: `unknown operator "LIKE"`,
+		},
+		{
+			name:  "a right side on a unary operator",
+			edit:  func(d doc) { replaceLine(d, "IS_NULL operation F", "IS_NULL operation lit:str F") },
+			names: "IS_NULL takes no right side",
+		},
+		{
+			name:  "a pattern on the right of EQ",
+			edit:  func(d doc) { replaceLine(d, "EQ operation operation F", "EQ operation pattern F") },
+			names: `EQ does not take kind "pattern" on the right`,
+		},
+		{
+			name:  "a pattern on the left",
+			edit:  func(d doc) { replaceLine(d, "EQ operation operation F", "EQ pattern operation F") },
+			names: `EQ does not take kind "pattern" on the left`,
+		},
+
+		{
 			name: "the class x, which the format splits into xn, xl, and xo",
 			edit: func(d doc) {
-				profileOf(d, "agent")["kinds"].(doc)["res:path"] = doc{"states": []any{"VALUE", "NULL"}, "classes": []any{"s", "l", "x"}}
+				d["kinds"].(doc)["res:path"] = doc{"states": []any{"VALUE", "NULL"}, "classes": []any{"s", "l", "x"}}
 			},
-			names: `agent: operand kind res:path: class "x" is unknown or repeated`,
+			names: `operand kind res:path: class "x" is unknown or repeated`,
+		},
+		{
+			name:  "a domain for an unknown operand kind",
+			edit:  func(d doc) { d["kinds"].(doc)["pip:REGO"] = doc{"states": []any{"NULL"}} },
+			names: `unknown operand kind "pip:REGO"`,
+		},
+
+		{
+			name:  "an unknown outcome of a rule effect",
+			edit:  func(d doc) { nodesOf(d)["effects"].(doc)["other"] = "indeterminate" },
+			names: `nodes: effects.other has unknown node outcome "indeterminate"`,
 		},
 		{
 			name: "an unknown algorithm",
 			edit: func(d doc) {
 				nodesOf(d)["algorithms"].(doc)["FIRST_APPLICABLE"] = nodesOf(d)["algorithms"].(doc)["DENY_OVERRIDES"]
 			},
-			names: `agent: nodes: unknown algorithm "FIRST_APPLICABLE"`,
+			names: `nodes: unknown algorithm "FIRST_APPLICABLE"`,
 		},
 		{
 			name:  "an unknown node outcome",
 			edit:  func(d doc) { nodesOf(d)["algorithms"].(doc)["DENY_OVERRIDES"].(doc)["none"] = "indeterminate" },
-			names: `agent: nodes: DENY_OVERRIDES.none has unknown node outcome "indeterminate"`,
+			names: `nodes: DENY_OVERRIDES.none has unknown node outcome "indeterminate"`,
 		},
 		{
 			name:  "an absent algorithm that is not an algorithm",
 			edit:  func(d doc) { nodesOf(d)["absent_algorithm"] = "FIRST_APPLICABLE" },
-			names: `agent: nodes: absent_algorithm "FIRST_APPLICABLE" is not an algorithm`,
+			names: `nodes: absent_algorithm "FIRST_APPLICABLE" is not an algorithm`,
 		},
 		{
 			name:  "an unknown rule effect",
 			edit:  func(d doc) { nodesOf(d)["effects"].(doc)["PERMIT"] = "permit" },
-			names: `agent: nodes: unknown rule effect "PERMIT"`,
+			names: `nodes: unknown rule effect "PERMIT"`,
 		},
 		{
 			name:  "an unknown absent effect",
 			edit:  func(d doc) { nodesOf(d)["absent_effect"] = "NOT_APPLICABLE" },
-			names: `agent: nodes: absent_effect "NOT_APPLICABLE" is not one of`,
+			names: `nodes: absent_effect "NOT_APPLICABLE" is not one of`,
 		},
 		{
 			name:  "an absent expression that is undefined",
 			edit:  func(d doc) { nodesOf(d)["absent_expression"] = "U" },
-			names: `agent: nodes: absent_expression "U" is not T or F`,
-		},
-
-		{
-			name:  "an unknown profile",
-			edit:  func(d doc) { d["profiles"].(doc)["stage2"] = fixtureProfile(nil) },
-			names: `unknown profile "stage2"`,
-		},
-
-		{
-			name:  "an agent outcome in the legacy profile",
-			edit:  func(d doc) { profileOf(d, "legacy")["cells"].([]any)[0].(doc)["outcome"] = "U" },
-			names: `outcome "U" is not an outcome of profile legacy`,
-		},
-		{
-			name:  "an outcome of the agent profile in a by_value list",
-			edit:  func(d doc) { eqCell(d, eqValueS)["outcomes"] = []any{"T", "U"} },
-			names: `by_value outcome "U" is not an outcome of profile legacy`,
-		},
-		{
-			name:  "by_value with one outcome",
-			edit:  func(d doc) { eqCell(d, eqValueS)["outcomes"] = []any{"T"} },
-			names: "by_value lists 1 outcomes, want at least 2",
-		},
-		{
-			name:  "outcomes beside an outcome other than by_value",
-			edit:  func(d doc) { eqCell(d, eqNullOr)["outcomes"] = []any{"T", "F"} },
-			names: "outcomes is set for outcome F",
-		},
-		{
-			name: "two cells covering one point",
-			edit: func(d doc) {
-				pr := profileOf(d, "agent")
-				pr["cells"] = append(agentCells(d), doc{"op": "EQ", "left": doc{"kind": "res:path", "state": "NULL"}, "right": doc{"kind": "lit:str"}, "place": "set_target", "outcome": "T"})
-			},
-			names: "agent: EQ(res:path, lit:str): several cells cover",
-		},
-		{
-			name:  "an unknown operator",
-			edit:  func(d doc) { eqCell(d, eqNullOr)["op"] = "LIKE" },
-			names: `unknown operator "LIKE"`,
-		},
-		{
-			name:  "a domain for an unknown operand kind",
-			edit:  func(d doc) { profileOf(d, "agent")["kinds"].(doc)["pip:REGO"] = doc{"states": []any{"NULL"}} },
-			names: `agent: unknown operand kind "pip:REGO"`,
-		},
-		{
-			name: "a right side on a unary operator",
-			edit: func(d doc) {
-				for _, c := range agentCells(d) {
-					if c.(doc)["op"] == "IS_NULL" {
-						c.(doc)["right"] = doc{"kind": "lit:str"}
-						return
-					}
-				}
-			},
-			names: "IS_NULL takes no right side",
-		},
-		{
-			name:  "a pattern on the right of EQ",
-			edit:  func(d doc) { eqCell(d, eqNullOr)["right"] = doc{"kind": "pattern"} },
-			names: `EQ does not take kind "pattern" on the right`,
-		},
-		{
-			name:  "a pattern on the left",
-			edit:  func(d doc) { eqCell(d, eqNullOr)["left"] = doc{"kind": "pattern"} },
-			names: `EQ does not take kind "pattern" on the left`,
-		},
-		{
-			name:  "a class without state VALUE",
-			edit:  func(d doc) { eqCell(d, eqNullOr)["left"].(doc)["class"] = "s" },
-			names: `left class "s" is set without state VALUE`,
-		},
-		{
-			name:  "a class outside the kind's domain",
-			edit:  func(d doc) { eqCell(d, eqValueS)["left"].(doc)["class"] = "xo" },
-			names: `left class "xo" is not in the domain of res:path`,
-		},
-		{
-			name:  "a state outside the kind's domain",
-			edit:  func(d doc) { eqCell(d, eqNullOr)["left"].(doc)["state"] = "ERROR" },
-			names: `left state "ERROR" is not in the domain of res:path`,
-		},
-		{
-			name:  "an unknown place",
-			edit:  func(d doc) { eqCell(d, eqValueLRuleTarget)["place"] = "filter" },
-			names: `unknown place "filter"`,
-		},
-		{
-			name:  "an unknown effect",
-			edit:  func(d doc) { eqCell(d, eqNullDeny)["effect"] = "PERMIT" },
-			names: `unknown effect "PERMIT"`,
+			names: `nodes: absent_expression "U" is not T or F`,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			d := completeExport()
+			d := completeTable()
 			tt.edit(d)
 			_, err := load(t, d)
 			if !errors.Is(err, ErrInvalid) || !strings.Contains(err.Error(), tt.names) {
@@ -688,31 +702,24 @@ func TestLoadRejectsAnInvalidExport(t *testing.T) {
 	}
 }
 
-func TestNodesReturnsTheNodeRulesOfTheProfile(t *testing.T) {
+func TestNodesReturnsTheNodeRulesOfTheTable(t *testing.T) {
 	t.Parallel()
-	d := completeExport()
+	d := completeTable()
 	nodesOf(d)["algorithms"].(doc)["PERMIT_UNLESS_DENY"].(doc)["none"] = "na"
 	tab := mustLoad(t, d)
-	agent, ok := tab.Nodes(ProfileAgent)
-	if !ok {
-		t.Fatalf("Nodes(agent) reports no node rules, want them")
+	nodes := tab.Nodes()
+	if got, want := nodes.Algorithms["PERMIT_UNLESS_DENY"], (Combination{NodePermit, NodeDeny, NodeDeny, NodeNotApplicable}); got != want {
+		t.Errorf("Nodes().Algorithms[PERMIT_UNLESS_DENY] = %+v, want %+v", got, want)
 	}
-	if got, want := agent.Algorithms["PERMIT_UNLESS_DENY"], (Combination{NodePermit, NodeDeny, NodeDeny, NodeNotApplicable}); got != want {
-		t.Errorf("Nodes(agent).Algorithms[PERMIT_UNLESS_DENY] = %+v, want %+v", got, want)
-	}
-	legacy, _ := tab.Nodes(ProfileLegacy)
-	if got := legacy.Algorithms["PERMIT_UNLESS_DENY"].None; got != NodePermit {
-		t.Errorf("Nodes(legacy).Algorithms[PERMIT_UNLESS_DENY].None = %q, want %q", got, NodePermit)
-	}
-	if agent.AbsentAlgorithm != "DENY_UNLESS_PERMIT" || agent.Effects["USE_FILTER_CONDITION"] != NodeDeny ||
-		agent.AbsentEffect != "other" || agent.AbsentExpression != OutcomeT {
-		t.Errorf("Nodes(agent) = %+v, want the fixture's absent algorithm, effects, absent effect, and absent expression", agent)
+	if nodes.AbsentAlgorithm != "DENY_UNLESS_PERMIT" || nodes.Effects["USE_FILTER_CONDITION"] != NodeDeny ||
+		nodes.AbsentEffect != "other" || nodes.AbsentExpression != OutcomeT {
+		t.Errorf("Nodes() = %+v, want the fixture's absent algorithm, effects, absent effect, and absent expression", nodes)
 	}
 }
 
-func TestLoadRejectsADocumentThatIsNotOneExport(t *testing.T) {
+func TestLoadRejectsADocumentThatIsNotOneTable(t *testing.T) {
 	t.Parallel()
-	complete, err := json.Marshal(completeExport())
+	complete, err := json.Marshal(completeTable())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -720,8 +727,8 @@ func TestLoadRejectsADocumentThatIsNotOneExport(t *testing.T) {
 		name  string
 		input string
 	}{
-		{name: "malformed JSON", input: `{"schema_version": 1,`},
-		{name: "data after the export", input: string(complete) + ` {}`},
+		{name: "malformed JSON", input: `{"schema_version": 4,`},
+		{name: "data after the table", input: string(complete) + ` {}`},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -734,9 +741,9 @@ func TestLoadRejectsADocumentThatIsNotOneExport(t *testing.T) {
 	}
 }
 
-// TestLoadAcceptsTheExportNamedBySpectablesExport loads the file that the
+// TestLoadAcceptsTheExportNamedBySpectablesExport loads the table that the
 // SPECTABLES_EXPORT environment variable names, so that the specification's
-// exporter can check its output with this loader. It is skipped when the
+// exporter can check its output with this package. It is skipped when the
 // variable is unset.
 func TestLoadAcceptsTheExportNamedBySpectablesExport(t *testing.T) {
 	path := os.Getenv("SPECTABLES_EXPORT")
@@ -755,66 +762,13 @@ func TestLoadAcceptsTheExportNamedBySpectablesExport(t *testing.T) {
 	t.Logf("Load(%s): spec_tag %s", path, tab.SpecTag())
 }
 
-// sameCells returns an export whose two profiles carry
-// the same cells, in legacy's outcomes: those of fixtureProfile, with eq as the
-// cells of EQ(res:path, lit:str) when eq is not nil. The agent profile maps
-// ABORT to F and ERR to U, and subj.name is an alias of subj.id.
-func sameCells(eq []any) doc {
-	d := doc{
-		"schema_version": 3,
-		"spec_tag":       "r99",
-		"negates":        negatesDoc(),
-		"profiles":       doc{"legacy": fixtureProfile(eq), "agent": fixtureProfile(eq)},
-	}
-	profileOf(d, "legacy")["leaf"] = doc{}
-	profileOf(d, "agent")["leaf"] = doc{"ABORT": "F", "ERR": "U"}
-	for _, p := range []string{"legacy", "agent"} {
-		profileOf(d, p)["aliases"] = doc{"subj.name": "subj.id"}
-	}
-	return d
-}
+// eqPositive is the line of EQ(res:path, lit:str) the derivation tests start
+// from, in legacy's outcomes: T or ABORT by value on VALUE/s (code b), ERR on
+// VALUE/l, and T on NULL. A line the tests tell apart from its source answers
+// ERR, which no mirror produces.
+const eqPositive = "EQ res:path lit:str b E T"
 
-// setCells replaces the cells of the combination in both profiles; no cells
-// leaves the combination to its source.
-func setCells(d doc, op, left, right string, cells ...doc) {
-	for _, p := range []string{"legacy", "agent"} {
-		pr := profileOf(d, p)
-		kept := slices.DeleteFunc(pr["cells"].([]any), func(c any) bool { return isCombo(c.(doc), op, left, right) })
-		for _, c := range cells {
-			kept = append(kept, c)
-		}
-		pr["cells"] = kept
-	}
-}
-
-func cellOf(op, left, right string, outcome string, extra doc) doc {
-	c := doc{"op": op, "left": doc{"kind": left}, "right": doc{"kind": right}, "outcome": outcome}
-	for k, v := range extra {
-		c[k] = v
-	}
-	return c
-}
-
-// eqPositive is EQ(res:path, lit:str) in legacy's outcomes: T on NULL, ABORT
-// or T by value on VALUE/s, and ERR on VALUE/l.
-func eqPositive() []any {
-	left := func(state, class string) doc {
-		s := doc{"kind": "res:path", "state": state}
-		if class != "" {
-			s["class"] = class
-		}
-		return s
-	}
-	right := doc{"kind": "lit:str"}
-	return []any{
-		doc{"op": "EQ", "left": left("NULL", ""), "right": right, "outcome": "T"},
-		doc{"op": "EQ", "left": left("VALUE", "s"), "right": right, "outcome": "by_value", "outcomes": []any{"T", "ABORT"},
-			"value_rule": []any{"eq"}},
-		doc{"op": "EQ", "left": left("VALUE", "l"), "right": right, "outcome": "ERR"},
-	}
-}
-
-func TestLoadDerivesTheCellsAnExportLeavesOut(t *testing.T) {
+func TestLoadDerivesTheCellsATableLeavesOut(t *testing.T) {
 	t.Parallel()
 	resPath := func(s State, c Class) Point { return Point{Kind: KindResPath, State: s, Class: c} }
 	litStr := Point{Kind: KindLitStr, State: StateValue, Class: ClassString}
@@ -825,110 +779,98 @@ func TestLoadDerivesTheCellsAnExportLeavesOut(t *testing.T) {
 	tests := []struct {
 		name string
 		edit func(d doc)
-		prof Profile
 		key  Key
 		want Cell
 	}{
 		{
-			name: "a negated combination without cells takes its positive operator's cell with T and F swapped",
-			edit: func(d doc) { setCells(d, "NE", "res:path", "lit:str") },
-			prof: ProfileLegacy,
+			name: "a negated combination without lines takes its positive operator's result with T and F swapped",
+			edit: func(d doc) { setLines(d, "NE res:path lit:str") },
 			key:  Key{Op: OpNE, Left: resPath(StateNull, ""), Right: litStr, Context: ruleCondition()},
 			want: Cell{Outcome: OutcomeF},
 		},
 		{
-			name: "a mirrored by_value cell swaps T and F among its outcomes and keeps its value rule",
-			edit: func(d doc) { setCells(d, "NE", "res:path", "lit:str") },
-			prof: ProfileLegacy,
-			key:  Key{Op: OpNE, Left: resPath(StateValue, ClassString), Right: litStr, Context: ruleCondition()},
-			want: byValue(RuleEq, OutcomeF, OutcomeAbort),
+			name: "a mirrored by_value result swaps T and F among its outcomes and keeps its value rule",
+			edit: func(d doc) {
+				setLines(d, "EQ subj.id lit:str", "EQ subj.id lit:str c")
+				setLines(d, "NE subj.id lit:str")
+			},
+			key:  Key{Op: OpNE, Left: subj(KindSubjID), Right: litStr, Context: ruleCondition()},
+			want: byValue(RuleEq, OutcomeF, OutcomeU),
 		},
 		{
 			name: "a mirror keeps an outcome other than T and F",
-			edit: func(d doc) { setCells(d, "NE", "res:path", "lit:str") },
-			prof: ProfileLegacy,
+			edit: func(d doc) { setLines(d, "NE res:path lit:str") },
 			key:  Key{Op: OpNE, Left: resPath(StateValue, ClassList), Right: litStr, Context: ruleCondition()},
-			want: Cell{Outcome: OutcomeErr},
+			want: Cell{Outcome: OutcomeU},
 		},
 		{
-			name: "a negated combination with cells of its own is not mirrored",
-			edit: func(d doc) {
-				setCells(d, "NE", "res:path", "lit:str", cellOf("NE", "res:path", "lit:str", "ABORT", nil))
-			},
-			prof: ProfileLegacy,
+			name: "a negated combination with lines of its own is not mirrored",
+			edit: func(d doc) { setLines(d, "NE res:path lit:str", "NE res:path lit:str E") },
 			key:  Key{Op: OpNE, Left: resPath(StateNull, ""), Right: litStr, Context: ruleCondition()},
-			want: Cell{Outcome: OutcomeAbort},
+			want: Cell{Outcome: OutcomeU},
 		},
 		{
-			name: "an alias combination without cells takes its representative's cells",
+			name: "an alias combination without lines takes its representative's lines",
 			edit: func(d doc) {
-				setCells(d, "EQ", "subj.id", "lit:str", cellOf("EQ", "subj.id", "lit:str", "T", nil))
-				setCells(d, "EQ", "subj.name", "lit:str")
+				setLines(d, "EQ subj.id lit:str", "EQ subj.id lit:str T")
+				setLines(d, "EQ subj.name lit:str")
 			},
-			prof: ProfileLegacy,
 			key:  Key{Op: OpEQ, Left: subj(KindSubjName), Right: litStr, Context: ruleCondition()},
 			want: Cell{Outcome: OutcomeT},
 		},
 		{
-			name: "an alias combination with cells of its own keeps them",
+			name: "an alias combination with lines of its own keeps them",
 			edit: func(d doc) {
-				setCells(d, "EQ", "subj.id", "lit:str", cellOf("EQ", "subj.id", "lit:str", "T", nil))
-				setCells(d, "EQ", "subj.name", "lit:str", cellOf("EQ", "subj.name", "lit:str", "ABORT", nil))
+				setLines(d, "EQ subj.id lit:str", "EQ subj.id lit:str T")
+				setLines(d, "EQ subj.name lit:str", "EQ subj.name lit:str E")
 			},
-			prof: ProfileLegacy,
 			key:  Key{Op: OpEQ, Left: subj(KindSubjName), Right: litStr, Context: ruleCondition()},
-			want: Cell{Outcome: OutcomeAbort},
+			want: Cell{Outcome: OutcomeU},
 		},
 		{
-			name: "a negated alias combination takes its representative's own cells rather than the mirror",
+			name: "a negated alias combination takes its representative's own lines rather than the mirror",
 			edit: func(d doc) {
-				setCells(d, "NE", "subj.id", "lit:str", cellOf("NE", "subj.id", "lit:str", "ABORT", nil))
-				setCells(d, "EQ", "subj.name", "lit:str", cellOf("EQ", "subj.name", "lit:str", "T", nil))
-				setCells(d, "NE", "subj.name", "lit:str")
+				setLines(d, "NE subj.id lit:str", "NE subj.id lit:str E")
+				setLines(d, "EQ subj.name lit:str", "EQ subj.name lit:str T")
+				setLines(d, "NE subj.name lit:str")
 			},
-			prof: ProfileLegacy,
 			key:  Key{Op: OpNE, Left: subj(KindSubjName), Right: litStr, Context: ruleCondition()},
-			want: Cell{Outcome: OutcomeAbort},
+			want: Cell{Outcome: OutcomeU},
 		},
 		{
-			name: "a negated alias combination without cells takes the mirror of its positive one, renamed",
+			name: "a negated alias combination without lines takes the mirror of its positive one, renamed",
 			edit: func(d doc) {
-				setCells(d, "EQ", "subj.id", "lit:str", cellOf("EQ", "subj.id", "lit:str", "T", nil))
-				setCells(d, "EQ", "subj.name", "lit:str")
-				setCells(d, "NE", "subj.name", "lit:str")
+				setLines(d, "EQ subj.id lit:str", "EQ subj.id lit:str T")
+				setLines(d, "EQ subj.name lit:str")
+				setLines(d, "NE subj.name lit:str")
 			},
-			prof: ProfileLegacy,
 			key:  Key{Op: OpNE, Left: subj(KindSubjName), Right: litStr, Context: ruleCondition()},
 			want: Cell{Outcome: OutcomeF},
 		},
 		{
-			name: "a combination with an alias on both sides takes its representatives' cells",
+			name: "a combination with an alias on both sides takes its representatives' lines",
 			edit: func(d doc) {
-				setCells(d, "EQ", "subj.id", "subj.id", cellOf("EQ", "subj.id", "subj.id", "T", nil))
-				setCells(d, "EQ", "subj.name", "subj.name")
+				setLines(d, "EQ subj.id subj.id", "EQ subj.id subj.id T")
+				setLines(d, "EQ subj.name subj.name")
 			},
-			prof: ProfileLegacy,
 			key:  Key{Op: OpEQ, Left: subj(KindSubjName), Right: subj(KindSubjName), Context: ruleCondition()},
 			want: Cell{Outcome: OutcomeT},
 		},
 		{
-			name: "the leaf map takes ERR of the agent profile to U",
+			name: "the leaf map takes ERR to U",
 			edit: func(d doc) {},
-			prof: ProfileAgent,
 			key:  Key{Op: OpEQ, Left: resPath(StateValue, ClassList), Right: litStr, Context: ruleCondition()},
 			want: Cell{Outcome: OutcomeU},
 		},
 		{
-			name: "the leaf map takes ABORT among the outcomes of a by_value cell to F",
+			name: "the leaf map takes ABORT among the outcomes of a by_value result to F",
 			edit: func(d doc) {},
-			prof: ProfileAgent,
 			key:  Key{Op: OpEQ, Left: resPath(StateValue, ClassString), Right: litStr, Context: ruleCondition()},
 			want: byValue(RuleEq, OutcomeT, OutcomeF),
 		},
 		{
-			name: "a by_value cell whose outcomes the leaf map takes to one outcome answers that outcome",
-			edit: func(d doc) { setCells(d, "NE", "res:path", "lit:str") },
-			prof: ProfileAgent,
+			name: "a by_value result whose outcomes the leaf map takes to one outcome answers that outcome",
+			edit: func(d doc) { setLines(d, "NE res:path lit:str") },
 			key:  Key{Op: OpNE, Left: resPath(StateValue, ClassString), Right: litStr, Context: ruleCondition()},
 			want: Cell{Outcome: OutcomeF},
 		},
@@ -936,12 +878,12 @@ func TestLoadDerivesTheCellsAnExportLeavesOut(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			d := sameCells(eqPositive())
+			d := fixtureTable([]string{eqPositive})
 			tt.edit(d)
 			tab := mustLoad(t, d)
-			got, err := tab.Lookup(tt.prof, tt.key)
+			got, err := tab.Lookup(tt.key)
 			if err != nil || !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Lookup(%s, %+v) = %+v, %v, want %+v", tt.prof, tt.key, got, err, tt.want)
+				t.Errorf("Lookup(%+v) = %+v, %v, want %+v", tt.key, got, err, tt.want)
 			}
 		})
 	}
@@ -961,51 +903,44 @@ func TestLoadRejectsAnInvalidDerivation(t *testing.T) {
 		},
 		{
 			name:  "a leaf map that leaves an outcome of legacy unmapped",
-			edit:  func(d doc) { delete(profileOf(d, "agent")["leaf"].(doc), "ERR") },
-			names: "agent: leaf does not map ERR",
+			edit:  func(d doc) { delete(d["leaf"].(doc), "ERR") },
+			names: "leaf does not map ERR",
 		},
 		{
 			name:  "a leaf map of an outcome the profile has",
-			edit:  func(d doc) { profileOf(d, "legacy")["leaf"] = doc{"ABORT": "F"} },
-			names: `legacy: leaf maps "ABORT" to "F"`,
+			edit:  func(d doc) { d["leaf"].(doc)["T"] = "F" },
+			names: `leaf maps "T" to "F"`,
 		},
 		{
-			name:  "a leaf map to an outcome no by_value cell of the profile lists",
-			edit:  func(d doc) { profileOf(d, "agent")["leaf"].(doc)["ABORT"] = "bad_request" },
-			names: `agent: leaf maps "ABORT" to "bad_request"`,
+			name:  "a leaf map to an outcome no by_value result of the profile lists",
+			edit:  func(d doc) { d["leaf"].(doc)["ABORT"] = "bad_request" },
+			names: `leaf maps "ABORT" to "bad_request"`,
 		},
 		{
 			name:  "an alias of itself",
-			edit:  func(d doc) { profileOf(d, "legacy")["aliases"].(doc)["subj.type"] = "subj.type" },
-			names: "legacy: alias subj.type names subj.type, which is itself or another alias",
+			edit:  func(d doc) { d["aliases"].(doc)["subj.type"] = "subj.type" },
+			names: "alias subj.type names subj.type, which is itself or another alias",
 		},
 		{
 			name:  "an alias of the pattern",
-			edit:  func(d doc) { profileOf(d, "legacy")["aliases"].(doc)["subj.type"] = "pattern" },
-			names: `legacy: alias "subj.type" of "pattern" names an unknown kind or the pattern`,
+			edit:  func(d doc) { d["aliases"].(doc)["subj.type"] = "pattern" },
+			names: `alias "subj.type" of "pattern" names an unknown kind or the pattern`,
 		},
 		{
 			name:  "an alias of an alias",
-			edit:  func(d doc) { profileOf(d, "legacy")["aliases"].(doc)["subj.type"] = "subj.name" },
-			names: "legacy: alias subj.type names subj.name, which is itself or another alias",
+			edit:  func(d doc) { d["aliases"].(doc)["subj.type"] = "subj.name" },
+			names: "alias subj.type names subj.name, which is itself or another alias",
 		},
 		{
-			name: "an alias with another domain than its representative",
-			edit: func(d doc) {
-				profileOf(d, "legacy")["kinds"].(doc)["subj.name"] = doc{"states": []any{"NULL"}}
-			},
-			names: "legacy: alias subj.name has another domain than its representative subj.id",
-		},
-		{
-			name:  "a cell outcome of the agent profile in place of legacy's",
-			edit:  func(d doc) { setCells(d, "EQ", "res:path", "lit:str", cellOf("EQ", "res:path", "lit:str", "U", nil)) },
-			names: `outcome "U" is not an outcome of profile legacy`,
+			name:  "an alias with another domain than its representative",
+			edit:  func(d doc) { d["kinds"].(doc)["subj.name"] = doc{"states": []any{"NULL"}} },
+			names: "alias subj.name has another domain than its representative subj.id",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			d := sameCells(nil)
+			d := fixtureTable(nil)
 			tt.edit(d)
 			_, err := load(t, d)
 			if !errors.Is(err, ErrInvalid) || !strings.Contains(err.Error(), tt.names) {

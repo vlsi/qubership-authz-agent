@@ -412,7 +412,7 @@ func (g *gen) ref(o policyir.Operand, kind spectables.Kind, network bool) (*Ref,
 		}
 		return r, nil
 	}
-	dom, ok := g.tab.Domain(spectables.ProfileAgent, kind)
+	dom, ok := g.tab.Domain(kind)
 	if !ok {
 		return nil, fmt.Errorf("kind %s has no domain", kind)
 	}
@@ -579,11 +579,11 @@ func (g *gen) pathDomain(dom spectables.Domain, dot bool) (spectables.Domain, er
 	}), Classes: dom.Classes}, nil
 }
 
-// stringKnob returns a knob of the agent profile that holds a string.
+// stringKnob returns a knob of the table that holds a string.
 func (g *gen) stringKnob(name string) (string, error) {
-	raw, ok := g.tab.Knob(spectables.ProfileAgent, name)
+	raw, ok := g.tab.Knob(name)
 	if !ok {
-		return "", fmt.Errorf("the export carries no knob %s", name)
+		return "", fmt.Errorf("the table carries no knob %s", name)
 	}
 	var v string
 	if err := json.Unmarshal(raw, &v); err != nil {

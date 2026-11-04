@@ -184,7 +184,7 @@ func (g *gen) compare(c policyir.Compare, ctx spectables.Context) (leafRails, er
 			if R != nil {
 				key.Right = rp.spec(R.kind)
 			}
-			cell, err := g.tab.Lookup(spectables.ProfileAgent, key)
+			cell, err := g.tab.Lookup(key)
 			if err != nil {
 				return leafRails{}, err
 			}

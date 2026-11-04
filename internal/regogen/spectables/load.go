@@ -24,36 +24,37 @@ import (
 	"strings"
 )
 
-// SchemaVersion is the version of the export format the exporter writes.
-const SchemaVersion = 3
+// SchemaVersion is the version of the table format [Load] reads.
+const SchemaVersion = 4
 
 // maxProblems bounds how many problems an error from [Load] spells out.
 const maxProblems = 20
 
 var (
-	// ErrInvalid reports an export that violates the format: malformed JSON, a
+	// ErrInvalid reports a table that violates its format: malformed JSON, a
 	// field or knob the format does not define, a value outside its
-	// enumeration, or two cells that answer the same question.
+	// enumeration, or two lines that answer the same question.
 	ErrInvalid = errors.New("invalid specification export")
-	// ErrIncomplete reports a well-formed export that leaves a required question
-	// unanswered: a missing profile, knob, or kind domain, or a combination of
-	// operator and operand kinds with a point no cell covers.
+	// ErrIncomplete reports a well-formed table that leaves a required
+	// question unanswered: a missing knob or kind domain, or a combination of
+	// operator and operand kinds with a context no line covers.
 	ErrIncomplete = errors.New("incomplete specification export")
 	// ErrNotCovered reports a [Key] that no cell of the table answers.
 	ErrNotCovered = errors.New("no cell for the key")
 )
 
-// Table is a loaded and validated export. It is safe for concurrent use.
+// Table is a loaded and validated table of the agent profile. It is safe for
+// concurrent use.
 type Table struct {
-	specTag  string
-	profiles map[Profile]*profileTable
-}
-
-type profileTable struct {
+	specTag string
 	knobs   map[string]json.RawMessage
 	domains map[Kind]Domain
-	cells   map[combo][]cellJSON
-	nodes   *Nodes
+	points  map[Kind][]Point
+	nodes   Nodes
+	// results holds every distinct cell the lines refer to, in the agent
+	// profile's outcomes once Load has applied the leaf map.
+	results []Cell
+	lines   map[combo][]line
 }
 
 // combo is one combination of operator and operand kinds; right is empty for a
@@ -70,53 +71,49 @@ func (c combo) String() string {
 	return fmt.Sprintf("%s(%s, %s)", c.op, c.left, c.right)
 }
 
-type exportJSON struct {
-	SchemaVersion int                      `json:"schema_version"`
-	SpecTag       string                   `json:"spec_tag"`
-	Negates       map[Operator]Operator    `json:"negates,omitempty"`
-	Profiles      map[Profile]*profileJSON `json:"profiles"`
+// line is one parsed entry of cells: the contexts it covers and, for each pair
+// of a left point and a right point of its combination, an index into
+// Table.results. The grid is left-major: the pair (li, ri) is at li*m+ri, where
+// m is the number of right points, 1 for a unary operator.
+type line struct {
+	ctx  contextFilter
+	grid []int
 }
 
-type profileJSON struct {
-	Knobs   map[string]json.RawMessage `json:"knobs"`
-	Kinds   map[Kind]Domain            `json:"kinds"`
-	Nodes   *Nodes                     `json:"nodes,omitempty"`
-	Leaf    map[Outcome]Outcome        `json:"leaf,omitempty"`
-	Aliases map[Kind]Kind              `json:"aliases,omitempty"`
-	Cells   []cellJSON                 `json:"cells"`
+// contextFilter holds the qualifiers of a line; an unset one matches every
+// value of its dimension.
+type contextFilter struct {
+	place       Place
+	effect      Effect
+	disjunction *bool
+	inIterate   *bool
 }
 
-type sideJSON struct {
-	Kind  Kind  `json:"kind"`
-	State State `json:"state,omitempty"`
-	Class Class `json:"class,omitempty"`
+type tableJSON struct {
+	SchemaVersion int                        `json:"schema_version"`
+	SpecTag       string                     `json:"spec_tag"`
+	Negates       map[Operator]Operator      `json:"negates"`
+	Knobs         map[string]json.RawMessage `json:"knobs"`
+	Kinds         map[Kind]Domain            `json:"kinds"`
+	Nodes         *Nodes                     `json:"nodes"`
+	Leaf          map[Outcome]Outcome        `json:"leaf"`
+	Aliases       map[Kind]Kind              `json:"aliases"`
+	Codes         map[string]Cell            `json:"codes"`
+	Cells         []string                   `json:"cells"`
 }
 
-type cellJSON struct {
-	Op          Operator    `json:"op"`
-	Left        *sideJSON   `json:"left"`
-	Right       *sideJSON   `json:"right,omitempty"`
-	Place       Place       `json:"place,omitempty"`
-	Effect      Effect      `json:"effect,omitempty"`
-	Disjunction *bool       `json:"disjunction,omitempty"`
-	InIterate   *bool       `json:"in_iterate,omitempty"`
-	Outcome     Outcome     `json:"outcome"`
-	Outcomes    []Outcome   `json:"outcomes,omitempty"`
-	ValueRule   []ValueRule `json:"value_rule,omitempty"`
-}
-
-// Load reads an export and validates it. The error wraps [ErrInvalid] when the
+// Load reads a table and validates it. The error wraps [ErrInvalid] when the
 // document violates the format and [ErrIncomplete] when it leaves a required
 // question unanswered; its text names up to 20 of the problems found.
 func Load(r io.Reader) (*Table, error) {
 	dec := json.NewDecoder(r)
 	dec.DisallowUnknownFields()
-	var doc exportJSON
+	var doc tableJSON
 	if err := dec.Decode(&doc); err != nil {
 		return nil, fmt.Errorf("%w: %w", ErrInvalid, err)
 	}
 	if dec.More() {
-		return nil, fmt.Errorf("%w: data after the export document", ErrInvalid)
+		return nil, fmt.Errorf("%w: data after the table document", ErrInvalid)
 	}
 	if doc.SchemaVersion != SchemaVersion {
 		return nil, fmt.Errorf("%w: schema_version is %d, want %d", ErrInvalid, doc.SchemaVersion, SchemaVersion)
@@ -129,29 +126,50 @@ func Load(r io.Reader) (*Table, error) {
 	if !maps.Equal(doc.Negates, Negations) {
 		invalid.add("negates is %v, want %v", doc.Negates, Negations)
 	}
-	t := &Table{specTag: doc.SpecTag, profiles: map[Profile]*profileTable{}}
-	for p := range doc.Profiles {
-		if !known(Profiles, p) {
-			invalid.add("unknown profile %q", p)
+	t := &Table{specTag: doc.SpecTag, knobs: doc.Knobs, domains: map[Kind]Domain{}, points: map[Kind][]Point{},
+		lines: map[combo][]line{}}
+	if doc.Nodes == nil {
+		incomplete.add("nodes is missing")
+	} else {
+		checkNodes(doc.Nodes, &invalid, &incomplete)
+		t.nodes = *doc.Nodes
+	}
+	for _, name := range RequiredKnobs {
+		if _, ok := doc.Knobs[name]; !ok {
+			incomplete.add("knob %s is missing", name)
 		}
 	}
-	for _, p := range Profiles {
-		pj := doc.Profiles[p]
-		if pj == nil {
-			incomplete.add("profile %s is missing", p)
+	for name := range doc.Knobs {
+		if !slices.Contains(RequiredKnobs, name) {
+			invalid.add("unknown knob %q", name)
+		}
+	}
+	for k, d := range doc.Kinds {
+		if !known(Kinds, k) {
+			invalid.add("unknown operand kind %q", k)
 			continue
 		}
-		pt := buildProfile(p, pj, &invalid, &incomplete)
-		t.profiles[p] = pt
+		checkDomain(k, d, &invalid)
+		t.domains[k] = d
+		t.points[k] = points(k, d)
+	}
+	for _, k := range Kinds {
+		if _, ok := doc.Kinds[k]; !ok {
+			incomplete.add("operand kind %s has no domain", k)
+		}
+	}
+	checkLeaf(doc.Leaf, &invalid)
+	checkAliases(doc.Aliases, t.domains, &invalid)
+	codes := t.readCodes(doc.Codes, &invalid)
+	for i, s := range doc.Cells {
+		t.readLine(i, s, codes, &invalid)
 	}
 	if err := invalid.err(ErrInvalid); err != nil {
 		return nil, err
 	}
-	for _, p := range Profiles {
-		if pt := t.profiles[p]; pt != nil {
-			checkCoverage(p, pt, &invalid, &incomplete)
-		}
-	}
+	t.derive(doc.Aliases)
+	t.applyLeaf(doc.Leaf)
+	t.checkCoverage(&invalid, &incomplete)
 	if err := invalid.err(ErrInvalid); err != nil {
 		return nil, err
 	}
@@ -161,143 +179,218 @@ func Load(r io.Reader) (*Table, error) {
 	return t, nil
 }
 
-// SpecTag returns the tag of the specification commit the export was computed
+// SpecTag returns the tag of the specification commit the table was computed
 // from.
 func (t *Table) SpecTag() string { return t.specTag }
 
-// Nodes returns how the profile combines the outcomes of nodes, and false for
-// an unknown profile.
-func (t *Table) Nodes(p Profile) (Nodes, bool) {
-	pt := t.profiles[p]
-	if pt == nil || pt.nodes == nil {
-		return Nodes{}, false
-	}
-	return *pt.nodes, true
-}
+// Nodes returns how the agent profile combines the outcomes of nodes.
+func (t *Table) Nodes() Nodes { return t.nodes }
 
-// Knob returns the raw JSON value of a specification setting in the profile,
-// and false when the export does not carry it.
-func (t *Table) Knob(p Profile, name string) (json.RawMessage, bool) {
-	pt := t.profiles[p]
-	if pt == nil {
-		return nil, false
-	}
-	v, ok := pt.knobs[name]
+// Knob returns the raw JSON value of a specification setting, and false when
+// the table does not carry it.
+func (t *Table) Knob(name string) (json.RawMessage, bool) {
+	v, ok := t.knobs[name]
 	return v, ok
 }
 
-// Domain returns the states and classes an operand of the kind can have in the
-// profile, and false for an unknown profile or kind.
-func (t *Table) Domain(p Profile, k Kind) (Domain, bool) {
-	pt := t.profiles[p]
-	if pt == nil {
-		return Domain{}, false
-	}
-	d, ok := pt.domains[k]
+// Domain returns the states and classes an operand of the kind can have, and
+// false for an unknown kind.
+func (t *Table) Domain(k Kind) (Domain, bool) {
+	d, ok := t.domains[k]
 	return d, ok
 }
 
-// Lookup returns the cell of the profile that answers the key. The error wraps
-// [ErrNotCovered] when no cell does: the profile, an enumerated value, or a
-// point is outside the table, or Right is set for a unary operator or unset for
-// a binary one.
-func (t *Table) Lookup(p Profile, k Key) (Cell, error) {
-	pt := t.profiles[p]
-	if pt == nil {
-		return Cell{}, fmt.Errorf("%w: unknown profile %q", ErrNotCovered, p)
-	}
+// Lookup returns the cell that answers the key. The error wraps
+// [ErrNotCovered] when no cell does: an enumerated value or a point is outside
+// the table, or Right is set for a unary operator or unset for a binary one.
+func (t *Table) Lookup(k Key) (Cell, error) {
 	c := combo{op: k.Op, left: k.Left.Kind, right: k.Right.Kind}
 	if k.Op.Unary() && k.Right != (Point{}) {
 		return Cell{}, fmt.Errorf("%w: %s takes no right operand", ErrNotCovered, k.Op)
 	}
-	if !known(Places, k.Context.Place) || !known(Effects, k.Context.Effect) ||
-		!pt.inDomain(k.Left) || !k.Op.Unary() && !pt.inDomain(k.Right) {
+	li := slices.Index(t.points[k.Left.Kind], k.Left)
+	ri, m := 0, 1
+	if !k.Op.Unary() {
+		ri, m = slices.Index(t.points[k.Right.Kind], k.Right), len(t.points[k.Right.Kind])
+	}
+	if !known(Places, k.Context.Place) || !known(Effects, k.Context.Effect) || li < 0 || ri < 0 {
 		return Cell{}, fmt.Errorf("%w: %s, %s is outside the domains", ErrNotCovered, c,
 			describePoint(k.Left, k.Right, k.Context, c.right != ""))
 	}
-	for i := range pt.cells[c] {
-		cj := &pt.cells[c][i]
-		if cj.matchesContext(k.Context) && cj.Left.matches(k.Left) && (cj.Right == nil || cj.Right.matches(k.Right)) {
-			return Cell{Outcome: cj.Outcome, Outcomes: slices.Clone(cj.Outcomes), ValueRule: slices.Clone(cj.ValueRule)}, nil
+	for _, l := range t.lines[c] {
+		if l.ctx.matches(k.Context) {
+			r := t.results[l.grid[li*m+ri]]
+			return Cell{Outcome: r.Outcome, Outcomes: slices.Clone(r.Outcomes), ValueRule: slices.Clone(r.ValueRule)}, nil
 		}
 	}
 	return Cell{}, fmt.Errorf("%w: %s, %s", ErrNotCovered, c, describePoint(k.Left, k.Right, k.Context, c.right != ""))
 }
 
-// inDomain reports whether the point is one of the (state, class) pairs its
-// kind's domain lists.
-func (pt *profileTable) inDomain(p Point) bool {
-	d, ok := pt.domains[p.Kind]
-	if !ok || !slices.Contains(d.States, p.State) {
-		return false
-	}
-	if p.State == StateValue {
-		return slices.Contains(d.Classes, p.Class)
-	}
-	return p.Class == ""
-}
-
-func buildProfile(p Profile, pj *profileJSON, invalid, incomplete *problems) *profileTable {
-	pt := &profileTable{knobs: pj.Knobs, domains: map[Kind]Domain{}, cells: map[combo][]cellJSON{}, nodes: pj.Nodes}
-	if pj.Nodes == nil {
-		incomplete.add("%s: nodes is missing", p)
-	} else {
-		checkNodes(p, pj.Nodes, invalid, incomplete)
-	}
-	for _, name := range RequiredKnobs {
-		if _, ok := pj.Knobs[name]; !ok {
-			incomplete.add("%s: knob %s is missing", p, name)
-		}
-	}
-	for name := range pj.Knobs {
-		if !slices.Contains(RequiredKnobs, name) {
-			invalid.add("%s: unknown knob %q", p, name)
-		}
-	}
-	for k, d := range pj.Kinds {
-		if !known(Kinds, k) {
-			invalid.add("%s: unknown operand kind %q", p, k)
+// readCodes appends each valid entry of codes to t.results, in the order of
+// the codes, and returns the index of each code's result.
+func (t *Table) readCodes(codes map[string]Cell, invalid *problems) map[byte]int {
+	index := map[byte]int{}
+	for _, code := range slices.Sorted(maps.Keys(codes)) {
+		where := fmt.Sprintf("code %q", code)
+		if len(code) != 1 || !isCode(code[0]) {
+			invalid.add("%s is not one ASCII letter or digit", where)
 			continue
 		}
-		checkDomain(p, k, d, invalid)
-		pt.domains[k] = d
-	}
-	for _, k := range Kinds {
-		if _, ok := pj.Kinds[k]; !ok {
-			incomplete.add("%s: operand kind %s has no domain", p, k)
+		r := codes[code]
+		if checkResult(where, r, invalid) {
+			index[code[0]] = len(t.results)
+			t.results = append(t.results, r)
 		}
 	}
-	checkLeaf(p, pj.Leaf, invalid)
-	checkAliases(p, pj.Aliases, pt.domains, invalid)
-	for i := range pj.Cells {
-		cj := pj.Cells[i]
-		if checkCell(p, i, &cj, pt.domains, invalid) {
-			c := combo{op: cj.Op, left: cj.Left.Kind}
-			if cj.Right != nil {
-				c.right = cj.Right.Kind
+	return index
+}
+
+func isCode(b byte) bool {
+	return 'a' <= b && b <= 'z' || 'A' <= b && b <= 'Z' || '0' <= b && b <= '9'
+}
+
+// readLine parses entry i of cells into a line of its combination, and records
+// each problem.
+func (t *Table) readLine(i int, s string, codes map[byte]int, invalid *problems) {
+	where := fmt.Sprintf("cells[%d]", i)
+	f := strings.Fields(s)
+	if len(f) < 3 {
+		invalid.add("%s: %q has no operator, kind, or grid", where, s)
+		return
+	}
+	c := combo{op: Operator(f[0]), left: Kind(f[1])}
+	rest := f[2:]
+	switch {
+	case !known(Operators, c.op):
+		invalid.add("%s: unknown operator %q", where, c.op)
+		return
+	case !admitsLeft(c.left) || !known(Kinds, c.left):
+		invalid.add("%s: %s does not take kind %q on the left", where, c.op, c.left)
+		return
+	case c.op.Unary() && known(Kinds, Kind(rest[0])):
+		invalid.add("%s: %s takes no right side", where, c.op)
+		return
+	case !c.op.Unary():
+		c.right, rest = Kind(rest[0]), rest[1:]
+		if !admitsRight(c.op, c.right) || !known(Kinds, c.right) {
+			invalid.add("%s: %s does not take kind %q on the right", where, c.op, c.right)
+			return
+		}
+	}
+	where += " " + c.String()
+	var l line
+	for len(rest) > 0 && strings.Contains(rest[0], "=") {
+		if !l.ctx.set(rest[0]) {
+			invalid.add("%s: qualifier %q is unknown or repeated", where, rest[0])
+			return
+		}
+		rest = rest[1:]
+	}
+	lps, ok := t.points[c.left]
+	m := 1
+	if c.right != "" {
+		var rps []Point
+		rps, ok = t.points[c.right]
+		m = len(rps)
+	}
+	if !ok {
+		return // reported as a missing domain
+	}
+	grid, problem := readGrid(rest, len(lps), m, codes)
+	if problem != "" {
+		invalid.add("%s: %s", where, problem)
+		return
+	}
+	l.grid = grid
+	t.lines[c] = append(t.lines[c], l)
+}
+
+// readGrid expands the rows of a line into its grid of n left points and m
+// right points. It accepts one row for every left point, or one row for all of
+// them; and in a row, one code for every right point, or one code for all of
+// them. It returns a description of the first problem, or "".
+func readGrid(rows []string, n, m int, codes map[byte]int) ([]int, string) {
+	if len(rows) != 1 && len(rows) != n {
+		return nil, fmt.Sprintf("has %d rows, want %d or 1", len(rows), n)
+	}
+	grid := make([]int, 0, n*m)
+	for li := range n {
+		row := rows[0]
+		if len(rows) == n {
+			row = rows[li]
+		}
+		if len(row) != 1 && len(row) != m {
+			return nil, fmt.Sprintf("row %q has %d codes, want %d or 1", row, len(row), m)
+		}
+		for ri := range m {
+			code := row[0]
+			if len(row) == m {
+				code = row[ri]
 			}
-			pt.cells[c] = append(pt.cells[c], cj)
+			r, ok := codes[code]
+			if !ok {
+				return nil, fmt.Sprintf("row %q names code %q, which codes does not define", row, string(code))
+			}
+			grid = append(grid, r)
 		}
 	}
-	derive(pt, pj.Aliases)
-	applyLeaf(pt, pj.Leaf)
-	return pt
+	return grid, ""
+}
+
+// set records a qualifier of the form name=value, and reports false for an
+// unknown name or value or a name set before.
+func (f *contextFilter) set(q string) bool {
+	name, value, _ := strings.Cut(q, "=")
+	flag := func(p **bool) bool {
+		if *p != nil || value != "true" && value != "false" {
+			return false
+		}
+		b := value == "true"
+		*p = &b
+		return true
+	}
+	switch name {
+	case "place":
+		if f.place != "" || !known(Places, Place(value)) {
+			return false
+		}
+		f.place = Place(value)
+	case "effect":
+		if f.effect != "" || !known(Effects, Effect(value)) {
+			return false
+		}
+		f.effect = Effect(value)
+	case "disjunction":
+		return flag(&f.disjunction)
+	case "in_iterate":
+		return flag(&f.inIterate)
+	default:
+		return false
+	}
+	return true
+}
+
+func (f contextFilter) matches(ctx Context) bool {
+	return (f.place == "" || f.place == ctx.Place) &&
+		(f.effect == "" || f.effect == ctx.Effect) &&
+		(f.disjunction == nil || *f.disjunction == ctx.Disjunction) &&
+		(f.inIterate == nil || *f.inIterate == ctx.InIterate)
 }
 
 // checkLeaf records a leaf map that does not take every outcome of legacy the
-// profile lacks to an outcome the profile has, or maps anything else.
-func checkLeaf(p Profile, leaf map[Outcome]Outcome, invalid *problems) {
+// agent profile lacks to an outcome the profile has, or maps anything else.
+func checkLeaf(leaf map[Outcome]Outcome, invalid *problems) {
 	legacy, _ := Outcomes(ProfileLegacy)
-	own, _ := Outcomes(p)
+	own, _ := Outcomes(ProfileAgent)
 	for from, to := range leaf {
-		if !known(legacy, from) || known(own, from) || !known(valueOutcomes(p), to) {
-			invalid.add("%s: leaf maps %q to %q; it maps each outcome of legacy the profile lacks to T, F, or U",
-				p, from, to)
+		if !known(legacy, from) || known(own, from) || !known(valueOutcomes(ProfileAgent), to) {
+			invalid.add("leaf maps %q to %q; it maps each outcome of legacy the agent profile lacks to T, F, or U",
+				from, to)
 		}
 	}
 	for _, o := range legacy {
 		if _, ok := leaf[o]; !ok && !known(own, o) {
-			invalid.add("%s: leaf does not map %s, which profile %s lacks", p, o, p)
+			invalid.add("leaf does not map %s, which the agent profile lacks", o)
 		}
 	}
 }
@@ -305,28 +398,29 @@ func checkLeaf(p Profile, leaf map[Outcome]Outcome, invalid *problems) {
 // checkAliases records an alias whose kind or representative is unknown or
 // takes no side, that names itself or another alias, or whose domain is not
 // its representative's.
-func checkAliases(p Profile, aliases map[Kind]Kind, domains map[Kind]Domain, invalid *problems) {
+func checkAliases(aliases map[Kind]Kind, domains map[Kind]Domain, invalid *problems) {
 	for a, r := range aliases {
 		switch {
 		case !known(Kinds, a) || !known(Kinds, r) || !admitsLeft(a) || !admitsLeft(r):
-			invalid.add("%s: alias %q of %q names an unknown kind or the pattern", p, a, r)
+			invalid.add("alias %q of %q names an unknown kind or the pattern", a, r)
 		case aliases[r] != "": // an alias of itself names an alias too
-			invalid.add("%s: alias %s names %s, which is itself or another alias", p, a, r)
+			invalid.add("alias %s names %s, which is itself or another alias", a, r)
 		case !slices.Equal(domains[a].States, domains[r].States) || !slices.Equal(domains[a].Classes, domains[r].Classes):
-			invalid.add("%s: alias %s has another domain than its representative %s", p, a, r)
+			invalid.add("alias %s has another domain than its representative %s", a, r)
 		}
 	}
 }
 
-// derive gives each combination without cells of its own the cells of its
-// source: the combination over the representatives of its
-// kinds when that one has cells of its own, renamed; else, for a negated
-// operator, its positive operator's cells, mirrored; else the combination over
-// the representatives, renamed. A combination whose source has no cells stays
-// without them, and checkCoverage reports it.
-func derive(pt *profileTable, aliases map[Kind]Kind) {
+// derive gives each combination without lines of its own the lines of its
+// source: the combination over the representatives of its kinds when that one
+// has lines of its own; else, for a negated operator, its positive operator's
+// lines, mirrored; else the combination over the representatives. A
+// combination whose source has no lines stays without them, and checkCoverage
+// reports it. An alias has its representative's domain, so a grid of the
+// source indexes the points of the derived combination unchanged.
+func (t *Table) derive(aliases map[Kind]Kind) {
 	own := map[combo]bool{}
-	for c := range pt.cells {
+	for c := range t.lines {
 		own[c] = true
 	}
 	rep := func(k Kind) Kind {
@@ -335,61 +429,71 @@ func derive(pt *profileTable, aliases map[Kind]Kind) {
 		}
 		return k
 	}
-	var cellsOf func(c combo) []cellJSON
-	cellsOf = func(c combo) []cellJSON {
-		if cells, ok := pt.cells[c]; ok {
-			return cells
+	mirrored := map[int]int{}
+	mirror := func(lines []line) []line {
+		out := make([]line, len(lines))
+		for i, l := range lines {
+			grid := make([]int, len(l.grid))
+			for j, r := range l.grid {
+				grid[j] = t.mirrorResult(r, mirrored)
+			}
+			out[i] = line{ctx: l.ctx, grid: grid}
+		}
+		return out
+	}
+	var linesOf func(c combo) []line
+	linesOf = func(c combo) []line {
+		if lines, ok := t.lines[c]; ok {
+			return lines
 		}
 		r := combo{op: c.op, left: rep(c.left), right: rep(c.right)}
-		var out []cellJSON
+		var out []line
 		switch pos, negated := Negations[c.op]; {
 		case r != c && own[r]:
-			out = copyCells(pt.cells[r], c, false)
+			out = t.lines[r]
 		case negated:
-			out = copyCells(cellsOf(combo{op: pos, left: c.left, right: c.right}), c, true)
+			out = mirror(linesOf(combo{op: pos, left: c.left, right: c.right}))
 		case r != c:
-			out = copyCells(cellsOf(r), c, false)
+			out = linesOf(r)
 		}
 		if len(out) > 0 {
-			pt.cells[c] = out
+			t.lines[c] = out
 		}
 		return out
 	}
 	for _, c := range combos() {
-		cellsOf(c)
+		linesOf(c)
 	}
 }
 
-// copyCells returns the cells as cells of the combination c, their outcomes
-// mirrored when mirror is set: T and F swap, and a by_value cell lists the
-// mirrored outcomes in the order of valueOutcomes.
-func copyCells(cells []cellJSON, c combo, mirror bool) []cellJSON {
-	out := make([]cellJSON, len(cells))
-	for i, cj := range cells {
-		left := *cj.Left
-		left.Kind = c.left
-		cj.Left = &left
-		if cj.Right != nil {
-			right := *cj.Right
-			right.Kind = c.right
-			cj.Right = &right
-		}
-		cj.Op = c.op
-		if mirror {
-			cj.Outcome = mirrorOutcome(cj.Outcome)
-			outs := make([]Outcome, 0, len(cj.Outcomes))
-			for _, o := range valueOutcomes(ProfileLegacy) {
-				if slices.ContainsFunc(cj.Outcomes, func(x Outcome) bool { return mirrorOutcome(x) == o }) {
-					outs = append(outs, o)
-				}
-			}
-			if cj.Outcomes != nil {
-				cj.Outcomes = outs
-			}
-		}
-		out[i] = cj
+// mirrorResult returns the index of the mirror of result i, appending it to
+// t.results when no result equals it: T and F swap, and a by_value cell lists
+// the mirrored outcomes in the order of valueOutcomes.
+func (t *Table) mirrorResult(i int, memo map[int]int) int {
+	if m, ok := memo[i]; ok {
+		return m
 	}
-	return out
+	r := t.results[i]
+	m := Cell{Outcome: mirrorOutcome(r.Outcome), ValueRule: r.ValueRule}
+	if r.Outcomes != nil {
+		m.Outcomes = []Outcome{}
+		for _, o := range valueOutcomes(ProfileLegacy) {
+			if slices.ContainsFunc(r.Outcomes, func(x Outcome) bool { return mirrorOutcome(x) == o }) {
+				m.Outcomes = append(m.Outcomes, o)
+			}
+		}
+	}
+	j := slices.IndexFunc(t.results, func(x Cell) bool { return sameCell(x, m) })
+	if j < 0 {
+		j = len(t.results)
+		t.results = append(t.results, m)
+	}
+	memo[i] = j
+	return j
+}
+
+func sameCell(a, b Cell) bool {
+	return a.Outcome == b.Outcome && slices.Equal(a.Outcomes, b.Outcomes) && slices.Equal(a.ValueRule, b.ValueRule)
 }
 
 func mirrorOutcome(o Outcome) Outcome {
@@ -403,9 +507,9 @@ func mirrorOutcome(o Outcome) Outcome {
 	}
 }
 
-// applyLeaf maps the outcome of every cell through the profile's leaf map. A
-// by_value cell whose outcomes map to one becomes a cell of that outcome.
-func applyLeaf(pt *profileTable, leaf map[Outcome]Outcome) {
+// applyLeaf maps the outcome of every result through the leaf map. A by_value
+// result whose outcomes map to one becomes a result of that outcome.
+func (t *Table) applyLeaf(leaf map[Outcome]Outcome) {
 	if len(leaf) == 0 {
 		return
 	}
@@ -415,115 +519,64 @@ func applyLeaf(pt *profileTable, leaf map[Outcome]Outcome) {
 		}
 		return o
 	}
-	for c, cells := range pt.cells {
-		out := make([]cellJSON, len(cells))
-		for i, cj := range cells {
-			cj.Outcome = mapped(cj.Outcome)
-			if cj.Outcome == OutcomeByValue {
-				var outs []Outcome
-				for _, o := range cj.Outcomes {
-					if m := mapped(o); !slices.Contains(outs, m) {
-						outs = append(outs, m)
-					}
-				}
-				cj.Outcomes = outs
-				if len(outs) == 1 {
-					cj.Outcome, cj.Outcomes, cj.ValueRule = outs[0], nil, nil
+	for i, r := range t.results {
+		r.Outcome = mapped(r.Outcome)
+		if r.Outcome == OutcomeByValue {
+			var outs []Outcome
+			for _, o := range r.Outcomes {
+				if m := mapped(o); !slices.Contains(outs, m) {
+					outs = append(outs, m)
 				}
 			}
-			out[i] = cj
+			r.Outcomes = outs
+			if len(outs) == 1 {
+				r.Outcome, r.Outcomes, r.ValueRule = outs[0], nil, nil
+			}
 		}
-		pt.cells[c] = out
+		t.results[i] = r
 	}
 }
 
-func checkDomain(p Profile, k Kind, d Domain, invalid *problems) {
+func checkDomain(k Kind, d Domain, invalid *problems) {
 	if len(d.States) == 0 {
-		invalid.add("%s: operand kind %s has no states", p, k)
+		invalid.add("operand kind %s has no states", k)
 	}
 	for i, s := range d.States {
 		if !known(States, s) || slices.Contains(d.States[:i], s) {
-			invalid.add("%s: operand kind %s: state %q is unknown or repeated", p, k, s)
+			invalid.add("operand kind %s: state %q is unknown or repeated", k, s)
 		}
 	}
 	for i, c := range d.Classes {
 		if !known(Classes, c) || slices.Contains(d.Classes[:i], c) {
-			invalid.add("%s: operand kind %s: class %q is unknown or repeated", p, k, c)
+			invalid.add("operand kind %s: class %q is unknown or repeated", k, c)
 		}
 	}
 	if slices.Contains(d.States, StateValue) != (len(d.Classes) > 0) {
-		invalid.add("%s: operand kind %s lists classes without state VALUE, or state VALUE without classes", p, k)
+		invalid.add("operand kind %s lists classes without state VALUE, or state VALUE without classes", k)
 	}
 }
 
-// checkCell reports whether the cell is well-formed, and records each problem.
-// The cells of either profile carry legacy's outcomes; the profile's leaf map
-// rewrites them after loading.
-func checkCell(p Profile, i int, cj *cellJSON, domains map[Kind]Domain, invalid *problems) bool {
+// checkResult reports whether the cell is a valid result in legacy's
+// outcomes, and records each problem. The leaf map rewrites the outcomes
+// after loading.
+func checkResult(where string, r Cell, invalid *problems) bool {
 	before := len(invalid.list) + invalid.extra
-	where := fmt.Sprintf("%s: cell %d", p, i)
-	if !known(Operators, cj.Op) {
-		invalid.add("%s: unknown operator %q", where, cj.Op)
-		return false
-	}
-	if cj.Left == nil {
-		invalid.add("%s: %s has no left side", where, cj.Op)
-		return false
-	}
-	if !admitsLeft(cj.Left.Kind) || !known(Kinds, cj.Left.Kind) {
-		invalid.add("%s: %s does not take kind %q on the left", where, cj.Op, cj.Left.Kind)
-	} else {
-		checkSide(where, "left", cj.Left, domains, invalid)
-	}
-	switch {
-	case cj.Op.Unary() && cj.Right != nil:
-		invalid.add("%s: %s takes no right side", where, cj.Op)
-	case !cj.Op.Unary() && cj.Right == nil:
-		invalid.add("%s: %s has no right side", where, cj.Op)
-	case cj.Right != nil && (!admitsRight(cj.Op, cj.Right.Kind) || !known(Kinds, cj.Right.Kind)):
-		invalid.add("%s: %s does not take kind %q on the right", where, cj.Op, cj.Right.Kind)
-	case cj.Right != nil:
-		checkSide(where, "right", cj.Right, domains, invalid)
-	}
-	if cj.Place != "" && !known(Places, cj.Place) {
-		invalid.add("%s: unknown place %q", where, cj.Place)
-	}
-	if cj.Effect != "" && !known(Effects, cj.Effect) {
-		invalid.add("%s: unknown effect %q", where, cj.Effect)
-	}
 	allowed, _ := Outcomes(ProfileLegacy)
 	switch {
-	case !known(allowed, cj.Outcome):
-		invalid.add("%s: outcome %q is not an outcome of profile %s", where, cj.Outcome, ProfileLegacy)
-	case cj.Outcome == OutcomeByValue:
-		checkValueOutcomes(where, ProfileLegacy, cj.Outcomes, invalid)
-	case len(cj.Outcomes) > 0:
-		invalid.add("%s: outcomes is set for outcome %s; only by_value lists outcomes", where, cj.Outcome)
+	case !known(allowed, r.Outcome):
+		invalid.add("%s: outcome %q is not an outcome of profile %s", where, r.Outcome, ProfileLegacy)
+	case r.Outcome == OutcomeByValue:
+		checkValueOutcomes(where, ProfileLegacy, r.Outcomes, invalid)
+	case len(r.Outcomes) > 0:
+		invalid.add("%s: outcomes is set for outcome %s; only by_value lists outcomes", where, r.Outcome)
 	}
 	switch {
-	case cj.Outcome == OutcomeByValue:
-		checkValueRule(where, cj.ValueRule, invalid)
-	case cj.ValueRule != nil:
-		invalid.add("%s: value_rule is set for outcome %s; only by_value names a value rule", where, cj.Outcome)
+	case r.Outcome == OutcomeByValue:
+		checkValueRule(where, r.ValueRule, invalid)
+	case r.ValueRule != nil:
+		invalid.add("%s: value_rule is set for outcome %s; only by_value names a value rule", where, r.Outcome)
 	}
 	return len(invalid.list)+invalid.extra == before
-}
-
-func checkSide(where, side string, s *sideJSON, domains map[Kind]Domain, invalid *problems) {
-	d, ok := domains[s.Kind]
-	if !ok {
-		return // reported as a missing domain
-	}
-	if s.State != "" && !slices.Contains(d.States, s.State) {
-		invalid.add("%s: %s state %q is not in the domain of %s", where, side, s.State, s.Kind)
-	}
-	if s.Class != "" {
-		if s.State != StateValue {
-			invalid.add("%s: %s class %q is set without state VALUE", where, side, s.Class)
-		} else if !slices.Contains(d.Classes, s.Class) {
-			invalid.add("%s: %s class %q is not in the domain of %s", where, side, s.Class, s.Kind)
-		}
-	}
 }
 
 func checkValueOutcomes(where string, p Profile, outs []Outcome, invalid *problems) {
@@ -559,9 +612,9 @@ func checkValueRule(where string, rules []ValueRule, invalid *problems) {
 }
 
 // checkNodes records an unknown or missing algorithm, rule effect, or node
-// outcome of the profile's nodes.
-func checkNodes(p Profile, n *Nodes, invalid, incomplete *problems) {
-	where := fmt.Sprintf("%s: nodes", p)
+// outcome of the nodes.
+func checkNodes(n *Nodes, invalid, incomplete *problems) {
+	const where = "nodes"
 	outcome := func(what string, o NodeOutcome) {
 		switch {
 		case o == "":
@@ -615,33 +668,50 @@ func checkNodes(p Profile, n *Nodes, invalid, incomplete *problems) {
 	}
 }
 
-// checkCoverage records, for every combination the profile must answer, each
-// point of its grid that no cell covers or that two cells cover.
-func checkCoverage(p Profile, pt *profileTable, invalid, incomplete *problems) {
-	contexts := allContexts()
-	var counts []uint8
+// checkCoverage records, for every combination the table must answer, each
+// context that no line of the combination covers or that two lines cover. A
+// line covers every point of its combination, so the contexts are all that
+// can leave a point uncovered or covered twice.
+func (t *Table) checkCoverage(invalid, incomplete *problems) {
 	for _, c := range combos() {
-		cells := pt.cells[c]
-		if len(cells) == 0 {
-			incomplete.add("%s: %s has no cells", p, c)
+		lines := t.lines[c]
+		if len(lines) == 0 {
+			incomplete.add("%s has no cells", c)
 			continue
 		}
-		lps := points(c.left, pt.domains[c.left])
-		rps := []Point{{}}
-		if c.right != "" {
-			rps = points(c.right, pt.domains[c.right])
+		var holes, overlaps int
+		var firstHole, firstOverlap Context
+		for _, ctx := range allContexts() {
+			n := 0
+			for _, l := range lines {
+				if l.ctx.matches(ctx) {
+					n++
+				}
+			}
+			switch {
+			case n == 0 && holes == 0:
+				firstHole = ctx
+				fallthrough
+			case n == 0:
+				holes++
+			case n > 1 && overlaps == 0:
+				firstOverlap = ctx
+				fallthrough
+			case n > 1:
+				overlaps++
+			}
 		}
-		n := len(contexts) * len(lps) * len(rps)
-		counts = slices.Grow(counts[:0], n)[:n]
-		clear(counts)
-		for i := range cells {
-			cells[i].mark(counts, contexts, lps, rps)
+		if holes > 0 {
+			incomplete.add("%s: no line covers %d contexts, the first at %s", c, holes, describeContext(firstHole))
 		}
-		reportGrid(p, c, counts, contexts, lps, rps, invalid, incomplete)
+		if overlaps > 0 {
+			invalid.add("%s: several lines cover %d contexts, the first at %s", c, overlaps,
+				describeContext(firstOverlap))
+		}
 	}
 }
 
-// combos lists every combination of operator and operand kinds a profile must
+// combos lists every combination of operator and operand kinds a table must
 // answer.
 func combos() []combo {
 	var out []combo
@@ -664,70 +734,19 @@ func combos() []combo {
 	return out
 }
 
-func (cj *cellJSON) mark(counts []uint8, contexts []Context, lps, rps []Point) {
-	for ci, ctx := range contexts {
-		if !cj.matchesContext(ctx) {
-			continue
-		}
-		for li, lp := range lps {
-			if !cj.Left.matches(lp) {
-				continue
-			}
-			for ri, rp := range rps {
-				if cj.Right != nil && !cj.Right.matches(rp) {
-					continue
-				}
-				i := (ci*len(lps)+li)*len(rps) + ri
-				if counts[i] < 2 {
-					counts[i]++
-				}
-			}
-		}
-	}
-}
-
-// reportGrid records the first hole and the first overlap of one combination's
-// grid, with the number of points of each.
-func reportGrid(p Profile, c combo, counts []uint8, contexts []Context, lps, rps []Point, invalid, incomplete *problems) {
-	var holes, overlaps int
-	var firstHole, firstOverlap int
-	for i, n := range counts {
-		switch n {
-		case 0:
-			if holes == 0 {
-				firstHole = i
-			}
-			holes++
-		case 2:
-			if overlaps == 0 {
-				firstOverlap = i
-			}
-			overlaps++
-		}
-	}
-	at := func(i int) string {
-		ri := i % len(rps)
-		li := i / len(rps) % len(lps)
-		ci := i / len(rps) / len(lps)
-		return describePoint(lps[li], rps[ri], contexts[ci], c.right != "")
-	}
-	if holes > 0 {
-		incomplete.add("%s: %s: no cell covers %d points, the first at %s", p, c, holes, at(firstHole))
-	}
-	if overlaps > 0 {
-		invalid.add("%s: %s: several cells cover %d points, the first at %s", p, c, overlaps, at(firstOverlap))
-	}
-}
-
 func describePoint(l, r Point, ctx Context, binary bool) string {
 	var b strings.Builder
 	b.WriteString("left " + describeSide(l))
 	if binary {
 		b.WriteString(", right " + describeSide(r))
 	}
-	fmt.Fprintf(&b, ", place %s, effect %s, disjunction %t, in_iterate %t",
-		ctx.Place, ctx.Effect, ctx.Disjunction, ctx.InIterate)
+	b.WriteString(", " + describeContext(ctx))
 	return b.String()
+}
+
+func describeContext(ctx Context) string {
+	return fmt.Sprintf("place %s, effect %s, disjunction %t, in_iterate %t",
+		ctx.Place, ctx.Effect, ctx.Disjunction, ctx.InIterate)
 }
 
 func describeSide(pt Point) string {
@@ -737,7 +756,9 @@ func describeSide(pt Point) string {
 	return string(pt.State)
 }
 
-// points lists the (state, class) pairs of a domain, VALUE once per class.
+// points lists the (state, class) pairs of a domain in the order a line's grid
+// indexes them: the states in the order the domain lists them, with VALUE
+// once per class, in the order the domain lists the classes.
 func points(k Kind, d Domain) []Point {
 	var ps []Point
 	for _, s := range d.States {
@@ -764,19 +785,6 @@ func allContexts() []Context {
 		}
 	}
 	return cs
-}
-
-func (s *sideJSON) matches(pt Point) bool {
-	return s.Kind == pt.Kind &&
-		(s.State == "" || s.State == pt.State) &&
-		(s.Class == "" || s.Class == pt.Class)
-}
-
-func (cj *cellJSON) matchesContext(ctx Context) bool {
-	return (cj.Place == "" || cj.Place == ctx.Place) &&
-		(cj.Effect == "" || cj.Effect == ctx.Effect) &&
-		(cj.Disjunction == nil || *cj.Disjunction == ctx.Disjunction) &&
-		(cj.InIterate == nil || *cj.InIterate == ctx.InIterate)
 }
 
 // problems collects the messages of one error, keeping the first maxProblems.
