@@ -18,6 +18,7 @@ import (
 	"maps"
 	"slices"
 	"strings"
+	"sync"
 
 	"authz-agent/internal/jsonvalue"
 )
@@ -41,6 +42,10 @@ type test struct {
 	// sets are the tokens of the elements of a literal on the left of IS
 	// SUBSET.
 	sets [][]string
+	// ri and ri2 number ref and ref2 among the references of the module's
+	// groups, -1 for none and for sroles. groupIndex sets them for the tests
+	// of the factors it holds.
+	ri, ri2 int
 }
 
 // Group is a subject group: a conjunction of factors, each a disjunction of
@@ -48,6 +53,9 @@ type test struct {
 // <hash> is the first 12 hex digits of the SHA-256 of its factors.
 type Group struct {
 	Factors [][][]*test
+	// factorIDs numbers each factor among the factors of the module's
+	// groups, so that groups share a factor by its number.
+	factorIDs []int
 }
 
 // subjectClauses returns the tests of every clause of d, and false when an
@@ -108,6 +116,12 @@ func (g *gen) group(factors ...dnf) dnf {
 				panic("regogen: a group factor holds an expression without a test")
 			}
 			grp.Factors = append(grp.Factors, cs)
+			fid, ok := g.factorIDs[x.key]
+			if !ok {
+				fid = len(g.factorIDs)
+				g.factorIDs[x.key] = fid
+			}
+			grp.factorIDs = append(grp.factorIDs, fid)
 		}
 		g.groups[id] = grp
 	}
@@ -188,14 +202,16 @@ func (c *cond) tWithSubject(subj dnf) dnf {
 // EvalGroups returns the IDs of the module's groups the input satisfies.
 func EvalGroups(m *Module, in *Input) []string {
 	ix := m.groupIndex()
-	seen := map[string]bool{}
+	e := ix.pool.Get().(*groupEval)
+	defer e.release(ix)
+	e.in, e.ix = in, ix
 	out := []string{}
-	try := func(ids []string) {
-		for _, id := range ids {
-			if !seen[id] {
-				seen[id] = true
-				if m.Groups[id].holds(in) {
-					out = append(out, id)
+	try := func(gs []int) {
+		for _, g := range gs {
+			if !e.seen[g] {
+				e.seen[g] = true
+				if e.groupHolds(ix.groups[g]) {
+					out = append(out, ix.ids[g])
 				}
 			}
 		}
@@ -220,18 +236,61 @@ func EvalGroups(m *Module, in *Input) []string {
 // satisfying input has: a factor whose every clause requires a key among a
 // list's keys (has) or a scalar's key (eq). A group without such a factor is
 // tried for every input.
+//
+// A factor that several groups share is held once, so one evaluation answers
+// it for all of them, and a reference the tests read is numbered, so a test
+// reads its record from a slice rather than from [Input.Records].
 type groupIndex struct {
-	byKey  map[string][]string
-	always []string
+	ids    []string
+	groups [][]int // the factors of each group, as indexes into factors
+	// factors holds the clauses of each distinct factor.
+	factors [][][]*test
+	byKey   map[string][]int
+	always  []int
+	// refs lists the references the tests read; test.ri and test.ri2 index
+	// it.
+	refs []string
+	pool sync.Pool
 }
 
 func (m *Module) groupIndex() *groupIndex {
 	m.ixOnce.Do(func() {
-		ix := &groupIndex{byKey: map[string][]string{}}
-		ids := slices.Sorted(maps.Keys(m.Groups))
-		for _, id := range ids {
+		ix := &groupIndex{byKey: map[string][]int{}}
+		ix.ids = slices.Sorted(maps.Keys(m.Groups))
+		factorIDs := map[int]int{}
+		refIDs := map[string]int{}
+		refID := func(ref string) int {
+			if ref == "" || ref == "sroles" {
+				return -1
+			}
+			i, ok := refIDs[ref]
+			if !ok {
+				i = len(ix.refs)
+				refIDs[ref] = i
+				ix.refs = append(ix.refs, ref)
+			}
+			return i
+		}
+		for g, id := range ix.ids {
+			grp := m.Groups[id]
+			fs := make([]int, len(grp.Factors))
+			for i, f := range grp.Factors {
+				fi, ok := factorIDs[grp.factorIDs[i]]
+				if !ok {
+					fi = len(ix.factors)
+					factorIDs[grp.factorIDs[i]] = fi
+					ix.factors = append(ix.factors, f)
+					for _, c := range f {
+						for _, t := range c {
+							t.ri, t.ri2 = refID(t.ref), refID(t.ref2)
+						}
+					}
+				}
+				fs[i] = fi
+			}
+			ix.groups = append(ix.groups, fs)
 			var best []string
-			for _, f := range m.Groups[id].Factors {
+			for _, f := range grp.Factors {
 				var keys []string
 				ok := true
 				for _, c := range f {
@@ -253,46 +312,93 @@ func (m *Module) groupIndex() *groupIndex {
 				}
 			}
 			if best == nil {
-				ix.always = append(ix.always, id)
+				ix.always = append(ix.always, g)
 				continue
 			}
 			for _, k := range slices.Compact(slices.Sorted(slices.Values(best))) {
-				ix.byKey[k] = append(ix.byKey[k], id)
+				ix.byKey[k] = append(ix.byKey[k], g)
 			}
+		}
+		ix.pool.New = func() any {
+			return &groupEval{seen: make([]bool, len(ix.ids)), factors: make([]int8, len(ix.factors)),
+				recs: make([]Record, len(ix.refs)), loaded: make([]int8, len(ix.refs))}
 		}
 		m.ix = ix
 	})
 	return m.ix
 }
 
-func (grp Group) holds(in *Input) bool {
-	for _, f := range grp.Factors {
-		ok := false
-		for _, c := range f {
-			if clauseHolds(c, in) {
-				ok = true
-				break
-			}
-		}
+// groupEval holds what one call of [EvalGroups] has learned about its input:
+// the groups it tried, the answer of each factor it evaluated, and the
+// record of each reference it read.
+type groupEval struct {
+	in      *Input
+	ix      *groupIndex
+	seen    []bool
+	factors []int8 // 0 not evaluated, 1 holds, 2 does not
+	recs    []Record
+	loaded  []int8 // 0 not read, 1 in recs, 2 absent from the input
+}
+
+func (e *groupEval) release(ix *groupIndex) {
+	e.in, e.ix = nil, nil
+	clear(e.seen)
+	clear(e.factors)
+	clear(e.recs)
+	clear(e.loaded)
+	ix.pool.Put(e)
+}
+
+// rec returns the record of the reference i, and false where the input has
+// none.
+func (e *groupEval) rec(i int) (*Record, bool) {
+	switch e.loaded[i] {
+	case 0:
+		r, ok := e.in.Records[e.ix.refs[i]]
 		if !ok {
+			e.loaded[i] = 2
+			return nil, false
+		}
+		e.recs[i], e.loaded[i] = r, 1
+	case 2:
+		return nil, false
+	}
+	return &e.recs[i], true
+}
+
+func (e *groupEval) groupHolds(fs []int) bool {
+	for _, f := range fs {
+		if !e.factorHolds(f) {
 			return false
 		}
 	}
 	return true
 }
 
-func clauseHolds(c []*test, in *Input) bool {
+func (e *groupEval) factorHolds(f int) bool {
+	if a := e.factors[f]; a != 0 {
+		return a == 1
+	}
+	ok := slices.ContainsFunc(e.ix.factors[f], e.clauseHolds)
+	e.factors[f] = 2
+	if ok {
+		e.factors[f] = 1
+	}
+	return ok
+}
+
+func (e *groupEval) clauseHolds(c []*test) bool {
 	for _, t := range c {
-		if !t.holds(in) {
+		if !t.holds(e) {
 			return false
 		}
 	}
 	return true
 }
 
-func (t *test) holds(in *Input) bool {
+func (t *test) holds(e *groupEval) bool {
 	if t.kind == "m2m" {
-		return in.M2M == (t.val == "true")
+		return e.in.M2M == (t.val == "true")
 	}
 	if t.kind == "noop" {
 		return true
@@ -303,16 +409,15 @@ func (t *test) holds(in *Input) bool {
 	var n0 bool
 	var num *jsonvalue.Decimal
 	if t.ref == "sroles" {
-		ks = in.SRoles
-	} else {
-		r, ok := in.Records[t.ref]
-		if ok {
-			ks, k, st, cl, n0, num = r.list(t.field), r.K, r.S, r.T, r.N0, r.N
-		}
+		ks = e.in.SRoles
+	} else if r, ok := e.rec(t.ri); ok {
+		ks, k, st, cl, n0, num = r.list(t.field), r.K, r.S, r.T, r.N0, r.N
 	}
 	in2 := func() ([]string, *string) {
-		r := in.Records[t.ref2]
-		return r.list(t.field2), r.K
+		if r, ok := e.rec(t.ri2); ok {
+			return r.list(t.field2), r.K
+		}
+		return nil, nil
 	}
 	switch t.kind {
 	case "has":
@@ -334,11 +439,15 @@ func (t *test) holds(in *Input) bool {
 	case "rel":
 		return relHolds(t.val, num, t.num)
 	case "relref":
-		return relHolds(t.val, num, in.Records[t.ref2].N)
+		var n2 *jsonvalue.Decimal
+		if r, ok := e.rec(t.ri2); ok {
+			n2 = r.N
+		}
+		return relHolds(t.val, num, n2)
 	case "nonum":
 		return num == nil
 	case "subset", "unmatched", "nonempty", "emptyleft":
-		return t.subsetHolds(in)
+		return t.subsetHolds(e)
 	case "state":
 		return st == t.val
 	case "cls":

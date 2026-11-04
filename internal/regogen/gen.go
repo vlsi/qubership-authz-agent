@@ -180,6 +180,8 @@ type gen struct {
 
 	groups   map[string]Group
 	groupIDs map[string]string
+	// factorIDs numbers the factors of the groups by their keys.
+	factorIDs map[string]int
 
 	// sources holds what the comments say of each node, by label; shared
 	// holds the rules several nodes may read, and ruleAtoms the comparisons
@@ -213,7 +215,8 @@ func Generate(tree *policyir.Tree, tab *spectables.Table, opt Options) (*Module,
 	g := &gen{tab: tab, tree: tree, opt: opt, refs: map[string]*Ref{}, vars: map[string]string{}, rules: map[string]dnf{},
 		memo: map[string]string{}, counters: map[string]int{}, anyBodies: map[string]dnf{},
 		condMemo: map[string]*cond{}, decNames: map[string]string{}, decRoots: map[string]*node{},
-		groups: map[string]Group{}, groupIDs: map[string]string{}, params: map[string]bool{}, uncertainMemo: map[*node]bool{},
+		groups: map[string]Group{}, groupIDs: map[string]string{}, factorIDs: map[string]int{},
+		params: map[string]bool{}, uncertainMemo: map[*node]bool{},
 		sources: map[string]nodeSource{}, shared: map[string]bool{}, ruleAtoms: map[string][]string{}, light: map[string]bool{},
 		hashedKeys: map[string]string{}}
 	g.stats.NoTemplate = map[string]int{}

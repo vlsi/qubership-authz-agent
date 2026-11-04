@@ -252,11 +252,14 @@ func subsetTest(L, R *side, kind string) *test {
 
 // subsetHolds answers a test of subsetTest as its Rego row does: a missing
 // field fails it.
-func (t *test) subsetHolds(in *Input) bool {
+func (t *test) subsetHolds(e *groupEval) bool {
 	la, okL := t.sets, t.sets != nil
 	if t.ref != "" {
-		r, ok := in.Records[t.ref]
-		la, okL = r.SA, ok && r.SA != nil
+		r, ok := e.rec(t.ri)
+		if !ok {
+			return false
+		}
+		la, okL = r.SA, r.SA != nil
 	}
 	if !okL {
 		return false
@@ -269,8 +272,11 @@ func (t *test) subsetHolds(in *Input) bool {
 	}
 	rb, okR := t.set, t.set != nil
 	if t.ref2 != "" {
-		r, ok := in.Records[t.ref2]
-		rb, okR = r.SB, ok && r.SB != nil
+		r, ok := e.rec(t.ri2)
+		if !ok {
+			return false
+		}
+		rb, okR = r.SB, r.SB != nil
 	}
 	if !okR {
 		return false

@@ -24,6 +24,7 @@ import (
 	"regexp"
 	"slices"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/open-policy-agent/opa/v1/ast"
@@ -1343,6 +1344,118 @@ func TestASubjectGroupComparesSubsets(t *testing.T) {
 			}
 		})
 	}
+}
+
+// Go finds a key of a subject group's factor anywhere in a subject list: in
+// a long list and a short one, in another case, which CONTAINS ANY ignores,
+// and as a literal on the left of IN. Two groups that share a factor, here the
+// one of subject.roles, read the same answer of it.
+func TestASubjectGroupFindsAKeyAmongMany(t *testing.T) {
+	opt := DefaultOptions()
+	opt.Groups = true
+	const anyOf6 = "subject.roles CONTAINS ANY 'r1', 'r2', 'r3', 'r4', 'r5', 'r6'"
+	const shared = anyOf6 + " AND subject.permissions CONTAINS ANY 'p1' AND resource.a == 'p' OR " +
+		anyOf6 + " AND subject.permissions CONTAINS ANY 'p2' AND resource.a == 'q'"
+	const long = `["x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9", `
+	const both = `["p1", "p2"]`
+	for _, tc := range []struct {
+		name, condition, roles, perms, a, want string
+	}{
+		{"the last key in a long list", anyOf6, long + `"r6"]`, both, `"p"`, "T"},
+		{"the first key in a long list", anyOf6, `["r1", ` + long[1:] + `"x10"]`, both, `"p"`, "T"},
+		{"no key in a long list", anyOf6, long + `"x10"]`, both, `"p"`, "F"},
+		{"a key in another case in a long list", anyOf6, long + `"R4"]`, both, `"p"`, "T"},
+		{"a key in a short list", anyOf6, `["x", "r3"]`, both, `"p"`, "T"},
+		{"no key in a short list", anyOf6, `["x", "y"]`, both, `"p"`, "F"},
+		{"the shared factor, the first group", shared, long + `"r2"]`, both, `"p"`, "T"},
+		{"the shared factor, the second group", shared, long + `"r2"]`, both, `"q"`, "T"},
+		{"without the shared factor, the first group", shared, long + `"x10"]`, both, `"p"`, "F"},
+		{"without the shared factor, the second group", shared, long + `"x10"]`, both, `"q"`, "F"},
+		{"a literal in a long list", "'r6' IN subject.roles", long + `"r6"]`, both, `"p"`, "T"},
+		{"a literal not in a long list", "'r6' IN subject.roles", long + `"x10"]`, both, `"p"`, "F"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			values := map[string]Resolved{`["subj","roles"]`: resolved(t, "VALUE", tc.roles),
+				`["subj","permissions"]`: resolved(t, "VALUE", tc.perms), keyA: resolved(t, "VALUE", tc.a)}
+			if got := leafOutcome(t, tc.condition, opt, values); got != tc.want {
+				t.Errorf("%s with subject.roles = %s, subject.permissions = %s, resource.a = %s is %s, want %s",
+					tc.condition, tc.roles, tc.perms, tc.a, got, tc.want)
+			}
+		})
+	}
+}
+
+// One module answers the groups of each input apart from the inputs before
+// it, in turn and at once: the roles of a simplified policy, of a factor of six
+// keys and of a factor of one key, are looked up in a long list of one input
+// and found missing in the next.
+func TestASubjectGroupIsAnsweredForEachInputAlone(t *testing.T) {
+	sets := `{"policySets": [{"policySetId": "s", "name": "s", "status": "ACTIVE", "type": "SIMPLIFIED",
+		"target": "resourceType == 'doc'", "combiningAlgorithm": "DENY_UNLESS_PERMIT", "tenantId": "t1",
+		"policies": [{"policyId": "p", "target": "operation == 'read'", "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+			"tenantId": "t1", "rules": [{"ruleId": "r", "target": "subject.roles CONTAINS ANY 'r1','r2','r3','r4','r5','r6'",
+				"condition": "subject.permissions CONTAINS ANY 'p1'", "effect": "ALLOW", "tenantId": "t1"},
+				{"ruleId": "r7", "target": "subject.roles CONTAINS ANY 'r7'", "effect": "ALLOW", "tenantId": "t1"}]}]}]}`
+	exp, err := policyir.FromRegular([]byte(sets), []byte(`{"pips": []}`))
+	if err != nil {
+		t.Fatalf("FromRegular: %v", err)
+	}
+	opt := DefaultOptions()
+	opt.Groups = true
+	m, err := Generate(exp.Trees["t1"], table(t), opt)
+	if err != nil {
+		t.Fatalf("Generate: %v", err)
+	}
+	long := []string{"x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9"}
+	cases := []struct {
+		name  string
+		roles []string
+		perms string
+		want  bool
+	}{
+		{"a role in a long list", append(slices.Clone(long), "r6"), `["p1"]`, true},
+		{"the other role in a long list", append(slices.Clone(long), "r7"), `["q"]`, true},
+		{"no role in a long list", append(slices.Clone(long), "x10"), `["p1"]`, false},
+		{"a role in a short list", []string{"r2"}, `["p1"]`, true},
+		{"a role without the permission", append(slices.Clone(long), "r3"), `["q"]`, false},
+	}
+	request := func(i int) Request {
+		return Request{Body: Body{Operation: "read", ResourceType: "doc"}, Roles: cases[i].roles,
+			Values: map[string]Resolved{`["subj","permissions"]`: resolved(t, "VALUE", cases[i].perms)}}
+	}
+	groups := make([][]string, len(cases))
+	for round := range 2 {
+		for i, tc := range cases {
+			if got := evalModule(t, m, request(i)); got != tc.want {
+				t.Errorf("round %d, %s: allow = %v, want %v", round, tc.name, got, tc.want)
+			}
+			in, err := Project(m, request(i))
+			if err != nil {
+				t.Fatalf("Project: %v", err)
+			}
+			groups[i] = in.G
+		}
+	}
+	var wg sync.WaitGroup
+	for n := range 40 {
+		wg.Go(func() {
+			i := n % len(cases)
+			if got := EvalGroups(m, mustProject(t, m, request(i))); !slices.Equal(got, groups[i]) {
+				t.Errorf("%s at once with other inputs: groups %v, want %v", cases[i].name, got, groups[i])
+			}
+		})
+	}
+	wg.Wait()
+}
+
+func mustProject(t *testing.T, m *Module, req Request) *Input {
+	t.Helper()
+	in, err := Project(m, req)
+	if err != nil {
+		t.Errorf("Project: %v", err)
+		return &Input{}
+	}
+	return in
 }
 
 // A one-element GENERAL list of a boolean, null, or an object (SINGLE_ODD) on
