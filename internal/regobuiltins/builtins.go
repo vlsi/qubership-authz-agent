@@ -31,6 +31,10 @@
 //     kind is a [jsonpath.Kind] and rec is present for three kinds: for one
 //     and many it is the record of the selected value or of the list of
 //     selected values, and for toolarge a record in state ERROR.
+//   - nc.http.send(request) sends one HTTP request with the agent's own
+//     token and a timeout, and returns its response; the one built-in that
+//     reaches the network, through the [HTTP] of the query's context, with
+//     answers kept for one decision request by [WithCalls].
 //
 // Nothing is registered globally. A compiler takes [Capabilities], a query
 // takes [Options], and an OPA test runner takes the same functions through the
@@ -107,6 +111,8 @@ func All() []Builtin {
 		{valueDecl, rego.Function1(function(valueDecl), value)},
 		{compareDecl, rego.Function2(function(compareDecl), compare)},
 		{jsonpathDecl, rego.Function2(function(jsonpathDecl), selectPath)},
+		{httpSendDecl, rego.Function1(&rego.Function{Name: httpSendDecl.Name, Decl: httpSendDecl.Decl,
+			Nondeterministic: true}, httpSend)},
 	}
 }
 
