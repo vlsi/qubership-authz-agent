@@ -35,31 +35,20 @@ import (
 
 	"authz-agent/components/authz-agent/internal/decisionlog"
 	"authz-agent/components/authz-agent/internal/engine"
+	"authz-agent/components/authz-agent/internal/snapshot"
+	"authz-agent/internal/regogen"
 )
 
-// publicPolicy stands in for the product policies on the public routes: a
-// request without a subject is refused with an authError, a READ is
-// allowed and any other operation denied, and each result carries an rsql
-// predicate naming the resource type, so a test can tell from the response
-// which resources reached the policy.
-const publicPolicy = `package authorize
+// publicSets stands in for the product policies on the public routes, in
+// the tenant default: a READ of an ORDER is allowed with the rsql predicate
+// type==ORDER, and any other operation is denied.
+const publicSets = `{"policySets": [{"policySetId": "s", "name": "s", "status": "ACTIVE", "tenantId": "default",
+	"target": "resourceType == 'ORDER'", "combiningAlgorithm": "DENY_UNLESS_PERMIT",
+	"policies": [{"policyId": "p", "target": "true", "combiningAlgorithm": "DENY_UNLESS_PERMIT", "tenantId": "default",
+		"rules": [{"ruleId": "r", "target": "operation == 'READ'", "effect": "ALLOW", "tenantId": "default",
+			"rsqlPredicate": "type==ORDER"}]}]}]}`
 
-import rego.v1
-
-authError := {"status": 403, "message": "no subject"} if input.subject == ""
-
-rlsIgnored := false
-
-results := [r |
-	some res in input.resources
-	r := {
-		"isAllowed": res.operation == "READ",
-		"predicates": [{"predicateType": "rsql", "predicate": sprintf("type==%v", [res.resourceType])}],
-	}
-]
-`
-
-// newPublicApp builds the public surface over publicPolicy, with the routing
+// newPublicApp builds the public surface over publicSets, with the routing
 // options main uses. collector is the base URL the download is relayed to,
 // "" for none.
 func newPublicApp(t *testing.T, logs *decisionlog.Logger, collector string) *fiber.App {
@@ -72,8 +61,23 @@ func newPublicApp(t *testing.T, logs *decisionlog.Logger, collector string) *fib
 // routes, as the platform's Fiber builder installs it in main.
 func newPublicAppWithLog(t *testing.T, logs *decisionlog.Logger, collector string, log Logger) *fiber.App {
 	t.Helper()
-	return newPublicAppOver(t, map[string]string{"authorize.rego": publicPolicy}, logs,
-		Options{CollectorURL: collector, NDBuiltinCache: true, Log: log})
+	return newPublicAppOver(t, map[string]string{"internals.rego": admissionStub}, logs,
+		Options{CollectorURL: collector, Log: log, Snapshots: registry(t, publicSets), DefaultTenant: func() string { return "default" }})
+}
+
+// registry is a snapshot registry loaded with the policy sets of sets and
+// no PIPs.
+func registry(t *testing.T, sets string) *snapshot.Registry {
+	t.Helper()
+	tab, err := regogen.DefaultTable()
+	if err != nil {
+		t.Fatal(err)
+	}
+	reg := snapshot.New(snapshot.Config{}, tab, quietLoader{})
+	if _, err := reg.Load(context.Background(), []byte(sets), []byte(`{"pips": []}`)); err != nil {
+		t.Fatal(err)
+	}
+	return reg
 }
 
 // newPublicAppOver builds the public surface over modules, with
@@ -324,11 +328,12 @@ func TestPublic_Bulk(t *testing.T) {
 }
 
 // TestPublic_Filter: the filter routes read the query, not the body, and
-// answer the legacy filter shape with the policy's predicates.
+// answer the legacy filter shape with the policy's predicates, a dialect
+// the policy gives none as null.
 func TestPublic_Filter(t *testing.T) {
 	app := newPublicApp(t, nil, "")
-	const useFilter = `{"calculationResult":"USE_FILTER_CONDITION","filterCondition":"","mongodbFilterCondition":"","rsqlFilterCondition":"type==ORDER","sqlFilterCondition":"","customFilterCondition":null}`
-	const denied = `{"calculationResult":"DENY","filterCondition":"","mongodbFilterCondition":"","rsqlFilterCondition":"","sqlFilterCondition":"","customFilterCondition":null}`
+	const useFilter = `{"calculationResult":"USE_FILTER_CONDITION","filterCondition":null,"mongodbFilterCondition":null,"rsqlFilterCondition":"type==ORDER","sqlFilterCondition":null,"customFilterCondition":null}`
+	const denied = `{"calculationResult":"DENY","filterCondition":null,"mongodbFilterCondition":null,"rsqlFilterCondition":null,"sqlFilterCondition":null,"customFilterCondition":null}`
 	cases := []struct {
 		name, path, body string
 		status           int

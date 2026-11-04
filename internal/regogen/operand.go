@@ -407,6 +407,9 @@ func (g *gen) ref(o policyir.Operand, kind spectables.Kind, network bool) (*Ref,
 		key = k
 	}
 	if r, ok := g.refs[key]; ok {
+		if g.touched != nil {
+			g.touched[r] = true
+		}
 		return r, nil
 	}
 	dom, ok := g.tab.Domain(spectables.ProfileAgent, kind)
@@ -439,6 +442,9 @@ func (g *gen) ref(o policyir.Operand, kind spectables.Kind, network bool) (*Ref,
 	}
 	g.refs[key] = r
 	g.refList = append(g.refList, r)
+	if g.touched != nil {
+		g.touched[r] = true
+	}
 	return r, nil
 }
 
@@ -461,6 +467,9 @@ func (g *gen) side(o policyir.Operand) (*side, error) {
 		}
 	case policyir.Subject:
 		if o.Attr == policyir.SubjectPermissionScope {
+			if g.touched != nil {
+				g.touched[scopeOutside] = true
+			}
 			return &side{kind: spectables.KindSubjPermissionScope, fixed: spectables.StateScopeOutside}, nil
 		}
 	case policyir.Resource:

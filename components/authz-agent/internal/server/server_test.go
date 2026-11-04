@@ -30,28 +30,13 @@ import (
 	"authz-agent/components/authz-agent/internal/authn"
 	"authz-agent/components/authz-agent/internal/decisionlog"
 	"authz-agent/components/authz-agent/internal/engine"
-	"authz-agent/components/authz-agent/internal/pull"
 )
 
-// testPolicies mirror the shape of the product policies: a decision that
-// allows each resource when the subject token names data.users.admin, and a
-// non-deterministic builtin for the decision log to record.
-const testPolicies = `package authorize
-
-import rego.v1
-
-rlsIgnored := false
-
-results := [{"isAllowed": input.subject == concat(" ", ["Bearer", data.users.admin])} | some _ in input.resources]
-
-now := time.now_ns()
-`
-
-// newApp builds the internal surface over testPolicies, with
+// newApp builds the internal surface over the admission stub, with
 // data.users.admin set to root.
 func newApp(t *testing.T, logs *decisionlog.Logger, health func() Report) (*fiber.App, *engine.Engine) {
 	t.Helper()
-	eng, err := engine.New(engine.Options{Modules: map[string]string{"authorize.rego": testPolicies}})
+	eng, err := engine.New(engine.Options{Modules: map[string]string{"internals.rego": admissionStub}})
 	if err != nil {
 		t.Fatalf("engine: %v", err)
 	}
@@ -59,7 +44,7 @@ func newApp(t *testing.T, logs *decisionlog.Logger, health func() Report) (*fibe
 		t.Fatal(err)
 	}
 	app := fiber.New(fiber.Config{Immutable: true, DisableStartupMessage: true})
-	Register(app, eng, logs, Options{Health: health, NDBuiltinCache: true})
+	Register(app, eng, logs, Options{Health: health})
 	return app, eng
 }
 
@@ -125,8 +110,7 @@ func TestReady_WaitsForThePolicies(t *testing.T) {
 	}
 }
 
-// TestHealth_ReportsTheLoops: /health is 200 with the conversion counts
-// when the report is healthy, 503 with the reason and its details when it
+// TestHealth_ReportsTheLoops: /health is 200 when the report is healthy, 503 with the reason and its details when it
 // is not, and 200 without details when there is no report.
 func TestHealth_ReportsTheLoops(t *testing.T) {
 	report := Report{Healthy: false, Message: "bootstrap threshold not met", Bootstrap: &authn.Details{Mode: "strict", SuccessCount: 0, RequiredCount: 1}}
@@ -139,10 +123,9 @@ func TestHealth_ReportsTheLoops(t *testing.T) {
 	if details["opaReady"] != true || details["bootstrap"].(map[string]any)["requiredCount"] != float64(1) {
 		t.Errorf("details = %v, want opaReady true and the bootstrap counts", details)
 	}
-	report = Report{Healthy: true, Conversion: &pull.Conversion{PolicySets: 2, Policies: 3}}
-	code, body, raw = do(t, app, http.MethodGet, "/health", "", nil)
-	if code != 200 || body["status"] != "healthy" || body["policyConversion"].(map[string]any)["policies"] != float64(3) {
-		t.Fatalf("GET /health healthy = %d %s, want 200 with the conversion counts", code, raw)
+	report = Report{Healthy: true}
+	if code, _, raw := do(t, app, http.MethodGet, "/health", "", nil); code != 200 || raw != `{"status":"healthy"}` {
+		t.Fatalf("GET /health healthy = %d %s, want 200 {\"status\":\"healthy\"}", code, raw)
 	}
 	plain, _ := newApp(t, nil, nil)
 	if code, _, raw := do(t, plain, http.MethodGet, "/health", "", nil); code != 200 || raw != `{"status":"healthy"}` {
@@ -225,13 +208,13 @@ func (l *levels) at(level string) []string {
 }
 
 // TestDecide_ReportsTheDecisionAtDebug: the decision is the line a policy
-// author asks for, and it names the document and whether it was defined. It
-// is debug because every request writes one, and it carries neither the
-// input nor the result: those hold the caller's token and claims, and the
-// decision log is where they are recorded.
+// author asks for, and it names the document and the tenant. It is debug
+// because every request writes one, and it carries neither the input nor
+// the result: those hold the caller's token and claims, and the decision
+// log is where they are recorded.
 func TestDecide_ReportsTheDecisionAtDebug(t *testing.T) {
 	reported := &levels{}
-	app := newPublicAppOver(t, map[string]string{"authorize.rego": testPolicies}, nil, Options{Log: reported})
+	app := newPublicAppWithLog(t, nil, "", reported)
 
 	if code, _, raw := checkAs(t, app, "alice", nil); code != 200 {
 		t.Fatalf("POST /access/v1/check/resource = %d %s, want 200", code, raw)
@@ -240,60 +223,54 @@ func TestDecide_ReportsTheDecisionAtDebug(t *testing.T) {
 	if len(debug) != 1 {
 		t.Fatalf("one decision reported %v, want one debug line", reported.lines)
 	}
-	if !strings.Contains(debug[0], "path=authorize") || !strings.Contains(debug[0], "defined=true") {
-		t.Errorf("the decision reported %q, want the path authorize and defined=true", debug[0])
+	if !strings.Contains(debug[0], "path=authorize") || !strings.Contains(debug[0], "tenant=default") {
+		t.Errorf("the decision reported %q, want the path authorize and tenant=default", debug[0])
 	}
 	if strings.Contains(debug[0], "alice") {
 		t.Errorf("the decision reported %q, which carries the input; the decision log records that", debug[0])
 	}
 }
 
-// conflictingPolicies makes the decision fail at evaluation rather than
-// deciding: two complete definitions of allowed produce different values for
-// the same request, which OPA reports as a conflict.
-const conflictingPolicies = `package authorize
+// conflictingAdmission makes the checks of the caller fail at evaluation
+// rather than deciding: two complete definitions of admission produce
+// different values for the same request, which OPA reports as a conflict.
+const conflictingAdmission = `package authorize_internals
 
 import rego.v1
 
-allowed := true if input.subject != ""
+admission := {"tokenPayload": {}} if input.subject != ""
 
-allowed := false if input.subject != ""
-
-results := [{"isAllowed": allowed} | some _ in input.resources]
+admission := {"subjectError": "x"} if input.subject != ""
 `
 
-// TestDecide_ReportsADecisionThatCouldNotBeEvaluated: a policy that fails to
-// evaluate answers 500, and the decision log records nothing for a decision
-// that was never made, so the error line is the only account of it. A caller
-// that passes no logger gets no line and the same answer.
-func TestDecide_ReportsADecisionThatCouldNotBeEvaluated(t *testing.T) {
+// TestDecide_ReportsAnAdmissionThatCouldNotBeEvaluated: checks of the caller
+// that fail to evaluate answer 500, and the decision log records nothing for
+// a decision that was never made, so the error line is the only account of
+// it. A caller that passes no logger gets no line and the same answer.
+func TestDecide_ReportsAnAdmissionThatCouldNotBeEvaluated(t *testing.T) {
 	reported := &levels{}
 	for name, log := range map[string]Logger{"a logger was passed": reported, "no logger was passed": nil} {
 		t.Run(name, func(t *testing.T) {
-			app := newPublicAppOver(t, map[string]string{"authorize.rego": conflictingPolicies}, nil, Options{Log: log})
+			app := newPublicAppOver(t, map[string]string{"internals.rego": conflictingAdmission}, nil, Options{Log: log})
 
 			code, body, _ := checkAs(t, app, "alice", nil)
 			if code != 500 || body["code"] != "internal_error" {
-				t.Fatalf("POST /access/v1/check/resource under a failing policy = %d %v, want 500 internal_error", code, body)
+				t.Fatalf("POST /access/v1/check/resource under failing checks = %d %v, want 500 internal_error", code, body)
 			}
 		})
 	}
 	errors := reported.at("error")
-	if len(errors) != 1 {
-		t.Fatalf("a decision that could not be evaluated reported %v, want one error", reported.lines)
-	}
-	if !strings.Contains(errors[0], "path=authorize") {
-		t.Errorf("the failure reported %q, want the path authorize", errors[0])
+	if len(errors) != 1 || !strings.Contains(errors[0], "admission failed") {
+		t.Fatalf("an admission that could not be evaluated reported %v, want one admission error", reported.lines)
 	}
 }
 
 // TestDecide_LogsTheDecision: with logging on, the event of a check request
-// holds a decision id, the input, the result, the recorded header, and the
-// non-deterministic builtin cache.
+// holds a decision id, the input, the result, and the recorded header.
 func TestDecide_LogsTheDecision(t *testing.T) {
 	logs, events, stop := collector(t)
 	defer stop()
-	app := newPublicAppOver(t, map[string]string{"authorize.rego": testPolicies}, logs, Options{NDBuiltinCache: true})
+	app := newPublicApp(t, logs, "")
 
 	if code, _, raw := checkAs(t, app, "root", map[string]string{"X-Request-Id": "req-1"}); code != 200 || raw != "true" {
 		t.Fatalf("POST /access/v1/check/resource = %d %s, want 200 true", code, raw)
@@ -311,58 +288,9 @@ func TestDecide_LogsTheDecision(t *testing.T) {
 	if ev.RequestContext == nil || ev.RequestContext.HTTP.Headers["x-request-id"][0] != "req-1" {
 		t.Errorf("request header not recorded: %+v", ev.RequestContext)
 	}
-	if ev.NDBuiltinCache == nil {
-		t.Errorf("nd_builtin_cache missing (time.now_ns was called)")
-	}
 	select {
 	case extra := <-events:
 		t.Errorf("a second event %+v for one request, want one", extra)
 	case <-time.After(100 * time.Millisecond):
-	}
-}
-
-// TestDecide_AnUndefinedDecisionCarriesItsIDOnlyWhenLogged: a check request
-// whose decision is undefined is answered with the bare envelope, which
-// holds the id of the logged decision when the decisions are logged and
-// nothing when they are not. The builtin cache is built on the logged path alone, which the
-// answer cannot show; the condition is shared with the id, so this is where
-// it would break.
-func TestDecide_AnUndefinedDecisionCarriesItsIDOnlyWhenLogged(t *testing.T) {
-	undefined := map[string]string{"other.rego": "package other\n"}
-	// A logger with neither a collector nor a store is off, as the service
-	// runs without AUTHZ_DECISION_LOG_URL and AUTHZ_DECISION_LOG_FILE.
-	off := newPublicAppOver(t, undefined, decisionlog.New(decisionlog.Config{}, nil), Options{NDBuiltinCache: true})
-	if code, _, raw := checkAs(t, off, "root", nil); code != 200 || raw != "{}" {
-		t.Errorf("undefined decision, not logged = %d %s, want 200 {}", code, raw)
-	}
-	logs, events, stop := collector(t)
-	defer stop()
-	on := newPublicAppOver(t, undefined, logs, Options{NDBuiltinCache: true})
-	code, body, raw := checkAs(t, on, "root", nil)
-	if code != 200 || len(body) != 1 || body["decision_id"] == nil {
-		t.Errorf("undefined decision, logged = %d %s, want 200 with the decision id alone", code, raw)
-	}
-	if ev := nextEvent(t, events); ev.DecisionID != body["decision_id"] {
-		t.Errorf("logged decision id %q, want the id of the answer, %v", ev.DecisionID, body["decision_id"])
-	}
-}
-
-// TestDecide_WithoutTheBuiltinCache: with the cache off the decision is
-// answered and logged as before, and the event carries no
-// nd_builtin_cache, so the PIP requests and responses are not recorded.
-func TestDecide_WithoutTheBuiltinCache(t *testing.T) {
-	logs, events, stop := collector(t)
-	defer stop()
-	app := newPublicAppOver(t, map[string]string{"authorize.rego": testPolicies}, logs, Options{NDBuiltinCache: false})
-
-	if code, _, raw := checkAs(t, app, "root", nil); code != 200 || raw != "true" {
-		t.Fatalf("POST /access/v1/check/resource = %d %s, want 200 true", code, raw)
-	}
-	ev := nextEvent(t, events)
-	if ev.Result == nil {
-		t.Fatalf("event = %+v, want one with its result", ev)
-	}
-	if ev.NDBuiltinCache != nil {
-		t.Errorf("nd_builtin_cache = %v, want none with the cache off", ev.NDBuiltinCache)
 	}
 }

@@ -52,6 +52,10 @@ type Options struct {
 	// Groups moves the subject-only part of each condition into a subject
 	// group that Go evaluates before Eval.
 	Groups bool
+	// FirstApproximation makes the filter of [GenerateFilter] give no rows
+	// for a node any of whose children denies some rows by a predicate,
+	// instead of subtracting the predicate.
+	FirstApproximation bool
 	// AccessDepth is the deepest nesting of subject allowed/denied that a copy
 	// of the tree answers; deeper, the leaf is a constant.
 	AccessDepth int
@@ -112,6 +116,10 @@ type Module struct {
 
 	ixOnce sync.Once
 	ix     *groupIndex
+
+	// filter is the tree a module of [GenerateFilter] answers the statuses
+	// of; nil for a module of [Generate].
+	filter *filterPlan
 }
 
 // Stats counts what the generator produced. Clauses, AllowClauses,
@@ -213,6 +221,12 @@ type gen struct {
 	failures []Failure
 
 	uncertainMemo map[*node]bool
+
+	// filter is set while the generator translates the tree for
+	// check/filter, where a comparison that reads the resource is unknown;
+	// touched collects the references the condition being translated reads.
+	filter  bool
+	touched map[*Ref]bool
 }
 
 // Generate translates the policy tree of a tenant into one Rego module that
@@ -223,39 +237,16 @@ type gen struct {
 // statistics gathered up to it. A part of the tree that fails as a source does
 // generates, and [Module.Failures] lists it.
 func Generate(tree *policyir.Tree, tab *spectables.Table, opt Options) (*Module, error) {
-	g := &gen{tab: tab, tree: tree, opt: opt, refs: map[string]*Ref{}, vars: map[string]string{}, rules: map[string]dnf{},
-		memo: map[string]string{}, counters: map[string]int{}, anyBodies: map[string]dnf{},
-		condMemo: map[string]*cond{}, decNames: map[string]string{}, decRoots: map[string]*node{},
-		groups: map[string]Group{}, groupIDs: map[string]string{}, factorIDs: map[string]int{},
-		params: map[string]bool{}, uncertainMemo: map[*node]bool{},
-		sources: map[string]nodeSource{}, shared: map[string]bool{}, ruleAtoms: map[string][]string{}, light: map[string]bool{},
-		hashedKeys: map[string]string{}}
-	g.stats.NoTemplate = map[string]int{}
-	if fs := tree.Unsupported(); len(fs) > 0 {
-		rej := &RejectedError{}
-		for _, f := range fs {
-			rej.Rejections = append(rej.Rejections, Rejection{Where: f.Where, Form: f.Form, Text: f.Text})
-		}
-		return &Module{Stats: g.stats}, rej
+	g, err := newGen(tree, tab, opt)
+	if err != nil {
+		return &Module{Stats: g.stats}, err
 	}
-	nodes, ok := tab.Nodes(spectables.ProfileAgent)
-	if !ok {
-		return nil, fmt.Errorf("the leaf-outcome tables carry no node rules for profile %s", spectables.ProfileAgent)
-	}
-	g.nodes = nodes
 	tops, err := g.tops()
 	if err != nil {
 		return &Module{Stats: g.stats}, err
 	}
-	for _, name := range g.decOrder {
-		root := g.decRoots[name]
-		for _, f := range []string{"loP", "loD", "hiP", "hiD"} {
-			body, err := g.flagBody(root, f[:2], f[2:])
-			if err != nil {
-				return nil, err
-			}
-			g.rule(name+"_"+f, body)
-		}
+	if err := g.decisions(); err != nil {
+		return nil, err
 	}
 	allow := dnfFalse
 	for _, t := range tops {
@@ -278,6 +269,70 @@ func Generate(tree *policyir.Tree, tab *spectables.Table, opt Options) (*Module,
 	if g.collision != nil {
 		return &Module{Stats: g.stats}, g.collision
 	}
+	m := g.newModule()
+	if g.opt.Decision {
+		m.DecisionText, g.stats.DecisionClauses = g.module(g.opt.Package+"_decision", allow, maybe, true)
+	}
+	m.Text, g.stats.Clauses = g.module(g.opt.Package, allow, nil, false)
+	markEmitted(g.refList, m.Text, m.DecisionText)
+	g.stats.Bytes = len(m.Text)
+	g.stats.AllowClauses = len(allow)
+	for _, c := range allow {
+		if !guarded(dnf{c}) {
+			g.stats.UnguardedAllow++
+		}
+	}
+	m.Stats = g.stats
+	return m, nil
+}
+
+// newGen returns a generator of the tree under opt, or a [*RejectedError]
+// when the tree holds a form the agent cannot execute; the generator then
+// carries only its statistics.
+func newGen(tree *policyir.Tree, tab *spectables.Table, opt Options) (*gen, error) {
+	g := &gen{tab: tab, tree: tree, opt: opt, refs: map[string]*Ref{}, vars: map[string]string{}, rules: map[string]dnf{},
+		memo: map[string]string{}, counters: map[string]int{}, anyBodies: map[string]dnf{},
+		condMemo: map[string]*cond{}, decNames: map[string]string{}, decRoots: map[string]*node{},
+		groups: map[string]Group{}, groupIDs: map[string]string{}, factorIDs: map[string]int{},
+		params: map[string]bool{}, uncertainMemo: map[*node]bool{},
+		sources: map[string]nodeSource{}, shared: map[string]bool{}, ruleAtoms: map[string][]string{}, light: map[string]bool{},
+		hashedKeys: map[string]string{}}
+	g.stats.NoTemplate = map[string]int{}
+	if fs := tree.Unsupported(); len(fs) > 0 {
+		rej := &RejectedError{}
+		for _, f := range fs {
+			rej.Rejections = append(rej.Rejections, Rejection{Where: f.Where, Form: f.Form, Text: f.Text})
+		}
+		return g, rej
+	}
+	nodes, ok := tab.Nodes(spectables.ProfileAgent)
+	if !ok {
+		return g, fmt.Errorf("the leaf-outcome tables carry no node rules for profile %s", spectables.ProfileAgent)
+	}
+	g.nodes = nodes
+	return g, nil
+}
+
+// decisions adds the rules of the bounds of each decision for another
+// operation that a subject allowed or denied leaf reads.
+func (g *gen) decisions() error {
+	for _, name := range g.decOrder {
+		root := g.decRoots[name]
+		for _, f := range []string{"loP", "loD", "hiP", "hiD"} {
+			body, err := g.flagBody(root, f[:2], f[2:])
+			if err != nil {
+				return err
+			}
+			g.rule(name+"_"+f, body)
+		}
+	}
+	return nil
+}
+
+// newModule returns the module of the references the generator assigned,
+// without its text.
+func (g *gen) newModule() *Module {
+	tree := g.tree
 	m := &Module{Refs: g.refList, Iterates: g.stats.Iterates > 0, Groups: g.groups, Report: g.report,
 		Failures: g.failures, pips: tree.PIP}
 	for _, p := range tree.PIPs {
@@ -299,20 +354,7 @@ func Generate(tree *policyir.Tree, tab *spectables.Table, opt Options) (*Module,
 			}
 		}
 	}
-	if g.opt.Decision {
-		m.DecisionText, g.stats.DecisionClauses = g.module(g.opt.Package+"_decision", allow, maybe, true)
-	}
-	m.Text, g.stats.Clauses = g.module(g.opt.Package, allow, nil, false)
-	markEmitted(g.refList, m.Text, m.DecisionText)
-	g.stats.Bytes = len(m.Text)
-	g.stats.AllowClauses = len(allow)
-	for _, c := range allow {
-		if !guarded(dnf{c}) {
-			g.stats.UnguardedAllow++
-		}
-	}
-	m.Stats = g.stats
-	return m, nil
+	return m
 }
 
 // hashed returns the name of a rule or a group that any node of the tenant
@@ -638,6 +680,9 @@ type cond struct {
 	three  bool
 	t, f   dnf
 	done   bool
+	// refs are the references the condition reads, set in the generator
+	// for check/filter only.
+	refs []*Ref
 }
 
 func (g *gen) constCond(v bool) *cond { return &cond{g: g, isTrue: &v} }
@@ -663,6 +708,20 @@ func (g *gen) cond(c *policyir.Condition, place spectables.Place, effect policyi
 	}
 	cc := &cond{g: g}
 	g.where.place = place
+	var outer map[*Ref]bool
+	if g.filter {
+		outer, g.touched = g.touched, map[*Ref]bool{}
+		defer func() {
+			for r := range g.touched {
+				cc.refs = append(cc.refs, r)
+				if outer != nil {
+					outer[r] = true
+				}
+			}
+			slices.SortFunc(cc.refs, func(a, b *Ref) int { return strings.Compare(a.Key, b.Key) })
+			g.touched = outer
+		}()
+	}
 	for _, d := range c.Disjuncts {
 		var leaves []leafRails
 		for _, a := range d {
@@ -1271,6 +1330,15 @@ func (g *gen) module(pkg string, allow, maybe dnf, decision bool) (string, int) 
 	if !decision {
 		g.stats.Rules = len(used)
 	}
+	clauses += g.writeRules(&b, cm, used)
+	return b.String(), clauses
+}
+
+// writeRules writes to b the rules in used and the functions of the PIPs and
+// of subject.entitledResources the module calls, and returns the number of
+// clauses of the rules.
+func (g *gen) writeRules(b *strings.Builder, cm *commenter, used map[string]bool) int {
+	clauses := 0
 	// the rules stand in the order of their names, which depend on a node's
 	// label or on a body's content, not on the order the generator met
 	// them in
@@ -1342,5 +1410,5 @@ func (g *gen) module(pkg string, allow, maybe dnf, decision bool) (string, int) 
 	if pips {
 		b.WriteString(pipSendText)
 	}
-	return b.String(), clauses
+	return clauses
 }

@@ -242,8 +242,7 @@ func TestCheckFilter(t *testing.T) {
 		want                    []Resource
 		err                     string
 	}{
-		{"a blank operation means ALL", "ORDER", " ", []Resource{{ResourceType: "ORDER", Operation: "ALL", Resource: map[string]any{}}}, ""},
-		{"an absent operation means ALL", "ORDER", "", []Resource{{ResourceType: "ORDER", Operation: "ALL", Resource: map[string]any{}}}, ""},
+		{"an absent operation stays empty", "ORDER", "", []Resource{{ResourceType: "ORDER", Operation: "", Resource: map[string]any{}}}, ""},
 		{"values keep their spaces", " ORDER ", " READ", []Resource{{ResourceType: " ORDER ", Operation: " READ", Resource: map[string]any{}}}, ""},
 		{"a blank resource type is a bad request", " ", "READ", nil, "bad request"},
 		{"an absent resource type is a bad request", "", "", nil, "bad request"},
@@ -433,43 +432,6 @@ func TestCheckResourceBulkOperationsResponse(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			if got := string(CheckResourceBulkOperationsResponse(tc.result, tc.entries, tc.v2)); got != tc.want {
 				t.Errorf("CheckResourceBulkOperationsResponse(%v, %v, v2=%v) = %s, want %s", tc.result, tc.entries, tc.v2, got, tc.want)
-			}
-		})
-	}
-}
-
-func typedPredicate(typ string, value any) map[string]any {
-	return map[string]any{"predicateType": typ, "predicate": value}
-}
-
-func TestFilterResponse(t *testing.T) {
-	const denied = `{"calculationResult":"DENY","filterCondition":"","mongodbFilterCondition":"","rsqlFilterCondition":"","sqlFilterCondition":"","customFilterCondition":null}`
-	const allowed = `{"calculationResult":"ALLOW","filterCondition":"","mongodbFilterCondition":"","rsqlFilterCondition":"","sqlFilterCondition":"","customFilterCondition":null}`
-	cases := []struct {
-		name   string
-		result any
-		want   string
-	}{
-		{"no results is DENY", decision(), denied},
-		{"a denied result is DENY whatever its predicates", decision(map[string]any{"isAllowed": false, "predicates": []any{typedPredicate("rsql", "a==b")}}), denied},
-		{"allowed without predicates is ALLOW", decision(allow()), allowed},
-		{"allowed with predicates of unknown types is ALLOW", decision(allow(typedPredicate("jpql", "a==b"))), allowed},
-		{"a null predicate counts as none", decision(allow(typedPredicate("rsql", nil))), allowed},
-		{"every typed predicate in its field, querydsl as filterCondition",
-			decision(allow(typedPredicate("rsql", "dept==eng"), typedPredicate("querydsl", "dept eq eng"), typedPredicate("mongodb", map[string]any{"dept": "eng"}),
-				typedPredicate("sql", "dept = 'eng'"), typedPredicate("custom", "x"))),
-			`{"calculationResult":"USE_FILTER_CONDITION","filterCondition":"dept eq eng","mongodbFilterCondition":"{\"dept\":\"eng\"}","rsqlFilterCondition":"dept==eng","sqlFilterCondition":"dept = 'eng'","customFilterCondition":"x"}`},
-		{"only querydsl is still USE_FILTER_CONDITION", decision(allow(typedPredicate("querydsl", "dept eq eng"))),
-			`{"calculationResult":"USE_FILTER_CONDITION","filterCondition":"dept eq eng","mongodbFilterCondition":"","rsqlFilterCondition":"","sqlFilterCondition":"","customFilterCondition":null}`},
-		{"the first predicate of a type wins", decision(allow(typedPredicate("rsql", "first"), typedPredicate("rsql", "second"))),
-			`{"calculationResult":"USE_FILTER_CONDITION","filterCondition":"","mongodbFilterCondition":"","rsqlFilterCondition":"first","sqlFilterCondition":"","customFilterCondition":null}`},
-		{"HTML characters are not escaped", decision(allow(typedPredicate("rsql", "a<b"))),
-			`{"calculationResult":"USE_FILTER_CONDITION","filterCondition":"","mongodbFilterCondition":"","rsqlFilterCondition":"a<b","sqlFilterCondition":"","customFilterCondition":null}`},
-	}
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			if got := string(FilterResponse(tc.result)); got != tc.want {
-				t.Errorf("FilterResponse(%v) = %s, want %s", tc.result, got, tc.want)
 			}
 		})
 	}

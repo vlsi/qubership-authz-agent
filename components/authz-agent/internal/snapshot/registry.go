@@ -66,6 +66,8 @@ type Config struct {
 	// Entitlements is the base URL of the entitlements service, which
 	// subject.entitledResources calls; empty fails every such operand.
 	Entitlements string
+	// FilterFirstApproximation is [regogen.Options.FirstApproximation].
+	FilterFirstApproximation bool
 }
 
 // Snapshot is the compiled module of one tenant.
@@ -74,7 +76,9 @@ type Snapshot struct {
 	// Hash identifies the module text and the decision text; tenants with
 	// equal text share the compiled queries.
 	Hash        string
-	Module      *regogen.Module
+	Module *regogen.Module
+	// Filter is the module that answers check/filter.
+	Filter      *regogen.Module
 	PublishedAt time.Time
 	// treeKey identifies the tenant's tree, so that a load whose tree is
 	// unchanged keeps the snapshot without generating it again.
@@ -84,8 +88,8 @@ type Snapshot struct {
 
 // queries are the prepared queries of one module text.
 type queries struct {
-	allow, maybe rego.PreparedEvalQuery
-	compile      time.Duration
+	allow, maybe, filter rego.PreparedEvalQuery
+	compile              time.Duration
 }
 
 // state is what one load publishes: the snapshots and the health of every
@@ -124,6 +128,7 @@ func New(cfg Config, tab *spectables.Table, log Logger) *Registry {
 	}
 	opt := regogen.DefaultOptions()
 	opt.Groups, opt.Decision = true, true
+	opt.FirstApproximation = cfg.FilterFirstApproximation
 	r := &Registry{cfg: cfg, tab: tab, opt: opt, log: log}
 	r.cur.Store(&state{snapshots: map[string]*Snapshot{}, tenants: map[string]TenantHealth{}})
 	return r
@@ -336,13 +341,20 @@ func (r *Registry) build(ctx context.Context, t string, exp *policyir.Export, pr
 		b.health.Rejected = rej
 		return b
 	}
-	hs := sha256.Sum256([]byte(m.Text + "\x00" + m.DecisionText))
+	fopt := r.opt
+	fopt.Package += "_filter"
+	f, err := regogen.GenerateFilter(tree, r.tab, fopt)
+	if err != nil {
+		b.health.Rejected = &Rejection{At: now(), Stage: "generate", Reason: "the filter: " + err.Error()}
+		return b
+	}
+	hs := sha256.Sum256([]byte(m.Text + "\x00" + m.DecisionText + "\x00" + f.Text))
 	hash := hex.EncodeToString(hs[:])
 	mu.Lock()
 	q, ok := shared[hash]
 	mu.Unlock()
 	if !ok {
-		q, err = r.compile(ctx, m)
+		q, err = r.compile(ctx, m, f)
 		if err != nil {
 			b.health.Rejected = &Rejection{At: now(), Stage: "compile", Reason: err.Error()}
 			return b
@@ -353,12 +365,13 @@ func (r *Registry) build(ctx context.Context, t string, exp *policyir.Export, pr
 		mu.Unlock()
 	}
 	b.refusedTree = ""
-	b.snap = &Snapshot{Tenant: t, Hash: hash, Module: m, PublishedAt: time.Now(), treeKey: treeKey, q: q}
+	b.snap = &Snapshot{Tenant: t, Hash: hash, Module: m, Filter: f, PublishedAt: time.Now(), treeKey: treeKey, q: q}
 	return b
 }
 
-// compile prepares the queries allow and maybe of m.
-func (r *Registry) compile(ctx context.Context, m *regogen.Module) (*queries, error) {
+// compile prepares the queries allow and maybe of m and the statuses of
+// the filter f.
+func (r *Registry) compile(ctx context.Context, m, f *regogen.Module) (*queries, error) {
 	start := time.Now()
 	allow, err := rego.New(append([]func(*rego.Rego){
 		rego.Query("data." + r.opt.Package + ".allow"),
@@ -374,7 +387,14 @@ func (r *Registry) compile(ctx context.Context, m *regogen.Module) (*queries, er
 	if err != nil {
 		return nil, fmt.Errorf("compile the decision module: %w", err)
 	}
-	return &queries{allow: allow, maybe: maybe, compile: time.Since(start)}, nil
+	filter, err := rego.New(append([]func(*rego.Rego){
+		rego.Query(regogen.FilterQuery(r.opt.Package + "_filter")),
+		rego.Module("filter.rego", f.Text),
+	}, regogen.Builtins()...)...).PrepareForEval(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("compile the filter module: %w", err)
+	}
+	return &queries{allow: allow, maybe: maybe, filter: filter, compile: time.Since(start)}, nil
 }
 
 func now() string { return time.Now().UTC().Format(time.RFC3339) }

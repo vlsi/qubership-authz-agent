@@ -118,7 +118,7 @@ func TestReadScope_CallsTheServiceAndReadsAPassPerGrant(t *testing.T) {
 	const domain = `["subj","permissionScope.domain"]`
 	want := &Scope{Passes: []map[string]Resolved{{domain: resolved(t, "VALUE", `["d1"]`)},
 		{domain: {State: "ABSENT"}}}}
-	if !reflect.DeepEqual(s, want) {
+	if s.Failed || !reflect.DeepEqual(s.Passes, want.Passes) {
 		t.Errorf("ReadScope = %+v, want %+v", s, want)
 	}
 }

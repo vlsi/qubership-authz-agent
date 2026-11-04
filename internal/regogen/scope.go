@@ -74,7 +74,7 @@ func (m *Module) ReadScope(ctx context.Context, req *Request) *Scope {
 	if !ok {
 		return failed
 	}
-	s := &Scope{Passes: make([]map[string]Resolved, 0, len(grants))}
+	s := &Scope{Passes: make([]map[string]Resolved, 0, len(grants)), grants: grants}
 	for _, g := range grants {
 		pass := map[string]Resolved{}
 		for _, r := range m.Refs {

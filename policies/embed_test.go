@@ -19,14 +19,14 @@ import (
 	"testing"
 )
 
-// TestModules_ProductPoliciesOnly: the six product packages are embedded
+// TestModules_ProductPoliciesOnly: the two product packages are embedded
 // and no test module is, so the service never carries fixtures.
 func TestModules_ProductPoliciesOnly(t *testing.T) {
 	modules, err := Modules()
 	if err != nil {
 		t.Fatalf("Modules: %v", err)
 	}
-	for _, want := range []string{"authorize.rego", "identity.rego", "pip.rego", "rls.rego", "ols.rego", "authorize_internals.rego"} {
+	for _, want := range []string{"identity.rego", "authorize_internals.rego"} {
 		if _, ok := modules[want]; !ok {
 			t.Errorf("embedded policies lack %s; got %d modules", want, len(modules))
 		}

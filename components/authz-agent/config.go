@@ -41,10 +41,6 @@ type config struct {
 	// DecisionLogFile stores the decisions in the service instead of
 	// uploading them; empty uploads.
 	DecisionLogFile string
-	// NDBuiltinCache records the non-deterministic builtin calls of a
-	// decision, the PIP requests and their responses, into its event, as
-	// OPA's nd_builtin_cache does.
-	NDBuiltinCache bool
 	// Authn configures the trusted providers; an empty File disables them.
 	Authn authn.Config
 	// Pull configures the policy pull; [pull.Config] says what disables it.
@@ -70,9 +66,8 @@ type lookup func(key, fallback string) string
 // loadConfig builds the configuration from the environment.
 func loadConfig(get lookup) config {
 	return config{
-		NDBuiltinCache: boolean(get, "authz.nd.builtin.cache", true),
-		Addr:           get("authz.http.addr", "0.0.0.0:8181"),
-		PublicAddr:     get("authz.public.addr", "0.0.0.0:8080"),
+		Addr:       get("authz.http.addr", "0.0.0.0:8181"),
+		PublicAddr: get("authz.public.addr", "0.0.0.0:8080"),
 		DecisionLogs: decisionlog.Config{
 			URL:     get("authz.decision.log.url", ""),
 			Headers: splitList(get("authz.decision.log.headers", "")),

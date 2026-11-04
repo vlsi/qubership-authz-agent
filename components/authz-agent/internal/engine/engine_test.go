@@ -16,6 +16,7 @@ package engine
 
 import (
 	"context"
+	"reflect"
 	"testing"
 
 	"github.com/open-policy-agent/opa/v1/topdown/builtins"
@@ -112,8 +113,8 @@ func TestNew_RejectsBrokenPolicy(t *testing.T) {
 }
 
 // TestNew_EmbeddedProductPoliciesCompile: the policies the service ships
-// compile on the library, and the authorize document they define is what a
-// decision reads.
+// compile on the library, and the admission document they define is what a
+// check request reads first: a request without a token is refused.
 func TestNew_EmbeddedProductPoliciesCompile(t *testing.T) {
 	modules, err := policies.Modules()
 	if err != nil {
@@ -123,13 +124,12 @@ func TestNew_EmbeddedProductPoliciesCompile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("New with product policies: %v", err)
 	}
-	v, ok, err := e.Eval(context.Background(), []string{"authorize"}, map[string]any{}, nil)
+	v, ok, err := e.Eval(context.Background(), []string{"authorize_internals", "admission"}, map[string]any{}, nil)
 	if err != nil || !ok {
-		t.Fatalf("data.authorize with an empty input: ok=%v err=%v", ok, err)
+		t.Fatalf("data.authorize_internals.admission with an empty input: ok=%v err=%v", ok, err)
 	}
-	decision, _ := v.(map[string]any)
-	if results, _ := decision["results"].([]any); results == nil || len(results) != 0 || decision["rlsIgnored"] != false {
-		t.Errorf("data.authorize with an empty input = %v, want rlsIgnored false and an empty results list", v)
+	if want := map[string]any{"subjectError": "Authorization token is missing"}; !reflect.DeepEqual(v, want) {
+		t.Errorf("data.authorize_internals.admission with an empty input = %v, want %v", v, want)
 	}
 }
 

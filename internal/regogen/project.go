@@ -78,6 +78,9 @@ type Scope struct {
 	// value of each subject.permissionScope.<key> operand in that pass, by
 	// [Ref.Key].
 	Passes []map[string]Resolved
+	// grants holds each pass's values by scope key, which a placeholder of
+	// a filter predicate reads.
+	grants []map[string][]jsonvalue.Value
 }
 
 // Record is the value record of a reference, as the module reads it. KS, TK,

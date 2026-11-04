@@ -45,8 +45,6 @@ COLLIDING_PROVIDER_ID="other-idp"
 COLLIDING_ISSUER="https://idp.test.local/realms/other"
 
 IDENTITY_FIXTURE_FILE="${ROOT_DIR}/policies/fixtures/identity/token_auth_fixtures.json"
-POLICY_LANGUAGE_CASES_FILE="${ROOT_DIR}/policies/fixtures/policy_language/cases.json"
-POLICY_LANGUAGE_TOKENS_FILE="${ROOT_DIR}/policies/fixtures/policy_language/tokens.json"
 AUTHN_DATA_DIR="${ROOT_DIR}/policies/test-data/authn"
 
 require_cmd() {
@@ -102,15 +100,6 @@ mint_token() {
 
   rm -f "${claims_file}"
   printf '%s\n' "${token}"
-}
-
-build_policy_language_extra_claims() {
-  local subject_json="$1"
-
-  jq -c '
-    del(.id, .roles, .type)
-    | if has("scopes") then . + {scp: .scopes} | del(.scopes) else . end
-  ' <<<"${subject_json}"
 }
 
 require_cmd jq
@@ -339,33 +328,6 @@ jq -n \
     }
   }' > "${IDENTITY_FIXTURE_FILE}"
 
-policy_tokens_tmp="$(mktemp)"
-jq -n '{tokens:{}}' > "${policy_tokens_tmp}"
-
-while IFS=$'\t' read -r case_name subject_b64; do
-  subject_json="$(printf '%s' "${subject_b64}" | base64 --decode)"
-  roles_csv="$(jq -r '(.roles // []) | join(",")' <<<"${subject_json}")"
-  subject_id="$(jq -r '.id' <<<"${subject_json}")"
-  extra_claims="$(build_policy_language_extra_claims "${subject_json}")"
-  case_token="$(mint_token "${subject_id}" "${roles_csv}" "${VALID_ISSUED_AT}" "${VALID_EXPIRES_IN}" "${extra_claims}")"
-
-  jq \
-    --arg case_name "${case_name}" \
-    --arg token "${case_token}" \
-    '.tokens[$case_name] = $token' \
-    "${policy_tokens_tmp}" > "${policy_tokens_tmp}.next"
-  mv "${policy_tokens_tmp}.next" "${policy_tokens_tmp}"
-done < <(jq -r '.cases | to_entries[] | [.key, (.value.subject | @base64)] | @tsv' "${POLICY_LANGUAGE_CASES_FILE}")
-
-jq \
-  --arg issuer "${ISSUER}" \
-  --arg audience "${AUDIENCE}" \
-  '. + {issuer: $issuer, audience: $audience}' \
-  "${policy_tokens_tmp}" > "${POLICY_LANGUAGE_TOKENS_FILE}"
-
-rm -f "${policy_tokens_tmp}"
-
 echo "Updated Rego token fixtures:"
 echo "  ${IDENTITY_FIXTURE_FILE}"
-echo "  ${POLICY_LANGUAGE_TOKENS_FILE}"
 echo "  ${AUTHN_DATA_DIR}/authn.json"

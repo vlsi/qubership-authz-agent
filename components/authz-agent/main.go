@@ -47,7 +47,6 @@ import (
 	"authz-agent/components/authz-agent/internal/pull"
 	"authz-agent/components/authz-agent/internal/server"
 	"authz-agent/components/authz-agent/internal/snapshot"
-	"authz-agent/internal/pips"
 	"authz-agent/internal/regobuiltins"
 	"authz-agent/internal/regogen"
 	"authz-agent/policies"
@@ -96,7 +95,6 @@ func main() {
 	if cfg.M2M.TokenURL != "" || cfg.M2M.TokenFile != "" {
 		tokens = m2m.New(cfg.M2M, eng, logger)
 	}
-	cfg.Pull.Entitlements = pips.LoadEntitlementsConfigFromEnv()
 	var source pull.Tokens
 	ownToken := func() (string, error) { return "", m2m.ErrNoToken }
 	if tokens != nil {
@@ -114,14 +112,13 @@ func main() {
 	}, table, logger)
 	cfg.Pull.Snapshots = snapshots
 	tenant := newDefaultTenant(cfg.DefaultTenant, cfg.Authn.TenantManagerURL)
-	puller := pull.New(cfg.Pull, eng, source, logger)
+	puller := pull.New(cfg.Pull, source, logger)
 	opts := server.Options{
-		Log:            logger,
-		CollectorURL:   cfg.DecisionLogs.URL,
-		NDBuiltinCache: cfg.NDBuiltinCache,
-		Health:         func() server.Report { return report(providers, puller, snapshots) },
-		Snapshots:      snapshots,
-		DefaultTenant:  tenant.Get,
+		Log:           logger,
+		CollectorURL:  cfg.DecisionLogs.URL,
+		Health:        func() server.Report { return report(providers, puller, snapshots) },
+		Snapshots:     snapshots,
+		DefaultTenant: tenant.Get,
 	}
 
 	// Immutable: strings handed out by the request context, such as a header
@@ -277,7 +274,6 @@ func report(providers *authn.Manager, puller *pull.Puller, snapshots *snapshot.R
 		}
 	}
 	status := puller.Status()
-	r.Conversion = status.Conversion
 	r.Loaded = status.PoliciesLoaded
 	h := snapshots.Health()
 	r.Snapshots = &h

@@ -126,18 +126,6 @@ func TestLoadConfig_MalformedNumbersKeepTheDefaults(t *testing.T) {
 	}
 }
 
-// TestLoadConfig_NDBuiltinCache: the builtin calls are recorded unless the
-// environment turns the cache off, since a decision log without them cannot
-// say which PIP answers the decision rests on.
-func TestLoadConfig_NDBuiltinCache(t *testing.T) {
-	if cfg := loadConfig(fromMap(nil)); !cfg.NDBuiltinCache {
-		t.Error("the builtin calls must be recorded by default")
-	}
-	if cfg := loadConfig(fromMap(map[string]string{"authz.nd.builtin.cache": "false"})); cfg.NDBuiltinCache {
-		t.Error("authz.nd.builtin.cache=false must stop the recording")
-	}
-}
-
 // TestLoadConfig_DecisionPath: the default tenant, the timeout of a PIP
 // call, and the entitlements service, each by default and from the
 // environment.

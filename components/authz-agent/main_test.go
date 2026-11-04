@@ -44,7 +44,7 @@ func (quiet) Warnf(string, ...any)  {}
 
 func newEngine(t *testing.T) *engine.Engine {
 	t.Helper()
-	eng, err := engine.New(engine.Options{Modules: map[string]string{"authorize.rego": "package authorize\n\nimport rego.v1\n\nallowed := true\n"}})
+	eng, err := engine.New(engine.Options{Modules: map[string]string{"identity.rego": "package identity\n\nimport rego.v1\n\nallowed := true\n"}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -57,14 +57,14 @@ func newEngine(t *testing.T) *engine.Engine {
 // disabled pull counts as loaded.
 func TestReport(t *testing.T) {
 	eng := newEngine(t)
-	idle := pull.New(pull.Config{}, eng, nil, quiet{})
+	idle := pull.New(pull.Config{}, nil, quiet{})
 	snaps := snapshot.New(snapshot.Config{}, nil, quiet{})
 	if r := report(nil, idle, snaps); !r.Healthy || r.Loaded {
 		t.Errorf("report before any pull = %+v, want healthy and not loaded", r)
 	}
 	idle.Run(context.Background())
-	if r := report(nil, idle, snaps); !r.Healthy || !r.Loaded || r.Message != "" || r.Conversion != nil {
-		t.Errorf("report with the pull disabled = %+v, want healthy and loaded without counts", r)
+	if r := report(nil, idle, snaps); !r.Healthy || !r.Loaded || r.Message != "" {
+		t.Errorf("report with the pull disabled = %+v, want healthy and loaded", r)
 	}
 	providers := authn.New(authn.Config{File: filepath.Join(t.TempDir(), "absent.json")}, eng, quiet{})
 	providers.Bootstrap(context.Background())

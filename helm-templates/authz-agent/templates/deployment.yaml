@@ -189,10 +189,6 @@ spec:
             {{- end }}
             - name: AUTHZ_ENTITLEMENTS_URL
               value: '{{ .Values.AUTHZ_ENTITLEMENTS_URL }}'
-            - name: AUTHZ_ENTITLEMENTS_HTTP_TIMEOUT
-              value: '{{ .Values.AUTHZ_ENTITLEMENTS_HTTP_TIMEOUT }}'
-            - name: AUTHZ_ENTITLEMENTS_HTTP_RETRIES
-              value: '{{ .Values.AUTHZ_ENTITLEMENTS_HTTP_RETRIES }}'
             - name: AUTHZ_DECISION_LOG_FILE
               value: '{{ printf "%s/decision-logs.jsonl" (trimSuffix "/" .Values.AUTHZ_DECISION_LOG_PATH) }}'
             - name: AUTHZ_DECISION_LOG_HEADERS

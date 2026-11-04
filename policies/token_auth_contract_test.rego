@@ -19,83 +19,6 @@ import rego.v1
 fixtures := data.fixtures.identity
 idp_provider_fixture := fixtures.authn.trustedProviders.byId["test-idp"]
 
-policies_fixture := {
-  "ols": {
-    "CUSTOMER": {
-      "READ": ["ROLE_VIEWER"]
-    }
-  },
-  "rls": {
-    "CUSTOMER": {
-      "READ": {
-        "ROLE_VIEWER": [
-          {
-            "condition": true,
-            "predicates": [
-              {
-                "predicate": "true",
-                "type": "rsql"
-              }
-            ]
-          }
-        ]
-      }
-    }
-  }
-}
-
-runtime_policies_fixture := {
-  "ols": {
-    "ORDER": {
-      "READ": ["ROLE_ADMINISTRATOR", "ROLE_ORDER_MANAGEMENT_RO_USER"]
-    }
-  },
-  "rls": {
-    "ORDER": {
-      "READ": {
-        "ROLE_ADMINISTRATOR": [
-          {
-            "condition": true,
-            "predicates": [
-              {
-                "predicate": "true",
-                "type": "rsql"
-              }
-            ]
-          }
-        ],
-        "ROLE_ORDER_MANAGEMENT_RO_USER": [
-          {
-            "conditionAst": {
-              "op": "eq",
-              "args": [
-                {
-                  "ref": {
-                    "scope": "resource",
-                    "path": ["ownerId"]
-                  }
-                },
-                {
-                  "ref": {
-                    "scope": "subject",
-                    "path": ["id"]
-                  }
-                }
-              ]
-            },
-            "predicates": [
-              {
-                "predicate": "ownerId==${subject.id}",
-                "type": "rsql"
-              }
-            ]
-          }
-        ]
-      }
-    }
-  }
-}
-
 test_token_auth_valid_user_allows_authorize if {
   token := sprintf("Bearer %v", [fixtures.tokens.valid])
   input_req := {
@@ -112,14 +35,11 @@ test_token_auth_valid_user_allows_authorize if {
     "ignoreRls": true
   }
 
-  actual := data.authorize
+  actual := data.authorize_internals.admission
     with input as input_req
     with data.authn as fixtures.authn
-    with data.policies as policies_fixture
 
-  actual.rlsIgnored == true
-  count(actual.results) == 1
-  actual.results[0].isAllowed == true
+  actual.tokenPayload
 }
 
 test_token_auth_service_token_subject_type if {
@@ -159,12 +79,11 @@ test_token_auth_runtime_data_layout_allows_legacy_check_resource if {
     "ignoreRls": true,
   }
 
-  actual := data.authorize
+  actual := data.authorize_internals.admission
     with input as input_req
     with data.authn as runtime_authn
-    with data.policies as runtime_policies_fixture
 
-  actual.results[0].isAllowed == true
+  actual.tokenPayload
 }
 
 test_token_auth_verified_tokens_cache_entry_is_trusted_fast_path if {
@@ -242,15 +161,13 @@ test_token_auth_missing_token_canonical_deny if {
     "ignoreRls": true
   }
 
-  actual := data.authorize
+  actual := data.authorize_internals.admission
     with input as input_req
     with data.authn as fixtures.authn
-    with data.policies as policies_fixture
 
   not object.get(actual, "authError", false)
-  count(actual.results) == 1
-  actual.results[0].isAllowed == false
-  actual.results[0].reason == "Authorization token is missing"
+  actual.subjectError
+  actual.subjectError == "Authorization token is missing"
 }
 
 test_token_auth_expired_canonical_deny if {
@@ -267,15 +184,13 @@ test_token_auth_expired_canonical_deny if {
     "ignoreRls": true
   }
 
-  actual := data.authorize
+  actual := data.authorize_internals.admission
     with input as input_req
     with data.authn as fixtures.authn
-    with data.policies as policies_fixture
 
   not object.get(actual, "authError", false)
-  count(actual.results) == 1
-  actual.results[0].isAllowed == false
-  actual.results[0].reason == "Token has expired"
+  actual.subjectError
+  actual.subjectError == "Token has expired"
 }
 
 # The `iss` claim stopped being a trust criterion in authz-agent-ADR-0075: this
@@ -295,14 +210,12 @@ test_token_auth_foreign_issuer_canonical_allow if {
     "ignoreRls": true
   }
 
-  actual := data.authorize
+  actual := data.authorize_internals.admission
     with input as input_req
     with data.authn as fixtures.authn
-    with data.policies as policies_fixture
 
   not object.get(actual, "authError", false)
-  count(actual.results) == 1
-  actual.results[0].isAllowed == true
+  actual.tokenPayload
 }
 
 test_token_auth_unknown_kid_canonical_deny if {
@@ -319,15 +232,13 @@ test_token_auth_unknown_kid_canonical_deny if {
     "ignoreRls": true
   }
 
-  actual := data.authorize
+  actual := data.authorize_internals.admission
     with input as input_req
     with data.authn as fixtures.authn
-    with data.policies as policies_fixture
 
   not object.get(actual, "authError", false)
-  count(actual.results) == 1
-  actual.results[0].isAllowed == false
-  actual.results[0].reason == "JWT kid is not found in trusted provider keys"
+  actual.subjectError
+  actual.subjectError == "JWT kid is not found in trusted provider keys"
 }
 
 # ── Legacy: invalid subject token -> 401 authError ──────────────────────
@@ -339,13 +250,12 @@ test_token_auth_missing_token_legacy_auth_error if {
     "ignoreRls": true,
   }
 
-  actual := data.authorize
+  actual := data.authorize_internals.admission
     with input as input_req
     with data.authn as fixtures.authn
-    with data.policies as policies_fixture
 
-  actual.results[0].isAllowed == false
-  actual.results[0].reason == "Authorization token is missing"
+  actual.subjectError
+  actual.subjectError == "Authorization token is missing"
 }
 
 test_token_auth_expired_legacy_auth_error if {
@@ -357,17 +267,16 @@ test_token_auth_expired_legacy_auth_error if {
     "ignoreRls": true,
   }
 
-  actual := data.authorize
+  actual := data.authorize_internals.admission
     with input as input_req
     with data.authn as fixtures.authn
-    with data.policies as policies_fixture
 
   auth_error := object.get(actual, "authError", {})
   object.get(auth_error, "status", 0) == 401
   object.get(auth_error, "reason", "") == "Token has expired"
 }
 
-test_token_auth_no_roles_is_authenticated_but_denied if {
+test_token_auth_no_roles_is_admitted if {
   token := sprintf("Bearer %v", [fixtures.tokens.noRoles])
   input_req := {
     "resources": [
@@ -381,14 +290,12 @@ test_token_auth_no_roles_is_authenticated_but_denied if {
     "ignoreRls": true
   }
 
-  actual := data.authorize
+  actual := data.authorize_internals.admission
     with input as input_req
     with data.authn as fixtures.authn
-    with data.policies as policies_fixture
 
   not object.get(actual, "authError", false)
-  count(actual.results) == 1
-  actual.results[0].isAllowed == false
+  actual.tokenPayload
 }
 
 test_token_auth_object_subject_without_internal_flag_is_rejected if {
@@ -408,14 +315,12 @@ test_token_auth_object_subject_without_internal_flag_is_rejected if {
     "ignoreRls": true
   }
 
-  actual := data.authorize
+  actual := data.authorize_internals.admission
     with input as input_req
     with data.authn as fixtures.authn
-    with data.policies as policies_fixture
 
   not object.get(actual, "authError", false)
-  count(actual.results) == 1
-  actual.results[0].isAllowed == false
+  actual.subjectError
 }
 
 test_token_auth_object_subject_with_internal_flag_is_still_rejected if {
@@ -436,14 +341,12 @@ test_token_auth_object_subject_with_internal_flag_is_still_rejected if {
     "ignoreRls": true
   }
 
-  actual := data.authorize
+  actual := data.authorize_internals.admission
     with input as input_req
     with data.authn as fixtures.authn
-    with data.policies as policies_fixture
 
   not object.get(actual, "authError", false)
-  count(actual.results) == 1
-  actual.results[0].isAllowed == false
+  actual.subjectError
 }
 
 # ── realm_access.roles positive cases ────────────────────────────────────
@@ -560,7 +463,7 @@ test_token_auth_non_realm_claims_ignored_even_when_realm_access_present if {
   roles[0] == "ROLE_VIEWER"
 }
 
-test_token_auth_groups_only_token_is_denied_for_authorization if {
+test_token_auth_groups_only_token_is_admitted if {
   token := sprintf("Bearer %v", [fixtures.tokens.groupsOnlyOrderReader])
   input_req := {
     "resources": [{"resourceType": "Customer", "operation": "READ", "resource": {}}],
@@ -568,66 +471,18 @@ test_token_auth_groups_only_token_is_denied_for_authorization if {
     "ignoreRls": true,
   }
 
-  actual := data.authorize
+  actual := data.authorize_internals.admission
     with input as input_req
     with data.authn as fixtures.authn
-    with data.policies as policies_fixture
 
-  actual.results[0].isAllowed == false
+  actual.tokenPayload
 }
 
 # ── many-roles deduplication and matching ────────────────────────────────
 
-test_token_auth_many_roles_payload_is_deduplicated_and_authorizes_by_matching_role if {
-  payload := payload_with_many_roles_and_match
-  roles := data.identity.payload_roles(payload)
-  role_set := data.authorize_internals.subject_roles_set({"roles": roles})
-
-  count(roles) == 41
-  count(roles) == count({role | role := roles[_]})
-  count([1 |
-    some idx
-    roles[idx] == "ROLE_VIEWER"
-  ]) == 1
-
-  ols := data.ols.evaluate("CUSTOMER", "READ", role_set) with data.policies as policies_fixture
-  ols.allow
-  ols.roles == ["ROLE_VIEWER"]
-}
-
-test_token_auth_many_roles_payload_without_required_role_is_denied if {
-  payload := payload_with_many_roles_without_match
-  roles := data.identity.payload_roles(payload)
-  role_set := data.authorize_internals.subject_roles_set({"roles": roles})
-
-  count(roles) == 40
-  not role_set["ROLE_VIEWER"]
-
-  ols := data.ols.evaluate("CUSTOMER", "READ", role_set) with data.policies as policies_fixture
-  not ols.allow
-}
-
-test_token_auth_many_roles_normalize_case_and_deduplicate if {
-  payload := payload_with_many_roles_case_folded_duplicates
-  roles := data.identity.payload_roles(payload)
-  role_set := data.authorize_internals.subject_roles_set({"roles": roles})
-
-  count(roles) == 41
-  count(roles) == count({role | role := roles[_]})
-  count([1 |
-    some idx
-    roles[idx] == "ROLE_VIEWER"
-  ]) == 1
-  count([1 |
-    some idx
-    roles[idx] == "role_viewer"
-  ]) == 0
-  role_set["ROLE_VIEWER"]
-}
-
 # ── anonymous mode ───────────────────────────────────────────────────────
 
-test_token_auth_anonymous_mode_is_authenticated if {
+test_token_auth_anonymous_mode_is_admitted if {
   input_req := {
     "resources": [{"resourceType": "Customer", "operation": "READ", "resource": {}}],
     "subject": "",
@@ -635,12 +490,11 @@ test_token_auth_anonymous_mode_is_authenticated if {
     "ignoreRls": true,
   }
 
-  actual := data.authorize
+  actual := data.authorize_internals.admission
     with input as input_req
     with data.authn as fixtures.authn
-    with data.policies as policies_fixture
 
-  actual.results[0].isAllowed == false
+  actual.tokenPayload
 }
 
 test_token_auth_anonymous_subject_has_no_permissions_field if {
@@ -655,48 +509,6 @@ test_token_auth_anonymous_subject_has_no_permissions_field if {
 }
 
 # ── helper payloads ──────────────────────────────────────────────────────
-
-payload_with_many_roles_and_match := {
-  "roles": ["ROLE_VIEWER"],
-  "authorities": ["ROLE_VIEWER"],
-  "groups": ["ROLE_VIEWER"],
-  "realm_access": {
-    "roles": array.concat(["ROLE_VIEWER"], generated_roles("ROLE_REALM_", 1, 40))
-  },
-  "resource_access": {
-    "portal": {
-      "roles": ["ROLE_VIEWER"]
-    }
-  }
-}
-
-payload_with_many_roles_without_match := {
-  "roles": ["ROLE_VIEWER"],
-  "authorities": ["ROLE_VIEWER"],
-  "groups": ["ROLE_VIEWER"],
-  "realm_access": {
-    "roles": generated_roles("ROLE_REALM_", 1, 40)
-  },
-  "resource_access": {
-    "portal": {
-      "roles": ["ROLE_VIEWER"]
-    }
-  }
-}
-
-payload_with_many_roles_case_folded_duplicates := {
-  "roles": ["role_viewer"],
-  "authorities": ["Role_Viewer"],
-  "groups": ["ROLE_VIEWER"],
-  "realm_access": {
-    "roles": array.concat(["role_viewer", "Role_Viewer", "ROLE_VIEWER"], generated_roles("ROLE_REALM_", 1, 40))
-  },
-  "resource_access": {
-    "portal": {
-      "roles": ["ROLE_VIEWER"]
-    }
-  }
-}
 
 generated_roles(prefix, start, finish) := [sprintf("%v%03d", [prefix, idx]) |
   idx := numbers.range(start, finish)[_]
@@ -763,236 +575,3 @@ test_authenticate_returns_token_payload if {
 }
 
 # ── ADR-0046: TOKEN PIP end-to-end authorization tests ─────────────────────
-
-test_token_pip_e2e_positive_predicate_uses_alias if {
-  cached_token := "pip-e2e-token"
-  cached_authn := {
-    "verifiedTokens": {
-      cached_token: {
-        "providerId": "test-idp",
-        "subject": {
-          "id": "pip-user",
-          "name": "pip-user",
-          "type": "USER",
-          "roles": ["ROLE_USER"],
-          "scopes": []
-        },
-        "payload": {
-          "sub": "pip-user",
-          "preferred_username": "pip-user",
-          "realm_access": {"roles": ["ROLE_USER"]},
-          "email": "pip-user@test.local"
-        }
-      }
-    }
-  }
-
-  pip_config := {
-    "local": {
-      "token": {
-        "subject.emailFromToken": {
-          "name": "subject.emailFromToken",
-          "alias": "emailFromToken",
-          "claim": "email"
-        }
-      },
-      "header": {}
-    },
-    "remote": {"general": {}},
-    "activation": {"generalByResourceTypeOperation": {}},
-    "byName": {
-      "subject.emailFromToken": {
-        "type": "TOKEN",
-        "name": "subject.emailFromToken",
-        "alias": "emailFromToken",
-        "claim": "email"
-      }
-    },
-    "aliasSet": {"emailFromToken": true}
-  }
-
-  policies := {
-    "ols": {
-      "ORDER": {"READ": ["ROLE_USER"]}
-    },
-    "rls": {
-      "ORDER": {
-        "READ": {
-          "ROLE_USER": [{
-            "conditionAst": {
-              "op": "eq",
-              "args": [
-                {"ref": {"scope": "resource", "path": ["ownerEmail"]}},
-                {"ref": {"scope": "subject", "path": ["emailFromToken"]}}
-              ]
-            },
-            "predicates": [{"predicate": "ownerEmail==${subject.emailFromToken}", "type": "rsql"}]
-          }]
-        }
-      }
-    }
-  }
-
-  input_req := {
-    "resources": [{"resourceType": "ORDER", "operation": "READ", "resource": {"ownerEmail": "pip-user@test.local"}}],
-    "subject": sprintf("Bearer %v", [cached_token]),
-    "ignoreRls": false
-  }
-
-  actual := data.authorize
-    with input as input_req
-    with data.authn as cached_authn
-    with data.policies as policies
-    with data.pips as pip_config
-
-  count(actual.results) == 1
-  actual.results[0].isAllowed == true
-  # D-AF-R (OQ-AF-6, 2026-04-15): scalar string substitution is
-  # JSON-quoted in the rendered predicate per the legacy parity
-  # contract.
-  actual.results[0].predicates[0].predicate == `ownerEmail=="pip-user@test.local"`
-}
-
-test_token_pip_e2e_fallback_default_value if {
-  cached_token := "pip-e2e-no-email-token"
-  cached_authn := {
-    "verifiedTokens": {
-      cached_token: {
-        "providerId": "test-idp",
-        "subject": {
-          "id": "pip-user-no-email",
-          "name": "pip-user-no-email",
-          "type": "USER",
-          "roles": ["ROLE_USER"],
-          "scopes": []
-        },
-        "payload": {
-          "sub": "pip-user-no-email",
-          "preferred_username": "pip-user-no-email",
-          "realm_access": {"roles": ["ROLE_USER"]}
-        }
-      }
-    }
-  }
-
-  pip_config := {
-    "local": {
-      "token": {
-        "subject.emailFromToken": {
-          "name": "subject.emailFromToken",
-          "alias": "emailFromToken",
-          "claim": "email",
-          "defaultValue": "unknown@fallback"
-        }
-      },
-      "header": {}
-    },
-    "remote": {"general": {}},
-    "activation": {"generalByResourceTypeOperation": {}},
-    "byName": {
-      "subject.emailFromToken": {
-        "type": "TOKEN",
-        "name": "subject.emailFromToken",
-        "alias": "emailFromToken",
-        "claim": "email",
-        "defaultValue": "unknown@fallback"
-      }
-    },
-    "aliasSet": {"emailFromToken": true}
-  }
-
-  policies := {
-    "ols": {
-      "ORDER": {"READ": ["ROLE_USER"]}
-    },
-    "rls": {
-      "ORDER": {
-        "READ": {
-          "ROLE_USER": [{
-            "condition": true,
-            "predicates": [{"predicate": "ownerEmail==${subject.emailFromToken}", "type": "rsql"}]
-          }]
-        }
-      }
-    }
-  }
-
-  input_req := {
-    "resources": [{"resourceType": "ORDER", "operation": "READ", "resource": {}}],
-    "subject": sprintf("Bearer %v", [cached_token]),
-    "ignoreRls": false
-  }
-
-  actual := data.authorize
-    with input as input_req
-    with data.authn as cached_authn
-    with data.policies as policies
-    with data.pips as pip_config
-
-  count(actual.results) == 1
-  actual.results[0].isAllowed == true
-  # D-AF-R: scalar string (PIP default value) is JSON-quoted.
-  actual.results[0].predicates[0].predicate == `ownerEmail=="unknown@fallback"`
-}
-
-test_token_pip_e2e_unconfigured_claim_not_in_subject if {
-  cached_token := "pip-e2e-no-pip-token"
-  cached_authn := {
-    "verifiedTokens": {
-      cached_token: {
-        "providerId": "test-idp",
-        "subject": {
-          "id": "pip-user",
-          "name": "pip-user",
-          "type": "USER",
-          "roles": ["ROLE_USER"],
-          "scopes": []
-        },
-        "payload": {
-          "sub": "pip-user",
-          "preferred_username": "pip-user",
-          "realm_access": {"roles": ["ROLE_USER"]},
-          "email": "pip-user@test.local",
-          "department": "engineering"
-        }
-      }
-    }
-  }
-
-  policies := {
-    "ols": {
-      "ORDER": {"READ": ["ROLE_USER"]}
-    },
-    "rls": {
-      "ORDER": {
-        "READ": {
-          "ROLE_USER": [{
-            "conditionAst": {
-              "op": "eq",
-              "args": [
-                {"ref": {"scope": "resource", "path": ["dept"]}},
-                {"ref": {"scope": "subject", "path": ["department"]}}
-              ]
-            },
-            "predicates": [{"predicate": "dept==${subject.department}", "type": "rsql"}]
-          }]
-        }
-      }
-    }
-  }
-
-  input_req := {
-    "resources": [{"resourceType": "ORDER", "operation": "READ", "resource": {"dept": "engineering"}}],
-    "subject": sprintf("Bearer %v", [cached_token]),
-    "ignoreRls": false
-  }
-
-  actual := data.authorize
-    with input as input_req
-    with data.authn as cached_authn
-    with data.policies as policies
-
-  count(actual.results) == 1
-  actual.results[0].isAllowed == false
-  contains(actual.results[0].reason, "subject attribute not found: department")
-}

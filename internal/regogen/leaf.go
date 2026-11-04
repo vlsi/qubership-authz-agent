@@ -146,6 +146,12 @@ func (g *gen) compare(c policyir.Compare, ctx spectables.Context) (leafRails, er
 		}
 		return leaf
 	}
+	if g.filter && (readsResource(c.Left) || readsResource(c.Right)) {
+		// check/filter has no resource: what a comparison over it gives
+		// row by row is the predicate's part of the answer
+		g.reportLeaf(leafText(), nil)
+		return leafRails{threeValued: true}, nil
+	}
 	L, err := g.side(c.Left)
 	if err != nil {
 		if errors.Is(err, errUndeclared) {
@@ -680,3 +686,9 @@ func (g *gen) rightListScalarOps(tp *tpl, R *side, rp point) error {
 // list of two or more values of the subject or a PIP on the right.
 var rightListOp = map[spectables.Operator]bool{spectables.OpEQ: true, spectables.OpNE: true,
 	spectables.OpContains: true, spectables.OpNotContains: true}
+
+// readsResource reports whether operand o reads the resource of the request.
+func readsResource(o policyir.Operand) bool {
+	_, ok := o.(policyir.Resource)
+	return ok
+}

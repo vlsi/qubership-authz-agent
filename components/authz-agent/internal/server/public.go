@@ -198,7 +198,7 @@ func (s *Server) checkFilter(originalPath string) fiber.Handler {
 		if err != nil {
 			return s.refuse(c, err)
 		}
-		return s.check(c, originalPath, resources, legacy.FilterResponse)
+		return s.filter(c, originalPath, resources[0])
 	}
 }
 
@@ -212,28 +212,6 @@ func lastQuery(c *fiber.Ctx, key string) string {
 		}
 	}
 	return value
-}
-
-// check evaluates the canonical decision for a legacy request and writes
-// the response: the body shape builds from the decision, or the authError
-// as {"message": ...} with its status when the policy refused the request.
-// An undefined decision gets the envelope without a result, and a failed
-// evaluation 500, so that both stay visible as they were through Envoy. The
-// route is recorded in the decision log as originalPath.
-func (s *Server) check(c *fiber.Ctx, originalPath string, resources []legacy.Resource, shape func(result any) []byte) error {
-	c.Request().Header.Set(originalPathHeader, originalPath)
-	input := legacy.Input(c.GetReqHeaders(), resources)
-	result, defined, id, err := s.evaluate(c, []string{"authorize"}, input)
-	if err != nil {
-		return opaError(c, http.StatusInternalServerError, "internal_error", err.Error())
-	}
-	if !defined {
-		return c.JSON(undefinedEnvelope(id))
-	}
-	if status, body, refused := legacy.AuthError(result); refused {
-		return sendJSON(c, status, body)
-	}
-	return sendJSON(c, http.StatusOK, shape(result))
 }
 
 // refuse writes a request the legacy API rejects before any policy runs:

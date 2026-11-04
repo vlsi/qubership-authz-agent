@@ -207,41 +207,6 @@ func (s *RuntimeSuite) TestZZDecisionLogsCatalogCoverage() {
 				s.Assert().True(decisionLogResultIsCanonical(legacyLog),
 					"legacy route decision log must keep canonical result shape in OPA logs")
 
-				// GENERAL PIP full HTTP response must be persisted in decision logs
-				// via OPA-native nd_builtin_cache. The allowedCustomers PIP
-				// is the http.send whose request URL hits /api/v1/pip/allowed.
-				pipLog, ok := logsByRequestID["pip_general.active_pip_called"]
-				s.Require().True(ok, "missing decision log for pip_general.active_pip_called")
-				pipResponse, ok := decisionLogHTTPSendResponse(pipLog, "/api/v1/pip/allowed")
-				s.Require().True(ok, "decision log for pip_general.active_pip_called must include nd_builtin_cache http.send entry for allowedCustomers")
-				s.Require().Contains(pipResponse, "body")
-				s.Require().Contains(pipResponse, "headers")
-				s.Require().Contains(pipResponse, "raw_body")
-				s.Require().Contains(pipResponse, "status")
-				s.Require().Contains(pipResponse, "status_code")
-
-				pipBodyRaw := pipResponse["body"]
-				pipBody, ok := pipBodyRaw.([]any)
-				s.Require().True(ok, "nd_builtin_cache http.send (allowedCustomers) body must be JSON array")
-				s.Assert().Equal([]any{"C1", "C2", "C3"}, pipBody,
-					"decision log must store full PIP response body for allowedCustomers")
-
-				pipStatusCode, ok := pipResponse["status_code"].(float64)
-				s.Require().True(ok, "nd_builtin_cache http.send (allowedCustomers) status_code must be numeric")
-				s.Assert().Equal(float64(200), pipStatusCode)
-
-				pipStatus, ok := pipResponse["status"].(string)
-				s.Require().True(ok, "nd_builtin_cache http.send (allowedCustomers) status must be string")
-				s.Assert().Equal("200 OK", pipStatus)
-
-				pipRawBody, ok := pipResponse["raw_body"].(string)
-				s.Require().True(ok, "nd_builtin_cache http.send (allowedCustomers) raw_body must be string")
-				s.Assert().Contains(pipRawBody, "\"C1\"")
-
-				pipHeaders, ok := pipResponse["headers"].(map[string]any)
-				s.Require().True(ok, "nd_builtin_cache http.send (allowedCustomers) headers must be object")
-				s.Assert().NotEmpty(pipHeaders)
-
 				return
 			}
 
@@ -309,37 +274,6 @@ func decisionLogResultIsCanonical(obj map[string]any) bool {
 	_, hasRlsIgnored := result["rlsIgnored"]
 	_, hasResults := result["results"]
 	return hasRlsIgnored && hasResults
-}
-
-// decisionLogHTTPSendResponse extracts the http.send result for the PIP call
-// whose request URL contains urlSubstring from the event's nd_builtin_cache.
-// OPA keys nd_builtin_cache["http.send"] by the JSON-serialized request operand, so
-// the backend URL is matched against the cache key.
-func decisionLogHTTPSendResponse(obj map[string]any, urlSubstring string) (map[string]any, bool) {
-	ndCache, ok := obj["nd_builtin_cache"].(map[string]any)
-	if !ok {
-		return map[string]any{}, false
-	}
-
-	httpSend, ok := ndCache["http.send"].(map[string]any)
-	if !ok {
-		return map[string]any{}, false
-	}
-
-	for key, value := range httpSend {
-		if !strings.Contains(key, urlSubstring) {
-			continue
-		}
-
-		response, ok := value.(map[string]any)
-		if !ok {
-			return map[string]any{}, false
-		}
-
-		return response, true
-	}
-
-	return map[string]any{}, false
 }
 
 // expectedDecisionLogStepNames returns the list of catalog step names that are

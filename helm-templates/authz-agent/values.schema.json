@@ -468,33 +468,11 @@
       "$id": "#/properties/AUTHZ_ENTITLEMENTS_URL",
       "type": "string",
       "title": "The AUTHZ_ENTITLEMENTS_URL schema",
-      "description": "Base URL of the entitlements aggregator the ENTITLEMENT PIP calls. Empty leaves the resolver off, and entitlement-based policies evaluate against an empty set",
+      "description": "Base URL of the entitlements service a condition on subject.entitledResources calls. Empty makes such a condition fail, and the item is denied",
       "default": "",
       "examples": [
         "http://entitlements-aggregator:8080"
       ]
-    },
-    "AUTHZ_ENTITLEMENTS_HTTP_TIMEOUT": {
-      "$id": "#/properties/AUTHZ_ENTITLEMENTS_HTTP_TIMEOUT",
-      "type": "integer",
-      "title": "The AUTHZ_ENTITLEMENTS_HTTP_TIMEOUT schema",
-      "description": "Per-request timeout in seconds for the entitlements aggregator call",
-      "default": 5,
-      "examples": [
-        5
-      ],
-      "minimum": 1
-    },
-    "AUTHZ_ENTITLEMENTS_HTTP_RETRIES": {
-      "$id": "#/properties/AUTHZ_ENTITLEMENTS_HTTP_RETRIES",
-      "type": "integer",
-      "title": "The AUTHZ_ENTITLEMENTS_HTTP_RETRIES schema",
-      "description": "Retry count for the entitlements aggregator call",
-      "default": 3,
-      "examples": [
-        3
-      ],
-      "minimum": 1
     },
     "AUTHZ_DECISION_LOG_PATH": {
       "$id": "#/properties/AUTHZ_DECISION_LOG_PATH",

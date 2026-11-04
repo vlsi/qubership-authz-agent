@@ -23,8 +23,8 @@ import (
 
 // ── Simplified input types ────────────────────────────────────────────────────
 
-// simplifiedPolicy mirrors internal/simplifiedpolicies.Policy (only the
-// fields the stub uses for v3 export conversion).
+// simplifiedPolicy is an access-control simplified policy, with the fields
+// the stub uses for v3 export conversion.
 //
 // Predicate is not a field of an access-control simplified policy: it is the
 // querydsl template that access-control keeps in the predicate field of a v3
@@ -43,8 +43,8 @@ type simplifiedPolicy struct {
 	Roles            []any  `json:"roles,omitempty"`
 }
 
-// simplifiedPIP mirrors internal/pips.SimplifiedPIP (fields used by
-// the stub for v3 export conversion).
+// simplifiedPIP is an access-control simplified PIP, with the fields the
+// stub uses for v3 export conversion.
 type simplifiedPIP struct {
 	Name              string            `json:"name"`
 	PipType           string            `json:"pipType,omitempty"`

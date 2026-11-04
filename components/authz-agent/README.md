@@ -16,14 +16,13 @@ in ADR 0080 under `docs/decisions`.
   when it changes, and its outcome drives `/health` under the bootstrap rules: strict mode wants every provider,
   permissive mode wants one, and a provider marked `required` has to be there in either.
 - `internal/pull`: the policies and PIPs. Every interval it fetches the v3 configuration of the policy source with
-  the agent's token, converts it to the simplified model, and publishes `data.policies` and `data.pips`. The first
-  successful load makes the service ready.
+  the agent's token and builds each tenant's policies from it. The first successful load makes the service ready.
 - `internal/m2m`: the agent's own token, obtained from the identity provider with client credentials and refreshed
   before it expires, or read from a file another party keeps current. It is sent to the policy source and published
   as `data.m2m.bearerToken`, with its expiry as `data.m2m.expiresAtNs`, for the PIP calls. Without a current token,
   before the first one or once it expired after failed refreshes, neither the pull nor a PIP call is made.
-- `internal/legacy`: the check routes of the legacy access-control API. Each route's body and headers become the
-  input of the `authorize` decision, and the decision becomes the response shape of that route.
+- `internal/legacy`: the check routes of the legacy access-control API: the request body and headers each route
+  accepts, and the response shape it answers with.
 - `internal/server`: the routes, on two listeners. The public surface carries the nine check routes,
   `GET /api-version`, `/health`, `GET /internal/v1/decision-logs`, and `404 {"message":"not found"}` for every
   other path. The internal surface carries `/health`, `/ready`, `/api-version`, and `/prometheus`. No route reads
@@ -39,7 +38,6 @@ The chart assembles the agent Pod as this one container.
 | `LOGGING_LEVEL_ROOT` | `info` | Level of the platform logger; the chart sets it from its `LOG_LEVEL` value |
 | `AUTHZ_PUBLIC_ADDR` | `0.0.0.0:8080` | Listen address of the public surface |
 | `AUTHZ_HTTP_ADDR` | `0.0.0.0:8181` | Listen address of the internal surface: the probes, the metrics, and `/api-version` |
-| `AUTHZ_ND_BUILTIN_CACHE` | `true` | Record the non-deterministic builtin calls of a decision, the PIP requests and their responses, into its decision-log event |
 | `AUTHZ_DECISION_LOG_FILE` | empty | NDJSON file the decisions are stored in and `GET /internal/v1/decision-logs` serves; empty uploads them instead |
 | `AUTHZ_DECISION_LOG_URL` | empty | Collector base URL, where the decisions go and where `GET /internal/v1/decision-logs` is relayed when they are not stored; empty disables both |
 | `AUTHZ_DECISION_LOG_HEADERS` | empty | Comma-separated request headers recorded per decision |
@@ -53,8 +51,7 @@ The chart assembles the agent Pod as this one container.
 | `AUTHZ_PAP_CLIENT_PULL_INTERVAL` | `30` | Seconds between pulls; `0` disables the pull |
 | `AUTHZ_DEFAULT_TENANT` | `default` | Display name of the tenant a check request is decided in when it names none in the `tenant_id` parameter or the `Tenant` header; resolved to the tenant ID through `AUTHZ_TENANT_MANAGER_URL` |
 | `AUTHZ_PIP_TIMEOUT` | `2` | Seconds a policy waits for one call of a PIP; a call that takes longer is a failed PIP |
-| `AUTHZ_ENTITLEMENTS_URL` | empty | Base URL of the entitlements service, which a condition on `subject.entitledResources` calls at `/api/v3/user-entitlements/user/<subject id>`, once per decision request, within `AUTHZ_PIP_TIMEOUT` and without retries. Empty makes such a condition's operand fail, and the item is denied with the reason `PIP resolution failed`. `check/filter` reads it through the entitlements PIP the deployment pins, where an empty URL adds no PIP |
-| `AUTHZ_ENTITLEMENTS_HTTP_TIMEOUT`, `AUTHZ_ENTITLEMENTS_HTTP_RETRIES` | `5`, `3` | Timeout in seconds and retry count of the pinned entitlements PIP that `check/filter` calls |
+| `AUTHZ_ENTITLEMENTS_URL` | empty | Base URL of the entitlements service, which a condition on `subject.entitledResources` calls at `/api/v3/user-entitlements/user/<subject id>`, once per decision request, within `AUTHZ_PIP_TIMEOUT` and without retries. Empty makes such a condition's operand fail, and the item is denied with the reason `PIP resolution failed` |
 | `AUTHZ_M2M_TOKEN_URL` | empty | Token endpoint for the client-credentials grant; empty reads the token from `AUTHZ_PAP_CLIENT_TOKEN_FILE` instead |
 | `AUTHZ_M2M_CLIENT_ID_FILE`, `AUTHZ_M2M_CLIENT_SECRET_FILE` | `/etc/secret/username`, `/etc/secret/password` | The client credentials |
 | `AUTHZ_M2M_RENEW_BEFORE_SECONDS` | `60` | How long before its expiry the token is refreshed |
@@ -71,15 +68,15 @@ unmatched route and per policy load. A decision that denies its caller is not re
 answer the policy gave, and the decision log is where decisions are recorded.
 Every line carries the request id under `request_id`, the same id the decision log records.
 
-`GET /health` is 200 with the counts of the last policy conversion once the trusted providers meet the bootstrap
-rules, and 503 with the reason and its details until then. Its `snapshots` member lists each tenant of the last
-policy load: whether it is `ready`, the snapshot it answers from, the sets and PIPs that answer as failed, and the
-`rejected` reason of a candidate that was not published. A tenant keeps its previous snapshot when a new candidate is
-rejected; a tenant rejected on its first load is not ready and denies every check request. `GET /ready`, on the internal port, adds the policies:
-503 with the reason `policies not loaded yet` and the same details until they have loaded once, 200
-`{"status":"ready"}` after. A pull that fails later keeps the loaded policies and both verdicts. An empty
-`AUTHZ_PAP_CLIENT_SOURCE_URL` or an `AUTHZ_PAP_CLIENT_PULL_INTERVAL` of `0` disables the pull, and `/ready` then
-answers 200 as soon as the trusted providers meet the bootstrap rules, with no policies loaded.
+`GET /health` is 200 once the trusted providers meet the bootstrap rules, and 503 with the reason and its details until
+then. Its `snapshots` member lists each tenant of the last policy load: whether it is `ready`, the snapshot it answers
+from, the sets and PIPs that answer as failed, and the `rejected` reason of a candidate that was not published. A tenant
+keeps its previous snapshot when a new candidate is rejected; a tenant rejected on its first load is not ready and
+denies every check request. `GET /ready`, on the internal port, adds the policies: 503 with the reason `policies not
+loaded yet` and the same details until they have loaded once, 200 `{"status":"ready"}` after. A pull that fails later
+keeps the loaded policies and both verdicts. An empty `AUTHZ_PAP_CLIENT_SOURCE_URL` or an
+`AUTHZ_PAP_CLIENT_PULL_INTERVAL` of `0` disables the pull, and `/ready` then answers 200 as soon as the trusted
+providers meet the bootstrap rules, with no policies loaded.
 
 ## Running it
 

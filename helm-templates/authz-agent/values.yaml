@@ -280,16 +280,8 @@ AUTHZ_PAP_CLIENT_TOKEN_FILE: /var/run/secrets/tokens/netcracker/token
 # decision request, within AUTHZ_PIP_TIMEOUT and without retries. With the URL
 # empty (default) such a condition's operand fails, and check/resource and bulk
 # deny the item with the reason `PIP resolution failed`: set the URL wherever
-# entitlements-based policies are in use.
-#
-# check/filter reads entitlements through the ENTITLEMENT PIP, which the agent
-# pins at startup from these values; there an empty URL adds no PIP, and
-# `entitledResources` evaluates against an empty set.
+# entitlements-based policies are in use. check/filter reads it the same way.
 AUTHZ_ENTITLEMENTS_URL: ''
-# Per-request timeout and retry count of the pinned ENTITLEMENT PIP that
-# check/filter calls. Same shape as the AUTHZ_JWKS_HTTP_* knobs above.
-AUTHZ_ENTITLEMENTS_HTTP_TIMEOUT: 5
-AUTHZ_ENTITLEMENTS_HTTP_RETRIES: 3
 
 # The decisions are written to ephemeral container storage and are lost on a
 # Pod restart. See the handover Next Steps "decision-log collector sink

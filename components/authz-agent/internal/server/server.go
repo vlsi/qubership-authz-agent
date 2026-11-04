@@ -23,13 +23,10 @@ import (
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/open-policy-agent/opa/v1/ast"
-	"github.com/open-policy-agent/opa/v1/topdown/builtins"
 
 	"authz-agent/components/authz-agent/internal/authn"
 	"authz-agent/components/authz-agent/internal/decisionlog"
 	"authz-agent/components/authz-agent/internal/engine"
-	"authz-agent/components/authz-agent/internal/pull"
 	"authz-agent/components/authz-agent/internal/snapshot"
 )
 
@@ -69,17 +66,6 @@ type Options struct {
 	// Health reports the state of the loops the service runs; nil means
 	// the service is healthy and ready as long as it answers.
 	Health func() Report
-	// NDBuiltinCache builds the non-deterministic builtin cache, which the
-	// evaluator reads as a memo within one decision and which is recorded
-	// into the decision's event, as OPA's nd_builtin_cache does. Off,
-	// neither happens. It is also left unbuilt when the decisions are not
-	// logged, where the memo is all it would be: every non-deterministic
-	// builtin the policies call is stable within a decision without it,
-	// http.send and uuid.rfc4122 through caches of their own and
-	// io.jwt.decode_verify and time.now_ns through the evaluation's fixed
-	// clock. The two that would differ, io.jwt.encode_sign and
-	// io.jwt.encode_sign_raw, read no cache at all and are not called.
-	NDBuiltinCache bool
 	// Log receives the diagnostics of the request path; nil discards them.
 	Log Logger
 	// CollectorURL is the base URL of the decision-log collector the
@@ -130,9 +116,7 @@ type Report struct {
 	// Bootstrap carries the counts when a bootstrap threshold is not met or
 	// a required provider is missing.
 	Bootstrap *authn.Details
-	// Conversion counts the last policy conversion, on either outcome.
-	Conversion *pull.Conversion
-	Loaded     bool
+	Loaded    bool
 	// Snapshots is the state of every tenant's generated policies, nil
 	// without a registry.
 	Snapshots *snapshot.Health
@@ -140,9 +124,8 @@ type Report struct {
 
 // HealthResponse is the body of a healthy GET /health.
 type HealthResponse struct {
-	Status           string           `json:"status"`
-	PolicyConversion *pull.Conversion `json:"policyConversion,omitempty"`
-	Snapshots        *snapshot.Health `json:"snapshots,omitempty"`
+	Status    string           `json:"status"`
+	Snapshots *snapshot.Health `json:"snapshots,omitempty"`
 }
 
 // HealthErrorResponse is the body of a 503 GET /health or GET /ready.
@@ -156,14 +139,13 @@ type HealthErrorResponse struct {
 // separate engine to wait for. The field stays because the body's shape is
 // what the platform's probes and dashboards already read.
 type HealthErrorDetails struct {
-	OPAReady         *bool            `json:"opaReady,omitempty"`
-	ConfigError      string           `json:"configError,omitempty"`
-	Bootstrap        *authn.Details   `json:"bootstrap,omitempty"`
-	PolicyConversion *pull.Conversion `json:"policyConversion,omitempty"`
-	Snapshots        *snapshot.Health `json:"snapshots,omitempty"`
+	OPAReady    *bool            `json:"opaReady,omitempty"`
+	ConfigError string           `json:"configError,omitempty"`
+	Bootstrap   *authn.Details   `json:"bootstrap,omitempty"`
+	Snapshots   *snapshot.Health `json:"snapshots,omitempty"`
 }
 
-// health answers 200 with the conversion counts and the state of every
+// health answers 200 with the state of every
 // tenant's generated policies when healthy, 503 with the reason and its
 // details otherwise. A tenant whose candidate was refused leaves the
 // service healthy: the tenant names the refusal, and the other tenants
@@ -176,7 +158,7 @@ func (s *Server) health(c *fiber.Ctx) error {
 	}
 	report := s.opts.Health()
 	if report.Healthy {
-		return c.JSON(HealthResponse{Status: "healthy", PolicyConversion: report.Conversion, Snapshots: report.Snapshots})
+		return c.JSON(HealthResponse{Status: "healthy", Snapshots: report.Snapshots})
 	}
 	return unavailable(c, report)
 }
@@ -204,11 +186,10 @@ func unavailable(c *fiber.Ctx, report Report) error {
 	return c.Status(http.StatusServiceUnavailable).JSON(HealthErrorResponse{
 		Message: report.Message,
 		Details: &HealthErrorDetails{
-			OPAReady:         &ready,
-			ConfigError:      report.ConfigError,
-			Bootstrap:        report.Bootstrap,
-			PolicyConversion: report.Conversion,
-			Snapshots:        report.Snapshots,
+			OPAReady:    &ready,
+			ConfigError: report.ConfigError,
+			Bootstrap:   report.Bootstrap,
+			Snapshots:   report.Snapshots,
 		},
 	})
 }
@@ -223,41 +204,7 @@ func opaError(c *fiber.Ctx, status int, code, message string) error {
 	return c.Status(status).JSON(fiber.Map{"code": code, "message": message})
 }
 
-// evaluate runs the decision at segments with input and, when decisions are
-// logged, records it under a fresh decision id; id is "" otherwise. defined
-// is false when the document is undefined.
-func (s *Server) evaluate(c *fiber.Ctx, segments []string, input any) (result any, defined bool, id string, err error) {
-	logged := s.logs != nil && s.logs.Enabled()
-	var ndbc builtins.NDBCache
-	if s.opts.NDBuiltinCache && logged {
-		ndbc = builtins.NDBCache{}
-	}
-	result, defined, err = s.engine.Eval(c.UserContext(), segments, input, ndbc)
-	if err != nil {
-		// Reported here because the caller answers 500 and reports nothing.
-		s.opts.Log.ErrorC(c.UserContext(), "decision failed path=%s: %v", strings.Join(segments, "/"), err)
-		return nil, false, "", err
-	}
-	if logged {
-		id = decisionlog.NewDecisionID()
-		s.logDecision(c, id, segments, input, result, defined, ndbc)
-	}
-	s.opts.Log.DebugC(c.UserContext(), "decision path=%s defined=%t decisionId=%s",
-		strings.Join(segments, "/"), defined, id)
-	return result, defined, id, nil
-}
-
-// undefinedEnvelope is the body of an undefined decision in the shape of
-// OPA's data API: no result, and the decision id when the decision was
-// logged.
-func undefinedEnvelope(id string) fiber.Map {
-	if id == "" {
-		return fiber.Map{}
-	}
-	return fiber.Map{"decision_id": id}
-}
-
-func (s *Server) logDecision(c *fiber.Ctx, id string, segments []string, input, result any, ok bool, ndbc builtins.NDBCache) {
+func (s *Server) logDecision(c *fiber.Ctx, id string, segments []string, input, result any, ok bool) {
 	ev := decisionlog.Event{
 		DecisionID:  id,
 		Path:        strings.Join(segments, "/"),
@@ -268,11 +215,6 @@ func (s *Server) logDecision(c *fiber.Ctx, id string, segments []string, input, 
 	}
 	if ok {
 		ev.Result = result
-	}
-	if len(ndbc) > 0 {
-		if v, err := ast.JSON(ndbc.AsValue()); err == nil {
-			ev.NDBuiltinCache = v
-		}
 	}
 	if names := s.logs.Headers(); len(names) > 0 {
 		ev.RequestContext = &decisionlog.RequestContext{HTTP: &decisionlog.HTTPRequestContext{Headers: recordedHeaders(c, names)}}

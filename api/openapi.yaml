@@ -295,8 +295,8 @@ paths:
         Driven entirely by query parameters (`resourceType`, `operation`);
         the JSON body is reserved for legacy back-compat and must be
         present but is unused. Always returns the six-field
-        `CheckFilterResponse` shape on `200`. `customFilterCondition` is
-        JSON `null` on the simplified-policy path.
+        `CheckFilterResponse` shape on `200`; a field of a dialect without
+        a predicate is JSON `null`.
       parameters:
         - $ref: '#/components/parameters/IncomingTokenHeader'
         - $ref: '#/components/parameters/AuthorizationTypeHeader'
@@ -821,17 +821,30 @@ components:
           enum: [ALLOW, DENY, USE_FILTER_CONDITION]
         filterCondition:
           type: string
-          description: Always empty on the simplified-policy path.
+          nullable: true
+          description: The condition in QueryDSL; `null` without a QueryDSL predicate.
         mongodbFilterCondition:
           type: string
+          nullable: true
+          description: The condition in MongoDB; `null` without a MongoDB predicate.
         rsqlFilterCondition:
           type: string
+          nullable: true
+          description: The condition in RSQL; `null` without an RSQL predicate.
         sqlFilterCondition:
           type: string
-        customFilterCondition:
-          type: string
           nullable: true
-          description: JSON `null` on the simplified-policy path; populated only by legacy full-policy custom-condition payloads.
+          description: The condition in SQL; `null` without an SQL predicate.
+        customFilterCondition:
+          type: object
+          nullable: true
+          description: The custom predicates as `logic`, joined by `AND`, `OR` and `NOT`, and their `data`; `null` without a custom predicate.
+          required: [logic, data]
+          properties:
+            logic: {}
+            data:
+              type: object
+              additionalProperties: true
     ApiVersionResponse:
       type: object
       additionalProperties: false
@@ -864,8 +877,6 @@ components:
         status:
           type: string
           enum: [healthy]
-        policyConversion:
-          $ref: '#/components/schemas/PolicyConversionStats'
     HealthUnhealthyResponse:
       type: object
       additionalProperties: false
@@ -900,49 +911,6 @@ components:
             than silently clearing thresholds.
         bootstrap:
           $ref: '#/components/schemas/BootstrapHealthDetails'
-        policyConversion:
-          $ref: '#/components/schemas/PolicyConversionStats'
-    PolicyConversionStats:
-      type: object
-      additionalProperties: false
-      required: [policySets, policySetsSkipped, rules, rulesSkipped, rulesDenySkipped, policies]
-      description: |
-        Counts from the most recent conversion of the access-control policy
-        set into the OPA document. Present only after the first successful pull.
-
-        The skipped counters are the load-bearing part. A pull that fetched
-        1294 policy sets and converted none of them succeeds by every other
-        measure — `status: healthy` and `policiesLoaded: true` both hold —
-        and from the outside it looks like an authorization outage, because
-        every decision denies. These counts are what distinguishes the two,
-        for an operator reading the body and for monitoring scraping it.
-
-        Readiness is deliberately NOT gated on them: a partial data problem
-        must not turn into an outage.
-      properties:
-        policySets:
-          type: integer
-          description: Policy sets present in the fetched payload.
-        policySetsSkipped:
-          type: integer
-          description: |
-            Policy sets from which no rule could be converted. Non-zero means
-            part of the authorization model is missing from OPA.
-        rules:
-          type: integer
-          description: Rules converted into the OPA document.
-        rulesSkipped:
-          type: integer
-          description: |
-            Rules dropped because their target did not parse. Fail-closed:
-            an unrecognised role target skips the policy rather than granting
-            open access.
-        rulesDenySkipped:
-          type: integer
-          description: DENY-effect rules skipped; the converter emits ALLOW rules only.
-        policies:
-          type: integer
-          description: Simplified policies produced by the conversion.
     BootstrapHealthDetails:
       type: object
       additionalProperties: false
