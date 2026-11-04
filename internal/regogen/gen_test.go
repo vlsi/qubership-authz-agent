@@ -1346,10 +1346,10 @@ func TestASubjectGroupComparesSubsets(t *testing.T) {
 	}
 }
 
-// Go finds a key of a subject group's factor anywhere in a subject list: in
-// a long list and a short one, in another case, which CONTAINS ANY ignores,
-// and as a literal on the left of IN. Two groups that share a factor, here the
-// one of subject.roles, read the same answer of it.
+// Go looks a key up in a subject list longer than eight as in a set: a key
+// anywhere in the list, in another case, which CONTAINS ANY ignores, and in a
+// short list, and IN reads a literal there. Two groups that share a factor,
+// here the one of subject.roles, read the same answer of it.
 func TestASubjectGroupFindsAKeyAmongMany(t *testing.T) {
 	opt := DefaultOptions()
 	opt.Groups = true

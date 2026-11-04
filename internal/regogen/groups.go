@@ -43,9 +43,10 @@ type test struct {
 	// SUBSET.
 	sets [][]string
 	// ri and ri2 number ref and ref2 among the references of the module's
-	// groups, -1 for none and for sroles. groupIndex sets them for the tests
-	// of the factors it holds.
-	ri, ri2 int
+	// groups, -1 for none and for sroles, and slot numbers the list of ref
+	// that field names (listSlot). groupIndex sets them for the tests of the
+	// factors it holds.
+	ri, ri2, slot int
 }
 
 // Group is a subject group: a conjunction of factors, each a disjunction of
@@ -283,6 +284,7 @@ func (m *Module) groupIndex() *groupIndex {
 					for _, c := range f {
 						for _, t := range c {
 							t.ri, t.ri2 = refID(t.ref), refID(t.ref2)
+							t.slot = listSlot(t.ri, t.field)
 						}
 					}
 				}
@@ -321,7 +323,8 @@ func (m *Module) groupIndex() *groupIndex {
 		}
 		ix.pool.New = func() any {
 			return &groupEval{seen: make([]bool, len(ix.ids)), factors: make([]int8, len(ix.factors)),
-				recs: make([]Record, len(ix.refs)), loaded: make([]int8, len(ix.refs))}
+				recs: make([]Record, len(ix.refs)), loaded: make([]int8, len(ix.refs)),
+				sets: make([]map[string]struct{}, 3*len(ix.refs)+1)}
 		}
 		m.ix = ix
 	})
@@ -338,6 +341,9 @@ type groupEval struct {
 	factors []int8 // 0 not evaluated, 1 holds, 2 does not
 	recs    []Record
 	loaded  []int8 // 0 not read, 1 in recs, 2 absent from the input
+	// sets holds, as a set, each long list a test has looked a key up in,
+	// by listSlot.
+	sets []map[string]struct{}
 }
 
 func (e *groupEval) release(ix *groupIndex) {
@@ -346,6 +352,7 @@ func (e *groupEval) release(ix *groupIndex) {
 	clear(e.factors)
 	clear(e.recs)
 	clear(e.loaded)
+	clear(e.sets)
 	ix.pool.Put(e)
 }
 
@@ -364,6 +371,39 @@ func (e *groupEval) rec(i int) (*Record, bool) {
 		return nil, false
 	}
 	return &e.recs[i], true
+}
+
+// contains reports whether ks, the list in the slot listSlot names, holds k.
+// A list longer than eight keys is looked up in a set that the first lookup
+// builds.
+func (e *groupEval) contains(slot int, ks []string, k string) bool {
+	if len(ks) <= 8 {
+		return slices.Contains(ks, k)
+	}
+	set := e.sets[slot]
+	if set == nil {
+		set = make(map[string]struct{}, len(ks))
+		for _, x := range ks {
+			set[x] = struct{}{}
+		}
+		e.sets[slot] = set
+	}
+	_, ok := set[k]
+	return ok
+}
+
+// listSlot numbers the list a test reads: the field of the record of ri, or
+// the subject's roles.
+func listSlot(ri int, field string) int {
+	switch {
+	case ri < 0:
+		return 0
+	case field == "ea":
+		return 3*ri + 2
+	case field == "eb":
+		return 3*ri + 3
+	}
+	return 3*ri + 1
 }
 
 func (e *groupEval) groupHolds(fs []int) bool {
@@ -421,9 +461,9 @@ func (t *test) holds(e *groupEval) bool {
 	}
 	switch t.kind {
 	case "has":
-		return slices.Contains(ks, t.val)
+		return e.contains(t.slot, ks, t.val)
 	case "nothas":
-		return !slices.Contains(ks, t.val)
+		return !e.contains(t.slot, ks, t.val)
 	case "eq":
 		return k != nil && *k == t.val
 	case "ne":
@@ -433,7 +473,7 @@ func (t *test) holds(e *groupEval) bool {
 	case "notin":
 		return k == nil || !slices.Contains(t.set, *k)
 	case "none":
-		return ks != nil && !slices.ContainsFunc(ks, func(x string) bool { return slices.Contains(t.set, x) })
+		return ks != nil && !slices.ContainsFunc(t.set, func(x string) bool { return e.contains(t.slot, ks, x) })
 	case "non0":
 		return !n0
 	case "rel":
