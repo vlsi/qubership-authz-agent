@@ -15,9 +15,11 @@
 package regogen
 
 import (
+	"slices"
 	"testing"
 
 	"authz-agent/internal/jsonvalue"
+	"authz-agent/internal/regogen/spectables"
 )
 
 // The text a string compares a structure by prints a scalar member as Java
@@ -41,5 +43,41 @@ func TestStructureText(t *testing.T) {
 		if got := structureText(v); got != tc.want {
 			t.Errorf("structureText(%s) = %q, want %q", tc.value, got, tc.want)
 		}
+	}
+}
+
+// The record of a value carries the folded text a string compares it by
+// (TK), the tokens of its elements (EA), and those tokens with the folded
+// text of each nested list or object after the element's own token (EB). A
+// list with a number or null is not a list of strings, whose text TK takes
+// from the folded Java text.
+func TestRecordReadsTheTokensOfTheElements(t *testing.T) {
+	for _, tc := range []struct {
+		value, tk string
+		ea, eb    []string
+	}{
+		{`["Ab", "c"]`, `[ab, c]`, []string{"t:ab", "t:c"}, []string{"t:ab", "t:c"}},
+		{`[]`, `[]`, []string{}, []string{}},
+		{`["x", ["Y"], "Z"]`, `[x, ["y"], z]`, []string{"t:x", `l:["t:y"]`, "t:z"},
+			[]string{"t:x", `l:["t:y"]`, "t:[y]", "t:z"}},
+		{`[1.0, "A"]`, `[1, a]`, []string{"t:1.0", "t:a"}, []string{"t:1.0", "t:a"}},
+		{`[null, "A"]`, `[null, a]`, []string{"t:a"}, []string{"t:a"}},
+		{`"Q"`, ``, []string{"t:q"}, []string{"t:q"}},
+	} {
+		t.Run(tc.value, func(t *testing.T) {
+			v, err := jsonvalue.Decode([]byte(tc.value))
+			if err != nil {
+				t.Fatalf("jsonvalue.Decode(%s): %v", tc.value, err)
+			}
+			rec := record(&Ref{}, Resolved{State: spectables.StateValue, Value: v})
+			tk := ""
+			if rec.TK != nil {
+				tk = *rec.TK
+			}
+			if tk != tc.tk || !slices.Equal(rec.EA, tc.ea) || !slices.Equal(rec.EB, tc.eb) {
+				t.Errorf("record(%s): tk %q, ea %q, eb %q; want tk %q, ea %q, eb %q", tc.value, tk, rec.EA, rec.EB,
+					tc.tk, tc.ea, tc.eb)
+			}
+		})
 	}
 }

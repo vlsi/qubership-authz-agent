@@ -156,7 +156,7 @@ func record(r *Ref, v Resolved) Record {
 			rec.KS = []string{}
 		}
 		rec.N0 = lv.State == legacyvalue.StateNullElement
-		rec.EA, rec.EB = elementTokens(v.Value)
+		rec.EA, rec.EB = elementTokens(v.Value, lv)
 		rec.subset(r, v.Value)
 		return rec
 	}
@@ -174,7 +174,7 @@ func record(r *Ref, v Resolved) Record {
 		cl = spectables.ClassHeaderList
 	}
 	rec.T = string(cl)
-	rec.EA, rec.EB = elementTokens(v.Value)
+	rec.EA, rec.EB = elementTokens(v.Value, lv)
 	rec.subset(r, v.Value)
 	switch cl {
 	case spectables.ClassString, spectables.ClassScalar:
@@ -187,8 +187,14 @@ func record(r *Ref, v Resolved) Record {
 			rec.KS = []string{}
 		}
 		rec.N0 = lv.State == legacyvalue.StateNullElement
-		tk := legacyvalue.Fold(structureText(v.Value))
-		rec.TK = &tk
+		if l, ok := v.Value.([]jsonvalue.Value); ok && len(l) > 0 && allStrings(l) {
+			// structureText of a list of strings is its Java text, which k
+			// folds
+			rec.TK = lv.Key
+		} else {
+			tk := legacyvalue.Fold(structureText(v.Value))
+			rec.TK = &tk
+		}
 		rec.O = lv.Structure
 		if l, ok := v.Value.([]jsonvalue.Value); ok {
 			n := len(l)
@@ -219,22 +225,40 @@ func (rec *Record) subset(r *Ref, v jsonvalue.Value) {
 }
 
 // elementTokens returns the EA and EB of a value, a list or a value read as
-// a list of one.
-func elementTokens(v jsonvalue.Value) (ea, eb []string) {
+// a list of one; lv is its legacyvalue.Of. Where no element is a list or an
+// object, eb is ea itself.
+func elementTokens(v jsonvalue.Value, lv legacyvalue.Record) (ea, eb []string) {
 	l, ok := v.([]jsonvalue.Value)
+	elems := lv.Elements
 	if !ok {
-		l = []jsonvalue.Value{v}
+		l, elems = []jsonvalue.Value{v}, []legacyvalue.Record{lv}
 	}
-	ea, eb = []string{}, []string{}
-	for _, e := range l {
-		if t, ok := eqToken(e); ok {
+	ea = []string{}
+	for i, e := range l {
+		t, ok := "", false
+		switch e.(type) {
+		case string, jsonvalue.Number, bool:
+			// the key of the element's record is the one eqToken reads
+			t, ok = "t:"+*elems[i].Key, true
+		default:
+			t, ok = eqToken(e)
+		}
+		if ok {
 			ea = append(ea, t)
-			eb = append(eb, t)
+			if eb != nil {
+				eb = append(eb, t)
+			}
 		}
 		switch e.(type) {
 		case []jsonvalue.Value, *jsonvalue.Object:
+			if eb == nil {
+				eb = slices.Clone(ea)
+			}
 			eb = append(eb, "t:"+legacyvalue.Fold(structureText(e)))
 		}
+	}
+	if eb == nil {
+		eb = ea
 	}
 	return ea, eb
 }
@@ -366,8 +390,9 @@ func (r Record) term() *ast.Term {
 		o.Insert(strTerm("ln"), ast.IntNumberTerm(*r.Len))
 	}
 	if r.EA != nil {
-		o.Insert(strTerm("ea"), strsTerm(r.EA))
-		o.Insert(strTerm("eb"), strsTerm(r.EB))
+		ea := strsTerm(r.EA)
+		o.Insert(strTerm("ea"), ea)
+		o.Insert(strTerm("eb"), r.ebTerm(ea))
 	}
 	if r.N != nil {
 		o.Insert(strTerm("nk"), orderKey(*r.N))
@@ -455,6 +480,15 @@ func fieldObjects(refs []*Ref, rec func(*Ref) (Record, bool)) map[string]ast.Obj
 	return fields
 }
 
+// ebTerm returns the term of EB, which is ea where EB is EA itself
+// (elementTokens).
+func (rec Record) ebTerm(ea *ast.Term) *ast.Term {
+	if len(rec.EB) == len(rec.EA) && (len(rec.EA) == 0 || &rec.EB[0] == &rec.EA[0]) {
+		return ea
+	}
+	return strsTerm(rec.EB)
+}
+
 // fields gives put each entry of the record in the maps of [fieldMaps]: the
 // name of the map and the value under the reference's ID.
 func (rec Record) fields(put func(field string, v *ast.Term)) {
@@ -484,8 +518,9 @@ func (rec Record) fields(put func(field string, v *ast.Term)) {
 		put("ln", ast.IntNumberTerm(*rec.Len))
 	}
 	if rec.EA != nil {
-		put("ea", strsTerm(rec.EA))
-		put("eb", strsTerm(rec.EB))
+		ea := strsTerm(rec.EA)
+		put("ea", ea)
+		put("eb", rec.ebTerm(ea))
 	}
 	if rec.N != nil {
 		put("nk", orderKey(*rec.N))
@@ -514,6 +549,15 @@ func (in *Input) PIPRecord(id string) (*ast.Term, bool) {
 		return nil, false
 	}
 	return r.term(), true
+}
+
+func allStrings(l []jsonvalue.Value) bool {
+	for _, e := range l {
+		if _, ok := e.(string); !ok {
+			return false
+		}
+	}
+	return true
 }
 
 // structureText is the text a string compares a list or an object by, as the
