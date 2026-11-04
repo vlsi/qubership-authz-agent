@@ -368,8 +368,7 @@ func writeStructureKey(b *strings.Builder, v jsonvalue.Value) {
 			b.WriteString(NumberText(x))
 		}
 	case string:
-		var buf [64]byte
-		b.Write(strconv.AppendQuote(buf[:0], x))
+		writeQuoted(b, x)
 	case []jsonvalue.Value:
 		b.WriteByte('[')
 		for i, e := range x {
@@ -386,12 +385,27 @@ func writeStructureKey(b *strings.Builder, v jsonvalue.Value) {
 			if i > 0 {
 				b.WriteByte(',')
 			}
-			var buf [64]byte
-			b.Write(strconv.AppendQuote(buf[:0], k))
+			writeQuoted(b, k)
 			b.WriteByte(':')
 			e, _ := x.Get(k)
 			writeStructureKey(b, e)
 		}
 		b.WriteByte('}')
 	}
+}
+
+// writeQuoted writes s as strconv.Quote does. A string of printable ASCII
+// without a quote or a backslash, which Quote only surrounds with quotes, is
+// written without escaping it.
+func writeQuoted(b *strings.Builder, s string) {
+	for i := 0; i < len(s); i++ {
+		if c := s[i]; c < ' ' || c > '~' || c == '"' || c == '\\' {
+			var buf [64]byte
+			b.Write(strconv.AppendQuote(buf[:0], s))
+			return
+		}
+	}
+	b.WriteByte('"')
+	b.WriteString(s)
+	b.WriteByte('"')
 }

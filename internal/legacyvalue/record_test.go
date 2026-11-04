@@ -17,6 +17,7 @@ package legacyvalue
 import (
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -362,4 +363,17 @@ func recordText(r Record) string {
 	}
 	return fmt.Sprintf("{s: %s, t: %s, j: %s, k: %q, ck: %q, ks: %q, o: %q, n: %s}",
 		r.State, r.Class, r.Type, deref(r.Key), deref(r.CaseKey), r.Keys, deref(r.Structure), n)
+}
+
+// writeQuoted writes what strconv.Quote returns, on both sides of the plain
+// ASCII it writes without escaping: the edges of printable ASCII, a quote, a
+// backslash, a control character, DEL, and a letter beyond ASCII.
+func TestWriteQuotedQuotesAsStrconv(t *testing.T) {
+	for _, s := range []string{"", "plain", " ", "~", "a\"b", `c\d`, "x\x01", "tab\t", "\x7f", "é", "a\xffb"} {
+		var b strings.Builder
+		writeQuoted(&b, s)
+		if got, want := b.String(), strconv.Quote(s); got != want {
+			t.Errorf("writeQuoted(%q) = %s, want %s", s, got, want)
+		}
+	}
 }
