@@ -76,10 +76,7 @@ func NewBulk(m *Module, req Request) (*Bulk, error) {
 	}) {
 		b.fields[f] = ast.NewTerm(o)
 	}
-	full := in.Value().(ast.Object)
-	for _, k := range []string{"sroles", "m2m", "g", "ps", "psf"} {
-		b.top = append(b.top, [2]*ast.Term{strTerm(k), full.Get(strTerm(k))})
-	}
+	b.top = in.subjectMembers()
 	return b, nil
 }
 

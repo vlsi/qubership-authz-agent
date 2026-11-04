@@ -418,18 +418,9 @@ func (in *Input) Value() ast.Value {
 		rec, ok := in.Records[r.ID]
 		return rec, ok && !r.Network && !r.Pass
 	})
-	o.Insert(strTerm("sroles"), strsTerm(in.SRoles))
-	o.Insert(strTerm("m2m"), ast.BooleanTerm(in.M2M))
-	o.Insert(strTerm("g"), strsTerm(in.G))
-	passes := make([]*ast.Term, len(in.Passes))
-	for i, pass := range in.Passes {
-		passes[i] = ast.NewTerm(fieldMaps(in.refs, func(r *Ref) (Record, bool) {
-			rec, ok := pass[r.ID]
-			return rec, ok
-		}))
+	for _, kv := range in.subjectMembers() {
+		o.Insert(kv[0], kv[1])
 	}
-	o.Insert(strTerm("ps"), ast.ArrayTerm(passes...))
-	o.Insert(strTerm("psf"), ast.BooleanTerm(in.ScopeFailed))
 	if in.resourceMember() {
 		res := ast.NullTerm()
 		if in.resource != nil {
@@ -450,6 +441,25 @@ func (in *Input) resourceMember() bool {
 // Context returns ctx with what nc.jsonpath needs to read input.resource as
 // the document it was built from; evaluate the module's query with it.
 func (in *Input) Context(ctx context.Context) context.Context { return in.docs.Context(ctx) }
+
+// subjectMembers returns the members sroles, m2m, g, ps, and psf of the
+// input's Value.
+func (in *Input) subjectMembers() [][2]*ast.Term {
+	passes := make([]*ast.Term, len(in.Passes))
+	for i, pass := range in.Passes {
+		passes[i] = ast.NewTerm(fieldMaps(in.refs, func(r *Ref) (Record, bool) {
+			rec, ok := pass[r.ID]
+			return rec, ok
+		}))
+	}
+	return [][2]*ast.Term{
+		{strTerm("sroles"), strsTerm(in.SRoles)},
+		{strTerm("m2m"), ast.BooleanTerm(in.M2M)},
+		{strTerm("g"), strsTerm(in.G)},
+		{strTerm("ps"), ast.ArrayTerm(passes...)},
+		{strTerm("psf"), ast.BooleanTerm(in.ScopeFailed)},
+	}
+}
 
 // fieldMaps returns the object of the maps from a reference ID to a field of
 // its record, for each reference whose record rec gives.
