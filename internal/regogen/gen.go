@@ -273,6 +273,7 @@ func Generate(tree *policyir.Tree, tab *spectables.Table, opt Options) (*Module,
 		m.DecisionText, g.stats.DecisionClauses = g.module(g.opt.Package+"_decision", allow, maybe, true)
 	}
 	m.Text, g.stats.Clauses = g.module(g.opt.Package, allow, nil, false)
+	markEmitted(g.refList, m.Text, m.DecisionText)
 	g.stats.Bytes = len(m.Text)
 	g.stats.AllowClauses = len(allow)
 	for _, c := range allow {

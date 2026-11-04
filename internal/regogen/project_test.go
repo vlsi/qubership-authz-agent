@@ -19,6 +19,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/open-policy-agent/opa/v1/ast"
+
 	"authz-agent/internal/jsonvalue"
 	"authz-agent/internal/regogen/spectables"
 )
@@ -144,5 +146,64 @@ func TestARecordHoldsTheFieldsTheModuleReads(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+// The input carries a field of a record where the text of the module reads
+// it, and the subject groups read the others from the record in Go: with
+// groups, CONTAINS of the subject's permissions moves into a group, and the
+// input keeps the keys of the permissions out while the record holds them.
+func TestTheInputCarriesTheFieldsTheTextReads(t *testing.T) {
+	const id, key = "subject.permissions", `["subj","permissions"]`
+	req := Request{Body: Body{Operation: "read", ResourceType: "doc"},
+		Values: map[string]Resolved{key: resolved(t, "VALUE", `["p1", "p2"]`)}}
+	for _, groups := range []bool{false, true} {
+		opt := DefaultOptions()
+		opt.Groups = groups
+		m, err := Generate(tenantWithSetAndPIPs(t, "DENY_UNLESS_PERMIT", "ALLOW", "subject.permissions CONTAINS 'p1'",
+			""), table(t), opt)
+		if err != nil {
+			t.Fatalf("Generate: %v", err)
+		}
+		in := mustProject(t, m, req)
+		if in.Records[id].KS == nil {
+			t.Errorf("groups %v: the record of %s holds no keys", groups, id)
+		}
+		ks := in.Value().(ast.Object).Get(ast.StringTerm("ks")).Value.(ast.Object).Get(ast.StringTerm(id))
+		reads := strings.Contains(m.Text, "input.ks"+refIndex(id))
+		if (ks != nil) != reads {
+			t.Errorf("groups %v: the text reads input.ks of %s: %v, the input carries it: %v", groups, id, reads,
+				ks != nil)
+		}
+		if reads == groups {
+			t.Errorf("groups %v: the text reads input.ks of %s: %v", groups, id, reads)
+		}
+	}
+}
+
+// markEmitted sets each field the text reads of the reference it reads it
+// of, and no other: every field name, n0 and nseg among them, after input
+// and after p, the record of a pass value, with the index of a name that is
+// an identifier and of one that is not. A field read with no index is set
+// for every reference.
+func TestMarkEmittedSetsTheFieldsTheTextReads(t *testing.T) {
+	x, ab := &Ref{ID: "x"}, &Ref{ID: "a.b<"}
+	for _, f := range recordFields {
+		for _, text := range []string{
+			"input." + f + refIndex(x.ID) + " == 1\n  not input.s" + refIndex(ab.ID),
+			"some p in input.ps\n  p." + f + refIndex(x.ID) + "[0]\n  p.s" + refIndex(ab.ID),
+		} {
+			markEmitted([]*Ref{x, ab}, text)
+			if want := fieldsKnown | fieldBit(f); x.emit != want {
+				t.Errorf("%q: emit of x %b, want %b", text, x.emit, want)
+			}
+			if want := fieldsKnown | fieldBit("s"); ab.emit != want {
+				t.Errorf("%q: emit of %s %b, want %b", text, ab.ID, ab.emit, want)
+			}
+		}
+	}
+	markEmitted([]*Ref{x, ab}, "count(input.ks) > 0")
+	if want := fieldsKnown | fieldBit("ks"); x.emit != want || ab.emit != want {
+		t.Errorf("input.ks with no index: emit %b and %b, want %b for both", x.emit, ab.emit, want)
 	}
 }

@@ -504,18 +504,53 @@ func fieldBit(f string) fieldSet {
 	return 1 << i
 }
 
-// reads reports whether the module reads one of the fields fs of r's record,
-// and is true for a reference the generator did not create.
-func (r *Ref) reads(fs ...string) bool {
-	if r.read&fieldsKnown == 0 {
+// has reports whether fs holds one of the fields f, and is true for the
+// fieldSet of a reference the generator did not create.
+func (fs fieldSet) has(f ...string) bool {
+	if fs&fieldsKnown == 0 {
 		return true
 	}
-	for _, f := range fs {
-		if r.read&fieldBit(f) != 0 {
+	for _, x := range f {
+		if fs&fieldBit(x) != 0 {
 			return true
 		}
 	}
 	return false
+}
+
+// reads reports whether the module reads one of the fields fs of r's record,
+// and is true for a reference the generator did not create.
+func (r *Ref) reads(fs ...string) bool { return r.read.has(fs...) }
+
+// fieldReadRE matches a read of a record field in the text of a module:
+// input.<field> or p.<field>, the record of a pass value, then the index of
+// the reference where the text names one.
+var fieldReadRE = regexp.MustCompile(`\b(?:input|p)\.([a-z][a-z0-9]*)(\.[A-Za-z_][A-Za-z0-9_]*|\["(?:[^"\\]|\\.)*"\])?`)
+
+// markEmitted sets the emit of each reference to the fields that texts read
+// of its record. A field read with no index, of whichever reference, is set
+// for every reference.
+func markEmitted(refs []*Ref, texts ...string) {
+	byIndex := make(map[string]*Ref, len(refs))
+	for _, r := range refs {
+		r.emit = fieldsKnown
+		byIndex[refIndex(r.ID)] = r
+	}
+	for _, text := range texts {
+		for _, m := range fieldReadRE.FindAllStringSubmatch(text, -1) {
+			i := slices.Index(recordFields, m[1])
+			if i < 0 {
+				continue
+			}
+			if m[2] == "" {
+				for _, r := range refs {
+					r.emit |= 1 << i
+				}
+			} else if r, ok := byIndex[m[2]]; ok {
+				r.emit |= 1 << i
+			}
+		}
+	}
 }
 
 // parts are the parts of the legacyvalue record of a list that the fields
@@ -549,7 +584,7 @@ func fieldObjects(refs []*Ref, rec func(*Ref) (Record, bool)) map[string]ast.Obj
 	for _, r := range refs {
 		if rec, ok := rec(r); ok {
 			id := strTerm(r.ID)
-			rec.fields(func(f string, v *ast.Term) { fields[f].Insert(id, v) })
+			rec.fields(r.emit, func(f string, v *ast.Term) { fields[f].Insert(id, v) })
 		}
 	}
 	return fields
@@ -564,52 +599,68 @@ func (rec Record) ebTerm(ea *ast.Term) *ast.Term {
 	return strsTerm(rec.EB)
 }
 
-// fields gives put each entry of the record in the maps of [fieldMaps]: the
-// name of the map and the value under the reference's ID.
-func (rec Record) fields(put func(field string, v *ast.Term)) {
-	put("s", strTerm(rec.S))
-	if rec.T != "" {
+// fields gives put each entry of the record in the maps of [fieldMaps] that
+// emit holds: the name of the map and the value under the reference's ID.
+func (rec Record) fields(emit fieldSet, put func(field string, v *ast.Term)) {
+	if emit.has("s") {
+		put("s", strTerm(rec.S))
+	}
+	if rec.T != "" && emit.has("t") {
 		put("t", strTerm(rec.T))
 	}
-	if rec.K != nil {
+	if rec.K != nil && emit.has("k") {
 		put("k", strTerm(*rec.K))
 	}
-	if rec.KS != nil {
+	if rec.KS != nil && emit.has("ks") {
 		put("ks", strsTerm(rec.KS))
 	}
-	if rec.Raw != nil {
+	if rec.Raw != nil && emit.has("raw") {
 		put("raw", strTerm(*rec.Raw))
 	}
-	if rec.N0 {
+	if rec.N0 && emit.has("n0") {
 		put("n0", ast.BooleanTerm(true))
 	}
-	if rec.TK != nil {
+	if rec.TK != nil && emit.has("tk") {
 		put("tk", strTerm(*rec.TK))
 	}
-	if rec.O != nil {
+	if rec.O != nil && emit.has("o") {
 		put("o", strTerm(*rec.O))
 	}
-	if rec.Len != nil {
+	if rec.Len != nil && emit.has("ln") {
 		put("ln", ast.IntNumberTerm(*rec.Len))
 	}
-	if rec.EA != nil {
+	if rec.EA != nil && emit.has("ea", "eb") {
 		ea := strsTerm(rec.EA)
-		put("ea", ea)
-		put("eb", rec.ebTerm(ea))
+		if emit.has("ea") {
+			put("ea", ea)
+		}
+		if emit.has("eb") {
+			put("eb", rec.ebTerm(ea))
+		}
 	}
-	if rec.N != nil {
+	if rec.N != nil && emit.has("nk") {
 		put("nk", orderKey(*rec.N))
 	}
 	if rec.SA != nil {
-		put("sa", setsTerm(rec.SA))
-		put("sb", strsTerm(rec.SB))
+		if emit.has("sa") {
+			put("sa", setsTerm(rec.SA))
+		}
+		if emit.has("sb") {
+			put("sb", strsTerm(rec.SB))
+		}
 	}
 	if rec.Segs != nil {
-		put("seg", strsTerm(rec.Segs))
-		rev := slices.Clone(rec.Segs)
-		slices.Reverse(rev)
-		put("eseg", strsTerm(rev))
-		put("nseg", ast.IntNumberTerm(len(rec.Segs)))
+		if emit.has("seg") {
+			put("seg", strsTerm(rec.Segs))
+		}
+		if emit.has("eseg") {
+			rev := slices.Clone(rec.Segs)
+			slices.Reverse(rev)
+			put("eseg", strsTerm(rev))
+		}
+		if emit.has("nseg") {
+			put("nseg", ast.IntNumberTerm(len(rec.Segs)))
+		}
 	}
 }
 

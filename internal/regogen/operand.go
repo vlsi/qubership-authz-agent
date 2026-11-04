@@ -72,7 +72,13 @@ type Ref struct {
 	// the clauses of the module and of its subject groups; a record holds no
 	// other field that is costly to build. A reference the generator did not
 	// create has an empty read, and its record holds every field.
-	read   fieldSet
+	read fieldSet
+	// emit holds the fields of the record that the text of the module or of
+	// its decision module reads, which the input carries; the record's other
+	// fields are for the subject groups, which read them in Go. A reference
+	// the generator did not create has an empty emit, and the input carries
+	// every field of its record.
+	emit   fieldSet
 	domain spectables.Domain
 	// sel is the compiled path of a resource operand that the projection
 	// reads, and dotState the state of one that ends in a dot

@@ -122,7 +122,7 @@ func (b *Bulk) value(in *Input) ast.Value {
 	own := map[string][]entry{}
 	for _, r := range b.items {
 		id := strTerm(r.ID)
-		in.Records[r.ID].fields(func(f string, v *ast.Term) { own[f] = append(own[f], entry{id, v}) })
+		in.Records[r.ID].fields(r.emit, func(f string, v *ast.Term) { own[f] = append(own[f], entry{id, v}) })
 	}
 	o := ast.NewObjectWithCapacity(len(recordFields) + len(b.top) + 1)
 	for _, f := range recordFields {
