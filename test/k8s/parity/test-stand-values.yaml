@@ -14,10 +14,8 @@ idp:
 pipStub:
   imageRepository: local/pip-stub
   instances:
-    # The PIP mock, with the request-args rule set.
     pip-mock:
       port: 8090
-      config: requestargs.responses.yaml
     entitlements-mock:
       port: 8080
 

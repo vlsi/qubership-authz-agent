@@ -28,7 +28,7 @@ installing the stand does not start it.
 `parity/` holds the same shape for the parity replay suite (`test/parity`):
 its `test-stand-values.yaml` sets up Keycloak as `idp` with the realms of
 `parity/idp-seed/` and the users of `test/parity/suite/testdata/realm/`,
-`pip-mock` with the request-args rule set, `entitlements-mock`, and the parity
+`pip-mock`, `entitlements-mock`, and the parity
 suite Job. Its chart values add the parity realm as an explicit trusted
 provider. It runs in its own namespace, so its Keycloak can be named `idp`, the
 issuer host in the parity realm's tokens, next to the e2e namespace's

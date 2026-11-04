@@ -241,7 +241,7 @@ parity: e2e-cluster e2e-images parity-harness parity-install parity-suite
 
 # The test stand of test/k8s/parity/test-stand-values.yaml: Keycloak with the
 # realms of test/k8s/parity/idp-seed/ and the users of
-# test/parity/suite/testdata/realm/, pip-mock with the request-args rule set,
+# test/parity/suite/testdata/realm/, pip-mock,
 # entitlements-mock, the M2M client-credentials Secret for the parity-m2m
 # client of the cloud-common realm, and the parity suite Job, which
 # parity-suite runs.

@@ -27,28 +27,10 @@ var embeddedSmokeFixtures embed.FS
 //go:embed testdata/fixtures/smoke/*.json testdata/fixtures/policies/suite/*.json testdata/fixtures/policies/regular/*.json
 var embeddedMainFixtures embed.FS
 
-// embeddedAuthzAgentFixtures is the main pack plus the row 30 request-args
-// pack. Legacy access-control rejects the row 30 PIPs, whose headers field is
-// a JSON object where access-control expects a string.
-//
-//go:embed testdata/fixtures/smoke/*.json testdata/fixtures/policies/suite/*.json testdata/fixtures/policies/regular/*.json testdata/fixtures/requestargs/*.json
-var embeddedAuthzAgentFixtures embed.FS
-
 var (
-	smokeFixtureFS      fs.FS = mustSubFS(embeddedSmokeFixtures, "testdata/fixtures/smoke")
-	mainFixtureFS       fs.FS = mustSubFS(embeddedMainFixtures, "testdata/fixtures")
-	authzAgentFixtureFS fs.FS = mustSubFS(embeddedAuthzAgentFixtures, "testdata/fixtures")
+	smokeFixtureFS fs.FS = mustSubFS(embeddedSmokeFixtures, "testdata/fixtures/smoke")
+	mainFixtureFS  fs.FS = mustSubFS(embeddedMainFixtures, "testdata/fixtures")
 )
-
-// mainFixturesFor returns the fixture tree SetupSuite seeds after the smoke
-// phase. Each seed replaces the whole domain, so the row 30 pack travels in the
-// same tree as the main pack rather than in a second seed call.
-func mainFixturesFor(profile string) fs.FS {
-	if isAuthzAgentProfile(profile) {
-		return authzAgentFixtureFS
-	}
-	return mainFixtureFS
-}
 
 func mustSubFS(root embed.FS, subdir string) fs.FS {
 	sub, err := fs.Sub(root, subdir)

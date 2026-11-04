@@ -77,7 +77,7 @@ func (s *ParitySuite) SetupSuite() {
 	if err := seeder.WipeDomain(ctx, s.cfg.DomainName); err != nil {
 		s.T().Fatalf("wipe after smoke: %v", err)
 	}
-	if err := seeder.SeedDomain(ctx, s.cfg.DomainName, mainFixturesFor(s.cfg.Profile)); err != nil {
+	if err := seeder.SeedDomain(ctx, s.cfg.DomainName, mainFixtureFS); err != nil {
 		s.T().Fatalf("seed main fixtures: %v", err)
 	}
 }
