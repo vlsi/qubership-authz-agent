@@ -40,12 +40,18 @@ var JSONPathDecl = &ast.Builtin{
 		types.Named("record", types.NewObject(nil, types.NewDynamicProperty(types.S, types.A)))),
 }
 
-// Builtins returns the built-in functions a generated module calls but nc.pip:
-// those of [regobuiltins], and nc.resource_path, which [JSONPathRecord]
-// answers. One query calls it once per path.
+// Builtins returns the built-in functions a generated module calls but nc.pip,
+// which stands for subject.entitledResources: those of [regobuiltins];
+// nc.resource_path, which [JSONPathRecord] answers, and which one query calls
+// once per path; and nc.pip.record, which reads the response of a GENERAL or
+// FILTERED PIP into its record.
 func Builtins() []func(*rego.Rego) {
-	return append(regobuiltins.Options(), rego.Function2(&rego.Function{Name: JSONPathDecl.Name,
-		Decl: JSONPathDecl.Decl, Memoize: true},
+	return append(regobuiltins.Options(), pipRecordFunction(), jsonPathFunction())
+}
+
+// jsonPathFunction is the implementation of nc.resource_path.
+func jsonPathFunction() func(*rego.Rego) {
+	return rego.Function2(&rego.Function{Name: JSONPathDecl.Name, Decl: JSONPathDecl.Decl, Memoize: true},
 		func(bctx rego.BuiltinContext, doc, path *ast.Term) (*ast.Term, error) {
 			p, ok := path.Value.(ast.String)
 			if !ok {
@@ -56,14 +62,15 @@ func Builtins() []func(*rego.Rego) {
 				return nil, err
 			}
 			return JSONPathRecord(d, string(p))
-		}))
+		})
 }
 
 // Capabilities returns the capabilities of [regobuiltins] with
-// nc.resource_path added, for a compiler that checks generated modules.
+// nc.resource_path and nc.pip.record added, for a compiler that checks
+// generated modules.
 func Capabilities() *ast.Capabilities {
 	c := regobuiltins.Capabilities()
-	c.Builtins = append(c.Builtins, JSONPathDecl)
+	c.Builtins = append(c.Builtins, JSONPathDecl, PIPRecordDecl)
 	return c
 }
 

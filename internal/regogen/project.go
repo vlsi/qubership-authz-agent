@@ -55,6 +55,16 @@ type Request struct {
 	// Scope is the subject's permission scope that an iterate runs over,
 	// read when the module iterates ([Module.Iterates]).
 	Scope *Scope
+	// Tenant, Anonymous, Claims, and Headers are what the call of a
+	// GENERAL or FILTERED PIP reads besides Values and Body: the tenant of
+	// the request, which goes into the header Tenant; whether the request
+	// names an anonymous subject; the claims of the subject's token, nil
+	// for none; and the request's headers by lower-case name, which a
+	// declaration forwards and a HEADER placeholder reads.
+	Tenant    string
+	Anonymous bool
+	Claims    *jsonvalue.Object
+	Headers   map[string]string
 }
 
 // Scope is the permission scope of a request's subject as the passes of an
@@ -122,6 +132,12 @@ type Input struct {
 	resource    jsonvalue.Value
 	docs        *regobuiltins.Documents
 	refs        []*Ref
+	// calls holds the q of each GENERAL or FILTERED PIP by reference ID,
+	// the member pq of the input; nil for a module without one. pipValues
+	// holds the values [Request.Values] gave those PIPs, by reference ID,
+	// which [ReplayTransport] answers their calls with.
+	calls     ast.Object
+	pipValues map[string]Resolved
 	// bulk is set on the input of an item of a bulk request, whose Records
 	// then hold the item's own records only ([Bulk.Item]).
 	bulk *Bulk
@@ -356,9 +372,42 @@ func Project(m *Module, req Request) (*Input, error) {
 			in.Passes = append(in.Passes, pass)
 		}
 	}
+	if err := in.setCalls(m, &req); err != nil {
+		return nil, err
+	}
 	in.G = EvalGroups(m, in)
 	return in, nil
 }
+
+// setCalls sets in the q of each GENERAL or FILTERED PIP of m on req
+// ([pipCall]). It fails where req lacks the value of a subject's operand a
+// request of such a PIP reads ([Module.Placeholders]).
+func (in *Input) setCalls(m *Module, req *Request) error {
+	for _, k := range m.placeholders {
+		if _, ok := req.Values[k]; !ok {
+			return fmt.Errorf("no resolved value of %s, which the request of a PIP reads", k)
+		}
+	}
+	for _, r := range m.Refs {
+		if r.pip == nil {
+			continue
+		}
+		if in.calls == nil {
+			in.calls = ast.NewObject()
+			in.pipValues = map[string]Resolved{}
+		}
+		in.calls.Insert(strTerm(r.ID), pipCall(r, req, m.pips))
+		if v, ok := req.Values[r.Key]; ok {
+			in.pipValues[r.ID] = v
+		}
+	}
+	return nil
+}
+
+// Placeholders returns the keys of the subject's operands that the request
+// of a GENERAL or FILTERED PIP of m reads from [Request.Values], besides the
+// operands m reads itself.
+func (m *Module) Placeholders() []string { return m.placeholders }
 
 func strTerm(s string) *ast.Term { return ast.StringTerm(s) }
 
@@ -422,9 +471,10 @@ func (r Record) term() *ast.Term {
 // Value returns the input as a Rego value: maps s, t, k, ks, raw, seg, eseg,
 // nseg, n0, tk, o, ln, ea, eb, nk, sa, and sb from a reference ID to a field of
 // its record, then sroles, m2m, g, ps (the passes, each with the same maps of
-// its pass values), psf, and for a module with a lazily read resource path
-// resource, the document. A network PIP's record is not in it: nc.pip
-// returns it.
+// its pass values), psf, for a module with a lazily read resource path
+// resource, the document, and for a module with a GENERAL or FILTERED PIP pq,
+// the requests of its calls. A network PIP's record is not in it: its
+// function pip_<Var>, or nc.pip, returns it.
 func (in *Input) Value() ast.Value {
 	if in.bulk != nil {
 		return in.bulk.value(in)
@@ -443,6 +493,9 @@ func (in *Input) Value() ast.Value {
 			res, _ = in.docs.Term(in.resource)
 		}
 		o.Insert(strTerm("resource"), res)
+	}
+	if in.calls != nil {
+		o.Insert(strTerm("pq"), ast.NewTerm(in.calls))
 	}
 	return o
 }

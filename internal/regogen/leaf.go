@@ -101,6 +101,9 @@ func (s *side) bind() clause {
 		return clause{{cls: clsBuiltin, text: fmt.Sprintf("p_%s := nc.resource_path(input.resource, %s)", s.ref.Var,
 			lit(s.ref.Path))}}
 	}
+	if s.ref.pip != nil {
+		return clause{{cls: clsBuiltin, text: fmt.Sprintf("p_%s := pip_%s", s.ref.Var, s.ref.Var)}}
+	}
 	return clause{{cls: clsBuiltin, text: fmt.Sprintf("p_%s := nc.pip(%s)", s.ref.Var, lit(s.ref.ID))}}
 }
 

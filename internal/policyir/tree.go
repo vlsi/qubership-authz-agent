@@ -244,7 +244,8 @@ type PIP struct {
 	// Domain is the domain that declares the PIP.
 	Domain string
 	// RequestAttributes maps an attribute name to its JSON value as written,
-	// compacted.
+	// compacted; nil for a declaration without requestAttributes or with null
+	// there, and empty for {}, which a call sends as written.
 	RequestAttributes map[string]string
 
 	// ProductMapping and CustomMapping are the JSON objects of a MAPPING PIP as

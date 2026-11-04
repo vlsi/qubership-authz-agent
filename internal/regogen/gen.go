@@ -99,6 +99,12 @@ type Module struct {
 	// failure of their source, in the order the generator met them.
 	Failures []Failure
 
+	// pips holds the tenant's PIP declarations, which the request of a
+	// GENERAL or FILTERED PIP reads, and placeholders the keys of the
+	// subject's operands those requests put into them.
+	pips         func(string) (*policyir.PIP, bool)
+	placeholders []string
+
 	ixOnce sync.Once
 	ix     *groupIndex
 }
@@ -268,7 +274,17 @@ func Generate(tree *policyir.Tree, tab *spectables.Table, opt Options) (*Module,
 		return &Module{Stats: g.stats}, g.collision
 	}
 	m := &Module{Refs: g.refList, Iterates: g.stats.Iterates > 0, Groups: g.groups, Report: g.report,
-		Failures: g.failures}
+		Failures: g.failures, pips: tree.PIP}
+	for _, r := range g.refList {
+		if r.pip == nil {
+			continue
+		}
+		for _, k := range pipPlaceholders(r.pip, tree.PIP) {
+			if !slices.Contains(m.placeholders, k) {
+				m.placeholders = append(m.placeholders, k)
+			}
+		}
+	}
 	if g.opt.Decision {
 		m.DecisionText, g.stats.DecisionClauses = g.module(g.opt.Package+"_decision", allow, maybe, true)
 	}
@@ -1293,6 +1309,19 @@ func (g *gen) module(pkg string, allow, maybe dnf, decision bool) (string, int) 
 			b.WriteString(clauseText(target, c))
 		}
 		clauses += len(body)
+	}
+	pips := false
+	for _, r := range g.refList {
+		if r.pip != nil {
+			if !pips {
+				b.WriteString("\n")
+			}
+			b.WriteString(pipText(r))
+			pips = true
+		}
+	}
+	if pips {
+		b.WriteString(pipSendText)
 	}
 	return b.String(), clauses
 }

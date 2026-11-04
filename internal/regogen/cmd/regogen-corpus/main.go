@@ -45,6 +45,14 @@
 // ([regogen.NewBulk]) is compared with the request's own, and a difference
 // is counted in bulk_mismatch. The bundle must carry the body.
 //
+// A GENERAL or FILTERED PIP calls nc.http.send, whose transport replays the
+// value the specification resolved for the PIP ([regogen.ReplayTransport]):
+// the request the projection builds is not checked, the reading of the
+// response and the calls the agent does not make are. A value no response
+// gives, two PIPs whose calls are one HTTP request with different values
+// recorded, and a url Go does not parse are counted in replay_errors, and the
+// request is not compared.
+//
 // A request whose projection or evaluation fails is counted in proj_errors,
 // not as a disagreement.
 package main
@@ -56,6 +64,7 @@ import (
 	"flag"
 	"fmt"
 	"maps"
+	"net/http"
 	"os"
 	"reflect"
 	"runtime"
@@ -71,6 +80,7 @@ import (
 
 	"authz-agent/internal/jsonvalue"
 	"authz-agent/internal/policyir"
+	"authz-agent/internal/regobuiltins"
 	"authz-agent/internal/regogen"
 	"authz-agent/internal/regogen/spectables"
 )
@@ -108,6 +118,11 @@ type result struct {
 	Requests   int      `json:"requests"`
 	Mismatch   []string `json:"mismatch,omitempty"`
 	ProjErrors []string `json:"projErrors,omitempty"`
+	// ReplayErrors lists the values of GENERAL and FILTERED PIPs that no
+	// response of a call gives, the calls of two PIPs that are one request
+	// with different values recorded, and the urls Go does not parse; their
+	// requests are not compared.
+	ReplayErrors []string `json:"replayErrors,omitempty"`
 	// RecordMismatch lists, with -resolve, each reference whose record the
 	// projection's values give differently from the specification's.
 	RecordMismatch []string  `json:"recordMismatch,omitempty"`
@@ -156,9 +171,20 @@ func stubs() []func(*rego.Rego) {
 	return append(regogen.Builtins(), pip)
 }
 
-func toRequest(q request) (regogen.Request, error) {
-	r := regogen.Request{Roles: q.Roles, M2M: q.M2M}
+// toRequest reads the request q of the tenant's bundle for module m. A value
+// of the subject that the request of a PIP of m reads and q does not carry
+// is ABSENT: the replay of the PIP's call answers by its request, which q
+// does not record either.
+func toRequest(q request, tenant string, m *regogen.Module) (regogen.Request, error) {
+	r := regogen.Request{Roles: q.Roles, M2M: q.M2M, Tenant: tenant, Anonymous: q.Anonymous}
 	var err error
+	if q.Claims != nil {
+		c, err := jsonvalue.Decode([]byte(*q.Claims))
+		if err != nil {
+			return r, fmt.Errorf("claims: %w", err)
+		}
+		r.Claims, _ = c.(*jsonvalue.Object)
+	}
 	if q.Body != nil {
 		if r.Body, err = regogen.ReadBody([]byte(*q.Body)); err != nil {
 			return r, fmt.Errorf("body: %w", err)
@@ -181,6 +207,11 @@ func toRequest(q request) (regogen.Request, error) {
 	}
 	if r.Values, err = resolvedValues(q.Vals); err != nil {
 		return r, err
+	}
+	for _, k := range m.Placeholders() {
+		if _, ok := r.Values[k]; !ok {
+			r.Values[k] = regogen.Resolved{State: spectables.StateAbsent}
+		}
 	}
 	// scope is "ERROR", null for a tenant without iterate, or the passes
 	var failed string
@@ -371,7 +402,7 @@ func run(b bundle, tab *spectables.Table, opt regogen.Options, reps int, dumpDir
 		res.DecisionCompileMs = float64(time.Since(t0).Microseconds()) / 1000
 	}
 	for _, q := range b.Requests {
-		rq, err := toRequest(q)
+		rq, err := toRequest(q, b.Tenant, m)
 		if err != nil {
 			res.ProjErrors = append(res.ProjErrors, q.ID+": "+err.Error())
 			continue
@@ -408,18 +439,29 @@ func run(b bundle, tab *spectables.Table, opt regogen.Options, reps int, dumpDir
 			in = r.in
 		}
 		v := in.Value()
-		ctx := in.Context(context.WithValue(context.Background(), ctxKey{}, in))
+		tr, errs := regogen.ReplayTransport(in)
+		for _, e := range errs {
+			res.ReplayErrors = append(res.ReplayErrors, q.ID+": "+e.Error())
+		}
+		if len(errs) > 0 {
+			// the replay answers a call otherwise than the recording did
+			continue
+		}
+		h := &regobuiltins.HTTP{Client: &http.Client{Transport: tr}, Token: func() (string, error) { return "own", nil }}
+		ctx := in.Context(context.WithValue(h.Context(context.Background()), ctxKey{}, in))
 		best, bestDeny := -1.0, -1.0
 		var got, maybe bool
 		for i := 0; i < reps; i++ {
 			e0 := time.Now()
-			rs, err := pq.Eval(ctx, rego.EvalParsedInput(v))
+			// each evaluation is a decision request of its own, with its own calls
+			cctx := regobuiltins.WithCalls(ctx)
+			rs, err := pq.Eval(cctx, rego.EvalParsedInput(v))
 			us := float64(time.Since(e0).Nanoseconds()) / 1000
 			deny := us
 			if err == nil {
 				got = len(rs) == 1 && rs[0].Expressions[0].Value == true
 				if !got && opt.Decision {
-					rs, err = pqd.Eval(ctx, rego.EvalParsedInput(v))
+					rs, err = pqd.Eval(cctx, rego.EvalParsedInput(v))
 					maybe = len(rs) == 1 && rs[0].Expressions[0].Value == true
 					deny = float64(time.Since(e0).Nanoseconds()) / 1000
 				}
@@ -571,6 +613,7 @@ func main() {
 		}
 		sum["mismatch"] += len(r.Mismatch)
 		sum["proj_errors"] += len(r.ProjErrors)
+		sum["replay_errors"] += len(r.ReplayErrors)
 		sum["record_mismatch"] += len(r.RecordMismatch)
 		resolveUs = append(resolveUs, r.ResolveUs...)
 		sum["bulk_mismatch"] += len(r.BulkMismatch)

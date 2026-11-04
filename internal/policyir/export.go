@@ -716,10 +716,10 @@ func readPIP(raw json.RawMessage) (p *PIP, unknown []string, err error) {
 	default:
 		return nil, nil, fmt.Errorf("%q: headers %s is neither a string, a list, nor an object", p.Name, h)
 	}
+	if e.RequestAttributes != nil {
+		p.RequestAttributes = make(map[string]string, len(e.RequestAttributes))
+	}
 	for k, v := range e.RequestAttributes {
-		if p.RequestAttributes == nil {
-			p.RequestAttributes = map[string]string{}
-		}
 		p.RequestAttributes[k] = compact(v)
 	}
 	for _, f := range []struct {

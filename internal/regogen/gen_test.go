@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"maps"
+	"net/http"
 	"reflect"
 	"regexp"
 	"slices"
@@ -33,6 +34,7 @@ import (
 
 	"authz-agent/internal/jsonvalue"
 	"authz-agent/internal/policyir"
+	"authz-agent/internal/regobuiltins"
 	"authz-agent/internal/regogen/spectables"
 )
 
@@ -45,7 +47,8 @@ func tenantWithSet(t testing.TB, algorithm, effect, condition string) *policyir.
 }
 
 // tenantWithSetAndPIPs is tenantWithSet with the PIP declarations given, a
-// comma-separated list of JSON objects without their tenantId.
+// comma-separated list of JSON objects without their tenantId, each starting
+// with its name.
 func tenantWithSetAndPIPs(t testing.TB, algorithm, effect, condition, pips string) *policyir.Tree {
 	t.Helper()
 	sets := fmt.Sprintf(`{"policySets": [{"policySetId": "s1", "name": "s1", "status": "ACTIVE",
@@ -53,7 +56,7 @@ func tenantWithSetAndPIPs(t testing.TB, algorithm, effect, condition, pips strin
 		"policies": [{"policyId": "p1", "target": "true", "combiningAlgorithm": %[1]q,
 			"tenantId": "t1", "rules": [{"ruleId": "r1", "target": "operation == 'read'",
 				"condition": %[2]q, "effect": %[3]q, "tenantId": "t1"}]}]}]}`, algorithm, condition, effect)
-	pips = strings.ReplaceAll(pips, "{", `{"tenantId": "t1", `)
+	pips = strings.ReplaceAll(pips, `{"name"`, `{"tenantId": "t1", "name"`)
 	exp, err := policyir.FromRegular([]byte(sets), []byte(`{"pips": [`+pips+`]}`))
 	if err != nil {
 		t.Fatalf("FromRegular: %v", err)
@@ -137,8 +140,9 @@ func evalInput(t *testing.T, m *Module, in *Input, rule string) any {
 	if rule == "decision" || rule == "maybe" {
 		pkg, text = pkg+"_decision", m.DecisionText
 	}
-	// nc.pip answers a network PIP from the projection, as the agent's
-	// built-in would after its call
+	// nc.pip answers subject.entitledResources from the projection, as the
+	// agent's built-in would after its call, and the replay transport the
+	// call of a GENERAL or FILTERED PIP
 	pip := rego.Function1(&rego.Function{Name: "nc.pip", Decl: types.NewFunction(types.Args(types.S), types.A)},
 		func(_ rego.BuiltinContext, a *ast.Term) (*ast.Term, error) {
 			r, ok := in.PIPRecord(string(a.Value.(ast.String)))
@@ -152,7 +156,7 @@ func evalInput(t *testing.T, m *Module, in *Input, rule string) any {
 	if err != nil {
 		t.Fatalf("PrepareForEval: %v\n%s", err, text)
 	}
-	rs, err := pq.Eval(in.Context(context.Background()), rego.EvalParsedInput(in.Value()))
+	rs, err := pq.Eval(in.Context(replayContext(t, in)), rego.EvalParsedInput(in.Value()))
 	if err != nil {
 		t.Fatalf("Eval: %v", err)
 	}
@@ -160,6 +164,19 @@ func evalInput(t *testing.T, m *Module, in *Input, rule string) any {
 		return nil
 	}
 	return rs[0].Expressions[0].Value
+}
+
+// replayContext returns a context in which nc.http.send answers each PIP
+// call of in with the value the request gave the PIP ([ReplayTransport]). A
+// value no response gives fails the test.
+func replayContext(t *testing.T, in *Input) context.Context {
+	t.Helper()
+	tr, errs := ReplayTransport(in)
+	if len(errs) > 0 {
+		t.Fatalf("ReplayTransport: %v", errs)
+	}
+	h := &regobuiltins.HTTP{Client: &http.Client{Transport: tr}, Token: func() (string, error) { return "own", nil }}
+	return regobuiltins.WithCalls(h.Context(context.Background()))
 }
 
 const keyA = `["res",".a"]`
@@ -1265,9 +1282,9 @@ func TestASubjectGroupComparesTheNumbers(t *testing.T) {
 // IS SUBSET holds when the left value, read as a list, is not empty and each
 // of its elements equals an element on the right: with case, a number equal to
 // its text, a list equal to a string by its Java text, and null equal to
-// nothing. An object on the right equals nothing. A resource attribute or a
-// PIP on the right is one value, so an element there that is not a string
-// equals nothing.
+// nothing. An object on the right equals nothing. A resource attribute on the
+// right is one value, so an element there that is not a string equals
+// nothing.
 func TestIsSubsetComparesElementsWithCase(t *testing.T) {
 	const perms, b, id, g = `["subj","permissions"]`, `["res",".b"]`, `["subj","id"]`, `["subj","g"]`
 	for _, tc := range []struct {
@@ -1283,8 +1300,6 @@ func TestIsSubsetComparesElementsWithCase(t *testing.T) {
 		{"a string in a resource attribute on the right", "resource.a IS SUBSET resource.b", `[5]`, b, `["5"]`, "T"},
 		{"an object on the right", "resource.a IS SUBSET subject.id", `[{}]`, id, `[{}]`, "F"},
 		{"a string where the object was", "resource.a IS SUBSET subject.id", `["x"]`, id, `["x"]`, "T"},
-		{"a number in a PIP on the right", "resource.a IS SUBSET subject.g", `[5]`, g, `[5]`, "F"},
-		{"a string in a PIP on the right", "resource.a IS SUBSET subject.g", `[5]`, g, `["5"]`, "T"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			values := map[string]Resolved{keyA: resolved(t, "VALUE", tc.a), tc.rightKey: resolved(t, "VALUE", tc.right)}
@@ -1879,7 +1894,11 @@ func TestAnEditOfOneSetChangesNoLineOfTheOthers(t *testing.T) {
 		}
 		n := map[string]int{}
 		for _, l := range strings.Split(m.Text, "\n") {
-			n[l]++
+			// the function of a PIP stands once in a module, whichever sets
+			// read the PIP, after a blank line
+			if l != "" && !strings.HasPrefix(l, "pip_") {
+				n[l]++
+			}
 		}
 		return n
 	}

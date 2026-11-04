@@ -68,6 +68,11 @@ type Ref struct {
 	// Path is the resource path of a reference read lazily, with Network
 	// set: nc.resource_path(input.resource, Path) returns its record.
 	Path string
+	// pip is the declaration of a GENERAL or FILTERED PIP, whose record the
+	// function pip_<Var> of the module returns, and pipPath the path
+	// [pipPath] gives for it.
+	pip     *policyir.PIP
+	pipPath string
 	// read holds the record fields the module reads of the reference, by
 	// the clauses of the module and of its subject groups; a record holds no
 	// other field that is costly to build. A reference the generator did not
@@ -296,6 +301,12 @@ func (g *gen) operandKind(o policyir.Operand) (kind spectables.Kind, network, de
 			g.fail(Failure{Set: g.where.set, PIP: o.Name, Reason: "isolated: " + pip.Isolated})
 			return "", false, false, nil
 		}
+		if pip.Type == policyir.PIPGeneral || pip.Type == policyir.PIPFiltered || pip.Type == "" {
+			if _, err := pipPath(pip); err != nil {
+				g.fail(Failure{Set: g.where.set, PIP: o.Name, Reason: err.Error()})
+				return "", false, false, nil
+			}
+		}
 		switch pip.Type {
 		case policyir.PIPGeneral, "":
 			return spectables.KindPIPGeneral, true, true, nil
@@ -471,6 +482,11 @@ func (g *gen) side(o policyir.Operand) (*side, error) {
 	r, err := g.ref(o, kind, network)
 	if err != nil {
 		return nil, err
+	}
+	if p, ok := o.(policyir.PIPRef); ok && r.pip == nil &&
+		(kind == spectables.KindPIPGeneral || kind == spectables.KindPIPFiltered) {
+		r.pip, _ = g.tree.PIP(p.Name)
+		r.pipPath, _ = pipPath(r.pip)
 	}
 	return &side{kind: kind, ref: r}, nil
 }

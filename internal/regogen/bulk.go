@@ -33,6 +33,10 @@ type Bulk struct {
 	// the members sroles, m2m, g, ps, and psf of the input.
 	fields map[string]*ast.Term
 	top    [][2]*ast.Term
+	// m and req are the module and the shared request, which the calls of
+	// its GENERAL and FILTERED PIPs read with each item's body.
+	m   *Module
+	req Request
 }
 
 // itemOperand reports whether each item of a bulk request resolves r from
@@ -68,7 +72,7 @@ func NewBulk(m *Module, req Request) (*Bulk, error) {
 	for _, r := range b.items {
 		delete(in.Records, r.ID)
 	}
-	b.in = in
+	b.in, b.m, b.req = in, m, shared
 	b.fields = make(map[string]*ast.Term, len(recordFields))
 	for f, o := range fieldObjects(m.Refs, func(r *Ref) (Record, bool) {
 		rec, ok := in.Records[r.ID]
@@ -83,7 +87,8 @@ func NewBulk(m *Module, req Request) (*Bulk, error) {
 // Item returns the input of one item of the bulk request, whose body is
 // body. The input shares the subject's part with every other item: its
 // Records hold the item's records only, and its Value reuses the shared
-// terms.
+// terms. The requests of its PIPs are the item's own, since a request may
+// read the resource.
 func (b *Bulk) Item(body Body) *Input {
 	in := &Input{
 		Records:     make(map[string]Record, len(b.items)),
@@ -111,6 +116,10 @@ func (b *Bulk) Item(body Body) *Input {
 		}
 		in.Records[r.ID] = record(r, v)
 	}
+	req := b.req
+	req.Body = body
+	// NewBulk checked the values setCalls requires
+	_ = in.setCalls(b.m, &req)
 	return in
 }
 
@@ -140,6 +149,9 @@ func (b *Bulk) value(in *Input) ast.Value {
 	}
 	for _, kv := range b.top {
 		o.Insert(kv[0], kv[1])
+	}
+	if in.calls != nil {
+		o.Insert(strTerm("pq"), ast.NewTerm(in.calls))
 	}
 	if b.in.resourceMember() {
 		res := ast.NullTerm()

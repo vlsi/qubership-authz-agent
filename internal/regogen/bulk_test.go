@@ -216,3 +216,40 @@ func BenchmarkBulk50(b *testing.B) {
 		}
 	}
 }
+
+// TestBulkItemSendsItsOwnPIPRequest: the request of a PIP whose
+// requestAttributes read the resource carries each item's resource, as the
+// item's request alone does.
+func TestBulkItemSendsItsOwnPIPRequest(t *testing.T) {
+	tree := tenantWithSetAndPIPs(t, "DENY_UNLESS_PERMIT", "ALLOW", "subject.g == 'acc-7'",
+		`{"name": "subject.g", "pipType": "GENERAL", "url": "http://g", "requestAttributes": {"r": "${resource.a}"}}`)
+	m, err := Generate(tree, table(t), DefaultOptions())
+	if err != nil {
+		t.Fatalf("Generate: %v", err)
+	}
+	shared := Request{Values: map[string]Resolved{`["subj","g"]`: resolved(t, "VALUE", `"acc-7"`)}}
+	checkBulk(t, m, shared, `{"operation": "read", "resourceType": "doc", "resource": {"a": "r1"}}`,
+		`{"operation": "read", "resourceType": "doc", "resource": {"a": "r2"}}`)
+
+	bulk, err := NewBulk(m, shared)
+	if err != nil {
+		t.Fatalf("NewBulk: %v", err)
+	}
+	var id string
+	for _, r := range m.Refs {
+		if r.pip != nil {
+			id = r.ID
+		}
+	}
+	for _, a := range []string{"r1", "r2"} {
+		b, err := ReadBody([]byte(`{"operation": "read", "resourceType": "doc", "resource": {"a": "` + a + `"}}`))
+		if err != nil {
+			t.Fatal(err)
+		}
+		q := bulk.Item(b).calls.Get(strTerm(id))
+		if got := q.Get(strTerm("body")); got == nil || !strings.Contains(got.String(), `"r": "`+a+`"`) {
+			t.Errorf("body of the PIP request of the item with resource.a %s = %v, want requestAttributes.r %s",
+				a, got, a)
+		}
+	}
+}
