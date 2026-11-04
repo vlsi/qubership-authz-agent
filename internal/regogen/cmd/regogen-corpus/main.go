@@ -45,6 +45,13 @@
 // ([regogen.NewBulk]) is compared with the request's own, and a difference
 // is counted in bulk_mismatch. The bundle must carry the body.
 //
+// With -service as well, a TOKEN or HEADER PIP takes the value the agent's
+// service reads from the claims and the headers of the request
+// ([regogen.Module.ResolveSubject]) in place of the specification's. A
+// source the service does not read, such as a MAPPING PIP, keeps the
+// specification's value, and the requests of a module that reads one are
+// counted in service_unread. The bundle must carry the headers.
+//
 // A GENERAL or FILTERED PIP calls nc.http.send, whose transport replays the
 // value the specification resolved for the PIP ([regogen.ReplayTransport]):
 // the request the projection builds is not checked, the reading of the
@@ -74,9 +81,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/open-policy-agent/opa/v1/ast"
 	"github.com/open-policy-agent/opa/v1/rego"
-	"github.com/open-policy-agent/opa/v1/types"
 
 	"authz-agent/internal/jsonvalue"
 	"authz-agent/internal/policyir"
@@ -105,10 +110,12 @@ type request struct {
 	Body     *string                       `json:"body"`
 	// Claims and Anonymous are the claims of the subject's token and
 	// whether the request is anonymous, which the subject is read from.
-	Claims    *string        `json:"claims"`
-	Anonymous bool           `json:"anonymous"`
-	Agent     bool           `json:"agent"`
-	Legacy    map[string]any `json:"legacy"`
+	Claims    *string `json:"claims"`
+	Anonymous bool    `json:"anonymous"`
+	// Headers are the headers of the request by name.
+	Headers map[string]string `json:"headers"`
+	Agent   bool              `json:"agent"`
+	Legacy  map[string]any    `json:"legacy"`
 }
 
 type result struct {
@@ -131,11 +138,14 @@ type result struct {
 	// of a bulk request differs from its own; BulkUs and ItemUs are the
 	// projection of the shared part and of the item, its input value
 	// included.
-	BulkMismatch []string  `json:"bulkMismatch,omitempty"`
-	BulkUs       []float64 `json:"bulkUs,omitempty"`
-	ItemUs       []float64 `json:"itemUs,omitempty"`
-	GenMs        float64   `json:"genMs"`
-	CompileMs    float64   `json:"compileMs"`
+	BulkMismatch []string `json:"bulkMismatch,omitempty"`
+	// ServiceUnread counts, with -service, the requests of a module that
+	// reads a source the service does not read.
+	ServiceUnread int       `json:"serviceUnread,omitempty"`
+	BulkUs        []float64 `json:"bulkUs,omitempty"`
+	ItemUs        []float64 `json:"itemUs,omitempty"`
+	GenMs         float64   `json:"genMs"`
+	CompileMs     float64   `json:"compileMs"`
 	// DecisionCompileMs and DenyUs are the compilation of the decision
 	// module and the evaluation of each denied request, allow and maybe;
 	// EvalUs times allow alone.
@@ -152,24 +162,7 @@ type result struct {
 	NoTemplate   map[string]int `json:"noTemplate,omitempty"`
 }
 
-type ctxKey struct{}
-
 var explain bool
-
-var pipDecl = &ast.Builtin{Name: "nc.pip", Decl: types.NewFunction(types.Args(types.S), types.A)}
-
-func stubs() []func(*rego.Rego) {
-	pip := rego.Function1(&rego.Function{Name: pipDecl.Name, Decl: pipDecl.Decl},
-		func(bctx rego.BuiltinContext, a *ast.Term) (*ast.Term, error) {
-			in := bctx.Context.Value(ctxKey{}).(*regogen.Input)
-			t, ok := in.PIPRecord(string(a.Value.(ast.String)))
-			if !ok {
-				return nil, fmt.Errorf("nc.pip: no record %v", a)
-			}
-			return t, nil
-		})
-	return append(regogen.Builtins(), pip)
-}
 
 // toRequest reads the request q of the tenant's bundle for module m. A value
 // of the subject that the request of a PIP of m reads and q does not carry
@@ -281,8 +274,9 @@ type resolution struct {
 // itself, the subject's where q carries the claims, and projects rq. It
 // compares the records with those of in, the input the specification's
 // values give, and the input of rq as the one item of a bulk request with
-// rq's own.
-func resolveRequest(m *regogen.Module, q request, rq *regogen.Request, in *regogen.Input) (resolution, error) {
+// rq's own. With service, the TOKEN and HEADER PIPs are resolved as the
+// service resolves them.
+func resolveRequest(m *regogen.Module, q request, rq *regogen.Request, in *regogen.Input, service bool) (resolution, error) {
 	var res resolution
 	var claims *jsonvalue.Object
 	if q.Claims != nil {
@@ -300,6 +294,18 @@ func resolveRequest(m *regogen.Module, q request, rq *regogen.Request, in *regog
 	m.Resolve(rq.Body, rq.Values)
 	if claims != nil {
 		regogen.SubjectOf(claims, q.Anonymous, regogen.DefaultSubjectRules).Apply(rq)
+	}
+	if service {
+		for _, r := range m.Refs {
+			if r.Kind == spectables.KindPIPToken || r.Kind == spectables.KindPIPHeader {
+				delete(rq.Values, r.Key)
+			}
+		}
+		rq.Headers = map[string]string{}
+		for k, v := range q.Headers {
+			rq.Headers[strings.ToLower(k)] = v
+		}
+		m.ResolveSubject(rq)
 	}
 	res.resolveUs = float64(time.Since(t0).Nanoseconds()) / 1000
 	got, err := regogen.Project(m, *rq)
@@ -337,7 +343,7 @@ func resolveRequest(m *regogen.Module, q request, rq *regogen.Request, in *regog
 	return res, nil
 }
 
-func run(b bundle, tab *spectables.Table, opt regogen.Options, reps int, dumpDir string, resolve bool) result {
+func run(b bundle, tab *spectables.Table, opt regogen.Options, reps int, dumpDir string, resolve, service bool) result {
 	res := result{Key: b.Key, Requests: len(b.Requests)}
 	exp, err := policyir.FromRegular(b.PolicySets, b.PIPs)
 	if err != nil {
@@ -372,6 +378,14 @@ func run(b bundle, tab *spectables.Table, opt regogen.Options, reps int, dumpDir
 	}
 	res.Stats = m.Stats
 	res.Groups = len(m.Groups)
+	// the service fails the permission scope and these sources
+	unread := m.Iterates
+	for _, r := range m.Refs {
+		switch r.Kind {
+		case spectables.KindPIPMapping, spectables.KindSubjPermissions, spectables.KindEntitled, spectables.KindSubjPermissionScope:
+			unread = true
+		}
+	}
 	res.NoTemplate = m.Stats.NoTemplate
 	if explain {
 		fmt.Fprintln(os.Stderr, tree.Dump())
@@ -382,7 +396,7 @@ func run(b bundle, tab *spectables.Table, opt regogen.Options, reps int, dumpDir
 	}
 	t0 = time.Now()
 	opts := append([]func(*rego.Rego){rego.Query("data." + opt.Package + ".allow"),
-		rego.Module("gen.rego", m.Text)}, stubs()...)
+		rego.Module("gen.rego", m.Text)}, regogen.Builtins()...)
 	pq, err := rego.New(opts...).PrepareForEval(context.Background())
 	res.CompileMs = float64(time.Since(t0).Microseconds()) / 1000
 	if err != nil {
@@ -394,7 +408,7 @@ func run(b bundle, tab *spectables.Table, opt regogen.Options, reps int, dumpDir
 	if opt.Decision {
 		t0 = time.Now()
 		opts := append([]func(*rego.Rego){rego.Query("data." + opt.Package + "_decision.maybe"),
-			rego.Module("decision.rego", m.DecisionText)}, stubs()...)
+			rego.Module("decision.rego", m.DecisionText)}, regogen.Builtins()...)
 		if pqd, err = rego.New(opts...).PrepareForEval(context.Background()); err != nil {
 			res.Stage, res.Error = "compile decision", err.Error()
 			return res
@@ -422,7 +436,14 @@ func run(b bundle, tab *spectables.Table, opt regogen.Options, reps int, dumpDir
 				res.ProjErrors = append(res.ProjErrors, q.ID+": -resolve: the bundle carries no body")
 				continue
 			}
-			r, err := resolveRequest(m, q, &rq, in)
+			if service && q.Headers == nil {
+				res.ProjErrors = append(res.ProjErrors, q.ID+": -service: the bundle carries no headers")
+				continue
+			}
+			if service && unread {
+				res.ServiceUnread++
+			}
+			r, err := resolveRequest(m, q, &rq, in, service)
 			if err != nil {
 				res.ProjErrors = append(res.ProjErrors, q.ID+": resolve: "+err.Error())
 				continue
@@ -448,7 +469,7 @@ func run(b bundle, tab *spectables.Table, opt regogen.Options, reps int, dumpDir
 			continue
 		}
 		h := &regobuiltins.HTTP{Client: &http.Client{Transport: tr}, Token: func() (string, error) { return "own", nil }}
-		ctx := in.Context(context.WithValue(h.Context(context.Background()), ctxKey{}, in))
+		ctx := in.Context(h.Context(context.Background()))
 		best, bestDeny := -1.0, -1.0
 		var got, maybe bool
 		for i := 0; i < reps; i++ {
@@ -519,6 +540,7 @@ func main() {
 	budget := flag.Int("budget", 16, "product limit")
 	decision := flag.Bool("decision", false, "evaluate decision == \"permit\" instead of allow")
 	resolve := flag.Bool("resolve", false, "resolve the resource operands from the body and compare the records")
+	service := flag.Bool("service", false, "with -resolve, resolve the TOKEN and HEADER PIPs as the service does")
 	flag.BoolVar(&explain, "explain", false, "print the export's tenants, the tree, and the module to stderr")
 	flag.Parse()
 
@@ -548,7 +570,7 @@ func main() {
 		go func() {
 			defer wg.Done()
 			for b := range jobs {
-				results <- run(b, tab, opt, *reps, *dump, *resolve)
+				results <- run(b, tab, opt, *reps, *dump, *resolve, *service)
 			}
 		}()
 	}
@@ -617,6 +639,7 @@ func main() {
 		sum["record_mismatch"] += len(r.RecordMismatch)
 		resolveUs = append(resolveUs, r.ResolveUs...)
 		sum["bulk_mismatch"] += len(r.BulkMismatch)
+		sum["service_unread"] += r.ServiceUnread
 		bulkUs = append(bulkUs, r.BulkUs...)
 		itemUs = append(itemUs, r.ItemUs...)
 		sum["evaluated"] += len(r.EvalUs)
