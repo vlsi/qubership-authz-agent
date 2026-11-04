@@ -241,6 +241,11 @@ func EvalGroups(m *Module, in *Input) []string {
 // A factor that several groups share is held once, so one evaluation answers
 // it for all of them, and a reference the tests read is numbered, so a test
 // reads its record from a slice rather than from [Input.Records].
+//
+// A factor of more than maxPlainClauses clauses, each of which requires a key
+// among a list's keys, is keyed: its clauses are filed under their keys too,
+// and an evaluation tries only the clauses filed under the keys the input
+// has.
 type groupIndex struct {
 	ids    []string
 	groups [][]int // the factors of each group, as indexes into factors
@@ -251,12 +256,47 @@ type groupIndex struct {
 	// refs lists the references the tests read; test.ri and test.ri2 index
 	// it.
 	refs []string
-	pool sync.Pool
+	// slots holds the slots of clauseKey that the clauses of a keyed factor
+	// require keys in, and nil for any other factor; clauses files the
+	// clauses of keyed factors under their keys, and sources names where an
+	// input's keys of each slot are.
+	slots   [][]int
+	clauses map[clauseKey][]factorClause
+	sources []keySource
+	pool    sync.Pool
+}
+
+// maxPlainClauses is the number of clauses up to which a factor is cheaper to
+// evaluate clause by clause than through the keys of the input.
+const maxPlainClauses = 4
+
+// clauseKey is a key a clause requires among the keys of the list in slot
+// (listSlot).
+type clauseKey struct {
+	slot int
+	val  string
+}
+
+type factorClause struct{ f, c int }
+
+// keySource names where the input's list in one slot is.
+type keySource struct {
+	slot, ri int
+	field    string
+}
+
+// key returns the clauseKey of a test that requires a key among a list's
+// keys, and false for any other test.
+func (t *test) key() (clauseKey, bool) {
+	if t.kind == "has" {
+		return clauseKey{t.slot, t.val}, true
+	}
+	return clauseKey{}, false
 }
 
 func (m *Module) groupIndex() *groupIndex {
 	m.ixOnce.Do(func() {
-		ix := &groupIndex{byKey: map[string][]int{}}
+		ix := &groupIndex{byKey: map[string][]int{}, clauses: map[clauseKey][]factorClause{}}
 		ix.ids = slices.Sorted(maps.Keys(m.Groups))
 		factorIDs := map[int]int{}
 		refIDs := map[string]int{}
@@ -281,10 +321,33 @@ func (m *Module) groupIndex() *groupIndex {
 					fi = len(ix.factors)
 					factorIDs[grp.factorIDs[i]] = fi
 					ix.factors = append(ix.factors, f)
+					var keys []clauseKey
+					var slots []int
 					for _, c := range f {
 						for _, t := range c {
 							t.ri, t.ri2 = refID(t.ref), refID(t.ref2)
 							t.slot = listSlot(t.ri, t.field)
+						}
+						for _, t := range c {
+							if k, ok := t.key(); ok {
+								keys = append(keys, k)
+								if !slices.Contains(slots, k.slot) {
+									slots = append(slots, k.slot)
+								}
+								if !slices.ContainsFunc(ix.sources, func(s keySource) bool { return s.slot == k.slot }) {
+									ix.sources = append(ix.sources, keySource{k.slot, t.ri, t.field})
+								}
+								break
+							}
+						}
+					}
+					if len(f) <= maxPlainClauses || len(keys) < len(f) {
+						slots = nil
+					}
+					ix.slots = append(ix.slots, slots)
+					for c, k := range keys {
+						if slots != nil {
+							ix.clauses[k] = append(ix.clauses[k], factorClause{fi, c})
 						}
 					}
 				}
@@ -324,7 +387,7 @@ func (m *Module) groupIndex() *groupIndex {
 		ix.pool.New = func() any {
 			return &groupEval{seen: make([]bool, len(ix.ids)), factors: make([]int8, len(ix.factors)),
 				recs: make([]Record, len(ix.refs)), loaded: make([]int8, len(ix.refs)),
-				sets: make([]map[string]struct{}, 3*len(ix.refs)+1)}
+				sets: make([]map[string]struct{}, 3*len(ix.refs)+1), cands: make([][]int, len(ix.factors))}
 		}
 		m.ix = ix
 	})
@@ -344,6 +407,39 @@ type groupEval struct {
 	// sets holds, as a set, each long list a test has looked a key up in,
 	// by listSlot.
 	sets []map[string]struct{}
+	// cands holds the clauses of each keyed factor filed under a key the
+	// input has, in the slots filed lists; touched lists the factors with
+	// any.
+	cands   [][]int
+	filed   []int
+	touched []int
+}
+
+// file adds to cands the clauses filed under the input's keys of slot, once
+// per slot.
+func (e *groupEval) file(slot int) {
+	if slices.Contains(e.filed, slot) {
+		return
+	}
+	e.filed = append(e.filed, slot)
+	add := func(v string) {
+		for _, fc := range e.ix.clauses[clauseKey{slot, v}] {
+			if len(e.cands[fc.f]) == 0 {
+				e.touched = append(e.touched, fc.f)
+			}
+			e.cands[fc.f] = append(e.cands[fc.f], fc.c)
+		}
+	}
+	s := e.ix.sources[slices.IndexFunc(e.ix.sources, func(s keySource) bool { return s.slot == slot })]
+	var ks []string
+	if s.ri < 0 {
+		ks = e.in.SRoles
+	} else if r, ok := e.rec(s.ri); ok {
+		ks = r.list(s.field)
+	}
+	for _, v := range ks {
+		add(v)
+	}
 }
 
 func (e *groupEval) release(ix *groupIndex) {
@@ -353,6 +449,10 @@ func (e *groupEval) release(ix *groupIndex) {
 	clear(e.recs)
 	clear(e.loaded)
 	clear(e.sets)
+	for _, f := range e.touched {
+		e.cands[f] = e.cands[f][:0]
+	}
+	e.filed, e.touched = e.filed[:0], e.touched[:0]
 	ix.pool.Put(e)
 }
 
@@ -419,7 +519,15 @@ func (e *groupEval) factorHolds(f int) bool {
 	if a := e.factors[f]; a != 0 {
 		return a == 1
 	}
-	ok := slices.ContainsFunc(e.ix.factors[f], e.clauseHolds)
+	var ok bool
+	if slots := e.ix.slots[f]; slots != nil {
+		for _, s := range slots {
+			e.file(s)
+		}
+		ok = slices.ContainsFunc(e.cands[f], func(c int) bool { return e.clauseHolds(e.ix.factors[f][c]) })
+	} else {
+		ok = slices.ContainsFunc(e.ix.factors[f], e.clauseHolds)
+	}
 	e.factors[f] = 2
 	if ok {
 		e.factors[f] = 1

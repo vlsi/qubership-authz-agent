@@ -1346,10 +1346,12 @@ func TestASubjectGroupComparesSubsets(t *testing.T) {
 	}
 }
 
-// Go looks a key up in a subject list longer than eight as in a set: a key
-// anywhere in the list, in another case, which CONTAINS ANY ignores, and in a
-// short list, and IN reads a literal there. Two groups that share a factor,
-// here the one of subject.roles, read the same answer of it.
+// Go evaluates a subject group whose factor lists more keys than
+// maxPlainClauses by the keys of the input, and looks a key up in a list
+// longer than eight as in a set: a key anywhere in the list, in another case,
+// which CONTAINS ANY ignores, and in a short list, and IN reads a literal
+// there. Two groups that share a factor, here the one of subject.roles, read
+// the same answer of it.
 func TestASubjectGroupFindsAKeyAmongMany(t *testing.T) {
 	opt := DefaultOptions()
 	opt.Groups = true
@@ -1386,9 +1388,9 @@ func TestASubjectGroupFindsAKeyAmongMany(t *testing.T) {
 }
 
 // One module answers the groups of each input apart from the inputs before
-// it, in turn and at once: the roles of a simplified policy, of a factor of six
-// keys and of a factor of one key, are looked up in a long list of one input
-// and found missing in the next.
+// it, in turn and at once: the roles of a simplified policy, of a factor of
+// more than maxPlainClauses keys and of a factor of one key, are looked up in
+// a long list of one input and found missing in the next.
 func TestASubjectGroupIsAnsweredForEachInputAlone(t *testing.T) {
 	sets := `{"policySets": [{"policySetId": "s", "name": "s", "status": "ACTIVE", "type": "SIMPLIFIED",
 		"target": "resourceType == 'doc'", "combiningAlgorithm": "DENY_UNLESS_PERMIT", "tenantId": "t1",
