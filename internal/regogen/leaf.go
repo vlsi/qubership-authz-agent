@@ -81,6 +81,7 @@ func (s *side) points() []point {
 
 // field is the expression that reads one field of the side's value record.
 func (s *side) field(f string) string {
+	s.ref.read |= fieldBit(f)
 	if s.ref.Network {
 		return "p_" + s.ref.Var + "." + f
 	}

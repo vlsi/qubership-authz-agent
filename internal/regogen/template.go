@@ -55,10 +55,10 @@ func (t tpl) fieldClasses(s *side) []spectables.Class {
 	return out
 }
 
-// fieldOf reports whether [record] writes field f for a value of class cl:
-// k and nk for s and n; ks for every class but z; raw and the segments for s;
-// tk and o for the lists and the object. Any other field, such as n0, keeps
-// the check of the class.
+// fieldOf reports whether [record] writes field f, which the module reads,
+// for a value of class cl: k and nk for s and n; ks for every class but z;
+// raw and the segments for s; tk and o for the lists and the object. Any
+// other field, such as n0, keeps the check of the class.
 func fieldOf(f string, cl spectables.Class) bool {
 	switch f {
 	case "k", "nk":
@@ -117,6 +117,7 @@ func (b *tb) use(s *side, f string) {
 	if s.ref == nil {
 		return
 	}
+	s.ref.read |= fieldBit(f)
 	if b.fields[s] == nil {
 		b.fields[s] = map[string]bool{}
 	}

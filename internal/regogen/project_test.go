@@ -16,6 +16,7 @@ package regogen
 
 import (
 	"slices"
+	"strings"
 	"testing"
 
 	"authz-agent/internal/jsonvalue"
@@ -77,6 +78,70 @@ func TestRecordReadsTheTokensOfTheElements(t *testing.T) {
 			if tk != tc.tk || !slices.Equal(rec.EA, tc.ea) || !slices.Equal(rec.EB, tc.eb) {
 				t.Errorf("record(%s): tk %q, ea %q, eb %q; want tk %q, ea %q, eb %q", tc.value, tk, rec.EA, rec.EB,
 					tc.tk, tc.ea, tc.eb)
+			}
+		})
+	}
+}
+
+// A record holds a field that is costly to build, the keys, the text, the
+// structure key, or the element tokens of a list, where the module reads it
+// and the record of every field holds it, and nowhere else: CONTAINS reads
+// the keys alone, as do the policies of a subject's permissions, and == with
+// a string reads the text. The value is a list of strings, an empty list, or
+// a one-element GENERAL list of an object, whose record has no text.
+func TestARecordHoldsTheFieldsTheModuleReads(t *testing.T) {
+	for _, tc := range []struct{ condition, state, value string }{
+		{"subject.permissions CONTAINS 'p1'", "VALUE", `["p1", "p2"]`},
+		{"subject.permissions == 'p1'", "VALUE", `["p1", "p2"]`},
+		{"subject.permissions == resource.b", "VALUE", `["p1", "p2"]`},
+		{"subject.permissions CONTAINS ANY resource.b", "VALUE", `["p1", "p2"]`},
+		{"subject.permissions IS EMPTY", "VALUE", `["p1", "p2"]`},
+		{"subject.permissions == resource.b", "VALUE", `[]`},
+		{"subject.permissions CONTAINS ANY resource.b", "VALUE", `[]`},
+		{"subject.g CONTAINS 'p1'", "SINGLE_ODD", `[{"a": 1}]`},
+		{"subject.g CONTAINS ANY resource.b", "SINGLE_ODD", `[{"a": 1}]`},
+		{"subject.g == 'x'", "SINGLE_ODD", `[{"a": 1}]`},
+	} {
+		t.Run(tc.condition+" "+tc.value, func(t *testing.T) {
+			condition := tc.condition
+			id, key, pips := "subject.permissions", `["subj","permissions"]`, ""
+			if tc.state == "SINGLE_ODD" {
+				id, key, pips = "subject.g", `["subj","g"]`, generalPIPs
+			}
+			values := map[string]Resolved{key: resolved(t, tc.state, tc.value),
+				`["res",".b"]`: resolved(t, "VALUE", `["p2"]`)}
+			m, err := Generate(tenantWithSetAndPIPs(t, "DENY_UNLESS_PERMIT", "ALLOW", condition, pips), table(t),
+				DefaultOptions())
+			if err != nil {
+				t.Fatalf("Generate: %v", err)
+			}
+			in, err := Project(m, Request{Body: Body{Operation: "read", ResourceType: "doc"}, Values: values})
+			if err != nil {
+				t.Fatalf("Project: %v", err)
+			}
+			rec, ok := in.Records[id]
+			if !ok {
+				t.Fatalf("the input holds no record of %s", id)
+			}
+			whole := record(&Ref{}, values[key])
+			i := slices.IndexFunc(m.Refs, func(r *Ref) bool { return r.ID == id })
+			if i < 0 {
+				t.Fatalf("the module has no reference %s", id)
+			}
+			// a copy, so that reading the expressions marks no field
+			r := *m.Refs[i]
+			s := &side{ref: &r}
+			for f, has := range map[string][2]bool{"ks": {rec.KS != nil, whole.KS != nil},
+				"tk": {rec.TK != nil, whole.TK != nil}, "o": {rec.O != nil, whole.O != nil},
+				"ea": {rec.EA != nil, whole.EA != nil}} {
+				reads := strings.Contains(m.Text, s.field(f))
+				if f == "ea" {
+					reads = reads || strings.Contains(m.Text, s.field("eb"))
+				}
+				if has[0] != (reads && has[1]) {
+					t.Errorf("the module reads %s of %s: %v, the record of every field holds it: %v, "+
+						"the record holds it: %v", f, id, reads, has[1], has[0])
+				}
 			}
 		})
 	}

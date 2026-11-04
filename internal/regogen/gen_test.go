@@ -2924,3 +2924,40 @@ func TestDecisionLeavesTheModuleOfAllowAlone(t *testing.T) {
 			off.Stats.DecisionClauses)
 	}
 }
+
+// A subject group answers from records that hold only the fields the module
+// reads as it does from records of every field: lists of strings, of a
+// nested list, an object, and null, and an empty list.
+func TestASubjectGroupReadsTheFieldsItsRecordsHold(t *testing.T) {
+	opt := DefaultOptions()
+	opt.Groups = true
+	for _, condition := range []string{
+		"subject.permissions CONTAINS 'p1'",
+		"subject.permissions CONTAINS ANY 'p1', 'p3'",
+		"subject.permissions IS EMPTY",
+		"'p1' IN subject.permissions",
+		"subject.permissions IS SUBSET 'p1', 'p2'",
+	} {
+		m, err := Generate(tenantWithSetAndPIPs(t, "DENY_UNLESS_PERMIT", "ALLOW", condition, ""), table(t), opt)
+		if err != nil {
+			t.Fatalf("Generate %s: %v", condition, err)
+		}
+		if len(m.Groups) == 0 {
+			t.Fatalf("%s builds no subject group", condition)
+		}
+		for _, value := range []string{`["p1", "p2"]`, `["P1"]`, `[["p1"], "p2"]`, `[{"a": "p1"}, null]`, `[]`,
+			`["x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9", "p1"]`} {
+			v := resolved(t, "VALUE", value)
+			req := Request{Body: Body{Operation: "read", ResourceType: "doc"},
+				Values: map[string]Resolved{`["subj","permissions"]`: v}}
+			got := EvalGroups(m, mustProject(t, m, req))
+			whole := mustProject(t, m, req)
+			r := m.Refs[slices.IndexFunc(m.Refs, func(r *Ref) bool { return r.ID == "subject.permissions" })]
+			whole.Records[r.ID] = record(&Ref{Kind: r.Kind, Subset: r.Subset}, v)
+			if want := EvalGroups(m, whole); !slices.Equal(got, want) {
+				t.Errorf("%s with subject.permissions = %s: groups %v, from records of every field %v", condition,
+					value, got, want)
+			}
+		}
+	}
+}

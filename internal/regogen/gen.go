@@ -422,6 +422,7 @@ func (g *gen) simplified(sg *policyir.SimplifiedGroup, label string) (*node, err
 			if err != nil {
 				return nil, err
 			}
+			r.read |= fieldBit("k")
 			m = conj(m, clause{{cls: clsIndexEq, text: "input.k" + refIndex(r.ID) + " == " + lit(g.fold(sg.ResourceType)),
 				src: simpSrc("resourceType == " + lit(sg.ResourceType))}})
 		}
@@ -435,6 +436,7 @@ func (g *gen) simplified(sg *policyir.SimplifiedGroup, label string) (*node, err
 			if err != nil {
 				return nil, err
 			}
+			r.read |= fieldBit("k")
 			m = conj(m, clause{{cls: clsIndexEq, text: "input.k" + refIndex(r.ID) + " == " + lit(g.fold(op)),
 				src: simpSrc("operation == " + lit(op))}})
 		}

@@ -68,7 +68,8 @@ type Scope struct {
 	Passes []map[string]Resolved
 }
 
-// Record is the value record of a reference, as the module reads it.
+// Record is the value record of a reference, as the module reads it. KS, TK,
+// O, EA, and EB are set only where the module reads them ([Ref.read]).
 type Record struct {
 	S    string
 	T    string
@@ -150,13 +151,17 @@ func record(r *Ref, v Resolved) Record {
 	if v.State == spectables.StateSingleOdd {
 		// a one-element GENERAL list of null, a boolean, or an object: the
 		// collection operators read it as a list
-		lv := legacyvalue.Of(v.Value)
-		rec.KS = lv.Keys
-		if rec.KS == nil {
-			rec.KS = []string{}
+		lv := legacyvalue.OfParts(v.Value, r.parts())
+		if r.reads("ks") {
+			rec.KS = lv.Keys
+			if rec.KS == nil {
+				rec.KS = []string{}
+			}
 		}
 		rec.N0 = lv.State == legacyvalue.StateNullElement
-		rec.EA, rec.EB = elementTokens(v.Value, lv)
+		if r.reads("ea", "eb") {
+			rec.EA, rec.EB = elementTokens(v.Value, lv)
+		}
 		rec.subset(r, v.Value)
 		return rec
 	}
@@ -168,39 +173,49 @@ func record(r *Ref, v Resolved) Record {
 		rec.subset(r, nil)
 		return rec
 	}
-	lv := legacyvalue.Of(v.Value)
+	lv := legacyvalue.OfParts(v.Value, r.parts())
 	cl := class(v.Value, lv)
 	if cl == spectables.ClassList && v.HeaderList {
 		cl = spectables.ClassHeaderList
 	}
 	rec.T = string(cl)
-	rec.EA, rec.EB = elementTokens(v.Value, lv)
+	if r.reads("ea", "eb") {
+		rec.EA, rec.EB = elementTokens(v.Value, lv)
+	}
 	rec.subset(r, v.Value)
 	switch cl {
 	case spectables.ClassString, spectables.ClassScalar:
 		rec.K = lv.Key
-		rec.KS = []string{*lv.Key}
+		if r.reads("ks") {
+			rec.KS = []string{*lv.Key}
+		}
 		rec.N = lv.Number
 	default:
-		rec.KS = lv.Keys
-		if rec.KS == nil {
-			rec.KS = []string{}
+		if r.reads("ks") {
+			rec.KS = lv.Keys
+			if rec.KS == nil {
+				rec.KS = []string{}
+			}
 		}
 		rec.N0 = lv.State == legacyvalue.StateNullElement
-		if l, ok := v.Value.([]jsonvalue.Value); ok && len(l) > 0 && allStrings(l) {
+		switch l, ok := v.Value.([]jsonvalue.Value); {
+		case !r.reads("tk"):
+		case ok && len(l) > 0 && allStrings(l):
 			// structureText of a list of strings is its Java text, which k
 			// folds
 			rec.TK = lv.Key
-		} else {
+		default:
 			tk := legacyvalue.Fold(structureText(v.Value))
 			rec.TK = &tk
 		}
-		rec.O = lv.Structure
+		if r.reads("o") {
+			rec.O = lv.Structure
+		}
 		if l, ok := v.Value.([]jsonvalue.Value); ok {
 			n := len(l)
 			rec.Len = &n
 		}
-		if lv.State == legacyvalue.StateEmptyColl {
+		if lv.State == legacyvalue.StateEmptyColl && r.reads("o") {
 			// the record of an empty list carries no structure key; it is []
 			empty := "[]"
 			rec.O = &empty
@@ -474,6 +489,56 @@ func fieldMaps(refs []*Ref, rec func(*Ref) (Record, bool)) ast.Object {
 // recordFields names the maps of [fieldMaps].
 var recordFields = []string{"s", "t", "k", "ks", "raw", "seg", "eseg", "nseg", "n0", "tk", "o", "ln", "ea", "eb",
 	"nk", "sa", "sb"}
+
+// fieldSet holds names of recordFields, one bit each, and fieldsKnown.
+type fieldSet uint32
+
+// fieldsKnown marks the fieldSet of a reference the generator created.
+const fieldsKnown fieldSet = 1 << 31
+
+func fieldBit(f string) fieldSet {
+	i := slices.Index(recordFields, f)
+	if i < 0 {
+		panic("regogen: no record field " + f)
+	}
+	return 1 << i
+}
+
+// reads reports whether the module reads one of the fields fs of r's record,
+// and is true for a reference the generator did not create.
+func (r *Ref) reads(fs ...string) bool {
+	if r.read&fieldsKnown == 0 {
+		return true
+	}
+	for _, f := range fs {
+		if r.read&fieldBit(f) != 0 {
+			return true
+		}
+	}
+	return false
+}
+
+// parts are the parts of the legacyvalue record of a list that the fields
+// the module reads of r come from.
+func (r *Ref) parts() legacyvalue.Parts {
+	if r.read&fieldsKnown == 0 {
+		return legacyvalue.AllParts
+	}
+	var p legacyvalue.Parts
+	if r.reads("tk") {
+		p |= legacyvalue.PartKey
+	}
+	if r.reads("ks") {
+		p |= legacyvalue.PartKeys
+	}
+	if r.reads("o") {
+		p |= legacyvalue.PartStructure
+	}
+	if r.reads("ea", "eb") {
+		p |= legacyvalue.PartElements
+	}
+	return p
+}
 
 // fieldObjects returns the maps of [fieldMaps] by their names.
 func fieldObjects(refs []*Ref, rec func(*Ref) (Record, bool)) map[string]ast.Object {

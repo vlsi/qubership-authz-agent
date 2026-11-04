@@ -135,11 +135,38 @@ func WithState(s State) Record {
 	return Record{State: s}
 }
 
+// Parts names the fields of the record of a list that [OfParts] builds.
+type Parts uint8
+
+// The parts of the record of a list.
+const (
+	// PartKey is k and ck.
+	PartKey Parts = 1 << iota
+	// PartKeys is ks.
+	PartKeys
+	// PartStructure is o.
+	PartStructure
+	// PartElements is e.
+	PartElements
+	// AllParts is every part, the record [Of] returns.
+	AllParts = PartKey | PartKeys | PartStructure | PartElements
+)
+
 // Of returns the record of v as the operand's value: state NULL for nil,
 // EMPTY_COLL for an empty list, NULL_ELEMENT for a list that holds nil, and
 // VALUE otherwise. Of panics if v is not a [jsonvalue.Value].
 func Of(v jsonvalue.Value) Record {
-	return of(v, true)
+	return OfParts(v, AllParts)
+}
+
+// OfParts returns the record [Of] returns, with only the parts p of a
+// non-empty list; the state and the class of a list, and the record of any
+// other value, are whole.
+func OfParts(v jsonvalue.Value, p Parts) Record {
+	if l, ok := v.([]jsonvalue.Value); ok && len(l) > 0 {
+		return listWithElements(l, p)
+	}
+	return of(v, false)
 }
 
 // of returns the record of v, and leaves out e when elements is false.
@@ -179,7 +206,7 @@ func listRecord(list []jsonvalue.Value, elements bool) Record {
 		return Record{State: StateEmptyColl}
 	}
 	if elements {
-		return listWithElements(list)
+		return listWithElements(list, AllParts)
 	}
 	ck := Text(list)
 	k := Fold(ck)
@@ -194,52 +221,80 @@ func listRecord(list []jsonvalue.Value, elements bool) Record {
 	return r
 }
 
-// listWithElements returns the record of a non-empty list with e. It builds
+// listWithElements returns the record of a non-empty list with the parts p,
+// e among them where p has PartElements. It builds
 // the list's ck, k, and ks from the records of its elements, which hold the
 // same texts, instead of reading the elements again, and its o as the key of
 // a set. The element records
 // come from of(e, false), which reads each element directly: joining at every
 // level would copy each byte once per level of nesting.
-func listWithElements(list []jsonvalue.Value) Record {
-	r := Record{State: StateValue, Class: ClassList, Type: TypeArray, Keys: []string{},
-		Elements: make([]Record, len(list))}
+func listWithElements(list []jsonvalue.Value, p Parts) Record {
+	r := Record{State: StateValue, Class: ClassList, Type: TypeArray}
+	if p&PartKeys != 0 {
+		r.Keys = []string{}
+	}
+	if p&PartElements != 0 {
+		r.Elements = make([]Record, len(list))
+	}
 	var ck, k strings.Builder
 	ck.WriteByte('[')
 	k.WriteByte('[')
-	elementKeys := make([]string, len(list))
+	var elementKeys []string
+	if p&PartStructure != 0 {
+		elementKeys = make([]string, len(list))
+	}
 	for i, e := range list {
+		null := classify(&r, e)
+		if p&^PartStructure == 0 {
+			// o alone reads the element, not its record
+			if elementKeys != nil {
+				elementKeys[i] = structureKey(e)
+			}
+			continue
+		}
 		er := of(e, false)
-		r.Elements[i] = er
-		if i > 0 {
-			ck.WriteString(", ")
-			k.WriteString(", ")
+		if r.Elements != nil {
+			r.Elements[i] = er
 		}
 		// A null element and an empty list have a record without ck or o.
-		var ek string
+		var text, ek string
 		if er.Key != nil {
-			ck.WriteString(*er.CaseKey)
-			ek = *er.Key
+			text, ek = *er.CaseKey, *er.Key
 		} else {
-			text := Text(e)
-			ck.WriteString(text)
+			text = Text(e)
 			ek = Fold(text)
 		}
-		k.WriteString(ek)
-		if er.Structure != nil {
-			elementKeys[i] = *er.Structure
-		} else {
-			elementKeys[i] = structureKey(e)
+		if p&PartKey != 0 {
+			if i > 0 {
+				ck.WriteString(", ")
+				k.WriteString(", ")
+			}
+			ck.WriteString(text)
+			k.WriteString(ek)
 		}
-		if !classify(&r, e) {
+		if elementKeys != nil {
+			if er.Structure != nil {
+				elementKeys[i] = *er.Structure
+			} else {
+				elementKeys[i] = structureKey(e)
+			}
+		}
+		if !null && r.Keys != nil {
 			r.Keys = append(r.Keys, ek)
 		}
 	}
-	ck.WriteByte(']')
-	k.WriteByte(']')
-	slices.Sort(elementKeys)
-	elementKeys = slices.Compact(elementKeys)
-	cks, ks, os := ck.String(), k.String(), "["+strings.Join(elementKeys, ",")+"]"
-	r.CaseKey, r.Key, r.Structure = &cks, &ks, &os
+	if p&PartKey != 0 {
+		ck.WriteByte(']')
+		k.WriteByte(']')
+		cks, ks := ck.String(), k.String()
+		r.CaseKey, r.Key = &cks, &ks
+	}
+	if elementKeys != nil {
+		slices.Sort(elementKeys)
+		elementKeys = slices.Compact(elementKeys)
+		os := "[" + strings.Join(elementKeys, ",") + "]"
+		r.Structure = &os
+	}
 	return r
 }
 

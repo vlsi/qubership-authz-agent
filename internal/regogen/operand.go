@@ -67,7 +67,12 @@ type Ref struct {
 	Pass bool
 	// Path is the resource path of a reference read lazily, with Network
 	// set: nc.resource_path(input.resource, Path) returns its record.
-	Path   string
+	Path string
+	// read holds the record fields the module reads of the reference, by
+	// the clauses of the module and of its subject groups; a record holds no
+	// other field that is costly to build. A reference the generator did not
+	// create has an empty read, and its record holds every field.
+	read   fieldSet
 	domain spectables.Domain
 	// sel is the compiled path of a resource operand that the projection
 	// reads, and dotState the state of one that ends in a dot
@@ -404,7 +409,7 @@ func (g *gen) ref(o policyir.Operand, kind spectables.Kind, network bool) (*Ref,
 	}
 	g.vars[v] = id
 	_, pass := o.(policyir.PassValue)
-	r := &Ref{ID: id, Var: v, Key: key, Kind: kind, Network: network, Pass: pass, domain: dom}
+	r := &Ref{ID: id, Var: v, Key: key, Kind: kind, Network: network, Pass: pass, read: fieldsKnown, domain: dom}
 	if res, ok := o.(policyir.Resource); ok {
 		if kind == spectables.KindResJSONPath && !res.TrailingDot {
 			r.Network, r.Path = true, res.Path
