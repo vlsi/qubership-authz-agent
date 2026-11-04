@@ -21,6 +21,8 @@ import (
 	"authz-agent/components/authz-agent/internal/authn"
 	"authz-agent/components/authz-agent/internal/m2m"
 	"authz-agent/components/authz-agent/internal/pull"
+	"authz-agent/components/authz-agent/internal/snapshot"
+	"authz-agent/internal/regobuiltins"
 )
 
 func fromMap(values map[string]string) lookup {
@@ -134,5 +136,24 @@ func TestLoadConfig_NDBuiltinCache(t *testing.T) {
 	}
 	if cfg := loadConfig(fromMap(map[string]string{"authz.nd.builtin.cache": "false"})); cfg.NDBuiltinCache {
 		t.Error("authz.nd.builtin.cache=false must stop the recording")
+	}
+}
+
+// TestLoadConfig_DecisionPath: the default tenant, the timeout of a PIP
+// call, and the time a PIP answer is reused, each by default and from the
+// environment, where a TTL of zero turns the cache off.
+func TestLoadConfig_DecisionPath(t *testing.T) {
+	cfg := loadConfig(fromMap(map[string]string{}))
+	if cfg.DefaultTenant != "default" || cfg.PIPTimeout != regobuiltins.DefaultTimeout || cfg.PIPCacheTTL != snapshot.DefaultCacheTTL {
+		t.Errorf("defaults: tenant %q, timeout %v, cache TTL %v; want default, %v, %v",
+			cfg.DefaultTenant, cfg.PIPTimeout, cfg.PIPCacheTTL, regobuiltins.DefaultTimeout, snapshot.DefaultCacheTTL)
+	}
+	cfg = loadConfig(fromMap(map[string]string{
+		"authz.default.tenant": " acme ",
+		"authz.pip.timeout":    "5",
+		"authz.pip.cache.ttl":  "0",
+	}))
+	if cfg.DefaultTenant != "acme" || cfg.PIPTimeout != 5*time.Second || cfg.PIPCacheTTL != 0 {
+		t.Errorf("from env: tenant %q, timeout %v, cache TTL %v; want acme, 5s, 0s", cfg.DefaultTenant, cfg.PIPTimeout, cfg.PIPCacheTTL)
 	}
 }

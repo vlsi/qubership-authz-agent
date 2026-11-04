@@ -16,6 +16,7 @@ package legacy
 
 import (
 	"encoding/json"
+	"fmt"
 	"reflect"
 	"testing"
 )
@@ -66,7 +67,7 @@ func TestCheckResource(t *testing.T) {
 			if message(err) != tc.err {
 				t.Fatalf("CheckResource(%s) error = %q, want %q", tc.body, message(err), tc.err)
 			}
-			if !reflect.DeepEqual(got, tc.want) {
+			if got := decoded(got); !reflect.DeepEqual(got, tc.want) {
 				t.Errorf("CheckResource(%s) = %#v, want %#v", tc.body, got, tc.want)
 			}
 		})
@@ -134,8 +135,8 @@ func TestCheckResourceBulkOperations_ExpandsOperations(t *testing.T) {
 		{ResourceType: "ORDER", Operation: "5", Resource: kv},
 		{ResourceType: "DOC", Operation: "WRITE", Resource: map[string]any{}},
 	}
-	if !reflect.DeepEqual(resources, wantResources) {
-		t.Errorf("resources = %#v, want %#v", resources, wantResources)
+	if got := decoded(resources); !reflect.DeepEqual(got, wantResources) {
+		t.Errorf("resources = %#v, want %#v", got, wantResources)
 	}
 	wantEntries := []Entry{{ID: "a", Operation: "READ"}, {ID: "a", Operation: "5"}, {ID: "", Operation: "WRITE"}}
 	if !reflect.DeepEqual(entries, wantEntries) {
@@ -189,8 +190,8 @@ func TestCheckResourceBulkOperationsV2_SharesTheType(t *testing.T) {
 		{ResourceType: "ORDER", Operation: "WRITE", Resource: empty},
 		{ResourceType: "ORDER", Operation: "READ", Resource: map[string]any{"o": json.Number("1")}},
 	}
-	if !reflect.DeepEqual(resources, wantResources) {
-		t.Errorf("resources = %#v, want %#v", resources, wantResources)
+	if got := decoded(resources); !reflect.DeepEqual(got, wantResources) {
+		t.Errorf("resources = %#v, want %#v", got, wantResources)
 	}
 	wantEntries := []Entry{{ID: "a", Operation: "READ"}, {ID: "a", Operation: "WRITE"}, {ID: "", Operation: "READ"}}
 	if !reflect.DeepEqual(entries, wantEntries) {
@@ -472,4 +473,50 @@ func TestFilterResponse(t *testing.T) {
 			}
 		})
 	}
+}
+
+// decoded returns rs without their raw fields, which TestRawFieldsKeepTheTextOfTheRequest
+// checks on its own.
+func decoded(rs []Resource) []Resource {
+	if rs == nil {
+		return nil
+	}
+	out := make([]Resource, len(rs))
+	for i, r := range rs {
+		r.Raw = RawResource{}
+		out[i] = r
+	}
+	return out
+}
+
+func TestRawFieldsKeepTheTextOfTheRequest(t *testing.T) {
+	got, err := CheckResource([]byte(`{"type":"ORDER","operation":"READ","resource":{"b":1.50,"a":2}}`))
+	if err != nil {
+		t.Fatalf("CheckResource: %v", err)
+	}
+	want := RawResource{Type: json.RawMessage(`"ORDER"`), Operation: json.RawMessage(`"READ"`),
+		Resource: json.RawMessage(`{"b":1.50,"a":2}`)}
+	if !reflect.DeepEqual(got[0].Raw, want) {
+		t.Errorf("CheckResource raw = %s, want %s", rawText(got[0].Raw), rawText(want))
+	}
+
+	got, _, err = CheckResourceBulkOperations([]byte(`[{"id":"a","type":"ORDER","operations":["READ",5]}]`))
+	if err != nil {
+		t.Fatalf("CheckResourceBulkOperations: %v", err)
+	}
+	if len(got) != 2 || string(got[1].Raw.Operation) != "5" || string(got[1].Raw.Type) != `"ORDER"` || got[1].Raw.Resource != nil {
+		t.Errorf("CheckResourceBulkOperations raw = %v, want type \"ORDER\", operation 5, no resource", rawTexts(got))
+	}
+}
+
+func rawText(r RawResource) string {
+	return fmt.Sprintf("{type %s, operation %s, resource %s}", r.Type, r.Operation, r.Resource)
+}
+
+func rawTexts(rs []Resource) []string {
+	var out []string
+	for _, r := range rs {
+		out = append(out, rawText(r.Raw))
+	}
+	return out
 }

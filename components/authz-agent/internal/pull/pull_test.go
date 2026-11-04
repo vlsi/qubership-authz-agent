@@ -375,3 +375,30 @@ func TestLoad_PinsTheEntitlements(t *testing.T) {
 		t.Errorf("data.pips.remote.entitlements = %v, want the pinned URL", entitlements)
 	}
 }
+
+type failingSnapshots struct{ calls int }
+
+func (f *failingSnapshots) LoadSnapshots(context.Context, []byte, []byte) error {
+	f.calls++
+	return errors.New("the export names no tenant")
+}
+
+// TestPullOnce_StoresTheDocumentsWhenTheSnapshotsFail: the snapshots and
+// the documents of check/filter load apart, so an export the snapshots
+// cannot read still updates the documents, and the pull reports the
+// failure.
+func TestPullOnce_StoresTheDocumentsWhenTheSnapshotsFail(t *testing.T) {
+	srv, _ := source(t, http.StatusOK)
+	st := &store{}
+	snaps := &failingSnapshots{}
+	p := New(Config{SourceURL: srv.URL, Interval: time.Hour, Snapshots: snaps}, st, nil, quiet{})
+
+	err := p.PullOnce(context.Background())
+
+	if err == nil || !strings.Contains(err.Error(), "load snapshots: the export names no tenant") {
+		t.Errorf("PullOnce() = %v, want the error of the snapshots", err)
+	}
+	if snaps.calls != 1 || st.count("policies") != 1 || st.count("pips") != 1 {
+		t.Errorf("%d snapshot loads, %d policies, %d pips stored; want 1 of each", snaps.calls, st.count("policies"), st.count("pips"))
+	}
+}

@@ -53,6 +53,43 @@ canonical := {
   not _admission_validation.valid
 }
 
+# ── Admission alone, for the agent's own decision path ───────────────────
+#
+# admission is the outcome of the caller and subject checks without any
+# decision: authError when the admission token is refused, subjectError
+# with the reason when the subject's token is, and otherwise in
+# tokenPayload the verified claims the subject is read from: those of the
+# subject's token, or for an anonymous request those of the admission
+# token, whose roles the legacy service grants the anonymous subject ({}
+# without one). The agent decides check/resource with the generated module of
+# the request's tenant and asks this package only who the subject is.
+
+admission := {"authError": {
+  "status": 401,
+  "message": _admission_validation.reason,
+  "reason": _admission_validation.reason,
+}} if {
+  _has_admission_token
+  not _admission_validation.valid
+}
+
+admission := {"subjectError": object.get(object.get(auth, "error", {}), "reason", "unauthorized")} if {
+  _admission_ok
+  auth := authentication_context
+  not auth.authenticated
+}
+
+admission := {"tokenPayload": _subject_claims(auth)} if {
+  _admission_ok
+  auth := authentication_context
+  auth.authenticated
+}
+
+_subject_claims(auth) := object.get(_admission_validation, "payload", {}) if {
+  data.identity.anonymous_mode(input)
+  _has_admission_token
+} else := object.get(auth, "tokenPayload", {})
+
 # ── Subject deny (valid admission, invalid subject) ──────────────────────
 
 canonical := _subject_deny_response if {

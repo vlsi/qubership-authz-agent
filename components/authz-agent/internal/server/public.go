@@ -152,7 +152,7 @@ func (s *Server) checkResource(originalPath string, v2 bool) fiber.Handler {
 		if err != nil {
 			return s.refuse(c, err)
 		}
-		return s.check(c, originalPath, resources, func(result any) []byte {
+		return s.decide(c, originalPath, resources, func(result any) []byte {
 			return legacy.CheckResourceResponse(result, v2)
 		})
 	}
@@ -163,7 +163,7 @@ func (s *Server) checkResourceBulk(c *fiber.Ctx) error {
 	if err != nil {
 		return s.refuse(c, err)
 	}
-	return s.check(c, "/access/v1/check/resource/bulk", resources, func(result any) []byte {
+	return s.decide(c, "/access/v1/check/resource/bulk", resources, func(result any) []byte {
 		return legacy.CheckResourceBulkResponse(result, ids)
 	})
 }
@@ -186,7 +186,7 @@ func (s *Server) checkResourceBulkOperations(v2 bool) fiber.Handler {
 			// the Lua filter answered it without calling OPA.
 			return sendJSON(c, http.StatusOK, legacy.CheckResourceBulkOperationsResponse(nil, nil, v2))
 		}
-		return s.check(c, c.OriginalURL(), resources, func(result any) []byte {
+		return s.decide(c, c.OriginalURL(), resources, func(result any) []byte {
 			return legacy.CheckResourceBulkOperationsResponse(result, entries, v2)
 		})
 	}

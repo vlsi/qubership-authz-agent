@@ -56,6 +56,16 @@ type Resource struct {
 	ResourceType any
 	Operation    any
 	Resource     any
+	// Raw holds the same three fields as the request wrote them, member
+	// order and number text included, for the generated policies; a field
+	// the request left out is empty.
+	Raw RawResource
+}
+
+// RawResource is the JSON text of a resource's fields as the request wrote
+// them; an empty field is one the request left out.
+type RawResource struct {
+	Type, Operation, Resource json.RawMessage
 }
 
 // Entry is the legacy id and operation behind one Resource of a
@@ -270,7 +280,8 @@ func newResource(typ, op, res json.RawMessage) (Resource, *RequestError) {
 	if err != nil {
 		return Resource{}, err
 	}
-	return Resource{ResourceType: t, Operation: o, Resource: r}, nil
+	return Resource{ResourceType: t, Operation: o, Resource: r,
+		Raw: RawResource{Type: typ, Operation: op, Resource: res}}, nil
 }
 
 // expand appends one Resource and Entry per operation of a bulk/operations
@@ -286,6 +297,7 @@ func expand(resources []Resource, entries []Entry, typ json.RawMessage, ops []js
 			return nil, nil, err
 		}
 		r.Operation = name
+		r.Raw.Operation = op
 		resources = append(resources, r)
 		entries = append(entries, Entry{ID: id, Operation: name})
 	}

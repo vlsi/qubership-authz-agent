@@ -48,9 +48,12 @@ The chart assembles the agent Pod as this one container.
 | `AUTHZ_JWKS_HTTP_TIMEOUT` | `5` | Seconds per discovery or JWKS request |
 | `AUTHZ_JWKS_HTTP_RETRIES` | `3` | Attempts per request |
 | `AUTHZ_TRUSTED_PROVIDERS_RELOAD_INTERVAL` | `30` | Seconds between checks of the file for a change; `0` never reloads |
-| `AUTHZ_TENANT_MANAGER_URL` | `http://tenant-manager:8080` | Resolves a realm written by its tenant display name; empty disables the lookup |
+| `AUTHZ_TENANT_MANAGER_URL` | `http://tenant-manager:8080` | Resolves to a tenant ID a realm written by its tenant display name, and `AUTHZ_DEFAULT_TENANT`; empty disables the lookup, and the display name is then used as the ID |
 | `AUTHZ_PAP_CLIENT_SOURCE_URL` | empty | Base URL of the policy source; empty disables the pull |
 | `AUTHZ_PAP_CLIENT_PULL_INTERVAL` | `30` | Seconds between pulls; `0` disables the pull |
+| `AUTHZ_DEFAULT_TENANT` | `default` | Display name of the tenant a check request is decided in when it names none in the `tenant_id` parameter or the `Tenant` header; resolved to the tenant ID through `AUTHZ_TENANT_MANAGER_URL` |
+| `AUTHZ_PIP_TIMEOUT` | `2` | Seconds a policy waits for one call of a PIP; a call that takes longer is a failed PIP |
+| `AUTHZ_PIP_CACHE_TTL` | `60` | Seconds the answer of a PIP whose declaration leaves `cacheable` unset or true is reused for the same tenant, PIP and subject; `0` calls the PIP on every check request |
 | `AUTHZ_ENTITLEMENTS_URL`, `AUTHZ_ENTITLEMENTS_HTTP_TIMEOUT`, `AUTHZ_ENTITLEMENTS_HTTP_RETRIES` | empty, `5`, `3` | The entitlements PIP pinned by the deployment; an empty URL adds none |
 | `AUTHZ_M2M_TOKEN_URL` | empty | Token endpoint for the client-credentials grant; empty reads the token from `AUTHZ_PAP_CLIENT_TOKEN_FILE` instead |
 | `AUTHZ_M2M_CLIENT_ID_FILE`, `AUTHZ_M2M_CLIENT_SECRET_FILE` | `/etc/secret/username`, `/etc/secret/password` | The client credentials |
@@ -69,7 +72,10 @@ answer the policy gave, and the decision log is where decisions are recorded.
 Every line carries the request id under `request_id`, the same id the decision log records.
 
 `GET /health` is 200 with the counts of the last policy conversion once the trusted providers meet the bootstrap
-rules, and 503 with the reason and its details until then. `GET /ready`, on the internal port, adds the policies:
+rules, and 503 with the reason and its details until then. Its `snapshots` member lists each tenant of the last
+policy load: whether it is `ready`, the snapshot it answers from, the sets and PIPs that answer as failed, and the
+`rejected` reason of a candidate that was not published. A tenant keeps its previous snapshot when a new candidate is
+rejected; a tenant rejected on its first load is not ready and denies every check request. `GET /ready`, on the internal port, adds the policies:
 503 with the reason `policies not loaded yet` and the same details until they have loaded once, 200
 `{"status":"ready"}` after. A pull that fails later keeps the loaded policies and both verdicts. An empty
 `AUTHZ_PAP_CLIENT_SOURCE_URL` or an `AUTHZ_PAP_CLIENT_PULL_INTERVAL` of `0` disables the pull, and `/ready` then

@@ -23,6 +23,8 @@ import (
 	"authz-agent/components/authz-agent/internal/decisionlog"
 	"authz-agent/components/authz-agent/internal/m2m"
 	"authz-agent/components/authz-agent/internal/pull"
+	"authz-agent/components/authz-agent/internal/snapshot"
+	"authz-agent/internal/regobuiltins"
 )
 
 // config is what the service needs to start. Every value comes from the
@@ -51,6 +53,15 @@ type config struct {
 	// M2M configures the agent's own token; empty TokenURL and TokenFile
 	// disable it.
 	M2M m2m.Config
+	// DefaultTenant is the display name of the tenant a check request is
+	// decided in when it names none; tenant-manager resolves it to the
+	// tenant's ID.
+	DefaultTenant string
+	// PIPTimeout bounds one call of a PIP the generated policies make.
+	PIPTimeout time.Duration
+	// PIPCacheTTL is how long the answer of a cacheable PIP is reused
+	// across decision requests; zero turns the cache off.
+	PIPCacheTTL time.Duration
 }
 
 // lookup reads one configuration key; configloader in main, a map in tests.
@@ -89,6 +100,9 @@ func loadConfig(get lookup) config {
 			TokenFile:        get("authz.pap.client.token.file", m2m.DefaultTokenFile),
 			WatchInterval:    m2m.DefaultWatchInterval,
 		},
+		DefaultTenant: strings.TrimSpace(get("authz.default.tenant", "default")),
+		PIPTimeout:    seconds(get, "authz.pip.timeout", regobuiltins.DefaultTimeout),
+		PIPCacheTTL:   seconds(get, "authz.pip.cache.ttl", snapshot.DefaultCacheTTL),
 	}
 }
 
