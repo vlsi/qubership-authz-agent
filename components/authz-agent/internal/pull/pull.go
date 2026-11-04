@@ -66,9 +66,10 @@ type Putter interface {
 }
 
 // Tokens supplies the bearer token the source is fetched with; nil fetches
-// without one.
+// without one. When Bearer returns an error, such as for a token that has
+// expired, the pull sends no request and fails with that error.
 type Tokens interface {
-	Token() string
+	Bearer() (string, error)
 	Ready() <-chan struct{}
 }
 
@@ -204,7 +205,10 @@ func (p *Puller) waitForToken(ctx context.Context) {
 func (p *Puller) PullOnce(ctx context.Context) error {
 	token := ""
 	if p.tokens != nil {
-		token = p.tokens.Token()
+		var err error
+		if token, err = p.tokens.Bearer(); err != nil {
+			return fmt.Errorf("fetch policySets: no token to present: %w", err)
+		}
 	}
 	policySets, err := p.fetch(ctx, p.cfg.SourceURL+"/access/v3/config/policySets", token)
 	if err != nil {

@@ -16,6 +16,9 @@ package pip_resolution_test
 
 import rego.v1
 
+# m2m_token is a current token of the agent: without one no GENERAL PIP is called.
+m2m_token := {"bearerToken": "test-token"}
+
 # ── TOKEN PIP resolution ─────────────────────────────────────────────────
 
 test_token_pip_resolves_claim if {
@@ -36,7 +39,7 @@ test_token_pip_resolves_claim if {
 	}
 
 	result := data.pip.resolve_all(token_payload, {}, "ORDER", "READ")
-		with data.pips as pip_config
+		with data.pips as pip_config with data.m2m as m2m_token
 
 	result.customerId == "C123"
 }
@@ -60,7 +63,7 @@ test_token_pip_uses_default_when_claim_absent if {
 	}
 
 	result := data.pip.resolve_all(token_payload, {}, "ORDER", "READ")
-		with data.pips as pip_config
+		with data.pips as pip_config with data.m2m as m2m_token
 
 	result.customerId == "DEFAULT_CUSTOMER"
 }
@@ -86,7 +89,7 @@ test_header_pip_resolves_from_request_headers if {
 	}
 
 	result := data.pip.resolve_all(token_payload, request_headers, "ORDER", "READ")
-		with data.pips as pip_config
+		with data.pips as pip_config with data.m2m as m2m_token
 
 	result.tenantId == "T456"
 }
@@ -110,7 +113,7 @@ test_header_pip_uses_default_when_header_absent if {
 	}
 
 	result := data.pip.resolve_all(token_payload, {}, "ORDER", "READ")
-		with data.pips as pip_config
+		with data.pips as pip_config with data.m2m as m2m_token
 
 	result.tenantId == "DEFAULT_TENANT"
 }
@@ -142,7 +145,7 @@ test_combined_token_and_header_pips if {
 	}
 
 	result := data.pip.resolve_all(token_payload, request_headers, "ORDER", "READ")
-		with data.pips as pip_config
+		with data.pips as pip_config with data.m2m as m2m_token
 
 	result.customerId == "C999"
 	result.region == "EU"
@@ -185,7 +188,7 @@ test_general_pip_not_activated_for_unmatched_resource if {
 		{},
 		"ORDER",
 		"READ",
-	) with data.pips as pip_config
+	) with data.pips as pip_config with data.m2m as m2m_token
 
 	not result.allowed
 }
@@ -247,7 +250,7 @@ test_pip_enriched_subject_used_in_rls if {
 	subject_roles := {"ROLE_USER"}
 
 	pip_values := data.pip.resolve_all(token_payload, {}, resource_type, operation)
-		with data.pips as pip_config
+		with data.pips as pip_config with data.m2m as m2m_token
 
 	enriched := object.union(subject, pip_values)
 
@@ -309,7 +312,7 @@ test_pip_values_substituted_in_predicate if {
 	}
 
 	pip_values := data.pip.resolve_all(token_payload, {}, "ORDER", "READ")
-		with data.pips as pip_config
+		with data.pips as pip_config with data.m2m as m2m_token
 
 	pip_values.customerIds == ["C1", "C2", "C3"]
 
@@ -423,7 +426,7 @@ test_deny_reason_pip_resolution_failed if {
 
 	result := data.authorize_internals.authorization_evaluation
 		with input as input_data
-		with data.pips as pip_config
+		with data.pips as pip_config with data.m2m as m2m_token
 		with data.policies as policies
 		with data.authorize_internals.authenticated_subject as subject
 
@@ -487,7 +490,7 @@ test_deny_reason_pip_failure_annotated_with_kind if {
 
 	result := data.authorize_internals.authorization_evaluation
 		with input as input_data
-		with data.pips as pip_config
+		with data.pips as pip_config with data.m2m as m2m_token
 		with data.policies as policies
 		with data.authorize_internals.authenticated_subject as subject
 
@@ -534,7 +537,7 @@ test_deny_reason_missing_subject_attribute if {
 
 	result := data.authorize_internals.authorization_evaluation
 		with input as input_data
-		with data.pips as pip_config
+		with data.pips as pip_config with data.m2m as m2m_token
 		with data.policies as policies
 		with data.authorize_internals.authenticated_subject as subject
 
@@ -609,7 +612,7 @@ test_deny_reason_pip_failure_and_missing_attr if {
 
 	result := data.authorize_internals.authorization_evaluation
 		with input as input_data
-		with data.pips as pip_config
+		with data.pips as pip_config with data.m2m as m2m_token
 		with data.policies as policies
 		with data.authorize_internals.authenticated_subject as subject
 
@@ -659,7 +662,7 @@ test_deny_reason_no_extras_when_condition_has_existing_subject_ref if {
 
 	result := data.authorize_internals.authorization_evaluation
 		with input as input_data
-		with data.pips as pip_config
+		with data.pips as pip_config with data.m2m as m2m_token
 		with data.policies as policies
 		with data.authorize_internals.authenticated_subject as subject
 
@@ -702,7 +705,7 @@ test_general_pip_jsonpath_extracts_scalar if {
 
 	result := data.pip.resolve_all(
 		{"sub": "user1"}, {}, "CUSTOMER", "READ",
-	) with data.pips as pip_config with http.send as mock_response
+	) with data.pips as pip_config with data.m2m as m2m_token with http.send as mock_response
 
 	result.parityStatus == "ACTIVE"
 }
@@ -735,7 +738,7 @@ test_general_pip_jsonpath_extracts_array if {
 
 	result := data.pip.resolve_all(
 		{"sub": "user1"}, {}, "CUSTOMER", "READ",
-	) with data.pips as pip_config with http.send as mock_response
+	) with data.pips as pip_config with data.m2m as m2m_token with http.send as mock_response
 
 	result.parityIds == ["id-1", "id-2", "id-3"]
 }
@@ -769,7 +772,7 @@ test_general_pip_jsonpath_miss_falls_back_to_raw_body if {
 
 	result := data.pip.resolve_all(
 		{"sub": "user1"}, {}, "CUSTOMER", "READ",
-	) with data.pips as pip_config with http.send as mock_response
+	) with data.pips as pip_config with data.m2m as m2m_token with http.send as mock_response
 
 	# Fallback: raw body when the jsonPath does not resolve.
 	result.parityMissing == {"value": "ACTIVE"}
@@ -803,7 +806,7 @@ test_general_pip_type_text_returns_raw_body if {
 
 	result := data.pip.resolve_all(
 		{"sub": "user1"}, {}, "CUSTOMER", "READ",
-	) with data.pips as pip_config with http.send as mock_response
+	) with data.pips as pip_config with data.m2m as m2m_token with http.send as mock_response
 
 	result.parityRaw == {"value": "ACTIVE"}
 }
@@ -835,7 +838,7 @@ test_general_pip_type_absent_returns_raw_body if {
 
 	result := data.pip.resolve_all(
 		{"sub": "user1"}, {}, "CUSTOMER", "READ",
-	) with data.pips as pip_config with http.send as mock_response
+	) with data.pips as pip_config with data.m2m as m2m_token with http.send as mock_response
 
 	result.parityLegacy == ["L1", "L2"]
 }
@@ -871,7 +874,7 @@ test_general_pip_dict_return_without_type_returns_raw_dict if {
 
 	result := data.pip.resolve_all(
 		{"sub": "user1"}, {}, "CUSTOMER", "READ",
-	) with data.pips as pip_config with http.send as mock_response
+	) with data.pips as pip_config with data.m2m as m2m_token with http.send as mock_response
 
 	# No `type` / `jsonPath` declared → subject.parityDict is the raw dict.
 	# Any future regression where `extract_general_value` accidentally

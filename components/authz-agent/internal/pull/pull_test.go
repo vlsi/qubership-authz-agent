@@ -17,12 +17,14 @@ package pull
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -105,6 +107,8 @@ func (s *store) last(t *testing.T, path string) map[string]any {
 
 type tokens struct {
 	token string
+	// err, when set, is what Bearer returns instead of the token.
+	err   error
 	ready chan struct{}
 }
 
@@ -114,8 +118,8 @@ func readyTokens(token string) *tokens {
 	return &tokens{token: token, ready: ready}
 }
 
-func (t *tokens) Token() string          { return t.token }
-func (t *tokens) Ready() <-chan struct{} { return t.ready }
+func (t *tokens) Bearer() (string, error) { return t.token, t.err }
+func (t *tokens) Ready() <-chan struct{}  { return t.ready }
 
 type quiet struct{}
 
@@ -290,6 +294,30 @@ func TestPull_KeepsTheLoadedPoliciesWhenALaterPullFails(t *testing.T) {
 	}
 	if st.count("policies") != 1 || st.count("pips") != 1 {
 		t.Errorf("after the failed pull: %d policies and %d pips documents stored, want the one of each from the first pull", st.count("policies"), st.count("pips"))
+	}
+}
+
+// TestPullOnce_SendsNothingWithoutACurrentToken: a token source that has no
+// current token, such as one whose token expired after a failed refresh,
+// fails the pull before any request, with the source's error.
+func TestPullOnce_SendsNothingWithoutACurrentToken(t *testing.T) {
+	var requests atomic.Int32
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		requests.Add(1)
+	}))
+	defer srv.Close()
+	expired := readyTokens("old")
+	expired.err = errors.New("m2m token: expired at 2026-11-04T12:00:00Z")
+	st := &store{}
+	p := New(Config{SourceURL: srv.URL, Interval: time.Hour}, st, expired, quiet{})
+
+	err := p.PullOnce(context.Background())
+
+	if err == nil || !strings.Contains(err.Error(), "no token to present: m2m token: expired") {
+		t.Errorf("PullOnce() = %v, want the error of the token source", err)
+	}
+	if n := requests.Load(); n != 0 || st.count("policies") != 0 {
+		t.Errorf("requests at the source = %d, policies stored = %d; want 0 and 0", n, st.count("policies"))
 	}
 }
 

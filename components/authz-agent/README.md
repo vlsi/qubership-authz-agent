@@ -20,7 +20,8 @@ in ADR 0080 under `docs/decisions`.
   successful load makes the service ready.
 - `internal/m2m`: the agent's own token, obtained from the identity provider with client credentials and refreshed
   before it expires, or read from a file another party keeps current. It is sent to the policy source and published
-  as `data.m2m.bearerToken` for the PIP calls.
+  as `data.m2m.bearerToken`, with its expiry as `data.m2m.expiresAtNs`, for the PIP calls. Without a current token,
+  before the first one or once it expired after failed refreshes, neither the pull nor a PIP call is made.
 - `internal/legacy`: the check routes of the legacy access-control API. Each route's body and headers become the
   input of the `authorize` decision, and the decision becomes the response shape of that route.
 - `internal/server`: the routes, on two listeners. The public surface carries the nine check routes,

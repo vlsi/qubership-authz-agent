@@ -33,6 +33,8 @@ import (
 type store struct {
 	mu     sync.Mutex
 	tokens []string
+	// expires holds data.m2m.expiresAtNs of each published token.
+	expires []int64
 	// err, when set, is what Put returns, and the token is not recorded.
 	err error
 }
@@ -46,7 +48,9 @@ func (s *store) Put(_ context.Context, path []string, value any) error {
 	if !reflect.DeepEqual(path, []string{"m2m"}) {
 		return fmt.Errorf("unexpected path %v", path)
 	}
-	s.tokens = append(s.tokens, value.(map[string]any)["bearerToken"].(string))
+	doc := value.(map[string]any)
+	s.tokens = append(s.tokens, doc["bearerToken"].(string))
+	s.expires = append(s.expires, doc["expiresAtNs"].(int64))
 	return nil
 }
 
@@ -54,6 +58,13 @@ func (s *store) published() []string {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return append([]string(nil), s.tokens...)
+}
+
+// current returns the token src holds, expired or not, "" before the first.
+func current(src *Source) string {
+	src.mu.RLock()
+	defer src.mu.RUnlock()
+	return src.token
 }
 
 type quiet struct{}
@@ -111,8 +122,8 @@ func TestClientCredentials_PublishesTheToken(t *testing.T) {
 	case <-time.After(2 * time.Second):
 		t.Fatal("no token within 2s")
 	}
-	if got := src.Token(); got != "tok1" {
-		t.Errorf("Token() = %q, want tok1", got)
+	if got := current(src); got != "tok1" {
+		t.Errorf("current token = %q, want tok1", got)
 	}
 	if got := st.published(); !reflect.DeepEqual(got, []string{"tok1"}) {
 		t.Errorf("published %v, want [tok1]", got)
@@ -139,8 +150,8 @@ func TestClientCredentials_RefreshesBeforeExpiry(t *testing.T) {
 	defer cancel()
 	go src.Run(ctx)
 
-	waitFor(t, "the first token", func() bool { return src.Token() == "tok1" })
-	waitFor(t, "the refreshed token", func() bool { return src.Token() == "tok2" })
+	waitFor(t, "the first token", func() bool { return current(src) == "tok1" })
+	waitFor(t, "the refreshed token", func() bool { return current(src) == "tok2" })
 	if got := st.published(); !reflect.DeepEqual(got, []string{"tok1", "tok2"}) {
 		t.Errorf("published %v, want [tok1 tok2]", got)
 	}
@@ -166,11 +177,11 @@ func TestClientCredentials_RetriesAfterAFailure(t *testing.T) {
 	go src.Run(ctx)
 
 	deadline := time.Now().Add(initialBackoff + 2*time.Second)
-	for time.Now().Before(deadline) && src.Token() == "" {
+	for time.Now().Before(deadline) && current(src) == "" {
 		time.Sleep(20 * time.Millisecond)
 	}
-	if got := src.Token(); got != "tok" || fetches != 2 {
-		t.Errorf("Token() = %q after %d fetches, want tok after the retry", got, fetches)
+	if got := current(src); got != "tok" || fetches != 2 {
+		t.Errorf("current token = %q after %d fetches, want tok after the retry", got, fetches)
 	}
 }
 
@@ -197,8 +208,8 @@ func TestFetchAndPublish_AFailedFetchKeepsTheCurrentToken(t *testing.T) {
 	if _, err := src.fetchAndPublish(context.Background()); err == nil || !strings.Contains(err.Error(), "HTTP 500") {
 		t.Errorf("fetchAndPublish() with the provider answering 500: error = %v, want one naming HTTP 500", err)
 	}
-	if got := src.Token(); got != "tok1" {
-		t.Errorf("Token() = %q, want tok1", got)
+	if got := current(src); got != "tok1" {
+		t.Errorf("current token = %q, want tok1", got)
 	}
 	if got := st.published(); !reflect.DeepEqual(got, []string{"tok1"}) {
 		t.Errorf("published %v, want [tok1]", got)
@@ -215,8 +226,8 @@ func TestFetchAndPublish_AFailedPublishIsAnError(t *testing.T) {
 	if _, err := src.fetchAndPublish(context.Background()); !errors.Is(err, refused) {
 		t.Errorf("fetchAndPublish() error = %v, want %v", err, refused)
 	}
-	if got := src.Token(); got != "" {
-		t.Errorf("Token() = %q, want none", got)
+	if got := current(src); got != "" {
+		t.Errorf("current token = %q, want none", got)
 	}
 }
 
@@ -375,17 +386,17 @@ func TestFile_PublishesEachChange(t *testing.T) {
 	go src.Run(ctx)
 
 	time.Sleep(60 * time.Millisecond)
-	if got := src.Token(); got != "" || len(st.published()) != 0 {
-		t.Fatalf("before the file exists: Token() = %q and %d published, want none", got, len(st.published()))
+	if got := current(src); got != "" || len(st.published()) != 0 {
+		t.Fatalf("before the file exists: current token = %q and %d published, want none", got, len(st.published()))
 	}
 	if err := os.WriteFile(file, []byte("a\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	waitFor(t, "the first token", func() bool { return src.Token() == "a" })
+	waitFor(t, "the first token", func() bool { return current(src) == "a" })
 	if err := os.WriteFile(file, []byte("b"), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	waitFor(t, "the changed token", func() bool { return src.Token() == "b" })
+	waitFor(t, "the changed token", func() bool { return current(src) == "b" })
 	if err := os.WriteFile(file, []byte("\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
@@ -393,8 +404,8 @@ func TestFile_PublishesEachChange(t *testing.T) {
 	if got := st.published(); !reflect.DeepEqual(got, []string{"a", "b"}) {
 		t.Errorf("published %v, want [a b], once per change", got)
 	}
-	if got := src.Token(); got != "b" {
-		t.Errorf("Token() after the file was emptied = %q, want b", got)
+	if got := current(src); got != "b" {
+		t.Errorf("current token after the file was emptied = %q, want b", got)
 	}
 	select {
 	case <-src.Ready():
@@ -425,6 +436,93 @@ func TestJWTExpiry(t *testing.T) {
 			}
 			if err != nil || got.Unix() != tc.want {
 				t.Errorf("jwtExpiry(%q) = %v, %v; want exp %d", tc.token, got, err, tc.want)
+			}
+		})
+	}
+}
+
+// TestBearer_ClientCredentials: a call gets no token before the first grant,
+// the granted token until its expires_in passes, and none after that, also
+// when the refresh at that point fails.
+func TestBearer_ClientCredentials(t *testing.T) {
+	var fetches int
+	idp := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		fetches++
+		if fetches > 1 {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		_, _ = w.Write([]byte(`{"access_token":"tok1","expires_in":300}`))
+	}))
+	defer idp.Close()
+	st := &store{}
+	src := New(Config{TokenURL: idp.URL, ClientIDFile: writeFile(t, "id", "a"), ClientSecretFile: writeFile(t, "secret", "b")}, st, quiet{})
+	now := time.Date(2026, 11, 4, 12, 0, 0, 0, time.UTC)
+	src.now = func() time.Time { return now }
+
+	if tok, err := src.Bearer(); !errors.Is(err, ErrNoToken) {
+		t.Errorf("Bearer() before the first grant = %q, %v; want %v", tok, err, ErrNoToken)
+	}
+	if _, err := src.fetchAndPublish(context.Background()); err != nil {
+		t.Fatalf("fetchAndPublish() of the first token: error = %v", err)
+	}
+	// the policies stop presenting the token at the same instant
+	if want := now.Add(300 * time.Second).UnixNano(); !reflect.DeepEqual(st.expires, []int64{want}) {
+		t.Errorf("data.m2m.expiresAtNs = %v, want [%d]", st.expires, want)
+	}
+	now = now.Add(299 * time.Second)
+	if tok, err := src.Bearer(); tok != "tok1" || err != nil {
+		t.Errorf("Bearer() a second before expires_in passes = %q, %v; want tok1", tok, err)
+	}
+	now = now.Add(time.Second)
+	if _, err := src.fetchAndPublish(context.Background()); err == nil {
+		t.Fatal("fetchAndPublish() with the provider answering 500: no error")
+	}
+	if tok, err := src.Bearer(); !errors.Is(err, ErrTokenExpired) {
+		t.Errorf("Bearer() once expires_in passed and the refresh failed = %q, %v; want %v", tok, err, ErrTokenExpired)
+	}
+}
+
+// TestBearer_File: a call gets no token while the file is missing, a token
+// from the file until its exp claim passes, and a token that is not a JWT
+// with exp for as long as the file holds it.
+func TestBearer_File(t *testing.T) {
+	now := time.Unix(1700000000, 0)
+	tests := []struct {
+		name    string
+		content string // "" leaves the file missing
+		want    string
+		err     error
+		// expiresAtNs is what data.m2m.expiresAtNs holds, nil for no publish
+		expiresAtNs []int64
+	}{
+		{"no file", "", "", ErrNoToken, nil},
+		{"a JWT before its exp", jwt(`{"exp":1700000001}`), jwt(`{"exp":1700000001}`), nil, []int64{1700000001e9}},
+		{"a JWT at its exp", jwt(`{"exp":1700000000}`), "", ErrTokenExpired, []int64{1700000000e9}},
+		{"a JWT without exp", jwt(`{"sub":"x"}`), jwt(`{"sub":"x"}`), nil, []int64{0}},
+		{"an opaque token", "opaque", "opaque", nil, []int64{0}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			file := filepath.Join(t.TempDir(), "token")
+			if tt.content != "" {
+				if err := os.WriteFile(file, []byte(tt.content), 0o600); err != nil {
+					t.Fatal(err)
+				}
+			}
+			st := &store{}
+			src := New(Config{TokenFile: file}, st, quiet{})
+			src.now = func() time.Time { return now }
+			if err := src.checkFile(context.Background()); err != nil {
+				t.Fatalf("checkFile() error = %v", err)
+			}
+
+			tok, err := src.Bearer()
+			if tok != tt.want || !errors.Is(err, tt.err) {
+				t.Errorf("Bearer() = %q, %v; want %q, %v", tok, err, tt.want, tt.err)
+			}
+			if !reflect.DeepEqual(st.expires, tt.expiresAtNs) {
+				t.Errorf("data.m2m.expiresAtNs = %v, want %v", st.expires, tt.expiresAtNs)
 			}
 		})
 	}

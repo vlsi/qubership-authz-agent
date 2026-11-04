@@ -39,15 +39,24 @@ default general_pip_config := {}
 general_pip_activation := data.pips.activation.generalByResourceTypeOperation
 default general_pip_activation := {}
 
-# m2m_bearer_token is the current M2M token the agent publishes.  Empty when no
-# token has been published yet or when the feature is not in use
-# (backward-compatible: no header injected).
+# m2m_bearer_token is the M2M token the agent publishes while it is current:
+# until data.m2m.expiresAtNs, or with no known expiry when that is 0 or
+# absent. Empty before the first token and once the token has expired; a
+# GENERAL PIP that would then present it is not called (build_headers).
 #
 # It lives under its own document root, data.m2m, NOT under data.pips beside the
 # PIP configuration: the pull loop replaces data.pips wholesale on every tick,
 # so a token stored there is erased within one tick.  See ADR-0076.
-m2m_bearer_token := data.m2m.bearerToken
+m2m_bearer_token := token if {
+	token := data.m2m.bearerToken
+	m2m_token_current
+}
+
 default m2m_bearer_token := ""
+
+m2m_token_current if object.get(data.m2m, "expiresAtNs", 0) == 0
+
+m2m_token_current if time.now_ns() < data.m2m.expiresAtNs
 
 # ── x-request-id correlation (ADR-0069) ──────────────────────────────────
 # OPA owns the id: use the inbound input.requestId when present, else generate
@@ -156,6 +165,8 @@ default resolve_general_values(_, _, _, _) := {}
 # (general_pip_value is defined and returns the default) and is EXCLUDED — the
 # present-vs-missing distinction. Returns {alias: kind} for deny-reason
 # enrichment. Kinds:
+#   "no_token"     — no authorization to present: no header of the PIP's own
+#                    and no current M2M token, so the PIP is not called
 #   "substitution" — the request could not be built (non-scalar / missing
 #                    embedded source, incl. an anonymous subject.id used embedded)
 #   "http_error"   — non-200 / timeout with no defaultValue
@@ -182,7 +193,10 @@ default general_pip_hard_failures(_, _, _, _) := {}
 # A set sentinel that can never be a resolved alias value.
 _hf_absent := {"__hf_absent__"}
 
-hard_failure_kind(cfg, resource, sub_ctx) := "substitution" if {
+hard_failure_kind(cfg, resource, sub_ctx) := "no_token" if {
+	headers := pip_headers(cfg, sub_ctx, resource)
+	object.get(headers, "authorization", "") == ""
+} else := "substitution" if {
 	not build_pip_request(cfg, resource, sub_ctx)
 } else := "http_error" if {
 	general_pip_call(build_pip_request(cfg, resource, sub_ctx)).status_code != 200
@@ -252,8 +266,15 @@ with_query(url, query) := sprintf("%s?%s", [url, qs]) if {
 #   (a) data.m2m.bearerToken is non-empty, AND
 #   (b) neither forwardHeaders nor setHeaders already supply an `authorization` key.
 # Priority: setHeaders > forwardHeaders > M2M token injection (ADR-0076).
-# When m2m_bearer_token == "" no header is added (backward-compatible).
+# Undefined, so the PIP is not called, when the headers carry no
+# authorization: no header of the PIP's own and no current M2M token.
 build_headers(cfg, sub_ctx, resource) := headers if {
+	headers := pip_headers(cfg, sub_ctx, resource)
+	object.get(headers, "authorization", "") != ""
+}
+
+# pip_headers is build_headers without the authorization check.
+pip_headers(cfg, sub_ctx, resource) := headers if {
 	forwarded := {lower(name): v |
 		some name in object.get(cfg, "forwardHeaders", [])
 		v := object.get(request_headers_input, lower(name), "")

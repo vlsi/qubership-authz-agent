@@ -14,10 +14,10 @@
 
 // Package m2m keeps the agent's own bearer token current: the token the
 // policy pull presents to the policy source, and the token the PIP calls
-// present through data.m2m.bearerToken. A [Source] either obtains the
-// token from the identity provider with client credentials and refreshes
-// it before it expires, or reads it from a file another party keeps
-// current, such as a projected service account token.
+// present through data.m2m.bearerToken until data.m2m.expiresAtNs. A
+// [Source] either obtains the token from the identity provider with client
+// credentials and refreshes it before it expires, or reads it from a file
+// another party keeps current, such as a projected service account token.
 package m2m
 
 import (
@@ -79,19 +79,29 @@ type Logger interface {
 	Warnf(format string, args ...any)
 }
 
-// Source holds the current token. Token is safe to call from any
+// Errors of [Source.Bearer].
+var (
+	ErrNoToken      = errors.New("m2m token: no token yet")
+	ErrTokenExpired = errors.New("m2m token: expired")
+)
+
+// Source holds the current token. Bearer is safe to call from any
 // goroutine while Run refreshes it.
 type Source struct {
 	cfg    Config
 	store  Putter
 	log    Logger
 	client *http.Client
+	now    func() time.Time
 
 	mu    sync.RWMutex
 	token string
-	hash  string
-	ready chan struct{}
-	once  sync.Once
+	// expires is when token stops being valid, zero when that is unknown:
+	// a token from the file that is not a JWT with an exp claim.
+	expires time.Time
+	hash    string
+	ready   chan struct{}
+	once    sync.Once
 }
 
 // New returns a source for cfg, with the defaults in place of the empty
@@ -118,15 +128,26 @@ func New(cfg Config, store Putter, log Logger) *Source {
 		store:  store,
 		log:    log,
 		client: &http.Client{Timeout: 30 * time.Second},
+		now:    time.Now,
 		ready:  make(chan struct{}),
 	}
 }
 
-// Token is the current token, "" before the first one arrived.
-func (s *Source) Token() string {
+// Bearer returns the token a call presents. It returns [ErrNoToken] before
+// the first token arrived, and [ErrTokenExpired] once the current token is
+// past its expiry: the expires_in of the grant or, without it and for a token
+// from the file, the token's exp claim. A refresh that fails keeps the
+// current token until then.
+func (s *Source) Bearer() (string, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	return s.token
+	switch {
+	case s.token == "":
+		return "", ErrNoToken
+	case !s.expires.IsZero() && !s.now().Before(s.expires):
+		return "", fmt.Errorf("%w at %s", ErrTokenExpired, s.expires.UTC().Format(time.RFC3339))
+	}
+	return s.token, nil
 }
 
 // Ready is closed once the first token has been published.
@@ -197,7 +218,7 @@ func (s *Source) fetchAndPublish(ctx context.Context) (time.Duration, error) {
 	if err != nil {
 		return 0, err
 	}
-	if err := s.publish(ctx, token); err != nil {
+	if err := s.publish(ctx, token, s.now().Add(lifetime)); err != nil {
 		return 0, err
 	}
 	return lifetime, nil
@@ -240,7 +261,9 @@ func (s *Source) checkFile(ctx context.Context) error {
 	if unchanged {
 		return nil
 	}
-	if err := s.publish(ctx, token); err != nil {
+	// a token that is not a JWT with exp, such as an opaque one, does not expire here
+	expires, _ := jwtExpiry(token)
+	if err := s.publish(ctx, token, expires); err != nil {
 		return err
 	}
 	s.mu.Lock()
@@ -250,14 +273,20 @@ func (s *Source) checkFile(ctx context.Context) error {
 	return nil
 }
 
-// publish stores the token as data.m2m.bearerToken and makes it the
-// current token.
-func (s *Source) publish(ctx context.Context, token string) error {
-	if err := s.store.Put(ctx, []string{"m2m"}, map[string]any{"bearerToken": token}); err != nil {
+// publish stores the token as data.m2m.bearerToken, with its expiry in Unix
+// nanoseconds as data.m2m.expiresAtNs (0 for none), and makes it the current
+// token, valid until expires, or with no known expiry when expires is zero.
+func (s *Source) publish(ctx context.Context, token string, expires time.Time) error {
+	var expiresAtNs int64
+	if !expires.IsZero() {
+		expiresAtNs = expires.UnixNano()
+	}
+	doc := map[string]any{"bearerToken": token, "expiresAtNs": expiresAtNs}
+	if err := s.store.Put(ctx, []string{"m2m"}, doc); err != nil {
 		return fmt.Errorf("publish data.m2m: %w", err)
 	}
 	s.mu.Lock()
-	s.token = token
+	s.token, s.expires = token, expires
 	s.mu.Unlock()
 	s.once.Do(func() { close(s.ready) })
 	return nil
