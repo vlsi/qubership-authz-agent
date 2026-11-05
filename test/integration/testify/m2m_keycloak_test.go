@@ -53,7 +53,7 @@ func (s *RuntimeSuite) TestM2MKeycloak() {
 			"operation": "READ",
 			"resource":  map[string]interface{}{},
 		}
-		code, b := s.post("/access/v1/check/resource?tenant_id=default", h, body)
+		code, b := s.post("/access/v1/check/resource", h, body)
 		s.Require().Equal(200, code,
 			"m2m-keycloak: policy pull with Keycloak token must produce a functional agent; body: %s", string(b))
 	})
@@ -82,7 +82,7 @@ func (s *RuntimeSuite) TestM2MKeycloak() {
 			"operation": "READ",
 			"resource":  map[string]interface{}{},
 		}
-		code, b := s.post("/access/v1/check/resource?tenant_id=default", h, body)
+		code, b := s.post("/access/v1/check/resource", h, body)
 		s.Require().Equal(200, code,
 			"m2m-keycloak: agent must remain functional after token refresh cycle; body: %s", string(b))
 	})

@@ -27,7 +27,7 @@ func (s *RuntimeSuite) TestCheckResourceBulk() {
 			{"id": "item-1", "type": "ORDER", "operation": "READ", "resource": map[string]interface{}{"ownerId": "no-match"}},
 			{"id": "item-2", "type": "ORDER", "operation": "READ", "resource": map[string]interface{}{"ownerId": "also-no"}},
 		}
-		code, b := s.post("/access/v1/check/resource/bulk?tenant_id=default", h, body)
+		code, b := s.post("/access/v1/check/resource/bulk", h, body)
 		s.Require().Equal(200, code)
 		s.Assert().Equal("[]", bodyStr(b))
 	})
@@ -37,21 +37,21 @@ func (s *RuntimeSuite) TestCheckResourceBulk() {
 		body := []map[string]interface{}{
 			{"id": "denied-invoice", "type": "INVOICE", "operation": "READ", "resource": map[string]interface{}{}},
 		}
-		code, b := s.post("/access/v1/check/resource/bulk?tenant_id=default", h, body)
+		code, b := s.post("/access/v1/check/resource/bulk", h, body)
 		s.Require().Equal(200, code)
 		s.Assert().Equal("[]", bodyStr(b))
 	})
 
 	s.Step("check_resource_bulk.empty_array", func() {
 		h := incomingTokenHeader(s.validAdminToken)
-		code, b := s.post("/access/v1/check/resource/bulk?tenant_id=default", h, []interface{}{})
+		code, b := s.post("/access/v1/check/resource/bulk", h, []interface{}{})
 		s.Require().Equal(200, code)
 		s.Assert().Equal("[]", bodyStr(b))
 	})
 
 	s.Step("check_resource_bulk.null_body.400", func() {
 		h := incomingTokenHeader(s.validAdminToken)
-		code, b := s.postRaw("/access/v1/check/resource/bulk?tenant_id=default", h, nil)
+		code, b := s.postRaw("/access/v1/check/resource/bulk", h, nil)
 		s.Require().Equal(400, code)
 		s.Assert().Equal("bad request", jsonObj(b)["message"])
 	})
@@ -61,7 +61,7 @@ func (s *RuntimeSuite) TestCheckResourceBulk() {
 		body := []map[string]interface{}{
 			{"id": "item-1", "type": "ORDER", "operation": "READ", "resource": map[string]interface{}{}},
 		}
-		code, b := s.post("/access/v1/check/resource/bulk?tenant_id=default", h, body)
+		code, b := s.post("/access/v1/check/resource/bulk", h, body)
 		s.Require().Equal(200, code)
 		arr := jsonArr(b)
 		s.Assert().NotNil(arr, "response must be a JSON array")
@@ -76,7 +76,7 @@ func (s *RuntimeSuite) TestCheckResourceBulk() {
 				"resource": map[string]interface{}{"id": fmt.Sprintf("bulk-open-%d", i)},
 			}
 		}
-		code, b := s.post("/access/v1/check/resource/bulk?tenant_id=default", h, items)
+		code, b := s.post("/access/v1/check/resource/bulk", h, items)
 		s.Require().Equal(200, code)
 		result := jsonStrArr(b)
 		s.Require().Len(result, 3000)
@@ -88,7 +88,7 @@ func (s *RuntimeSuite) TestCheckResourceBulk() {
 		body := []map[string]interface{}{
 			{"id": "item-1", "type": "ORDER", "operation": "READ", "resource": map[string]interface{}{}},
 		}
-		code, b := s.post("/access/v1/check/resource/bulk?tenant_id=default", jsonHeader(), body)
+		code, b := s.post("/access/v1/check/resource/bulk", jsonHeader(), body)
 		s.Require().Equal(401, code)
 		s.Assert().NotEmpty(jsonObj(b)["message"], "legacy 401 must include message")
 	})
@@ -98,7 +98,7 @@ func (s *RuntimeSuite) TestCheckResourceBulk() {
 		body := []map[string]interface{}{
 			{"type": "ORDER", "operation": "READ", "resource": map[string]interface{}{}},
 		}
-		code, _ := s.post("/access/v1/check/resource/bulk?tenant_id=default", h, body)
+		code, _ := s.post("/access/v1/check/resource/bulk", h, body)
 		s.Require().Equal(200, code)
 	})
 
@@ -110,7 +110,7 @@ func (s *RuntimeSuite) TestCheckResourceBulk() {
 		body := []map[string]interface{}{
 			{"id": "item-1", "resource": map[string]interface{}{}},
 		}
-		code, b := s.postRaw("/access/v1/check/resource/bulk?tenant_id=default", h, body)
+		code, b := s.postRaw("/access/v1/check/resource/bulk", h, body)
 		s.Require().Equal(400, code)
 		msg, _ := jsonObj(b)["message"].(string)
 		s.Assert().Contains(msg, "Missing required parameter",
@@ -127,7 +127,7 @@ func (s *RuntimeSuite) TestCheckResourceBulk() {
 			{"id": "dup-1", "type": "ORDER", "operation": "READ", "resource": map[string]interface{}{}},
 			{"id": "dup-1", "type": "ORDER", "operation": "DELETE", "resource": map[string]interface{}{}},
 		}
-		code, b := s.post("/access/v1/check/resource/bulk?tenant_id=default", h, body)
+		code, b := s.post("/access/v1/check/resource/bulk", h, body)
 		s.Require().Equal(400, code)
 		msg, _ := jsonObj(b)["message"].(string)
 		s.Assert().Contains(msg, "Duplicate resource id",
@@ -149,7 +149,7 @@ func (s *RuntimeSuite) TestCheckResourceBulk() {
 		body := []map[string]interface{}{
 			{"id": "item-1", "type": "ORDER", "operation": "READ", "resource": map[string]interface{}{}},
 		}
-		code, b := s.post("/access/v1/check/resource/bul?tenant_id=default", h, body)
+		code, b := s.post("/access/v1/check/resource/bul", h, body)
 		s.Require().Equal(404, code)
 		s.Assert().Equal("not found", jsonObj(b)["message"])
 	})

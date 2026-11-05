@@ -204,7 +204,7 @@ func WaitForAgent(baseURL, adminToken string, timeout time.Duration, requestID s
 
 	for time.Now().Before(deadline) {
 		req, err := http.NewRequest("POST",
-			baseURL+"/access/v1/check/resource?tenant_id=default",
+			baseURL+"/access/v1/check/resource",
 			strings.NewReader(body))
 		if err != nil {
 			time.Sleep(1 * time.Second)

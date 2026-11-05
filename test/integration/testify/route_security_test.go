@@ -110,7 +110,7 @@ func (s *RuntimeSuite) TestRouteSecurity() {
 	// string (obligations=false) which Envoy does not read.
 	s.Step("route_security.v2_check_filter.implemented", func() {
 		h := incomingTokenHeader(s.validAdminToken)
-		code, b := s.post("/access/v2/check/filter?resourceType=ORDER&operation=READ&obligations=false&tenant_id=default", h, map[string]interface{}{})
+		code, b := s.post("/access/v2/check/filter?resourceType=ORDER&operation=READ&obligations=false", h, map[string]interface{}{})
 		s.Require().Equal(200, code, "body: %s", string(b))
 		j := jsonObj(b)
 		_, hasCalc := j["calculationResult"].(string)

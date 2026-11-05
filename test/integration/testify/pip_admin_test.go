@@ -77,7 +77,7 @@ func (s *RuntimeSuite) TestPIPDenyReason() {
 	s.Step("pip_deny.pip_failure_deny_reason", func() {
 		body := map[string]interface{}{"type": "PIP_FAIL_TEST", "operation": "READ", "resource": map[string]interface{}{"ownerId": "X"}}
 		mark := s.decisionLogMark()
-		code, b := s.post("/access/v1/check/resource?tenant_id=default", incomingTokenHeader(s.validAdminToken), body)
+		code, b := s.post("/access/v1/check/resource", incomingTokenHeader(s.validAdminToken), body)
 		s.Require().Equal(200, code, "body: %s", string(b))
 		s.Assert().Equal("false", bodyStr(b))
 		reason, _ := firstLoggedResult(s.loggedDecision(mark))["reason"].(string)
@@ -88,7 +88,7 @@ func (s *RuntimeSuite) TestPIPDenyReason() {
 	s.Step("pip_deny.missing_attr_deny_reason", func() {
 		body := map[string]interface{}{"type": "ATTR_MISS_TEST", "operation": "READ", "resource": map[string]interface{}{"ownerId": "X"}}
 		mark := s.decisionLogMark()
-		code, b := s.post("/access/v1/check/resource?tenant_id=default", incomingTokenHeader(s.validAdminToken), body)
+		code, b := s.post("/access/v1/check/resource", incomingTokenHeader(s.validAdminToken), body)
 		s.Require().Equal(200, code, "body: %s", string(b))
 		s.Assert().Equal("false", bodyStr(b))
 		reason, _ := firstLoggedResult(s.loggedDecision(mark))["reason"].(string)
@@ -194,7 +194,7 @@ func (s *RuntimeSuite) TestPIPGeneralActivation() {
 			{"id": "c2", "type": "CUSTOMER", "operation": "READ", "resource": map[string]interface{}{"customerId": "cust-deny-2"}},
 			{"id": "c3", "type": "CUSTOMER", "operation": "READ", "resource": map[string]interface{}{"customerId": "cust-keep-3"}},
 		}
-		code, b := s.post("/access/v1/check/resource/bulk?tenant_id=default", h, body)
+		code, b := s.post("/access/v1/check/resource/bulk", h, body)
 		s.Require().Equal(200, code, "body: %s", string(b))
 		result := jsonStrArr(b)
 		sort.Strings(result)
@@ -276,7 +276,7 @@ func (s *RuntimeSuite) TestPIPJsonPathExtraction() {
 			{"id": "c2", "type": "CUSTOMER", "operation": "READ", "resource": map[string]interface{}{"customerId": "cust-not-in-ids"}},
 			{"id": "c3", "type": "CUSTOMER", "operation": "READ", "resource": map[string]interface{}{"customerId": "cust-json-3"}},
 		}
-		code, b := s.post("/access/v1/check/resource/bulk?tenant_id=default", h, body)
+		code, b := s.post("/access/v1/check/resource/bulk", h, body)
 		s.Require().Equal(200, code, "body: %s", string(b))
 		result := jsonStrArr(b)
 		sort.Strings(result)

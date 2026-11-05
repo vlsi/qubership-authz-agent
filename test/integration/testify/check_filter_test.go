@@ -21,7 +21,7 @@ import "strings"
 func (s *RuntimeSuite) TestCheckFilter() {
 	s.Step("check_filter.calculation_result_present", func() {
 		h := incomingTokenHeader(s.validAdminToken)
-		code, b := s.post("/access/v1/check/filter?resourceType=ORDER&operation=READ&tenant_id=default", h, map[string]interface{}{})
+		code, b := s.post("/access/v1/check/filter?resourceType=ORDER&operation=READ", h, map[string]interface{}{})
 		s.Require().Equal(200, code)
 		j := jsonObj(b)
 		_, ok := j["calculationResult"].(string)
@@ -30,7 +30,7 @@ func (s *RuntimeSuite) TestCheckFilter() {
 
 	s.Step("check_filter.unknown_type.deny", func() {
 		h := incomingTokenHeader(s.validAdminToken)
-		code, b := s.post("/access/v1/check/filter?resourceType=NONEXISTENT&operation=READ&tenant_id=default", h, map[string]interface{}{})
+		code, b := s.post("/access/v1/check/filter?resourceType=NONEXISTENT&operation=READ", h, map[string]interface{}{})
 		s.Require().Equal(200, code)
 		s.Assert().Equal("DENY", jsonObj(b)["calculationResult"])
 	})
@@ -39,7 +39,7 @@ func (s *RuntimeSuite) TestCheckFilter() {
 	// each of the five condition fields.
 	s.Step("check_filter.deny_all_fields", func() {
 		h := incomingTokenHeader(s.validAdminToken)
-		code, b := s.post("/access/v1/check/filter?resourceType=NONEXISTENT&operation=READ&tenant_id=default", h, map[string]interface{}{})
+		code, b := s.post("/access/v1/check/filter?resourceType=NONEXISTENT&operation=READ", h, map[string]interface{}{})
 		s.Require().Equal(200, code)
 		j := jsonObj(b)
 		s.Assert().Equal("DENY", j["calculationResult"])
@@ -54,7 +54,7 @@ func (s *RuntimeSuite) TestCheckFilter() {
 
 	s.Step("check_filter.known_resource.not_null", func() {
 		h := incomingTokenHeader(s.validOrderReaderToken)
-		code, b := s.post("/access/v1/check/filter?resourceType=ATTACHMENT&operation=READ&tenant_id=default", h, map[string]interface{}{})
+		code, b := s.post("/access/v1/check/filter?resourceType=ATTACHMENT&operation=READ", h, map[string]interface{}{})
 		s.Require().Equal(200, code)
 		j := jsonObj(b)
 		_, ok := j["calculationResult"].(string)
@@ -63,7 +63,7 @@ func (s *RuntimeSuite) TestCheckFilter() {
 
 	s.Step("check_filter.missing_operation", func() {
 		h := incomingTokenHeader(s.validOrderReaderToken)
-		code, b := s.post("/access/v1/check/filter?resourceType=ATTACHMENT&tenant_id=default", h, map[string]interface{}{})
+		code, b := s.post("/access/v1/check/filter?resourceType=ATTACHMENT", h, map[string]interface{}{})
 		s.Require().Equal(200, code)
 		j := jsonObj(b)
 		_, ok := j["calculationResult"].(string)
@@ -78,14 +78,14 @@ func (s *RuntimeSuite) TestCheckFilter() {
 	})
 
 	s.Step("check_filter.no_token.401", func() {
-		code, b := s.post("/access/v1/check/filter?resourceType=ORDER&operation=READ&tenant_id=default", jsonHeader(), map[string]interface{}{})
+		code, b := s.post("/access/v1/check/filter?resourceType=ORDER&operation=READ", jsonHeader(), map[string]interface{}{})
 		s.Require().Equal(401, code)
 		s.Assert().NotEmpty(jsonObj(b)["message"], "legacy 401 must include message")
 	})
 
 	s.Step("check_filter.missing_resource_type.400", func() {
 		h := incomingTokenHeader(s.validAdminToken)
-		code, b := s.postRaw("/access/v1/check/filter?operation=READ&tenant_id=default", h, map[string]interface{}{})
+		code, b := s.postRaw("/access/v1/check/filter?operation=READ", h, map[string]interface{}{})
 		s.Require().Equal(400, code)
 		s.Assert().Equal("bad request", jsonObj(b)["message"])
 	})
@@ -110,7 +110,7 @@ func (s *RuntimeSuite) TestCheckFilter() {
 
 	s.Step("check_filter.wrong_address.404", func() {
 		h := incomingTokenHeader(s.validAdminToken)
-		code, b := s.post("/access/v1/check/filte?resourceType=ORDER&operation=READ&tenant_id=default", h, map[string]interface{}{})
+		code, b := s.post("/access/v1/check/filte?resourceType=ORDER&operation=READ", h, map[string]interface{}{})
 		s.Require().Equal(404, code)
 		s.Assert().Equal("not found", jsonObj(b)["message"])
 	})

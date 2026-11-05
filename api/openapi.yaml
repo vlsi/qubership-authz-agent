@@ -55,9 +55,8 @@ paths:
       summary: Legacy v1 OLS single-resource check.
       description: |
         Returns a JSON boolean literal (`true` or `false`) reflecting the
-        OLS decision for a single `(type, operation, resource)`. The
-        `tenant_id` query parameter is accepted for legacy thin-client
-        compatibility but does not influence the decision.
+        OLS decision for a single `(type, operation, resource)` in the
+        tenant that `tenant_id` names.
       parameters:
         - $ref: '#/components/parameters/IncomingTokenHeader'
         - $ref: '#/components/parameters/AuthorizationTypeHeader'
@@ -699,7 +698,11 @@ components:
       name: tenant_id
       in: query
       required: false
-      description: Accepted for legacy thin-client compatibility; does not influence the decision.
+      description: |
+        ID of the tenant whose policies decide the request. Without it the
+        `Tenant` header names the tenant, and without both the agent's
+        default tenant decides. A tenant with no published policies denies
+        the request.
       schema:
         type: string
     ObligationsQuery:
@@ -877,6 +880,8 @@ components:
         status:
           type: string
           enum: [healthy]
+        snapshots:
+          $ref: '#/components/schemas/SnapshotsHealth'
     HealthUnhealthyResponse:
       type: object
       additionalProperties: false
@@ -911,6 +916,92 @@ components:
             than silently clearing thresholds.
         bootstrap:
           $ref: '#/components/schemas/BootstrapHealthDetails'
+        snapshots:
+          $ref: '#/components/schemas/SnapshotsHealth'
+    SnapshotsHealth:
+      type: object
+      additionalProperties: false
+      required: [tenants]
+      description: |
+        State of the policies generated for each tenant of the last export.
+      properties:
+        loadedAt:
+          type: string
+          description: Time of the last completed load; absent before one.
+        tenants:
+          type: array
+          items:
+            $ref: '#/components/schemas/TenantSnapshotHealth'
+        orphans:
+          type: array
+          items:
+            type: string
+          description: Elements of the export that name no tenant.
+    TenantSnapshotHealth:
+      type: object
+      additionalProperties: false
+      required: [tenant, ready]
+      properties:
+        tenant:
+          type: string
+        ready:
+          type: boolean
+          description: |
+            Whether the tenant has a published snapshot. A tenant that is
+            not ready denies every request.
+        snapshot:
+          type: string
+        publishedAt:
+          type: string
+        failures:
+          type: array
+          description: |
+            Parts of the published snapshot that answer as a failed source;
+            the rest of the tenant is served.
+          items:
+            type: object
+            additionalProperties: false
+            required: [reason]
+            properties:
+              set:
+                type: string
+              pip:
+                type: string
+              reason:
+                type: string
+        rejected:
+          type: object
+          additionalProperties: false
+          required: [at, stage, reason]
+          description: |
+            Why the tenant's latest candidate was not published; absent when
+            the published snapshot is the latest candidate.
+          properties:
+            at:
+              type: string
+            stage:
+              type: string
+              enum: [export, unsupported, generate, compile]
+            reason:
+              type: string
+            forms:
+              type: array
+              items:
+                type: object
+                additionalProperties: false
+                required: [where, form, text]
+                properties:
+                  where:
+                    type: string
+                  form:
+                    type: string
+                  text:
+                    type: string
+        dropped:
+          type: array
+          items:
+            type: string
+          description: What the tenant's tree leaves out of the export.
     BootstrapHealthDetails:
       type: object
       additionalProperties: false

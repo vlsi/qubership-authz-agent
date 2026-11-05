@@ -59,7 +59,7 @@ func (s *RuntimeSuite) TestDecisionLogs() {
 		body := map[string]interface{}{
 			"type": "ATTACHMENT", "operation": "READ", "resource": map[string]interface{}{},
 		}
-		code, _ := s.post("/access/v1/check/resource?tenant_id=default", h, body)
+		code, _ := s.post("/access/v1/check/resource", h, body)
 		s.Require().Equal(200, code)
 	})
 
