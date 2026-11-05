@@ -464,8 +464,8 @@ func TestInMemoryModeServesUploads(t *testing.T) {
 // debugging "my policies did not arrive" wants to see.
 func TestHashEndpointListsDomains(t *testing.T) {
 	mux := newTestServer(t, t.TempDir())
-	do(t, mux, http.MethodPut, policiesPath+"BSS", bssPolicies)
-	do(t, mux, http.MethodPut, pipsPath+"OSS", `[]`)
+	do(t, mux, http.MethodPut, policiesPath+"billing", `[]`)
+	do(t, mux, http.MethodPut, pipsPath+"network", `[]`)
 	do(t, mux, http.MethodPut, pipsPath+"support?tenant_id=tenant-a", `[]`)
 
 	var status struct {
@@ -473,8 +473,8 @@ func TestHashEndpointListsDomains(t *testing.T) {
 		Hash    string   `json:"hash"`
 	}
 	decode(t, do(t, mux, http.MethodGet, "/authz-policy-admin/hash", "").Body.Bytes(), &status)
-	if fmt.Sprint(status.Domains) != "[BSS OSS tenant-a/support]" {
-		t.Errorf("domains %v, want [BSS OSS tenant-a/support]", status.Domains)
+	if fmt.Sprint(status.Domains) != "[billing network tenant-a/support]" {
+		t.Errorf("domains %v, want [billing network tenant-a/support]", status.Domains)
 	}
 	if status.Hash == "" {
 		t.Error("hash is empty")
