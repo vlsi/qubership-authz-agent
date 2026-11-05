@@ -30,6 +30,21 @@ PUT  /access/v1/simplifiedPolicies/domainPIPs/{domainName}
 PUT body for policies: a JSON array of simplified-policy objects.
 PUT body for PIPs:     a JSON array of simplified-PIP objects.
 
+A PUT that access-control would refuse is answered with 400 and
+`{"error": "<reason>"}`, naming the item and the field, and stores nothing.
+The stub checks a subset of access-control's rules:
+
+- a PIP name is `subject.` followed by dot-separated attributes of letters,
+  digits, and underscores, none starting with a digit;
+- a PIP field holds the JSON shape access-control binds it to: `headers`,
+  `defaultValue`, and the other text, number, and boolean fields take no
+  array or object, so `headers` is one text of comma-separated header names,
+  and `customMapping` and `productMapping` take an object;
+- a policy `condition` is absent, `null`, a boolean, or a non-empty text that
+  the agent's condition parser accepts, so `subject.x MATCH 5` is refused.
+
+An upload these checks accept may still be one access-control refuses.
+
 Each tenant keeps its own collections. The tenant of a request is the
 `tenant_id` query parameter, else the `Tenant` header, else `default`, so a
 PUT replaces only what the same tenant uploaded for that domain. A tenant

@@ -86,6 +86,10 @@ func (s *server) handlePutDomainPolicies(w http.ResponseWriter, r *http.Request)
 		http.Error(w, fmt.Sprintf(`{"error":"%s"}`, err.Error()), http.StatusBadRequest)
 		return
 	}
+	if why := validatePolicies(items); why != "" {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": why})
+		return
+	}
 	if err := s.st.SetDomainPolicies(tenant, domain, items, raw); err != nil {
 		// The upload did not reach disk, so it is not committed in memory
 		// either. Telling the caller beats a 200 that quietly evaporates on
@@ -121,6 +125,10 @@ func (s *server) handlePutDomainPIPs(w http.ResponseWriter, r *http.Request) {
 	var items []simplifiedPIP
 	if err := json.Unmarshal(raw, &items); err != nil {
 		http.Error(w, fmt.Sprintf(`{"error":"%s"}`, err.Error()), http.StatusBadRequest)
+		return
+	}
+	if why := validatePIPs(raw, items); why != "" {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": why})
 		return
 	}
 	if err := s.st.SetDomainPIPs(tenant, domain, items, raw); err != nil {

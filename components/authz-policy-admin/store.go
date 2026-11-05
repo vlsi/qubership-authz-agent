@@ -492,9 +492,7 @@ func sweepTempFiles(dir string) {
 }
 
 // writeFileAtomic writes content to path through a temp file and a rename, so a
-// reader (or a crash) never sees a half-written file. Mirrors the helper in
-// components/pap-client/internal/policyadmin/policy_puller.go; duplicated rather than shared
-// because the stub image deliberately links no internal packages.
+// reader (or a crash) never sees a half-written file.
 func writeFileAtomic(path string, content []byte) error {
 	dir := filepath.Dir(path)
 	if err := os.MkdirAll(dir, 0o755); err != nil {
