@@ -392,20 +392,6 @@ func (s *RuntimeSuite) loggedDecision(mark int) map[string]interface{} {
 	}
 }
 
-// loggedPredicate returns the text of the predicate of predicateType in a
-// logged result, or "" when the result has none.
-func loggedPredicate(result map[string]interface{}, predicateType string) string {
-	predicates, _ := result["predicates"].([]interface{})
-	for _, p := range predicates {
-		entry, _ := p.(map[string]interface{})
-		if entry["predicateType"] == predicateType {
-			text, _ := entry["predicate"].(string)
-			return text
-		}
-	}
-	return ""
-}
-
 // firstLoggedResult returns the result of the first resource of a logged
 // decision, or an empty map when the decision has none.
 func firstLoggedResult(decision map[string]interface{}) map[string]interface{} {

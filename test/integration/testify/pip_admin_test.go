@@ -81,8 +81,9 @@ func (s *RuntimeSuite) TestPIPDenyReason() {
 		s.Require().Equal(200, code, "body: %s", string(b))
 		s.Assert().Equal("false", bodyStr(b))
 		reason, _ := firstLoggedResult(s.loggedDecision(mark))["reason"].(string)
-		s.Assert().Contains(reason, "PIP resolution failed: brokenPip",
-			"deny reason must mention PIP failure, got: %s", reason)
+		s.Assert().True(strings.HasPrefix(reason, "PIP resolution failed: "),
+			"deny reason must name a PIP failure, got: %s", reason)
+		s.Assert().Contains(reason, "subject.brokenPip", "deny reason must name the failed PIP")
 	})
 
 	s.Step("pip_deny.missing_attr_deny_reason", func() {
@@ -92,8 +93,9 @@ func (s *RuntimeSuite) TestPIPDenyReason() {
 		s.Require().Equal(200, code, "body: %s", string(b))
 		s.Assert().Equal("false", bodyStr(b))
 		reason, _ := firstLoggedResult(s.loggedDecision(mark))["reason"].(string)
-		s.Assert().Contains(reason, "subject attribute not found: nonExistentAttr",
-			"deny reason must mention missing attr, got: %s", reason)
+		s.Assert().True(strings.HasPrefix(reason, "PIP resolution failed: "),
+			"deny reason must name an unread source, got: %s", reason)
+		s.Assert().Contains(reason, "subject.nonExistentAttr", "deny reason must name the missing attribute")
 	})
 }
 
