@@ -40,12 +40,19 @@ const ossPolicies = `[
 
 func newTestServer(t *testing.T, dataDir string) *http.ServeMux {
 	t.Helper()
+	return newTestServerWithDefaultTenantID(t, dataDir, defaultTenant)
+}
+
+// newTestServerWithDefaultTenantID is newTestServer whose export gives the
+// default tenant the tenantId defaultTenantID.
+func newTestServerWithDefaultTenantID(t *testing.T, dataDir, defaultTenantID string) *http.ServeMux {
+	t.Helper()
 	st, err := newStore(dataDir)
 	if err != nil {
 		t.Fatalf("newStore: %v", err)
 	}
 	mux := http.NewServeMux()
-	(&server{st: st}).routes(mux)
+	(&server{st: st, defaultTenantID: defaultTenantID}).routes(mux)
 	return mux
 }
 
@@ -459,14 +466,15 @@ func TestHashEndpointListsDomains(t *testing.T) {
 	mux := newTestServer(t, t.TempDir())
 	do(t, mux, http.MethodPut, policiesPath+"BSS", bssPolicies)
 	do(t, mux, http.MethodPut, pipsPath+"OSS", `[]`)
+	do(t, mux, http.MethodPut, pipsPath+"support?tenant_id=tenant-a", `[]`)
 
 	var status struct {
 		Domains []string `json:"domains"`
 		Hash    string   `json:"hash"`
 	}
 	decode(t, do(t, mux, http.MethodGet, "/authz-policy-admin/hash", "").Body.Bytes(), &status)
-	if fmt.Sprint(status.Domains) != "[BSS OSS]" {
-		t.Errorf("domains %v, want [BSS OSS]", status.Domains)
+	if fmt.Sprint(status.Domains) != "[BSS OSS tenant-a/support]" {
+		t.Errorf("domains %v, want [BSS OSS tenant-a/support]", status.Domains)
 	}
 	if status.Hash == "" {
 		t.Error("hash is empty")
@@ -587,6 +595,51 @@ func TestStoreReloadsTenantCollections(t *testing.T) {
 	}
 	if want := map[string]string{"billing": "default", "support": "tenant-a"}; fmt.Sprint(got) != fmt.Sprint(want) {
 		t.Errorf("reloaded tenantId by domain = %v, want %v", got, want)
+	}
+}
+
+// The export gives the default tenant the configured tenantId, which a
+// stand sets to the ID tenant-manager resolves the default tenant to, and
+// leaves the tenant an upload named as it is.
+func TestTheDefaultTenantIsExportedUnderItsConfiguredID(t *testing.T) {
+	mux := newTestServerWithDefaultTenantID(t, t.TempDir(), "6f1c2a9e-3b4d-4e8f-9a1b-2c3d4e5f6a7b")
+	do(t, mux, http.MethodPut, policiesPath+"billing", `[{"component":"billing","resourceType":"Invoice","operation":"READ","roles":["ROLE_ADMIN"]}]`)
+	do(t, mux, http.MethodPut, policiesPath+"billing?tenant_id=tenant-a", `[{"component":"billing","resourceType":"Ticket","operation":"READ","roles":["ROLE_ADMIN"]}]`)
+	do(t, mux, http.MethodPut, pipsPath+"billing", `[{"name":"subject.org","pipType":"TOKEN","claim":"org"}]`)
+
+	var sets v3PolicySetsResponse
+	decode(t, do(t, mux, http.MethodGet, "/access/v3/config/policySets", "").Body.Bytes(), &sets)
+	got := map[string]string{}
+	for _, ps := range sets.PolicySets {
+		got[ps.TenantID] = ps.Target
+	}
+	want := map[string]string{"6f1c2a9e-3b4d-4e8f-9a1b-2c3d4e5f6a7b": "resourceType == 'Invoice'", "tenant-a": "resourceType == 'Ticket'"}
+	if fmt.Sprint(got) != fmt.Sprint(want) {
+		t.Errorf("policy set targets by tenantId = %v, want %v", got, want)
+	}
+	var pips v3PIPsResponse
+	decode(t, do(t, mux, http.MethodGet, "/access/v3/config/pips", "").Body.Bytes(), &pips)
+	if len(pips.PIPs) != 1 || pips.PIPs[0].TenantID != "6f1c2a9e-3b4d-4e8f-9a1b-2c3d4e5f6a7b" {
+		t.Errorf("PIPs = %+v, want one PIP of tenantId 6f1c2a9e-3b4d-4e8f-9a1b-2c3d4e5f6a7b", pips.PIPs)
+	}
+}
+
+// A tenant names a data file, so a tenant that is not a legal name is
+// refused with 400 and writes nothing.
+func TestInvalidTenantIsRejected(t *testing.T) {
+	dir := t.TempDir()
+	mux := newTestServer(t, dir)
+	for _, tc := range []struct{ name, query, header string }{
+		{"a path in the query", "?tenant_id=..%2Fx", ""},
+		{"an @ in the header", "", "a@b"},
+	} {
+		rec := doWithTenantHeader(t, mux, http.MethodPut, policiesPath+"billing"+tc.query, `[]`, tc.header)
+		if rec.Code != http.StatusBadRequest {
+			t.Errorf("%s: got %d, want 400", tc.name, rec.Code)
+		}
+	}
+	if files, _ := filepath.Glob(filepath.Join(dir, "*.json")); len(files) != 0 {
+		t.Errorf("data files after the refused uploads = %v, want none", files)
 	}
 }
 

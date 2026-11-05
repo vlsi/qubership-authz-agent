@@ -81,6 +81,9 @@ AUTHZ_POLICY_ADMIN_PORT: 18090
 # Where the stub keeps policies.json / pips.json. Must stay inside the volume
 # mount — it is the mount path.
 AUTHZ_POLICY_ADMIN_DATA_DIR: /var/lib/authz-policy-admin
+# tenantId the export gives the policies and PIPs uploaded without a tenant.
+# Set it to the ID the agent resolves its default tenant to.
+AUTHZ_POLICY_ADMIN_DEFAULT_TENANT_ID: default
 # Volume holding the uploaded policies. It is the only copy: the chart creates
 # no seed ConfigMap.
 AUTHZ_POLICY_ADMIN_STORAGE_SIZE: 1Gi

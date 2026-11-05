@@ -5,3 +5,6 @@
 IMAGE_REPOSITORY: local/authz-policy-admin
 TAG: ci
 MESH_ROUTES_ENABLED: false
+# The ID test-stand-values.yaml gives the default tenant in tenant-manager,
+# which the agent resolves its default tenant to.
+AUTHZ_POLICY_ADMIN_DEFAULT_TENANT_ID: 6f1c2a9e-3b4d-4e8f-9a1b-2c3d4e5f6a7b

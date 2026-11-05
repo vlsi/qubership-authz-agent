@@ -162,7 +162,7 @@ type v3PIP struct {
 // then by (roles) → Policy, then each (operation, condition, rsqlPredicate)
 // becomes one Rule.  This mirrors what access-control creates when a SIMPLIFIED
 // policy is uploaded via the simplified API.
-func toV3PolicySets(items []simplifiedPolicy) []v3PolicySet {
+func toV3PolicySets(items []simplifiedPolicy, defaultTenantID string) []v3PolicySet {
 	// Group by (domain/component, resourceType).
 	type psKey struct{ tenant, domain, resourceType string }
 	type pKey struct{ roles string }
@@ -180,7 +180,7 @@ func toV3PolicySets(items []simplifiedPolicy) []v3PolicySet {
 	psMap := make(map[psKey]map[pKey][]ruleVal)
 
 	for _, p := range items {
-		pk := psKey{tenant: tenantOrDefault(p.Tenant), domain: p.Component, resourceType: p.ResourceType}
+		pk := psKey{tenant: exportTenant(p.Tenant, defaultTenantID), domain: p.Component, resourceType: p.ResourceType}
 		if _, seen := psMap[pk]; !seen {
 			psOrder = append(psOrder, pk)
 			psMap[pk] = make(map[pKey][]ruleVal)
@@ -255,7 +255,7 @@ func toV3PolicySets(items []simplifiedPolicy) []v3PolicySet {
 }
 
 // toV3PIPs converts simplified PIPs to v3 export shape.
-func toV3PIPs(items []simplifiedPIP) []v3PIP {
+func toV3PIPs(items []simplifiedPIP, defaultTenantID string) []v3PIP {
 	result := make([]v3PIP, 0, len(items))
 	for _, p := range items {
 		domain := p.Domain
@@ -272,7 +272,7 @@ func toV3PIPs(items []simplifiedPIP) []v3PIP {
 			BeanName:          p.BeanName,
 			DefaultValue:      p.DefaultValue,
 			Domain:            domain,
-			TenantID:          tenantOrDefault(p.Tenant),
+			TenantID:          exportTenant(p.Tenant, defaultTenantID),
 			Type:              p.Type,
 			JsonPath:          p.JsonPath,
 			RequestAttributes: p.RequestAttributes,
@@ -286,11 +286,11 @@ func toV3PIPs(items []simplifiedPIP) []v3PIP {
 	return result
 }
 
-// tenantOrDefault returns tenant, or the default tenant for an item that no
-// upload stamped.
-func tenantOrDefault(tenant string) string {
-	if tenant == "" {
-		return defaultTenant
+// exportTenant is the tenantId the export gives an item of tenant: the
+// default tenant, and an item no upload stamped, take defaultTenantID.
+func exportTenant(tenant, defaultTenantID string) string {
+	if tenant == "" || tenant == defaultTenant {
+		return defaultTenantID
 	}
 	return tenant
 }

@@ -323,10 +323,7 @@ func (s *store) Domains() []string {
 // ── Merging and hashing ───────────────────────────────────────────────────────
 
 // mergedPoliciesLocked flattens the per-tenant, per-domain map in sorted key
-// order.
-// Deterministic order matters twice over: the hash is computed from this view, so
-// map iteration order would make it flap, and a stable export keeps the OPA data
-// document stable across pulls that changed nothing.
+// order, so that the export stays the same across pulls that changed nothing.
 func (s *store) mergedPoliciesLocked() []simplifiedPolicy {
 	out := []simplifiedPolicy{}
 	for _, d := range sortedKeysOfPolicies(s.policies) {

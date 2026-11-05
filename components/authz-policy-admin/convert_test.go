@@ -35,7 +35,7 @@ func TestV3RoundTripThroughTheServiceReader(t *testing.T) {
 		{Tenant: "tenant-a", Component: "billing", ResourceType: "Invoice", Operation: "READ", Roles: []any{"ROLE_USER"}, RSQLPredicate: "ownerId==${subject.id}"},
 		{Tenant: "tenant-a", Component: "billing", ResourceType: "Invoice", Operation: "LIST", Roles: []any{"ROLE_USER"}, Predicate: `Invoice.ownerId.eq("${subject.id}")`},
 	}
-	raw, err := json.Marshal(v3PolicySetsResponse{Hash: "deadbeef", PolicySets: toV3PolicySets(input)})
+	raw, err := json.Marshal(v3PolicySetsResponse{Hash: "deadbeef", PolicySets: toV3PolicySets(input, defaultTenant)})
 	if err != nil {
 		t.Fatalf("marshal v3 envelope: %v", err)
 	}
@@ -75,7 +75,7 @@ func TestPIPRoundTripThroughTheServiceReader(t *testing.T) {
 		{Tenant: "tenant-a", Name: "subject.tenant", PipType: "TOKEN", Claim: "tenant_id", Domain: "billing"},
 		{Tenant: "tenant-a", Name: "subject.org", PipType: "HEADER", Header: "X-Org-Id", Domain: "billing"},
 	}
-	raw, err := json.Marshal(v3PIPsResponse{Hash: "deadbeef", PIPs: toV3PIPs(input)})
+	raw, err := json.Marshal(v3PIPsResponse{Hash: "deadbeef", PIPs: toV3PIPs(input, defaultTenant)})
 	if err != nil {
 		t.Fatalf("marshal v3 envelope: %v", err)
 	}

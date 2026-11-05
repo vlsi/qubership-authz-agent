@@ -89,7 +89,8 @@ func main() {
 	// in-memory, and an unset value keeps `docker run` of this image working
 	// without a mounted volume. The Helm chart always sets it to the PVC
 	// mount path.
-	mux, addr, err := build(os.Getenv("AUTHZ_POLICY_ADMIN_DATA_DIR"), envOr("AUTHZ_POLICY_ADMIN_PORT", "18090"))
+	mux, addr, err := build(os.Getenv("AUTHZ_POLICY_ADMIN_DATA_DIR"), envOr("AUTHZ_POLICY_ADMIN_PORT", "18090"),
+		envOr("AUTHZ_POLICY_ADMIN_DEFAULT_TENANT_ID", defaultTenant))
 	if err != nil {
 		logger.Errorf("%v", err)
 		os.Exit(1)
@@ -102,10 +103,11 @@ func main() {
 }
 
 // build opens the store under dataDir, assembles the routes over it, and
-// returns them with the address port makes. An empty dataDir keeps the
+// returns them with the address port makes. The export gives the default
+// tenant the tenantId defaultTenantID. An empty dataDir keeps the
 // policies in memory, which the run reports, as it reports that the upload
 // API is open to whoever can reach it.
-func build(dataDir, port string) (*http.ServeMux, string, error) {
+func build(dataDir, port, defaultTenantID string) (*http.ServeMux, string, error) {
 	st, err := newStore(dataDir)
 	if err != nil {
 		return nil, "", fmt.Errorf("store: %w", err)
@@ -123,7 +125,7 @@ func build(dataDir, port string) (*http.ServeMux, string, error) {
 	}
 
 	mux := http.NewServeMux()
-	(&server{st: st}).routes(mux)
+	(&server{st: st, defaultTenantID: defaultTenantID}).routes(mux)
 	return mux, "0.0.0.0:" + port, nil
 }
 

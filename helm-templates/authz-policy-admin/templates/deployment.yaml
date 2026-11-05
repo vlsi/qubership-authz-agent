@@ -91,6 +91,8 @@ spec:
             # pips.json and reloaded at startup.
             - name: AUTHZ_POLICY_ADMIN_DATA_DIR
               value: '{{ .Values.AUTHZ_POLICY_ADMIN_DATA_DIR }}'
+            - name: AUTHZ_POLICY_ADMIN_DEFAULT_TENANT_ID
+              value: '{{ .Values.AUTHZ_POLICY_ADMIN_DEFAULT_TENANT_ID }}'
           volumeMounts:
             - name: data
               mountPath: '{{ .Values.AUTHZ_POLICY_ADMIN_DATA_DIR }}'

@@ -32,7 +32,8 @@ PUT body for PIPs:     a JSON array of simplified-PIP objects.
 
 Each tenant keeps its own collections. The tenant of a request is the
 `tenant_id` query parameter, else the `Tenant` header, else `default`, so a
-PUT replaces only what the same tenant uploaded for that domain.
+PUT replaces only what the same tenant uploaded for that domain. A tenant
+other than letters, digits, dot, underscore, and dash is refused with 400.
 
 The API is **unauthenticated**.  Deploy `authz-policy-admin` only in
 development and test namespaces, never in a namespace that is reachable by
@@ -51,7 +52,8 @@ GET  /access/v3/config/pips
 Both require an `Authorization` header (the bearer token that the agent holds;
 the value is not validated, only presence-checked).  They return the union of
 all tenants and domains, and each policy set and PIP carries the tenant that
-uploaded it in `tenantId`.  An empty store exports `"policySets": []` and
+uploaded it in `tenantId`; the `default` tenant is exported as
+`AUTHZ_POLICY_ADMIN_DEFAULT_TENANT_ID`.  An empty store exports `"policySets": []` and
 `"pips": []`.
 
 ### Health / status
@@ -83,6 +85,7 @@ by the Helm chart probes and the Docker Compose health checks.
 | --- | --- | --- |
 | `LOGGING_LEVEL_ROOT` | `info` | Level of the platform logger; the chart sets it from its `LOG_LEVEL` value |
 | `AUTHZ_POLICY_ADMIN_PORT` | `18090` | TCP port to listen on |
+| `AUTHZ_POLICY_ADMIN_DEFAULT_TENANT_ID` | `default` | `tenantId` of the `default` tenant in the v3 export. Set it to the ID the agent resolves its default tenant to |
 | `AUTHZ_POLICY_ADMIN_DATA_DIR` | `` (empty) | Directory for persistence. Empty means in-memory only (data lost on restart). The Helm chart always sets this to the PVC mount path. |
 
 ## Volumes and persistence

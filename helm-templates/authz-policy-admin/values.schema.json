@@ -193,6 +193,17 @@
       ],
       "minLength": 1
     },
+    "AUTHZ_POLICY_ADMIN_DEFAULT_TENANT_ID": {
+      "$id": "#/properties/AUTHZ_POLICY_ADMIN_DEFAULT_TENANT_ID",
+      "type": "string",
+      "title": "The AUTHZ_POLICY_ADMIN_DEFAULT_TENANT_ID schema",
+      "description": "tenantId the export gives the policies and PIPs uploaded without a tenant; set it to the ID the agent resolves its default tenant to",
+      "default": "default",
+      "examples": [
+        "default"
+      ],
+      "pattern": "^[A-Za-z0-9._-]{1,64}$"
+    },
     "AUTHZ_POLICY_ADMIN_STORAGE_SIZE": {
       "$id": "#/properties/AUTHZ_POLICY_ADMIN_STORAGE_SIZE",
       "type": "string",

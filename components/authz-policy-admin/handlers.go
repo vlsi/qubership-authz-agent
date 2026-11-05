@@ -34,6 +34,8 @@ const maxBodyBytes = 10 << 20
 // namespaces.
 type server struct {
 	st *store
+	// defaultTenantID is the tenantId of the default tenant in the export.
+	defaultTenantID string
 }
 
 func (s *server) routes(mux *http.ServeMux) {
@@ -88,7 +90,7 @@ func (s *server) handlePutDomainPolicies(w http.ResponseWriter, r *http.Request)
 		// The upload did not reach disk, so it is not committed in memory
 		// either. Telling the caller beats a 200 that quietly evaporates on
 		// the next restart.
-		logger.Errorf("policy upload for domain %q rejected: %v", domain, err)
+		logger.Errorf("policy upload of tenant %q for domain %q rejected: %v", tenant, domain, err)
 		http.Error(w, fmt.Sprintf(`{"error":"%s"}`, err.Error()), http.StatusInternalServerError)
 		return
 	}
@@ -122,7 +124,7 @@ func (s *server) handlePutDomainPIPs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := s.st.SetDomainPIPs(tenant, domain, items, raw); err != nil {
-		logger.Errorf("PIP upload for domain %q rejected: %v", domain, err)
+		logger.Errorf("PIP upload of tenant %q for domain %q rejected: %v", tenant, domain, err)
 		http.Error(w, fmt.Sprintf(`{"error":"%s"}`, err.Error()), http.StatusInternalServerError)
 		return
 	}
@@ -144,7 +146,7 @@ func (s *server) handleV3PolicySets(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, v3PolicySetsResponse{
 		Hash:                      hash,
 		LastModificationTimestamp: timestamp(),
-		PolicySets:                toV3PolicySets(policies),
+		PolicySets:                toV3PolicySets(policies, s.defaultTenantID),
 	})
 }
 
@@ -157,7 +159,7 @@ func (s *server) handleV3PIPs(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, v3PIPsResponse{
 		Hash:                      hash,
 		LastModificationTimestamp: timestamp(),
-		PIPs:                      toV3PIPs(pips),
+		PIPs:                      toV3PIPs(pips, s.defaultTenantID),
 	})
 }
 
