@@ -85,6 +85,84 @@ func TestRecordReadsTheTokensOfTheElements(t *testing.T) {
 	}
 }
 
+// The token of a nested list adds a fixed length per level of nesting: the
+// one element of a list nested 16 deep around the string `"` is 15 times
+// "l:[" and "]" around the quoted leaf "t:\"", 66 bytes in all. Quoting the
+// token of a nested list again at each level doubled its backslashes per
+// level, and the same value gave a token of 98364 bytes.
+func TestAListTokenGrowsByAFixedLengthPerLevelOfNesting(t *testing.T) {
+	value := `[[[[[[[[[[[[[[[["\""]]]]]]]]]]]]]]]]`
+	ea, sa := recordTokens(t, value)
+	for name, token := range map[string]string{"ea": ea[0], "sa": sa[len(sa)-1]} {
+		if len(token) != 66 {
+			t.Errorf("record(%s): the %s token is %d bytes, want 66: %.80q", value, name, len(token), token)
+		}
+	}
+}
+
+// Two lists have one element token exactly when the operator reads them as
+// equal: the collection operators (EA) fold case, and IS SUBSET (SA) does
+// not. A string that holds a quote and a comma, or a comma and what follows
+// it in the token of the next element, or that spells the token of a list,
+// stays apart from the lists it looks like.
+func TestNestedListsShareAnElementTokenOnlyWhenEqual(t *testing.T) {
+	for _, tc := range []struct {
+		name, a, b       string
+		eaEqual, saEqual bool
+	}{
+		{"a string with a quote and a comma against two strings", `[["a\",\"b"]]`, `[["a", "b"]]`, false, false},
+		{"a string with a comma and a token against two strings", `[["a,t:b"]]`, `[["a", "b"]]`, false, false},
+		{"a string that spells a list token against the list", `[["l:[\"t:a\"]"]]`, `[[["a"]]]`, false, false},
+		{"two lists against one list of both", `[[["a"], ["b"]]]`, `[[["a", "b"]]]`, false, false},
+		{"lists that differ in case", `[[["A"]]]`, `[[["a"]]]`, true, false},
+		{"equal lists", `[[["a"]]]`, `[[["a"]]]`, true, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			eaA, saA := recordTokens(t, tc.a)
+			eaB, saB := recordTokens(t, tc.b)
+			if got := eaA[0] == eaB[0]; got != tc.eaEqual {
+				t.Errorf("ea token of %s = %q, of %s = %q; want equal %v", tc.a, eaA[0], tc.b, eaB[0], tc.eaEqual)
+			}
+			ta, tb := saA[len(saA)-1], saB[len(saB)-1]
+			if got := ta == tb; got != tc.saEqual {
+				t.Errorf("sa token of %s = %q, of %s = %q; want equal %v", tc.a, ta, tc.b, tb, tc.saEqual)
+			}
+		})
+	}
+}
+
+// A list that holds null at any depth has no element token: its EA is empty,
+// and its SA holds the token of its text alone. The same list with a string
+// in place of the null has both.
+func TestAListWithANullAtAnyDepthHasNoElementToken(t *testing.T) {
+	for _, tc := range []struct {
+		value     string
+		ea, saLen int
+	}{
+		{`[["x", [null]]]`, 0, 1},
+		{`[["x", ["y"]]]`, 1, 2},
+	} {
+		t.Run(tc.value, func(t *testing.T) {
+			ea, sa := recordTokens(t, tc.value)
+			if len(ea) != tc.ea || len(sa) != tc.saLen {
+				t.Errorf("record(%s): ea %q, sa %q; want %d ea and %d sa tokens", tc.value, ea, sa, tc.ea, tc.saLen)
+			}
+		})
+	}
+}
+
+// recordTokens returns the EA of the list value and the SA of its first
+// element, whose last token is the token of the element's value.
+func recordTokens(t *testing.T, value string) (ea, sa []string) {
+	t.Helper()
+	v, err := jsonvalue.Decode([]byte(value))
+	if err != nil {
+		t.Fatalf("jsonvalue.Decode(%s): %v", value, err)
+	}
+	rec := record(&Ref{Subset: true}, Resolved{State: spectables.StateValue, Value: v})
+	return rec.EA, rec.SA[0]
+}
+
 // A record holds a field that is costly to build, the keys, the text, the
 // structure key, or the element tokens of a list, where the module reads it
 // and the record of every field holds it, and nowhere else: CONTAINS reads

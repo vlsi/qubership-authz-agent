@@ -15,7 +15,6 @@
 package regogen
 
 import (
-	"encoding/json"
 	"fmt"
 	"slices"
 	"strconv"
@@ -134,19 +133,7 @@ func caseToken(e jsonvalue.Value, num numberText) (string, bool) {
 	case *jsonvalue.Object:
 		return "o:" + *legacyvalue.Of(e).Structure, true
 	case []jsonvalue.Value:
-		parts := make([]string, len(e))
-		for i, x := range e {
-			t, ok := caseToken(x, num)
-			if !ok {
-				return "", false
-			}
-			parts[i] = t
-		}
-		b, err := json.Marshal(parts)
-		if err != nil {
-			panic(err)
-		}
-		return "l:" + string(b), true
+		return listToken(e, func(x jsonvalue.Value) (string, bool) { return caseToken(x, num) })
 	}
 	return "t:" + scalarText(e, num), true
 }

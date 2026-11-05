@@ -311,21 +311,44 @@ func eqToken(e jsonvalue.Value) (string, bool) {
 	case *jsonvalue.Object:
 		return "o:" + *legacyvalue.Of(e).Structure, true
 	case []jsonvalue.Value:
-		parts := make([]string, len(e))
-		for i, x := range e {
-			t, ok := eqToken(x)
-			if !ok {
-				return "", false
-			}
-			parts[i] = t
-		}
-		b, err := json.Marshal(parts)
-		if err != nil {
-			panic(err)
-		}
-		return "l:" + string(b), true
+		return listToken(e, eqToken)
 	}
 	return "t:" + *legacyvalue.Of(e).Key, true
+}
+
+// listToken returns the token of a list by the tokens of its elements in
+// order: leaf gives the token of an element other than a list, and the list
+// has no token where leaf gives none for an element at any depth. Each leaf
+// token is quoted once and each level of nesting adds "l:[" and "]", so the
+// length of the token is linear in the size of the list.
+func listToken(l []jsonvalue.Value, leaf func(jsonvalue.Value) (string, bool)) (string, bool) {
+	var b strings.Builder
+	if !writeListToken(&b, l, leaf) {
+		return "", false
+	}
+	return b.String(), true
+}
+
+func writeListToken(b *strings.Builder, l []jsonvalue.Value, leaf func(jsonvalue.Value) (string, bool)) bool {
+	b.WriteString("l:[")
+	for i, e := range l {
+		if i > 0 {
+			b.WriteByte(',')
+		}
+		if nested, ok := e.([]jsonvalue.Value); ok {
+			if !writeListToken(b, nested, leaf) {
+				return false
+			}
+			continue
+		}
+		t, ok := leaf(e)
+		if !ok {
+			return false
+		}
+		b.WriteString(strconv.Quote(t))
+	}
+	b.WriteByte(']')
+	return true
 }
 
 // Project builds the input of the module for a request. It fails when the
@@ -789,27 +812,43 @@ func structureText(v jsonvalue.Value) string {
 
 // jsonText is compact JSON with the numbers as the document writes them.
 func jsonText(v jsonvalue.Value) string {
-	var parts []string
+	var b strings.Builder
+	writeJSONText(&b, v)
+	return b.String()
+}
+
+func writeJSONText(b *strings.Builder, v jsonvalue.Value) {
 	switch v := v.(type) {
 	case []jsonvalue.Value:
-		for _, x := range v {
-			parts = append(parts, jsonText(x))
+		b.WriteByte('[')
+		for i, x := range v {
+			if i > 0 {
+				b.WriteByte(',')
+			}
+			writeJSONText(b, x)
 		}
-		return "[" + strings.Join(parts, ",") + "]"
+		b.WriteByte(']')
 	case *jsonvalue.Object:
-		for _, k := range v.Keys() {
+		b.WriteByte('{')
+		for i, k := range v.Keys() {
+			if i > 0 {
+				b.WriteByte(',')
+			}
 			x, _ := v.Get(k)
-			parts = append(parts, jsonString(k)+":"+jsonText(x))
+			b.WriteString(jsonString(k))
+			b.WriteByte(':')
+			writeJSONText(b, x)
 		}
-		return "{" + strings.Join(parts, ",") + "}"
+		b.WriteByte('}')
 	case jsonvalue.Number:
-		return string(v)
+		b.WriteString(string(v))
 	case string:
-		return jsonString(v)
+		b.WriteString(jsonString(v))
 	case bool:
-		return strconv.FormatBool(v)
+		b.WriteString(strconv.FormatBool(v))
+	default:
+		b.WriteString("null")
 	}
-	return "null"
 }
 
 func jsonString(s string) string {
