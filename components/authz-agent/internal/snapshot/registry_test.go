@@ -16,6 +16,7 @@ package snapshot
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -57,10 +58,21 @@ func set(tenant, condition string) string {
 				"condition": %[2]q, "effect": "ALLOW", "tenantId": %[1]q}]}]}`, tenant, condition)
 }
 
+// documents are the v3 policy-sets and PIPs documents of sets and pips.
+func documents(pips string, sets ...string) (policySets, pipsDoc []byte) {
+	return []byte(`{"policySets": [` + strings.Join(sets, ",") + `]}`), []byte(`{"pips": [` + pips + `]}`)
+}
+
+// loadSnapshots is [Registry.LoadSnapshots] of sets, with no PIP.
+func loadSnapshots(r *Registry, sets ...string) error {
+	policySets, pips := documents(``, sets...)
+	return r.LoadSnapshots(context.Background(), policySets, pips)
+}
+
 func load(t *testing.T, r *Registry, pips string, sets ...string) LoadSummary {
 	t.Helper()
-	sum, err := r.Load(context.Background(), []byte(`{"policySets": [`+strings.Join(sets, ",")+`]}`),
-		[]byte(`{"pips": [`+pips+`]}`))
+	policySets, pipsDoc := documents(pips, sets...)
+	sum, err := r.Load(context.Background(), policySets, pipsDoc)
 	if err != nil {
 		t.Fatalf("Load: %v", err)
 	}
@@ -179,6 +191,62 @@ func TestATenantRefusedOnItsFirstLoadIsNotServed(t *testing.T) {
 	}
 	if th, _ := tenantHealth(r, "a"); th.Ready || th.Rejected == nil {
 		t.Errorf("health of a = %+v, want not ready with the refusal", th)
+	}
+}
+
+// LoadSnapshots fails with a *RefusedError for as long as a tenant's latest
+// candidate is refused: on the load that refuses it, on a load of the same
+// documents, and on a load that changes only another tenant. The load that
+// publishes the tenant's new tree succeeds.
+func TestLoadSnapshotsFailsWhileACandidateIsRefused(t *testing.T) {
+	r := New(Config{}, tab(t), quiet{})
+	if err := loadSnapshots(r, set("a", "true"), set("b", "true")); err != nil {
+		t.Fatalf("LoadSnapshots of two valid tenants = %v, want nil", err)
+	}
+	steps := []struct {
+		name string
+		sets []string
+	}{
+		{"the refusing load", []string{set("a", broken), set("b", "true")}},
+		{"the same documents again", []string{set("a", broken), set("b", "true")}},
+		{"a change to another tenant", []string{set("a", broken), set("b", "resource.a == 'x'")}},
+	}
+	for _, step := range steps {
+		err := loadSnapshots(r, step.sets...)
+		var refused *RefusedError
+		if !errors.As(err, &refused) {
+			t.Errorf("LoadSnapshots after %s = %v, want a *RefusedError", step.name, err)
+			continue
+		}
+		if len(refused.Tenants) != 1 || refused.Tenants[0].Tenant != "a" || !refused.Tenants[0].Served ||
+			refused.Tenants[0].Stage != "unsupported" {
+			t.Errorf("LoadSnapshots after %s refused %+v, want tenant a served by its previous snapshot at stage unsupported",
+				step.name, refused.Tenants)
+		}
+		if !strings.Contains(err.Error(), "tenant a: candidate snapshot refused, the previous snapshot stays: unsupported: ") {
+			t.Errorf("LoadSnapshots after %s = %q, want the tenant, what it keeps, and the stage", step.name, err)
+		}
+	}
+	if err := loadSnapshots(r, set("a", "true"), set("b", "true")); err != nil {
+		t.Errorf("LoadSnapshots after tenant a is repaired = %v, want nil", err)
+	}
+}
+
+// A tenant refused on its first load is named as not served.
+func TestLoadSnapshotsNamesARefusedTenantWithNoSnapshotAsNotServed(t *testing.T) {
+	r := New(Config{}, tab(t), quiet{})
+
+	err := loadSnapshots(r, set("a", broken), set("b", "true"))
+
+	var refused *RefusedError
+	if !errors.As(err, &refused) || len(refused.Tenants) != 1 || refused.Tenants[0].Served {
+		t.Fatalf("LoadSnapshots = %v, want a *RefusedError naming tenant a as not served", err)
+	}
+	if !strings.Contains(err.Error(), "tenant a: candidate snapshot refused, the tenant is not served: ") {
+		t.Errorf("LoadSnapshots = %q, want the tenant and that it is not served", err)
+	}
+	if _, ok := r.Snapshot("b"); !ok {
+		t.Error("tenant b has no snapshot, want it published beside the refusal")
 	}
 }
 

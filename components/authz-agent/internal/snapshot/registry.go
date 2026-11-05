@@ -33,6 +33,7 @@ import (
 	"maps"
 	"runtime"
 	"slices"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -153,15 +154,51 @@ type LoadSummary struct {
 	Rejected  int
 	Removed   int
 	Duration  time.Duration
+	// Refused lists, by tenant ID order, every tenant whose latest
+	// candidate is refused, including one refused by an earlier load whose
+	// tree has not changed since.
+	Refused []TenantRefusal
 }
+
+// TenantRefusal is a tenant whose latest candidate is refused.
+type TenantRefusal struct {
+	Tenant string
+	// Served is set when the tenant keeps a previous snapshot, and clear
+	// when the tenant has none and denies every request.
+	Served bool
+	Stage  string
+	Reason string
+}
+
+// RefusedError is the error of [Registry.LoadSnapshots] after a load that
+// published every tenant except the ones it names.
+type RefusedError struct {
+	// Tenants is [LoadSummary.Refused], never empty.
+	Tenants []TenantRefusal
+}
+
+func (e *RefusedError) Error() string {
+	var b strings.Builder
+	for i, t := range e.Tenants {
+		if i > 0 {
+			b.WriteString("; ")
+		}
+		fmt.Fprintf(&b, "tenant %s: candidate snapshot refused, %s: %s: %s", t.Tenant, keepsWhat(t.Served), t.Stage, t.Reason)
+	}
+	return b.String()
+}
+
+// Partial reports that the load published the tenants e does not name.
+func (e *RefusedError) Partial() bool { return true }
 
 // Load builds a candidate snapshot of every tenant in the documents of
 // GET /access/v3/config/policySets and GET /access/v3/config/pips, and
 // publishes each tenant whose candidate compiles. A tenant whose tree is
 // unchanged since the last load keeps its snapshot. A tenant whose
 // candidate is rejected or fails keeps its previous snapshot and reports
-// why in [Registry.Health]; on the first load it has none and is not
-// served. A tenant the documents no longer name is removed.
+// why in [Registry.Health] and [LoadSummary.Refused]; on the first load it
+// has none and is not served. A tenant the documents no longer name is
+// removed.
 //
 // Load returns an error, and publishes nothing, only when a document is
 // not a JSON object of the expected shape.
@@ -179,7 +216,8 @@ func (r *Registry) Load(ctx context.Context, policySets, pips []byte) (LoadSumma
 		next := *prev
 		next.loadedAt = time.Now()
 		r.cur.Store(&next)
-		return LoadSummary{Tenants: len(prev.tenants), Kept: len(prev.snapshots), Duration: time.Since(start)}, nil
+		return LoadSummary{Tenants: len(prev.tenants), Kept: len(prev.snapshots), Duration: time.Since(start),
+			Refused: refusalsOf(prev.tenants)}, nil
 	}
 	exp, err := policyir.FromRegular(policySets, pips)
 	if err != nil {
@@ -265,10 +303,6 @@ func (r *Registry) Load(ctx context.Context, policySets, pips []byte) (LoadSumma
 		if b.refusedTree != "" {
 			next.refused[t] = b.refusedTree
 		}
-		if th.Rejected != nil && !b.repeat {
-			r.log.Warnf("policies: tenant %s: candidate snapshot refused, %s: %s", t,
-				keepsWhat(hadOld), th.Rejected.Reason)
-		}
 		next.tenants[t] = th
 	}
 	for t := range prev.snapshots {
@@ -278,7 +312,20 @@ func (r *Registry) Load(ctx context.Context, policySets, pips []byte) (LoadSumma
 	}
 	r.cur.Store(next)
 	sum.Duration = time.Since(start)
+	sum.Refused = refusalsOf(next.tenants)
 	return sum, nil
+}
+
+// refusalsOf returns the tenants of tenants whose latest candidate is
+// refused, by tenant ID order.
+func refusalsOf(tenants map[string]TenantHealth) []TenantRefusal {
+	var out []TenantRefusal
+	for _, t := range slices.Sorted(maps.Keys(tenants)) {
+		if th := tenants[t]; th.Rejected != nil {
+			out = append(out, TenantRefusal{Tenant: t, Served: th.Ready, Stage: th.Rejected.Stage, Reason: th.Rejected.Reason})
+		}
+	}
+	return out
 }
 
 func keepsWhat(hadOld bool) string {
@@ -400,7 +447,10 @@ func (r *Registry) compile(ctx context.Context, m, f *regogen.Module) (*queries,
 func now() string { return time.Now().UTC().Format(time.RFC3339) }
 
 // LoadSnapshots is [Registry.Load] for package pull: it reports a load that
-// changed a tenant at info.
+// changed a tenant at info. After a load that published the other tenants,
+// it returns a [*RefusedError] naming every tenant whose latest candidate is
+// refused, so a caller that asked for this load learns that its documents
+// are not served in full.
 func (r *Registry) LoadSnapshots(ctx context.Context, policySets, pips []byte) error {
 	sum, err := r.Load(ctx, policySets, pips)
 	if err != nil {
@@ -409,6 +459,9 @@ func (r *Registry) LoadSnapshots(ctx context.Context, policySets, pips []byte) e
 	if sum.Generated+sum.Rejected+sum.Removed > 0 {
 		r.log.Infof("policies: snapshots of %d tenants: %d generated (%d compiled), %d kept, %d refused, %d removed in %s",
 			sum.Tenants, sum.Generated, sum.Compiled, sum.Kept, sum.Rejected, sum.Removed, sum.Duration.Round(time.Millisecond))
+	}
+	if len(sum.Refused) > 0 {
+		return &RefusedError{Tenants: sum.Refused}
 	}
 	return nil
 }

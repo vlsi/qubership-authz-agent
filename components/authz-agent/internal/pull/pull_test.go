@@ -335,3 +335,65 @@ func TestPullOnce_ReportsAFailedLoad(t *testing.T) {
 		t.Errorf("Status() = %+v, want not loaded", p.Status())
 	}
 }
+
+// refusal is an error of a load that published part of the tenants.
+type refusal string
+
+func (e refusal) Error() string { return string(e) }
+func (refusal) Partial() bool   { return true }
+
+// TestPull_APartialLoadMarksThePoliciesLoaded: a load that refused a tenant
+// and published the others releases readiness, and PullOnce still returns
+// the refusal to its caller.
+func TestPull_APartialLoadMarksThePoliciesLoaded(t *testing.T) {
+	srv, _ := source(t, http.StatusOK)
+	snaps := &loader{err: refusal("tenant a: candidate snapshot refused")}
+	p := New(Config{SourceURL: srv.URL, Interval: time.Hour, Snapshots: snaps}, nil, quiet{})
+
+	p.pull(context.Background())
+
+	if !p.Status().PoliciesLoaded {
+		t.Errorf("Status() after a partial load = %+v, want loaded", p.Status())
+	}
+	var partial PartialLoad
+	if err := p.PullOnce(context.Background()); !errors.As(err, &partial) {
+		t.Errorf("PullOnce() = %v, want the partial load of the snapshots", err)
+	}
+}
+
+// TestPull_ReportsARefusalWhenItChanges: a refusal is reported at warn on
+// the pull where it first appears or its text changes, not on every pull
+// that repeats it, and the pull that ends it is reported at info.
+func TestPull_ReportsARefusalWhenItChanges(t *testing.T) {
+	srv, _ := source(t, http.StatusOK)
+	snaps := &loader{}
+	rec := &recorder{}
+	p := New(Config{SourceURL: srv.URL, Interval: time.Hour, Snapshots: snaps}, nil, rec)
+	for _, err := range []error{
+		refusal("tenant a: refused"),
+		refusal("tenant a: refused"),
+		refusal("tenant a: refused; tenant b: refused"),
+		nil,
+		nil,
+	} {
+		snaps.mu.Lock()
+		snaps.err = err
+		snaps.mu.Unlock()
+		p.pull(context.Background())
+	}
+
+	var got []string
+	for _, line := range rec.lines {
+		if !strings.Contains(line, "policies: updated") {
+			got = append(got, line)
+		}
+	}
+	want := []string{
+		"warn: policies: pulled from " + srv.URL + ", and some tenants are not updated: load snapshots: tenant a: refused",
+		"warn: policies: pulled from " + srv.URL + ", and some tenants are not updated: load snapshots: tenant a: refused; tenant b: refused",
+		"info: policies: pulled from " + srv.URL + ", and every tenant is updated",
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("lines =\n%s\nwant\n%s", strings.Join(got, "\n"), strings.Join(want, "\n"))
+	}
+}
