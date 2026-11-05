@@ -70,7 +70,7 @@ func (s *RuntimeSuite) TestCheckFilter() {
 		s.Assert().True(ok, "calculationResult must be a string")
 	})
 
-	s.Step("check_filter.tenant_id_ignored", func() {
+	s.Step("check_filter.unknown_tenant_id.deny", func() {
 		h := incomingTokenHeader(s.validAdminToken)
 		code, b := s.post("/access/v1/check/filter?resourceType=NONEXISTENT&operation=READ&tenant_id=completely-different-tenant", h, map[string]interface{}{})
 		s.Require().Equal(200, code)

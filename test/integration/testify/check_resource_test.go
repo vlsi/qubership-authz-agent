@@ -71,7 +71,7 @@ func (s *RuntimeSuite) TestCheckResource() {
 		s.Assert().NotEmpty(jsonObj(b)["message"], "legacy 401 must include message")
 	})
 
-	s.Step("check_resource.tenant_id_ignored", func() {
+	s.Step("check_resource.unknown_tenant_id.deny", func() {
 		h := incomingTokenHeader(s.validOrderReaderToken)
 		body := map[string]interface{}{
 			"type": "ORDER", "operation": "READ",

@@ -57,7 +57,7 @@ var Catalog = []StepEntry{
 	{"check_resource.incoming_token_used_for_subject", userOrderReader, epCheckResource, "ORDER", "READ", "ROLE_ORDER_MANAGEMENT_RO_USER"},
 	{"check_resource.expired_authorization.401", userOrderReader, epCheckResource, "ATTACHMENT", "READ", "ROLE_ORDER_MANAGEMENT_RO_USER (expired)"},
 	{"check_resource.no_token.401", "n/a", epCheckResource, "ATTACHMENT", "READ", "none"},
-	{"check_resource.tenant_id_ignored", userOrderReader, epCheckResource, "ORDER", "READ", "ROLE_ORDER_MANAGEMENT_RO_USER"},
+	{"check_resource.unknown_tenant_id.deny", userOrderReader, epCheckResource, "ORDER", "READ", "ROLE_ORDER_MANAGEMENT_RO_USER"},
 	{"check_resource.tenant_id_absent", userOrderReader, epCheckResource, "ORDER", "READ", "ROLE_ORDER_MANAGEMENT_RO_USER"},
 	{"check_resource.null_body.400", "admin", epCheckResource, "-", "-", "ROLE_ADMINISTRATOR"},
 	{"check_resource.boolean_response", "admin", epCheckResource, "ATTACHMENT", "READ", "ROLE_ADMINISTRATOR"},
@@ -82,7 +82,7 @@ var Catalog = []StepEntry{
 	{"check_resource_bulk.no_id_empty", "admin", epCheckResourceBulk, "ORDER", "READ", "ROLE_ADMINISTRATOR"},
 	{"check_resource_bulk.missing_type_op.400", "admin", epCheckResourceBulk, "-", "-", "ROLE_ADMINISTRATOR"},
 	{"check_resource_bulk.duplicate_ids.400", "admin", epCheckResourceBulk, "ORDER", "READ,DELETE", "ROLE_ADMINISTRATOR"},
-	{"check_resource_bulk.tenant_id_ignored", userOrderReader, epCheckResourceBulk, "ORDER", "READ", "ROLE_ORDER_MANAGEMENT_RO_USER"},
+	{"check_resource_bulk.unknown_tenant_id.denied", userOrderReader, epCheckResourceBulk, "ORDER", "READ", "ROLE_ORDER_MANAGEMENT_RO_USER"},
 	{"check_resource_bulk.wrong_address.404", "admin", "POST /access/v1/check/resource/bul", "ORDER", "READ", "ROLE_ADMINISTRATOR"},
 
 	// ── check_filter ─────────────────────────────────────────────────────
@@ -91,7 +91,7 @@ var Catalog = []StepEntry{
 	{"check_filter.deny_all_fields", "admin", epCheckFilter, "NONEXISTENT", "READ", "ROLE_ADMINISTRATOR"},
 	{"check_filter.known_resource.not_null", userOrderReader, epCheckFilter, "ATTACHMENT", "READ", "ROLE_ORDER_MANAGEMENT_RO_USER"},
 	{"check_filter.missing_operation", userOrderReader, epCheckFilter, "ATTACHMENT", "-", "ROLE_ORDER_MANAGEMENT_RO_USER"},
-	{"check_filter.tenant_id_ignored", "admin", epCheckFilter, "NONEXISTENT", "READ", "ROLE_ADMINISTRATOR"},
+	{"check_filter.unknown_tenant_id.deny", "admin", epCheckFilter, "NONEXISTENT", "READ", "ROLE_ADMINISTRATOR"},
 	{"check_filter.no_token.401", "n/a", epCheckFilter, "ORDER", "READ", "none"},
 	{"check_filter.missing_resource_type.400", "admin", epCheckFilter, "-", "READ", "ROLE_ADMINISTRATOR"},
 	{"check_filter.wrong_address.404", "admin", "POST /access/v1/check/filte", "ORDER", "READ", "ROLE_ADMINISTRATOR"},
