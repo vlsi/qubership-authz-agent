@@ -1,12 +1,12 @@
 [
   {
-    "_comment": "PSUITE rows 06/10: filter endpoint renders all four predicate types (RSQL, querydsl, MongoDB, SQL) from subject.id for the Reader role. Covers TestRow06CheckFilterV1FullUseFilter and TestRow10CheckFilterV2FullUseFilter. A simplified policy has no querydsl field, and the authz-agent seeder skips the regular fixtures, so the querydsl text is in predicate, which authz-policy-admin copies to the predicate field of the v3 rule. The mongodb template uses the double-brace outer wrapper that access-control emits from its simplified-policy path.",
+    "_comment": "PSUITE rows 06/10: filter endpoint renders all four predicate types (RSQL, querydsl, MongoDB, SQL) from subject.id for the Reader role. Covers TestRow06CheckFilterV1FullUseFilter and TestRow10CheckFilterV2FullUseFilter. A simplified policy has no querydsl field, and the authz-agent seeder skips the regular fixtures, so the querydsl text is in predicate, which authz-policy-admin copies to the predicate field of the v3 rule. The mongodb template is the one regular/parity-suite-full.json uploads; the agent, like access-control, wraps it in braces.",
     "component": "PARITY",
     "reason": "Full predicate bundle: all four typed predicates from subject.id",
     "resourceType": "PARITY_SUITE_FULL_FILTER",
     "operation": "LIST",
     "rsqlPredicate": "ownerId==${subject.id}",
-    "mongodbPredicate": "{ { \"ownerId\": \"${subject.id}\" } }",
+    "mongodbPredicate": "{ \"ownerId\": \"${subject.id}\" }",
     "sqlPredicate": "owner_id=${subject.id}",
     "predicate": "PARITY_SUITE_FULL_FILTER.ownerId.eq(\"${subject.id}\")",
     "roles": ["ROLE_PARITY_READER"],

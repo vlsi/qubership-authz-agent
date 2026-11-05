@@ -1,11 +1,11 @@
 [
   {
-    "_comment": "PSUITE row 06: filter endpoint renders a HEADER-PIP-backed MongoDB predicate template by substituting the x-parity-pip-attribute header exposed as subject.parityHeaderAttr. Covers TestRow06CheckFilterV1HeaderScalarIntoMongo. WHY THIS DIFFERS FROM regular/parity-suite-full.json: that file holds the plain template { \"region\": \"${subject.parityHeaderAttr}\" }, while the golden recorded from live access-control holds { { \"region\": \"[ { \"$uuid\": \"parity-allow\" } ]\" } }. access-control expands the template into MongoDB Extended JSON at response time - note that parity-allow is not a UUID, so the $uuid wrapper is applied to collection elements regardless of value type (see PolicyEnforcementTests.java:811 and CheckEndpoint.java:145 in data-sources/access-control). The agent has no equivalent expansion: no $uuid or Extended JSON logic exists anywhere under components/ or helm-templates/. So the simplified path cannot derive the golden from the plain template, and this fixture must carry the already-expanded shape. Do not 'simplify' it back to match regular/ - the case would fail. The exact class performing the expansion is not in the local access-control clone (the engine ships as a compiled dependency), so this is the mechanism, not the code reference.",
+    "_comment": "PSUITE row 06: filter endpoint renders a HEADER-PIP-backed MongoDB predicate template by substituting the x-parity-pip-attribute header exposed as subject.parityHeaderAttr. Covers TestRow06CheckFilterV1HeaderScalarIntoMongo. The template is the one regular/parity-suite-full.json uploads to access-control; the agent, like access-control, renders the header value as [ { \"$uuid\": \"parity-allow\" } ] and wraps the predicate in braces, which gives the recorded golden.",
     "component": "PARITY",
     "reason": "HEADER PIP MongoDB scalar filter rendering",
     "resourceType": "PARITY_SUITE_HEADER_MONGO",
     "operation": "LIST",
-    "mongodbPredicate": "{ { \"region\": \"[ { \"$uuid\": ${subject.parityHeaderAttr} } ]\" } }",
+    "mongodbPredicate": "{ \"region\": \"${subject.parityHeaderAttr}\" }",
     "roles": ["ROLE_PARITY_READER"],
     "applicableForFrontend": false,
     "id": "00000000-0000-0000-0000-000000000f32"
