@@ -56,6 +56,31 @@ func validDomain(domain string) bool {
 	return domainPattern.MatchString(domain) && domain != "." && domain != ".."
 }
 
+// defaultTenant is the tenant of an upload that names none, and of a data file
+// written before uploads were kept per tenant.
+const defaultTenant = "default"
+
+// scopeKey is the key of the collection that one tenant uploaded for one
+// domain: the domain for the default tenant, tenant/domain for another.
+// access-control keeps the collections of two tenants apart, so a PUT for a
+// domain replaces only what the same tenant uploaded for it. Neither a tenant
+// nor a domain may contain the slash.
+func scopeKey(tenant, domain string) string {
+	if tenant == defaultTenant {
+		return domain
+	}
+	return tenant + "/" + domain
+}
+
+// scopeFileName is the data file of a collection: <prefix><domain>.json for
+// the default tenant, <prefix><tenant>@<domain>.json for another.
+func scopeFileName(prefix, tenant, domain string) string {
+	if tenant == defaultTenant {
+		return prefix + domain + ".json"
+	}
+	return prefix + tenant + "@" + domain + ".json"
+}
+
 // persistedState is diagnostic metadata written next to the data files. Only
 // `revision` is read back at startup; both hashes are always recomputed from
 // the data files, so losing or corrupting this file cannot change what the
@@ -138,8 +163,8 @@ func (s *store) loadFromDisk() {
 			logger.Errorf("%s is malformed, skipping domain %q: %v", f.path, f.domain, err)
 			continue
 		}
-		s.policies[f.domain] = normalizePolicies(items)
-		logger.Infof("loaded %d policies for domain %q from %s", len(items), f.domain, f.path)
+		s.policies[scopeKey(f.tenant, f.domain)] = withPolicyTenant(normalizePolicies(items), f.tenant)
+		logger.Infof("loaded %d policies of tenant %q for domain %q from %s", len(items), f.tenant, f.domain, f.path)
 	}
 	for _, f := range globDomainFiles(s.dataDir, pipsFilePrefix) {
 		raw, err := os.ReadFile(f.path)
@@ -152,8 +177,8 @@ func (s *store) loadFromDisk() {
 			logger.Errorf("%s is malformed, skipping domain %q: %v", f.path, f.domain, err)
 			continue
 		}
-		s.pips[f.domain] = normalizePIPs(items)
-		logger.Infof("loaded %d PIPs for domain %q from %s", len(items), f.domain, f.path)
+		s.pips[scopeKey(f.tenant, f.domain)] = withPIPTenant(normalizePIPs(items), f.tenant)
+		logger.Infof("loaded %d PIPs of tenant %q for domain %q from %s", len(items), f.tenant, f.domain, f.path)
 	}
 	if raw, ok := readIfPresent(s.dataDir, stateFileName); ok {
 		var st persistedState
@@ -166,19 +191,20 @@ func (s *store) loadFromDisk() {
 	s.rehashLocked()
 }
 
-// SetDomainPolicies replaces the policy collection of one domain. raw is the
-// request body, stored verbatim.
-func (s *store) SetDomainPolicies(domain string, items []simplifiedPolicy, raw []byte) error {
+// SetDomainPolicies replaces the policy collection that tenant uploaded for
+// domain. raw is the request body, stored verbatim.
+func (s *store) SetDomainPolicies(tenant, domain string, items []simplifiedPolicy, raw []byte) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	previous, existed := s.policies[domain]
-	s.policies[domain] = normalizePolicies(items)
-	if err := s.commitLocked(policiesFilePrefix+domain+".json", raw); err != nil {
+	key := scopeKey(tenant, domain)
+	previous, existed := s.policies[key]
+	s.policies[key] = withPolicyTenant(normalizePolicies(items), tenant)
+	if err := s.commitLocked(scopeFileName(policiesFilePrefix, tenant, domain), raw); err != nil {
 		if existed {
-			s.policies[domain] = previous
+			s.policies[key] = previous
 		} else {
-			delete(s.policies, domain)
+			delete(s.policies, key)
 		}
 		s.rehashLocked()
 		return err
@@ -186,18 +212,19 @@ func (s *store) SetDomainPolicies(domain string, items []simplifiedPolicy, raw [
 	return nil
 }
 
-// SetDomainPIPs replaces the PIP collection of one domain.
-func (s *store) SetDomainPIPs(domain string, items []simplifiedPIP, raw []byte) error {
+// SetDomainPIPs replaces the PIP collection that tenant uploaded for domain.
+func (s *store) SetDomainPIPs(tenant, domain string, items []simplifiedPIP, raw []byte) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	previous, existed := s.pips[domain]
-	s.pips[domain] = normalizePIPs(items)
-	if err := s.commitLocked(pipsFilePrefix+domain+".json", raw); err != nil {
+	key := scopeKey(tenant, domain)
+	previous, existed := s.pips[key]
+	s.pips[key] = withPIPTenant(normalizePIPs(items), tenant)
+	if err := s.commitLocked(scopeFileName(pipsFilePrefix, tenant, domain), raw); err != nil {
 		if existed {
-			s.pips[domain] = previous
+			s.pips[key] = previous
 		} else {
-			delete(s.pips, domain)
+			delete(s.pips, key)
 		}
 		s.rehashLocked()
 		return err
@@ -241,18 +268,19 @@ func (s *store) commitLocked(fileName string, raw []byte) error {
 	return nil
 }
 
-// DomainPolicies returns one domain's policies; an unknown domain reads as empty,
-// the same answer access-control gives for a domain nobody has uploaded yet.
-func (s *store) DomainPolicies(domain string) []simplifiedPolicy {
+// DomainPolicies returns the policies tenant uploaded for domain; an unknown
+// domain reads as empty, the same answer access-control gives for a domain
+// nobody has uploaded yet.
+func (s *store) DomainPolicies(tenant, domain string) []simplifiedPolicy {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	return normalizePolicies(s.policies[domain])
+	return normalizePolicies(s.policies[scopeKey(tenant, domain)])
 }
 
-func (s *store) DomainPIPs(domain string) []simplifiedPIP {
+func (s *store) DomainPIPs(tenant, domain string) []simplifiedPIP {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	return normalizePIPs(s.pips[domain])
+	return normalizePIPs(s.pips[scopeKey(tenant, domain)])
 }
 
 // Policies returns the union of every domain's policies and its content hash.
@@ -277,7 +305,8 @@ func (s *store) Status() (policiesHash, pipsHash string, revision int) {
 	return s.policiesHash, s.pipsHash, s.revision
 }
 
-// Domains lists the domains that have any content, for the startup log.
+// Domains lists the domains that have any content, as tenant/domain for a
+// tenant other than the default one, for the startup log.
 func (s *store) Domains() []string {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -293,7 +322,8 @@ func (s *store) Domains() []string {
 
 // ── Merging and hashing ───────────────────────────────────────────────────────
 
-// mergedPoliciesLocked flattens the per-domain map in sorted domain order.
+// mergedPoliciesLocked flattens the per-tenant, per-domain map in sorted key
+// order.
 // Deterministic order matters twice over: the hash is computed from this view, so
 // map iteration order would make it flap, and a stable export keeps the OPA data
 // document stable across pulls that changed nothing.
@@ -313,9 +343,12 @@ func (s *store) mergedPIPsLocked() []simplifiedPIP {
 	return out
 }
 
+// rehashLocked hashes each collection under its key: the tenant of an item is
+// not part of its JSON, and moving a collection to another tenant changes the
+// export.
 func (s *store) rehashLocked() {
-	s.policiesHash = hashItems(s.mergedPoliciesLocked())
-	s.pipsHash = hashItems(s.mergedPIPsLocked())
+	s.policiesHash = hashItems(s.policies)
+	s.pipsHash = hashItems(s.pips)
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -336,6 +369,20 @@ func hashItems(v any) string {
 	return hex.EncodeToString(sum[:])[:16]
 }
 
+func withPolicyTenant(items []simplifiedPolicy, tenant string) []simplifiedPolicy {
+	for i := range items {
+		items[i].Tenant = tenant
+	}
+	return items
+}
+
+func withPIPTenant(items []simplifiedPIP, tenant string) []simplifiedPIP {
+	for i := range items {
+		items[i].Tenant = tenant
+	}
+	return items
+}
+
 // normalizePolicies guarantees a non-nil slice so an empty upload and a missing
 // file hash identically (`[]`, not `null`).
 func normalizePolicies(items []simplifiedPolicy) []simplifiedPolicy {
@@ -353,13 +400,15 @@ func normalizePIPs(items []simplifiedPIP) []simplifiedPIP {
 }
 
 type domainFile struct {
+	tenant string
 	domain string
 	path   string
 }
 
-// globDomainFiles finds `<prefix><domain>.json` files and recovers the domain
-// from the name. Files whose recovered domain is not a legal domain are ignored
-// and logged: they cannot have been written by this stub.
+// globDomainFiles finds `<prefix><tenant>@<domain>.json` files and recovers the
+// tenant and the domain from the name; a name without @ is a file of the
+// default tenant. Files whose recovered tenant or domain is not legal are
+// ignored and logged: they cannot have been written by this stub.
 func globDomainFiles(dir, prefix string) []domainFile {
 	matches, err := filepath.Glob(filepath.Join(dir, prefix+"*.json"))
 	if err != nil {
@@ -369,12 +418,15 @@ func globDomainFiles(dir, prefix string) []domainFile {
 	out := make([]domainFile, 0, len(matches))
 	for _, m := range matches {
 		name := filepath.Base(m)
-		domain := strings.TrimSuffix(strings.TrimPrefix(name, prefix), ".json")
-		if !validDomain(domain) {
-			logger.Warnf("ignoring %s: %q is not a valid domain name", m, domain)
+		tenant, domain, found := strings.Cut(strings.TrimSuffix(strings.TrimPrefix(name, prefix), ".json"), "@")
+		if !found {
+			tenant, domain = defaultTenant, tenant
+		}
+		if !validDomain(tenant) || !validDomain(domain) {
+			logger.Warnf("ignoring %s: %q@%q is not a valid tenant and domain", m, tenant, domain)
 			continue
 		}
-		out = append(out, domainFile{domain: domain, path: m})
+		out = append(out, domainFile{tenant: tenant, domain: domain, path: m})
 	}
 	return out
 }

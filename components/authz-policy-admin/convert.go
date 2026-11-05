@@ -32,6 +32,8 @@ import (
 // test can deliver a querydsl predicate without a regular policy set, which
 // the stub has no endpoint for.
 type simplifiedPolicy struct {
+	// Tenant is the tenant that uploaded the policy, from the request.
+	Tenant           string `json:"-"`
 	Component        string `json:"component"`
 	ResourceType     string `json:"resourceType"`
 	Operation        string `json:"operation"`
@@ -46,6 +48,8 @@ type simplifiedPolicy struct {
 // simplifiedPIP is an access-control simplified PIP, with the fields the
 // stub uses for v3 export conversion.
 type simplifiedPIP struct {
+	// Tenant is the tenant that uploaded the PIP, from the request.
+	Tenant            string            `json:"-"`
 	Name              string            `json:"name"`
 	PipType           string            `json:"pipType,omitempty"`
 	URL               string            `json:"url,omitempty"`
@@ -160,7 +164,7 @@ type v3PIP struct {
 // policy is uploaded via the simplified API.
 func toV3PolicySets(items []simplifiedPolicy) []v3PolicySet {
 	// Group by (domain/component, resourceType).
-	type psKey struct{ domain, resourceType string }
+	type psKey struct{ tenant, domain, resourceType string }
 	type pKey struct{ roles string }
 	type ruleVal struct {
 		operation        string
@@ -176,7 +180,7 @@ func toV3PolicySets(items []simplifiedPolicy) []v3PolicySet {
 	psMap := make(map[psKey]map[pKey][]ruleVal)
 
 	for _, p := range items {
-		pk := psKey{domain: p.Component, resourceType: p.ResourceType}
+		pk := psKey{tenant: tenantOrDefault(p.Tenant), domain: p.Component, resourceType: p.ResourceType}
 		if _, seen := psMap[pk]; !seen {
 			psOrder = append(psOrder, pk)
 			psMap[pk] = make(map[pKey][]ruleVal)
@@ -192,7 +196,7 @@ func toV3PolicySets(items []simplifiedPolicy) []v3PolicySet {
 		})
 	}
 
-	var result []v3PolicySet
+	result := make([]v3PolicySet, 0, len(psMap))
 	for _, pk := range psOrder {
 		policyMap := psMap[pk]
 
@@ -243,7 +247,7 @@ func toV3PolicySets(items []simplifiedPolicy) []v3PolicySet {
 			Status:             "ACTIVE",
 			Target:             resourceTypeTarget(pk.resourceType),
 			CombiningAlgorithm: "DENY_UNLESS_PERMIT",
-			TenantID:           pk.domain,
+			TenantID:           pk.tenant,
 			Policies:           v3Policies,
 		})
 	}
@@ -268,7 +272,7 @@ func toV3PIPs(items []simplifiedPIP) []v3PIP {
 			BeanName:          p.BeanName,
 			DefaultValue:      p.DefaultValue,
 			Domain:            domain,
-			TenantID:          domain,
+			TenantID:          tenantOrDefault(p.Tenant),
 			Type:              p.Type,
 			JsonPath:          p.JsonPath,
 			RequestAttributes: p.RequestAttributes,
@@ -280,6 +284,15 @@ func toV3PIPs(items []simplifiedPIP) []v3PIP {
 		})
 	}
 	return result
+}
+
+// tenantOrDefault returns tenant, or the default tenant for an item that no
+// upload stamped.
+func tenantOrDefault(tenant string) string {
+	if tenant == "" {
+		return defaultTenant
+	}
+	return tenant
 }
 
 // resourceTypeTarget converts a simplified resourceType to a v3 target expression.

@@ -30,17 +30,17 @@ import (
 // may, and it is supposed to fail when the v3 wire shape changes.
 func TestV3RoundTripThroughTheServiceReader(t *testing.T) {
 	input := []simplifiedPolicy{
-		{Component: "billing", ResourceType: "Invoice", Operation: "READ", Roles: []any{"ROLE_ADMIN"}},
-		{Component: "billing", ResourceType: "Invoice", Operation: "UPDATE", Roles: []any{"ROLE_ADMIN"}, Condition: "subject.tenantId == resource.tenantId"},
-		{Component: "billing", ResourceType: "Invoice", Operation: "READ", Roles: []any{"ROLE_USER"}, RSQLPredicate: "ownerId==${subject.id}"},
-		{Component: "billing", ResourceType: "Invoice", Operation: "LIST", Roles: []any{"ROLE_USER"}, Predicate: `Invoice.ownerId.eq("${subject.id}")`},
+		{Tenant: "tenant-a", Component: "billing", ResourceType: "Invoice", Operation: "READ", Roles: []any{"ROLE_ADMIN"}},
+		{Tenant: "tenant-a", Component: "billing", ResourceType: "Invoice", Operation: "UPDATE", Roles: []any{"ROLE_ADMIN"}, Condition: "subject.tenantId == resource.tenantId"},
+		{Tenant: "tenant-a", Component: "billing", ResourceType: "Invoice", Operation: "READ", Roles: []any{"ROLE_USER"}, RSQLPredicate: "ownerId==${subject.id}"},
+		{Tenant: "tenant-a", Component: "billing", ResourceType: "Invoice", Operation: "LIST", Roles: []any{"ROLE_USER"}, Predicate: `Invoice.ownerId.eq("${subject.id}")`},
 	}
 	raw, err := json.Marshal(v3PolicySetsResponse{Hash: "deadbeef", PolicySets: toV3PolicySets(input)})
 	if err != nil {
 		t.Fatalf("marshal v3 envelope: %v", err)
 	}
 
-	tree := readTree(t, raw, []byte(`{"pips": []}`), "billing")
+	tree := readTree(t, raw, []byte(`{"pips": []}`), "tenant-a")
 	var got []string
 	for _, set := range tree.Sets {
 		for _, p := range set.Policies {
@@ -72,15 +72,15 @@ func format(c *policyir.Condition) string {
 
 func TestPIPRoundTripThroughTheServiceReader(t *testing.T) {
 	input := []simplifiedPIP{
-		{Name: "subject.tenant", PipType: "TOKEN", Claim: "tenant_id", Domain: "billing"},
-		{Name: "subject.org", PipType: "HEADER", Header: "X-Org-Id", Domain: "billing"},
+		{Tenant: "tenant-a", Name: "subject.tenant", PipType: "TOKEN", Claim: "tenant_id", Domain: "billing"},
+		{Tenant: "tenant-a", Name: "subject.org", PipType: "HEADER", Header: "X-Org-Id", Domain: "billing"},
 	}
 	raw, err := json.Marshal(v3PIPsResponse{Hash: "deadbeef", PIPs: toV3PIPs(input)})
 	if err != nil {
 		t.Fatalf("marshal v3 envelope: %v", err)
 	}
 
-	tree := readTree(t, []byte(`{"policySets": []}`), raw, "billing")
+	tree := readTree(t, []byte(`{"policySets": []}`), raw, "tenant-a")
 	var got []string
 	for _, p := range tree.PIPs {
 		got = append(got, p.Name+" "+string(p.Type)+" "+p.Claim+p.Header)

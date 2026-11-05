@@ -63,15 +63,15 @@ func (s *server) routes(mux *http.ServeMux) {
 // ── Simplified-policy API ─────────────────────────────────────────────────────
 
 func (s *server) handleGetDomainPolicies(w http.ResponseWriter, r *http.Request) {
-	domain, ok := pathDomain(w, r)
+	tenant, domain, ok := requestScope(w, r)
 	if !ok {
 		return
 	}
-	writeJSON(w, http.StatusOK, s.st.DomainPolicies(domain))
+	writeJSON(w, http.StatusOK, s.st.DomainPolicies(tenant, domain))
 }
 
 func (s *server) handlePutDomainPolicies(w http.ResponseWriter, r *http.Request) {
-	domain, ok := pathDomain(w, r)
+	tenant, domain, ok := requestScope(w, r)
 	if !ok {
 		return
 	}
@@ -84,7 +84,7 @@ func (s *server) handlePutDomainPolicies(w http.ResponseWriter, r *http.Request)
 		http.Error(w, fmt.Sprintf(`{"error":"%s"}`, err.Error()), http.StatusBadRequest)
 		return
 	}
-	if err := s.st.SetDomainPolicies(domain, items, raw); err != nil {
+	if err := s.st.SetDomainPolicies(tenant, domain, items, raw); err != nil {
 		// The upload did not reach disk, so it is not committed in memory
 		// either. Telling the caller beats a 200 that quietly evaporates on
 		// the next restart.
@@ -100,15 +100,15 @@ func (s *server) handlePutDomainPolicies(w http.ResponseWriter, r *http.Request)
 }
 
 func (s *server) handleGetDomainPIPs(w http.ResponseWriter, r *http.Request) {
-	domain, ok := pathDomain(w, r)
+	tenant, domain, ok := requestScope(w, r)
 	if !ok {
 		return
 	}
-	writeJSON(w, http.StatusOK, s.st.DomainPIPs(domain))
+	writeJSON(w, http.StatusOK, s.st.DomainPIPs(tenant, domain))
 }
 
 func (s *server) handlePutDomainPIPs(w http.ResponseWriter, r *http.Request) {
-	domain, ok := pathDomain(w, r)
+	tenant, domain, ok := requestScope(w, r)
 	if !ok {
 		return
 	}
@@ -121,7 +121,7 @@ func (s *server) handlePutDomainPIPs(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf(`{"error":"%s"}`, err.Error()), http.StatusBadRequest)
 		return
 	}
-	if err := s.st.SetDomainPIPs(domain, items, raw); err != nil {
+	if err := s.st.SetDomainPIPs(tenant, domain, items, raw); err != nil {
 		logger.Errorf("PIP upload for domain %q rejected: %v", domain, err)
 		http.Error(w, fmt.Sprintf(`{"error":"%s"}`, err.Error()), http.StatusInternalServerError)
 		return
@@ -199,6 +199,28 @@ func pathDomain(w http.ResponseWriter, r *http.Request) (string, bool) {
 		return "", false
 	}
 	return domain, true
+}
+
+// requestScope returns the tenant and the domain of a simplified-API request.
+// The tenant is the tenant_id query parameter, else the Tenant header, else
+// the default tenant, the order access-control reads them in.
+func requestScope(w http.ResponseWriter, r *http.Request) (tenant, domain string, ok bool) {
+	domain, ok = pathDomain(w, r)
+	if !ok {
+		return "", "", false
+	}
+	tenant = r.URL.Query().Get("tenant_id")
+	if tenant == "" {
+		tenant = r.Header.Get("Tenant")
+	}
+	if tenant == "" {
+		tenant = defaultTenant
+	}
+	if !validDomain(tenant) {
+		http.Error(w, `{"error":"invalid tenant: allowed characters are letters, digits, dot, underscore and dash"}`, http.StatusBadRequest)
+		return "", "", false
+	}
+	return tenant, domain, true
 }
 
 func readBody(w http.ResponseWriter, r *http.Request) ([]byte, bool) {

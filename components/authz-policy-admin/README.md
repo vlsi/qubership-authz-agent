@@ -30,6 +30,10 @@ PUT  /access/v1/simplifiedPolicies/domainPIPs/{domainName}
 PUT body for policies: a JSON array of simplified-policy objects.
 PUT body for PIPs:     a JSON array of simplified-PIP objects.
 
+Each tenant keeps its own collections. The tenant of a request is the
+`tenant_id` query parameter, else the `Tenant` header, else `default`, so a
+PUT replaces only what the same tenant uploaded for that domain.
+
 The API is **unauthenticated**.  Deploy `authz-policy-admin` only in
 development and test namespaces, never in a namespace that is reachable by
 untrusted callers.
@@ -46,7 +50,9 @@ GET  /access/v3/config/pips
 
 Both require an `Authorization` header (the bearer token that the agent holds;
 the value is not validated, only presence-checked).  They return the union of
-all domains.
+all tenants and domains, and each policy set and PIP carries the tenant that
+uploaded it in `tenantId`.  An empty store exports `"policySets": []` and
+`"pips": []`.
 
 ### Health / status
 
@@ -66,6 +72,7 @@ Returns a JSON object with:
 }
 ```
 
+A domain of a tenant other than `default` is listed as `<tenant>/<domain>`.
 `hash` and `policiesHash` are the same value; `hash` is kept for callers
 written against an earlier version of the stub.  This endpoint is also used
 by the Helm chart probes and the Docker Compose health checks.
@@ -82,7 +89,10 @@ by the Helm chart probes and the Docker Compose health checks.
 
 When `AUTHZ_POLICY_ADMIN_DATA_DIR` is set, policies and PIPs are persisted to
 disk so that a restart reloads the last uploaded state.  Data is stored as
-JSON files under that directory, one file per domain per collection.
+JSON files under that directory, one file per tenant, domain, and collection:
+`policies-<domain>.json` for the `default` tenant and
+`policies-<tenant>@<domain>.json` for another tenant, and the same with the
+`pips-` prefix.
 
 In the Helm chart:
 
