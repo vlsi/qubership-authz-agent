@@ -85,10 +85,10 @@ type Logger interface {
 }
 
 // Status reports the pull. PoliciesLoaded is set by the first successful
-// load, a partial one included, and never cleared: a source that becomes unreachable leaves the
-// snapshots already published, which are better than none. Reason
-// explains a PoliciesLoaded set without a load because the pull is
-// disabled.
+// load, a partial one included, and never cleared: a source that becomes
+// unreachable leaves the snapshots already published, which are better than
+// none. Reason explains a PoliciesLoaded set without a load because the pull
+// is disabled.
 type Status struct {
 	PoliciesLoaded bool   `json:"policiesLoaded"`
 	FirstSuccessAt string `json:"firstSuccessAt,omitempty"`
@@ -106,8 +106,9 @@ type Puller struct {
 	mu           sync.Mutex
 	status       Status
 	firstSuccess time.Time
-	// refusal is the text of the partial load of the last pull, empty when
-	// that pull published every tenant or failed.
+	// refusal is the text of the partial load of the last pull that loaded,
+	// empty when that pull published every tenant. A failed pull leaves it
+	// unchanged.
 	refusal string
 }
 

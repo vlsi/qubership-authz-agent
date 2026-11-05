@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -247,6 +248,31 @@ func TestLoadSnapshotsNamesARefusedTenantWithNoSnapshotAsNotServed(t *testing.T)
 	}
 	if _, ok := r.Snapshot("b"); !ok {
 		t.Error("tenant b has no snapshot, want it published beside the refusal")
+	}
+}
+
+// Refused tenants are named in the order of their IDs, and a load of the
+// same documents, which the registry skips, names them with the same text.
+// The pull reports a refusal only when its text changes, so a text that
+// differed between the two loads would be reported on every pull.
+func TestLoadSnapshotsNamesRefusedTenantsInOrderAcrossLoads(t *testing.T) {
+	r := New(Config{}, tab(t), quiet{})
+	first := loadSnapshots(r, set("b", broken), set("c", "true"), set("a", broken))
+	second := loadSnapshots(r, set("b", broken), set("c", "true"), set("a", broken))
+
+	var refused *RefusedError
+	if !errors.As(first, &refused) {
+		t.Fatalf("LoadSnapshots = %v, want a *RefusedError", first)
+	}
+	var tenants []string
+	for _, tr := range refused.Tenants {
+		tenants = append(tenants, tr.Tenant)
+	}
+	if !reflect.DeepEqual(tenants, []string{"a", "b"}) {
+		t.Errorf("refused tenants = %q, want [a b]", tenants)
+	}
+	if second == nil || second.Error() != first.Error() {
+		t.Errorf("LoadSnapshots of the same documents =\n%v\nwant\n%v", second, first)
 	}
 }
 

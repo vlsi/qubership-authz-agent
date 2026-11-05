@@ -372,6 +372,8 @@ func TestPull_ReportsARefusalWhenItChanges(t *testing.T) {
 	for _, err := range []error{
 		refusal("tenant a: refused"),
 		refusal("tenant a: refused"),
+		errors.New("source unreachable"),
+		refusal("tenant a: refused"),
 		refusal("tenant a: refused; tenant b: refused"),
 		nil,
 		nil,
@@ -384,7 +386,7 @@ func TestPull_ReportsARefusalWhenItChanges(t *testing.T) {
 
 	var got []string
 	for _, line := range rec.lines {
-		if !strings.Contains(line, "policies: updated") {
+		if !strings.Contains(line, "policies: updated") && !strings.Contains(line, "pull failed") {
 			got = append(got, line)
 		}
 	}

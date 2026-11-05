@@ -905,6 +905,22 @@ func TestASingleOddListOnTheRightOfNotContainsAny(t *testing.T) {
 	}
 }
 
+// On the left of NOT CONTAINS ANY a one-element GENERAL list of null is a
+// list, where CONTAINS ANY reads it as a failed PIP, so against an empty PIP
+// it shares no element and the condition is true, as for a list of a boolean.
+func TestASingleOddListOnTheLeftOfNotContainsAny(t *testing.T) {
+	tree := tenantWithSetAndPIPs(t, "DENY_UNLESS_PERMIT", "ALLOW", "subject.g NOT CONTAINS ANY subject.h", generalPIPs)
+	for _, g := range []string{`[true]`, `[null]`} {
+		t.Run(g, func(t *testing.T) {
+			values := map[string]Resolved{`["subj","g"]`: resolved(t, "SINGLE_ODD", g),
+				`["subj","h"]`: resolved(t, "PIP_EMPTY", "")}
+			if got := decideValues(t, tree, DefaultOptions(), values); !got {
+				t.Errorf("allow(subject.g = SINGLE_ODD %s, subject.h = PIP_EMPTY) = false, want true", g)
+			}
+		})
+	}
+}
+
 // A null whole resource is in no list, and a one-element GENERAL list of null
 // on the right of IN ends the rule, which the agent reads as undefined.
 func TestANullResourceIsInNoSingleOddList(t *testing.T) {
