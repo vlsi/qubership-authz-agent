@@ -878,6 +878,33 @@ func TestASingleOddListUnderContainsAny(t *testing.T) {
 	}
 }
 
+// NOT CONTAINS ANY negates CONTAINS ANY and keeps its undefined cell: a null
+// element on the left ends the rule against a one-element GENERAL list
+// (SINGLE_ODD) of a boolean, and against a list of null the values are
+// compared, so the null equals nothing and no element is common. ALLOW under
+// DENY_UNLESS_PERMIT tells true from the rest, and DENY under
+// PERMIT_UNLESS_DENY tells false from the rest.
+func TestASingleOddListOnTheRightOfNotContainsAny(t *testing.T) {
+	for _, tc := range []struct {
+		name, alg, effect, a, g string
+		want                    bool
+	}{
+		{"a null element against a boolean is not true", "DENY_UNLESS_PERMIT", "ALLOW", `[null, "x"]`, `[true]`, false},
+		{"a null element against a boolean is not false", "PERMIT_UNLESS_DENY", "DENY", `[null, "x"]`, `[true]`, false},
+		{"a null element against a null is true", "DENY_UNLESS_PERMIT", "ALLOW", `[null, "x"]`, `[null]`, true},
+		{"a list without a null against a boolean is true", "DENY_UNLESS_PERMIT", "ALLOW", `["x"]`, `[true]`, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			tree := tenantWithSetAndPIPs(t, tc.alg, tc.effect, "resource.a NOT CONTAINS ANY subject.g", generalPIPs)
+			values := map[string]Resolved{keyA: resolved(t, "VALUE", tc.a), `["subj","g"]`: resolved(t, "SINGLE_ODD", tc.g)}
+			if got := decideValues(t, tree, DefaultOptions(), values); got != tc.want {
+				t.Errorf("allow(%s %s, resource.a = %s, subject.g = SINGLE_ODD %s) = %v, want %v", tc.alg, tc.effect,
+					tc.a, tc.g, got, tc.want)
+			}
+		})
+	}
+}
+
 // A null whole resource is in no list, and a one-element GENERAL list of null
 // on the right of IN ends the rule, which the agent reads as undefined.
 func TestANullResourceIsInNoSingleOddList(t *testing.T) {

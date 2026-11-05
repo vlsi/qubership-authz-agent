@@ -444,12 +444,13 @@ func (g *gen) byValue(rails *leafRails, op spectables.Operator, L, R *side, cell
 			return "", fmt.Errorf("%s(%s %s, %s %s): %w", op, L.kind, lp.cl, kindOf(R), rp.cl, err)
 		}
 	}
-	if ok && op == spectables.OpContainsAny && (oddL || oddR) &&
+	if ok && (op == spectables.OpContainsAny || op == spectables.OpNotContainsAny) && (oddL || oddR) &&
 		lp.cl == spectables.ClassNullElement && rp.cl == spectables.ClassNullElement {
 		// A SINGLE_ODD list of null fails the PIP on the left of CONTAINS
 		// ANY. On the right it is a value, and a list of a boolean or an
 		// object holds no null, so a null element on the left ends the rule
-		// there as it does against any list without one.
+		// there as it does against any list without one. NOT CONTAINS ANY
+		// ends where CONTAINS ANY does, and the guard applies to both rails.
 		g := dnf{conj(L.bind(), clause{{cls: L.cls(clsCheck), text: "not " + L.field("n0"), fact: vfact(L)}})}
 		if oddR && !oddL {
 			g = append(g, conj(R.bind(), clause{{cls: R.cls(clsCheck), text: R.field("n0"), fact: vfact(R)}}))
