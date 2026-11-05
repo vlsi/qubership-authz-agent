@@ -204,6 +204,16 @@
       ],
       "pattern": "^[A-Za-z0-9._-]{1,64}$"
     },
+    "AUTHZ_POLICY_ADMIN_REQUIRE_DECLARED_PIPS": {
+      "$id": "#/properties/AUTHZ_POLICY_ADMIN_REQUIRE_DECLARED_PIPS",
+      "type": "boolean",
+      "title": "The AUTHZ_POLICY_ADMIN_REQUIRE_DECLARED_PIPS schema",
+      "description": "Refuse a policy upload whose condition reads a PIP the tenant has not declared, as access-control does",
+      "default": false,
+      "examples": [
+        false
+      ]
+    },
     "AUTHZ_POLICY_ADMIN_STORAGE_SIZE": {
       "$id": "#/properties/AUTHZ_POLICY_ADMIN_STORAGE_SIZE",
       "type": "string",

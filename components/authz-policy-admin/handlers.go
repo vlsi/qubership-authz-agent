@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sync"
 	"time"
 )
 
@@ -36,6 +37,12 @@ type server struct {
 	st *store
 	// defaultTenantID is the tenantId of the default tenant in the export.
 	defaultTenantID string
+	// requireDeclaredPIPs refuses a policy whose condition reads a PIP that
+	// the tenant has not declared yet, as access-control does.
+	requireDeclaredPIPs bool
+	// uploads serializes the uploads, so that the checks of one read what the
+	// tenant declared before it and no other upload commits in between.
+	uploads sync.Mutex
 }
 
 func (s *server) routes(mux *http.ServeMux) {
@@ -81,13 +88,26 @@ func (s *server) handlePutDomainPolicies(w http.ResponseWriter, r *http.Request)
 	if !ok {
 		return
 	}
-	var items []simplifiedPolicy
-	if err := json.Unmarshal(raw, &items); err != nil {
-		http.Error(w, fmt.Sprintf(`{"error":"%s"}`, err.Error()), http.StatusBadRequest)
-		return
+	s.uploads.Lock()
+	defer s.uploads.Unlock()
+	objects, err := decodeUpload(raw)
+	if err == nil {
+		var declared map[string]bool
+		if s.requireDeclaredPIPs {
+			declared = s.st.TenantPIPNames(tenant)
+		}
+		if why := validatePolicies(objects, declared); why != nil {
+			writeJSON(w, why.status, map[string]string{"error": why.reason})
+			return
+		}
+		raw, err = coerceTexts(raw, objects, policyTexts, false)
 	}
-	if why := validatePolicies(items); why != "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": why})
+	var items []simplifiedPolicy
+	if err == nil {
+		err = json.Unmarshal(raw, &items)
+	}
+	if err != nil {
+		http.Error(w, fmt.Sprintf(`{"error":"%s"}`, err.Error()), http.StatusBadRequest)
 		return
 	}
 	if err := s.st.SetDomainPolicies(tenant, domain, items, raw); err != nil {
@@ -122,13 +142,23 @@ func (s *server) handlePutDomainPIPs(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	var items []simplifiedPIP
-	if err := json.Unmarshal(raw, &items); err != nil {
-		http.Error(w, fmt.Sprintf(`{"error":"%s"}`, err.Error()), http.StatusBadRequest)
-		return
+	s.uploads.Lock()
+	defer s.uploads.Unlock()
+	objects, err := decodeUpload(raw)
+	if err == nil {
+		trimmed := trimPIPEnums(objects)
+		if why := validatePIPs(objects, domain, s.st.TenantPIPs(tenant)); why != nil {
+			writeJSON(w, why.status, map[string]string{"error": why.reason})
+			return
+		}
+		raw, err = coerceTexts(raw, objects, pipTexts, trimmed)
 	}
-	if why := validatePIPs(raw, items); why != "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": why})
+	var items []simplifiedPIP
+	if err == nil {
+		err = json.Unmarshal(raw, &items)
+	}
+	if err != nil {
+		http.Error(w, fmt.Sprintf(`{"error":"%s"}`, err.Error()), http.StatusBadRequest)
 		return
 	}
 	if err := s.st.SetDomainPIPs(tenant, domain, items, raw); err != nil {

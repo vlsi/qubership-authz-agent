@@ -60,6 +60,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/netcracker/qubership-core-lib-go/v3/configloader"
 	"github.com/netcracker/qubership-core-lib-go/v3/logging"
@@ -90,7 +91,8 @@ func main() {
 	// without a mounted volume. The Helm chart always sets it to the PVC
 	// mount path.
 	mux, addr, err := build(os.Getenv("AUTHZ_POLICY_ADMIN_DATA_DIR"), envOr("AUTHZ_POLICY_ADMIN_PORT", "18090"),
-		envOr("AUTHZ_POLICY_ADMIN_DEFAULT_TENANT_ID", defaultTenant))
+		envOr("AUTHZ_POLICY_ADMIN_DEFAULT_TENANT_ID", defaultTenant),
+		envOr("AUTHZ_POLICY_ADMIN_REQUIRE_DECLARED_PIPS", "false"))
 	if err != nil {
 		logger.Errorf("%v", err)
 		os.Exit(1)
@@ -104,10 +106,16 @@ func main() {
 
 // build opens the store under dataDir, assembles the routes over it, and
 // returns them with the address port makes. The export gives the default
-// tenant the tenantId defaultTenantID. An empty dataDir keeps the
-// policies in memory, which the run reports, as it reports that the upload
-// API is open to whoever can reach it.
-func build(dataDir, port, defaultTenantID string) (*http.ServeMux, string, error) {
+// tenant the tenantId defaultTenantID. requireDeclaredPIPs is a boolean text:
+// true refuses a policy upload whose condition reads a PIP the tenant has not
+// declared, and a text other than a boolean is an error. An empty dataDir
+// keeps the policies in memory, which the run reports, as it reports that the
+// upload API is open to whoever can reach it.
+func build(dataDir, port, defaultTenantID, requireDeclaredPIPs string) (*http.ServeMux, string, error) {
+	requireDeclared, err := strconv.ParseBool(requireDeclaredPIPs)
+	if err != nil {
+		return nil, "", fmt.Errorf("AUTHZ_POLICY_ADMIN_REQUIRE_DECLARED_PIPS: %w", err)
+	}
 	st, err := newStore(dataDir)
 	if err != nil {
 		return nil, "", fmt.Errorf("store: %w", err)
@@ -125,7 +133,7 @@ func build(dataDir, port, defaultTenantID string) (*http.ServeMux, string, error
 	}
 
 	mux := http.NewServeMux()
-	(&server{st: st, defaultTenantID: defaultTenantID}).routes(mux)
+	(&server{st: st, defaultTenantID: defaultTenantID, requireDeclaredPIPs: requireDeclared}).routes(mux)
 	return mux, "0.0.0.0:" + port, nil
 }
 

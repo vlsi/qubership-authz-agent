@@ -84,6 +84,10 @@ AUTHZ_POLICY_ADMIN_DATA_DIR: /var/lib/authz-policy-admin
 # tenantId the export gives the policies and PIPs uploaded without a tenant.
 # Set it to the ID the agent resolves its default tenant to.
 AUTHZ_POLICY_ADMIN_DEFAULT_TENANT_ID: default
+# Refuse a policy upload whose condition reads a PIP the tenant has not
+# declared, as access-control does. Off by default, so policies can be
+# uploaded before their PIPs.
+AUTHZ_POLICY_ADMIN_REQUIRE_DECLARED_PIPS: false
 # Volume holding the uploaded policies. It is the only copy: the chart creates
 # no seed ConfigMap.
 AUTHZ_POLICY_ADMIN_STORAGE_SIZE: 1Gi

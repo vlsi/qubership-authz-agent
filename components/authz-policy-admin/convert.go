@@ -49,20 +49,20 @@ type simplifiedPolicy struct {
 // stub uses for v3 export conversion.
 type simplifiedPIP struct {
 	// Tenant is the tenant that uploaded the PIP, from the request.
-	Tenant            string            `json:"-"`
-	Name              string            `json:"name"`
-	PipType           string            `json:"pipType,omitempty"`
-	URL               string            `json:"url,omitempty"`
-	HTTPMethod        string            `json:"httpMethod,omitempty"`
-	Header            string            `json:"header,omitempty"`
-	Claim             string            `json:"claim,omitempty"`
-	BeanName          string            `json:"beanName,omitempty"`
-	DefaultValue      json.RawMessage   `json:"defaultValue,omitempty"`
-	Domain            string            `json:"domain,omitempty"`
-	RequestAttributes map[string]string `json:"requestAttributes,omitempty"`
-	Headers           json.RawMessage   `json:"headers,omitempty"`
-	Type              string            `json:"type,omitempty"`
-	JsonPath          string            `json:"jsonPath,omitempty"`
+	Tenant            string                     `json:"-"`
+	Name              string                     `json:"name"`
+	PipType           string                     `json:"pipType,omitempty"`
+	URL               string                     `json:"url,omitempty"`
+	HTTPMethod        string                     `json:"httpMethod,omitempty"`
+	Header            string                     `json:"header,omitempty"`
+	Claim             string                     `json:"claim,omitempty"`
+	BeanName          string                     `json:"beanName,omitempty"`
+	DefaultValue      json.RawMessage            `json:"defaultValue,omitempty"`
+	Domain            string                     `json:"domain,omitempty"`
+	RequestAttributes map[string]json.RawMessage `json:"requestAttributes,omitempty"`
+	Headers           json.RawMessage            `json:"headers,omitempty"`
+	Type              string                     `json:"type,omitempty"`
+	JsonPath          string                     `json:"jsonPath,omitempty"`
 
 	// ── PDP contract extension (authz-agent-ADR-0066..0069) ──────────────
 	// These four fields do NOT exist in access-control: its authoritative
@@ -132,20 +132,20 @@ type v3PIPsResponse struct {
 }
 
 type v3PIP struct {
-	Name              string            `json:"name"`
-	PipType           string            `json:"pipType"`
-	URL               string            `json:"url,omitempty"`
-	HTTPMethod        string            `json:"httpMethod,omitempty"`
-	Header            string            `json:"header,omitempty"`
-	Claim             string            `json:"claim,omitempty"`
-	BeanName          string            `json:"beanName,omitempty"`
-	DefaultValue      json.RawMessage   `json:"defaultValue,omitempty"`
-	Domain            string            `json:"domain"`
-	TenantID          string            `json:"tenantId"`
-	Type              string            `json:"type,omitempty"`
-	JsonPath          string            `json:"jsonPath,omitempty"`
-	RequestAttributes map[string]string `json:"requestAttributes,omitempty"`
-	Headers           json.RawMessage   `json:"headers,omitempty"`
+	Name              string                     `json:"name"`
+	PipType           string                     `json:"pipType"`
+	URL               string                     `json:"url,omitempty"`
+	HTTPMethod        string                     `json:"httpMethod,omitempty"`
+	Header            string                     `json:"header,omitempty"`
+	Claim             string                     `json:"claim,omitempty"`
+	BeanName          string                     `json:"beanName,omitempty"`
+	DefaultValue      json.RawMessage            `json:"defaultValue,omitempty"`
+	Domain            string                     `json:"domain"`
+	TenantID          string                     `json:"tenantId"`
+	Type              string                     `json:"type,omitempty"`
+	JsonPath          string                     `json:"jsonPath,omitempty"`
+	RequestAttributes map[string]json.RawMessage `json:"requestAttributes,omitempty"`
+	Headers           json.RawMessage            `json:"headers,omitempty"`
 
 	// Extension fields, mirrored from the northbound shape — see the note on
 	// simplifiedPIP. Real access-control never emits these.

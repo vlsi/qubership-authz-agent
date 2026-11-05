@@ -268,6 +268,39 @@ func (s *store) commitLocked(fileName string, raw []byte) error {
 	return nil
 }
 
+// TenantPIPs returns the PIPs tenant declared, keyed by domain.
+func (s *store) TenantPIPs(tenant string) map[string][]simplifiedPIP {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	out := map[string][]simplifiedPIP{}
+	for key, items := range s.pips {
+		if domain, ok := keyDomain(key, tenant); ok {
+			out[domain] = items
+		}
+	}
+	return out
+}
+
+// TenantPIPNames returns the names of the PIPs tenant declared in any domain.
+func (s *store) TenantPIPNames(tenant string) map[string]bool {
+	names := map[string]bool{}
+	for _, items := range s.TenantPIPs(tenant) {
+		for _, p := range items {
+			names[p.Name] = true
+		}
+	}
+	return names
+}
+
+// keyDomain returns the domain of the collection key when tenant uploaded
+// it, the inverse of [scopeKey].
+func keyDomain(key, tenant string) (string, bool) {
+	if tenant == defaultTenant {
+		return key, !strings.Contains(key, "/")
+	}
+	return strings.CutPrefix(key, tenant+"/")
+}
+
 // DomainPolicies returns the policies tenant uploaded for domain; an unknown
 // domain reads as empty, the same answer access-control gives for a domain
 // nobody has uploaded yet.

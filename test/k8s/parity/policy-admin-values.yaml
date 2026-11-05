@@ -5,3 +5,6 @@
 IMAGE_REPOSITORY: local/authz-policy-admin
 TAG: ci
 MESH_ROUTES_ENABLED: false
+# The parity suite compares upload answers with access-control's, which
+# refuses a condition that reads an undeclared PIP.
+AUTHZ_POLICY_ADMIN_REQUIRE_DECLARED_PIPS: true

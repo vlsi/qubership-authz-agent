@@ -69,7 +69,7 @@ func TestBuild_ReportsWhatTheRunIs(t *testing.T) {
 	for name, dataDir := range map[string]string{"with a data directory": seeded, "with none": ""} {
 		t.Run(name, func(t *testing.T) {
 			rec := records(t)
-			mux, addr, err := build(dataDir, "18090", defaultTenant)
+			mux, addr, err := build(dataDir, "18090", defaultTenant, "false")
 			if err != nil {
 				t.Fatalf("build(%q) = %v", dataDir, err)
 			}
@@ -125,7 +125,7 @@ func TestBuild_RefusesADataDirectoryItCannotWrite(t *testing.T) {
 	}
 	t.Cleanup(func() { _ = os.Chmod(dir, 0o700) })
 
-	_, _, err := build(dir, "18090", defaultTenant)
+	_, _, err := build(dir, "18090", defaultTenant, "false")
 	if err == nil {
 		t.Fatal("build over an unwritable data directory = nil, want an error")
 	}
@@ -138,7 +138,7 @@ func TestBuild_RefusesADataDirectoryItCannotWrite(t *testing.T) {
 // answers before anything has been uploaded.
 func TestBuild_ServesTheExport(t *testing.T) {
 	records(t)
-	mux, _, err := build(t.TempDir(), "18090", defaultTenant)
+	mux, _, err := build(t.TempDir(), "18090", defaultTenant, "false")
 	if err != nil {
 		t.Fatalf("build: %v", err)
 	}
@@ -169,4 +169,25 @@ func TestEnvOr(t *testing.T) {
 			t.Errorf("envOr on an unset variable = %q, want the fallback 18090", got)
 		}
 	})
+}
+
+// AUTHZ_POLICY_ADMIN_REQUIRE_DECLARED_PIPS reaches the policy upload, and a
+// value that is no boolean stops the start.
+func TestBuild_RequiresDeclaredPIPsWhenAsked(t *testing.T) {
+	records(t)
+	const body = `[{"component":"BILLING","resourceType":"INVOICE","operation":"READ","roles":["R"],` +
+		`"condition":"subject.dept == 'x'"}]`
+	for value, want := range map[string]int{"true": http.StatusBadRequest, "false": http.StatusOK} {
+		mux, _, err := build("", "18090", defaultTenant, value)
+		if err != nil {
+			t.Fatalf("build(%q) = %v", value, err)
+		}
+		if rec := do(t, mux, http.MethodPut, policiesPath+"billing", body); rec.Code != want {
+			t.Errorf("with %q, PUT of a policy reading an undeclared PIP = %d %s, want %d", value, rec.Code, rec.Body, want)
+		}
+	}
+	if _, _, err := build("", "18090", defaultTenant, "sometimes"); err == nil ||
+		!strings.Contains(err.Error(), "AUTHZ_POLICY_ADMIN_REQUIRE_DECLARED_PIPS") {
+		t.Errorf(`build with "sometimes" = %v, want an error naming AUTHZ_POLICY_ADMIN_REQUIRE_DECLARED_PIPS`, err)
+	}
 }

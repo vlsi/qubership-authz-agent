@@ -93,6 +93,8 @@ spec:
               value: '{{ .Values.AUTHZ_POLICY_ADMIN_DATA_DIR }}'
             - name: AUTHZ_POLICY_ADMIN_DEFAULT_TENANT_ID
               value: '{{ .Values.AUTHZ_POLICY_ADMIN_DEFAULT_TENANT_ID }}'
+            - name: AUTHZ_POLICY_ADMIN_REQUIRE_DECLARED_PIPS
+              value: '{{ .Values.AUTHZ_POLICY_ADMIN_REQUIRE_DECLARED_PIPS }}'
           volumeMounts:
             - name: data
               mountPath: '{{ .Values.AUTHZ_POLICY_ADMIN_DATA_DIR }}'
