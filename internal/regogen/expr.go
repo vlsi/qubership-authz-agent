@@ -99,9 +99,11 @@ func (d dnf) isFalse() bool { return len(d) == 0 }
 // conj joins clauses, keeping the first of repeated expressions.
 func conj(parts ...clause) clause {
 	var out clause
+	seen := map[string]bool{}
 	for _, p := range parts {
 		for _, e := range p {
-			if !slices.ContainsFunc(out, func(x expr) bool { return x.text == e.text }) {
+			if !seen[e.text] {
+				seen[e.text] = true
 				out = append(out, e)
 			}
 		}

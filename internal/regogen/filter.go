@@ -296,14 +296,14 @@ func (fg *filterGen) module(pkg string) string {
 	for _, set := range []string{"t", "f", "tp", "fp"} {
 		b.WriteString(set + " contains \"\" if false\n")
 	}
-	all := dnfFalse
+	var clauses dnf
 	write := func(set, key string, d dnf, pass bool) {
 		head := fmt.Sprintf("%s contains %q", set, key)
 		if pass {
 			head = fmt.Sprintf("%sp contains [%q, i]", set, key)
 		}
 		for _, c := range d {
-			all = union(all, dnf{c})
+			clauses = append(clauses, c)
 			b.WriteString("\n" + head + " if {\n")
 			if pass {
 				v := "_"
@@ -329,6 +329,7 @@ func (fg *filterGen) module(pkg string) string {
 			write("f", key, d, fg.pass[key])
 		}
 	}
+	all := union(clauses)
 	cm := &commenter{g: g, b: &b, printed: map[string]bool{}}
 	used := g.used(all)
 	g.stats.Rules = len(used)

@@ -72,13 +72,18 @@ func (o *Object) Len() int {
 	return len(o.keys)
 }
 
+// MaxDepth is the deepest nesting of lists and objects that [Decode] accepts,
+// the limit encoding/json sets on Unmarshal.
+const MaxDepth = 10000
+
 // Decode parses one JSON document. Numbers keep their text and object members
 // keep their order; of two members with the same key, the later value wins at
-// the position of the earlier one.
+// the position of the earlier one. A document nested deeper than [MaxDepth] is
+// refused.
 func Decode(data []byte) (Value, error) {
 	dec := json.NewDecoder(bytes.NewReader(data))
 	dec.UseNumber()
-	v, err := decodeValue(dec)
+	v, err := decodeValue(dec, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -88,18 +93,23 @@ func Decode(data []byte) (Value, error) {
 	return v, nil
 }
 
-func decodeValue(dec *json.Decoder) (Value, error) {
+// decodeValue decodes the value whose first token comes next, inside depth
+// lists and objects.
+func decodeValue(dec *json.Decoder, depth int) (Value, error) {
 	tok, err := dec.Token()
 	if err != nil {
 		return nil, err
 	}
 	switch t := tok.(type) {
 	case json.Delim:
+		if depth == MaxDepth {
+			return nil, fmt.Errorf("jsonvalue: nested deeper than %d", MaxDepth)
+		}
 		switch t {
 		case '[':
 			list := []Value{}
 			for dec.More() {
-				v, err := decodeValue(dec)
+				v, err := decodeValue(dec, depth+1)
 				if err != nil {
 					return nil, err
 				}
@@ -114,7 +124,7 @@ func decodeValue(dec *json.Decoder) (Value, error) {
 				if err != nil {
 					return nil, err
 				}
-				v, err := decodeValue(dec)
+				v, err := decodeValue(dec, depth+1)
 				if err != nil {
 					return nil, err
 				}

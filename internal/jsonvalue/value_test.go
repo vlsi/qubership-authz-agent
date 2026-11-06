@@ -82,6 +82,20 @@ func TestDecode_RefusesInvalidDocuments(t *testing.T) {
 	}
 }
 
+// The limit is the decoder's own, so it holds on every toolchain: the
+// json.Decoder.Token that Decode reads through has none before Go 1.27.
+func TestDecode_RefusesNestingDeeperThanMaxDepth(t *testing.T) {
+	doc := func(depth int) []byte {
+		return []byte(`{"a": ` + strings.Repeat("[", depth-1) + strings.Repeat("]", depth-1) + `}`)
+	}
+	if _, err := Decode(doc(MaxDepth)); err != nil {
+		t.Errorf("Decode of a document nested %d deep: %v", MaxDepth, err)
+	}
+	if _, err := Decode(doc(MaxDepth + 1)); err == nil {
+		t.Errorf("Decode of a document nested %d deep: no error", MaxDepth+1)
+	}
+}
+
 func TestFromAST_ObjectComesInSortedKeyOrder(t *testing.T) {
 	v, err := FromAST(ast.MustParseTerm(`{"z": 1.50, "a": [null, "x", true]}`).Value)
 	if err != nil {

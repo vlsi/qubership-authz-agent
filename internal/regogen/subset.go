@@ -230,7 +230,7 @@ func subsetTest(L, R *side, kind string) *test {
 		t.sets = L.lit.sa
 	}
 	if R.ref != nil {
-		t.ref2 = R.ref.ID
+		t.ref2, t.field2 = R.ref.ID, "sb"
 	} else {
 		t.set = R.lit.sb
 	}
@@ -268,9 +268,11 @@ func (t *test) subsetHolds(e *groupEval) bool {
 	if !okR {
 		return false
 	}
-	unmatched := func(e []string) bool {
-		return !slices.ContainsFunc(e, func(x string) bool { return slices.Contains(rb, x) })
+	in := func(x string) bool { return slices.Contains(rb, x) }
+	if t.ref2 != "" {
+		in = func(x string) bool { return e.contains(t.slot2, rb, x) }
 	}
+	unmatched := func(e []string) bool { return !slices.ContainsFunc(e, in) }
 	if t.kind == "subset" {
 		return !slices.ContainsFunc(la, unmatched)
 	}

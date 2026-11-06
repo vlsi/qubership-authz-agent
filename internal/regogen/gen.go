@@ -248,23 +248,26 @@ func Generate(tree *policyir.Tree, tab *spectables.Table, opt Options) (*Module,
 	if err := g.decisions(); err != nil {
 		return nil, err
 	}
-	allow := dnfFalse
-	for _, t := range tops {
+	allows := make([]dnf, len(tops))
+	for i, t := range tops {
 		d, err := g.flag(t, "lo", "P")
 		if err != nil {
 			return nil, err
 		}
-		allow = union(allow, d)
+		allows[i] = d
 	}
+	allow := union(allows...)
 	maybe := dnfFalse
 	if g.opt.Decision {
-		for _, t := range tops {
+		maybes := make([]dnf, len(tops))
+		for i, t := range tops {
 			d, err := g.flag(t, "hi", "P")
 			if err != nil {
 				return nil, err
 			}
-			maybe = union(maybe, d)
+			maybes[i] = d
 		}
+		maybe = union(maybes...)
 	}
 	if g.collision != nil {
 		return &Module{Stats: g.stats}, g.collision
@@ -886,30 +889,32 @@ func (c *cond) F() dnf {
 func (c *cond) build() {
 	c.done = true
 	g := c.g
-	c.t = dnfFalse
-	for _, grp := range c.groups {
+	ts := make([]dnf, len(c.groups))
+	alts := make([]dnf, len(c.groups))
+	for i, grp := range c.groups {
 		if g.opt.Groups {
-			c.t = union(c.t, g.groupedT(grp, nil))
+			ts[i] = g.groupedT(grp, nil)
 			continue
 		}
-		d := dnfTrue
-		for _, l := range grp {
-			d = g.product(d, l.t)
+		lt := make([]dnf, len(grp))
+		for j, l := range grp {
+			lt[j] = l.t
 		}
-		c.t = union(c.t, d)
+		ts[i] = g.productAll(lt)
 	}
-	c.f = dnfTrue
-	for _, grp := range c.groups {
-		alt := dnfFalse
+	c.t = union(ts...)
+	for i, grp := range c.groups {
 		if g.opt.Groups {
-			alt = g.groupedF(grp)
-		} else {
-			for _, l := range grp {
-				alt = union(alt, l.f)
-			}
+			alts[i] = g.groupedF(grp)
+			continue
 		}
-		c.f = g.product(c.f, alt)
+		lf := make([]dnf, len(grp))
+		for j, l := range grp {
+			lf[j] = l.f
+		}
+		alts[i] = union(lf...)
 	}
+	c.f = g.productAll(alts)
 }
 
 func (c *cond) notF() dnf {
@@ -1017,6 +1022,31 @@ func (g *gen) product(a, b dnf) dnf {
 	return prod(a, b, true)
 }
 
+// productAll is the product of the factors. A list longer than
+// sequentialFactors is halved, and the product of the two halves' products
+// taken, so the product of n one-clause factors copies O(n log n)
+// expressions where multiplying in one factor at a time copies the growing
+// clause n times, O(n²) expressions. A shorter list is multiplied in order,
+// which keeps the module text of the conditions policies hold: halving can
+// make [gen.product] turn another partial product into a helper rule, which
+// holds the same clauses and decides the same but changes the text.
+func (g *gen) productAll(factors []dnf) dnf {
+	if len(factors) <= sequentialFactors {
+		d := dnfTrue
+		for _, f := range factors {
+			d = g.product(d, f)
+		}
+		return d
+	}
+	h := len(factors) / 2
+	return g.product(g.productAll(factors[:h]), g.productAll(factors[h:]))
+}
+
+// sequentialFactors is the longest list of factors productAll multiplies in
+// order. It is a variable so that a test can generate the module text of an
+// all-in-order product.
+var sequentialFactors = 16
+
 // -- flags --------------------------------------------------------------------
 
 // flag returns the clauses that hold exactly when bound b (lo, hi) of node n
@@ -1066,7 +1096,7 @@ func (g *gen) flagBody(n *node, b, x string) (dnf, error) {
 		if x == "D" {
 			return dnfFalse, nil
 		}
-		out := dnfFalse
+		parts := make([]dnf, 0, len(n.simp))
 		for _, k := range n.simp {
 			var body dnf
 			if g.opt.Groups {
@@ -1075,7 +1105,7 @@ func (g *gen) flagBody(n *node, b, x string) (dnf, error) {
 				} else {
 					body = g.product(g.group(k.roles), k.c.notF())
 				}
-				out = union(out, g.product(dnf{k.match}, body))
+				parts = append(parts, g.product(dnf{k.match}, body))
 				continue
 			}
 			alts := dnf{}
@@ -1087,9 +1117,9 @@ func (g *gen) flagBody(n *node, b, x string) (dnf, error) {
 			} else {
 				body = k.c.notF()
 			}
-			out = union(out, g.product(alts, body))
+			parts = append(parts, g.product(alts, body))
 		}
-		return out, nil
+		return union(parts...), nil
 	case kindIterate:
 		return g.iterateFlag(n, b, x)
 	case kindUnknown:
@@ -1127,14 +1157,15 @@ func (g *gen) anyKid(n *node, b, x string, negate bool) (dnf, error) {
 	}
 	name := n.id + "_any_" + b + x
 	if _, ok := g.anyBodies[name]; !ok {
-		body := dnfFalse
-		for _, k := range n.kids {
+		ds := make([]dnf, len(n.kids))
+		for i, k := range n.kids {
 			d, err := g.flag(k, b, x)
 			if err != nil {
 				return nil, err
 			}
-			body = union(body, d)
+			ds[i] = d
 		}
+		body := union(ds...)
 		g.rule(name, body)
 		g.anyBodies[name] = body
 	}

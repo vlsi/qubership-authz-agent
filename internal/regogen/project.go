@@ -456,6 +456,17 @@ func strsTerm(ss []string) *ast.Term {
 	return ast.ArrayTerm(ts...)
 }
 
+// keysTerm is the term of a list the module only tests membership in or
+// iterates, ks, ea, eb, or sb: a Rego set, so that x in it costs one lookup
+// and not a scan of the list.
+func keysTerm(ss []string) *ast.Term {
+	ts := make([]*ast.Term, len(ss))
+	for i, s := range ss {
+		ts[i] = ast.StringTerm(s)
+	}
+	return ast.SetTerm(ts...)
+}
+
 func setsTerm(sets [][]string) *ast.Term {
 	ts := make([]*ast.Term, len(sets))
 	for i, s := range sets {
@@ -473,7 +484,7 @@ func (r Record) term() *ast.Term {
 		o.Insert(strTerm("k"), strTerm(*r.K))
 	}
 	if r.KS != nil {
-		o.Insert(strTerm("ks"), strsTerm(r.KS))
+		o.Insert(strTerm("ks"), keysTerm(r.KS))
 	}
 	if r.Raw != nil {
 		o.Insert(strTerm("raw"), strTerm(*r.Raw))
@@ -491,7 +502,7 @@ func (r Record) term() *ast.Term {
 		o.Insert(strTerm("ln"), ast.IntNumberTerm(*r.Len))
 	}
 	if r.EA != nil {
-		ea := strsTerm(r.EA)
+		ea := keysTerm(r.EA)
 		o.Insert(strTerm("ea"), ea)
 		o.Insert(strTerm("eb"), r.ebTerm(ea))
 	}
@@ -500,7 +511,7 @@ func (r Record) term() *ast.Term {
 	}
 	if r.SA != nil {
 		o.Insert(strTerm("sa"), setsTerm(r.SA))
-		o.Insert(strTerm("sb"), strsTerm(r.SB))
+		o.Insert(strTerm("sb"), keysTerm(r.SB))
 	}
 	return ast.NewTerm(o)
 }
@@ -682,7 +693,7 @@ func (rec Record) ebTerm(ea *ast.Term) *ast.Term {
 	if len(rec.EB) == len(rec.EA) && (len(rec.EA) == 0 || &rec.EB[0] == &rec.EA[0]) {
 		return ea
 	}
-	return strsTerm(rec.EB)
+	return keysTerm(rec.EB)
 }
 
 // fields gives put each entry of the record in the maps of [fieldMaps] that
@@ -698,7 +709,7 @@ func (rec Record) fields(emit fieldSet, put func(field string, v *ast.Term)) {
 		put("k", strTerm(*rec.K))
 	}
 	if rec.KS != nil && emit.has("ks") {
-		put("ks", strsTerm(rec.KS))
+		put("ks", keysTerm(rec.KS))
 	}
 	if rec.Raw != nil && emit.has("raw") {
 		put("raw", strTerm(*rec.Raw))
@@ -716,7 +727,7 @@ func (rec Record) fields(emit fieldSet, put func(field string, v *ast.Term)) {
 		put("ln", ast.IntNumberTerm(*rec.Len))
 	}
 	if rec.EA != nil && emit.has("ea", "eb") {
-		ea := strsTerm(rec.EA)
+		ea := keysTerm(rec.EA)
 		if emit.has("ea") {
 			put("ea", ea)
 		}
@@ -732,7 +743,7 @@ func (rec Record) fields(emit fieldSet, put func(field string, v *ast.Term)) {
 			put("sa", setsTerm(rec.SA))
 		}
 		if emit.has("sb") {
-			put("sb", strsTerm(rec.SB))
+			put("sb", keysTerm(rec.SB))
 		}
 	}
 	if rec.Segs != nil {

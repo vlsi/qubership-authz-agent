@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"maps"
+	"math"
 	"net/http"
 	"reflect"
 	"regexp"
@@ -132,6 +133,14 @@ func evalRule(t *testing.T, m *Module, req Request, rule string) any {
 	return evalInput(t, m, in, rule)
 }
 
+// lastQuery is the query evalInput prepared last, so that a test that
+// evaluates one module many times prepares it once.
+var lastQuery struct {
+	sync.Mutex
+	query, text string
+	pq          rego.PreparedEvalQuery
+}
+
 // evalInput is evalRule on the input in.
 func evalInput(t *testing.T, m *Module, in *Input, rule string) any {
 	t.Helper()
@@ -139,11 +148,20 @@ func evalInput(t *testing.T, m *Module, in *Input, rule string) any {
 	if rule == "decision" || rule == "maybe" {
 		pkg, text = pkg+"_decision", m.DecisionText
 	}
-	pq, err := rego.New(append([]func(*rego.Rego){rego.Query("data." + pkg + "." + rule),
-		rego.Module("gen.rego", text)}, Builtins()...)...).PrepareForEval(context.Background())
-	if err != nil {
-		t.Fatalf("PrepareForEval: %v\n%s", err, text)
+	query := "data." + pkg + "." + rule
+	lastQuery.Lock()
+	pq := lastQuery.pq
+	if lastQuery.query != query || lastQuery.text != text {
+		var err error
+		pq, err = rego.New(append([]func(*rego.Rego){rego.Query(query),
+			rego.Module("gen.rego", text)}, Builtins()...)...).PrepareForEval(context.Background())
+		if err != nil {
+			lastQuery.Unlock()
+			t.Fatalf("PrepareForEval: %v\n%s", err, text)
+		}
+		lastQuery.query, lastQuery.text, lastQuery.pq = query, text, pq
 	}
+	lastQuery.Unlock()
 	rs, err := pq.Eval(in.Context(replayContext(t, in)), rego.EvalParsedInput(in.Value()))
 	if err != nil {
 		t.Fatalf("Eval: %v", err)
@@ -1392,6 +1410,36 @@ func TestASubjectGroupComparesSubsets(t *testing.T) {
 			if got := leafOutcome(t, tc.condition, opt, values); got != tc.want {
 				t.Errorf("%s with subject.permissions = %s, subject.roles = %s is %s, want %s", tc.condition, tc.perms,
 					tc.roles, got, tc.want)
+			}
+		})
+	}
+}
+
+// Go compares two subject lists through a set of the right one when it holds
+// more than eight elements: IS SUBSET by tokens and CONTAINS ANY by keys.
+// IS SUBSET looks its tokens up in a set of its own, apart from the set of
+// keys that CONTAINS ANY builds of the same roles.
+func TestASubjectGroupComparesTwoLongLists(t *testing.T) {
+	opt := DefaultOptions()
+	opt.Groups = true
+	const roles = `["x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "X9", "y"]`
+	for _, tc := range []struct {
+		name, condition, perms, want string
+	}{
+		{"every element in the roles", "subject.permissions IS SUBSET subject.roles", `["y", "x8"]`, "T"},
+		{"an element not in the roles", "subject.permissions IS SUBSET subject.roles", `["y", "z"]`, "F"},
+		{"an element in the roles in another case", "subject.permissions IS SUBSET subject.roles", `["x9"]`, "F"},
+		{"a key and a subset in the same roles", "subject.roles CONTAINS ANY 'x9', 'r1', 'r2', 'r3', 'r4', 'r5' AND subject.permissions IS SUBSET subject.roles",
+			`["y"]`, "T"},
+		{"one element in the roles", "subject.permissions CONTAINS ANY subject.roles", `["z", "y"]`, "T"},
+		{"no element in the roles", "subject.permissions CONTAINS ANY subject.roles", `["z"]`, "F"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			values := map[string]Resolved{`["subj","permissions"]`: resolved(t, "VALUE", tc.perms),
+				`["subj","roles"]`: resolved(t, "VALUE", roles)}
+			if got := leafOutcome(t, tc.condition, opt, values); got != tc.want {
+				t.Errorf("%s with subject.permissions = %s, subject.roles = %s is %s, want %s", tc.condition, tc.perms,
+					roles, got, tc.want)
 			}
 		})
 	}
@@ -3011,4 +3059,120 @@ func TestASubjectGroupReadsTheFieldsItsRecordsHold(t *testing.T) {
 			}
 		}
 	}
+}
+
+// A condition of more factors than productAll multiplies in order decides as
+// its atoms do, on the true and the false rail, with and without subject
+// groups: an AND of 40 atoms is true when every atom is and false when any
+// one is false, and an OR is false when every atom is and true when any one
+// is true.
+func TestAWideConditionDecidesAsItsAtoms(t *testing.T) {
+	const n = 40
+	for _, tc := range []struct {
+		name, op string
+		atom     func(i int) string
+		and      bool
+	}{
+		{"resource atoms joined by AND", " AND ", func(i int) string { return fmt.Sprintf("resource.a%d != 'x'", i) }, true},
+		{"resource atoms joined by OR", " OR ", func(i int) string { return fmt.Sprintf("resource.a%d == 'x'", i) }, false},
+		{"subject atoms joined by AND", " AND ", func(i int) string { return fmt.Sprintf("subject.roles CONTAINS 'r%d'", i) }, true},
+		{"subject atoms joined by OR", " OR ", func(i int) string { return fmt.Sprintf("subject.roles CONTAINS 'r%d'", i) }, false},
+	} {
+		atoms := make([]string, n)
+		for i := range atoms {
+			atoms[i] = tc.atom(i)
+		}
+		condition := strings.Join(atoms, tc.op)
+		for _, groups := range []bool{false, true} {
+			opt := DefaultOptions()
+			opt.Groups = groups
+			for _, rail := range []struct{ alg, effect string }{{"DENY_UNLESS_PERMIT", "ALLOW"}, {"PERMIT_UNLESS_DENY", "DENY"}} {
+				m, err := Generate(tenantWithSet(t, rail.alg, rail.effect, condition), table(t), opt)
+				if err != nil {
+					t.Fatalf("Generate: %v", err)
+				}
+				// odd is the one atom whose value differs from the others: false
+				// in an AND, true in an OR; -1 for none.
+				for odd := -1; odd < n; odd++ {
+					var members, roles []string
+					for i := range n {
+						holds := (i == odd) != tc.and
+						v := "x"
+						if holds == tc.and {
+							v = "y"
+						}
+						members = append(members, fmt.Sprintf(`"a%d": %q`, i, v))
+						if holds {
+							roles = append(roles, fmt.Sprintf(`"r%d"`, i))
+						}
+					}
+					res, err := jsonvalue.Decode([]byte("{" + strings.Join(members, ", ") + "}"))
+					if err != nil {
+						t.Fatalf("Decode: %v", err)
+					}
+					req := Request{Body: Body{Operation: "read", ResourceType: "doc", Resource: res, HasResource: true},
+						Values: map[string]Resolved{}}
+					m.Resolve(req.Body, req.Values)
+					req.Values[`["subj","roles"]`] = resolved(t, "VALUE", "["+strings.Join(roles, ", ")+"]")
+					holds := (odd < 0) == tc.and
+					if want := holds == (rail.effect == "ALLOW"); evalModule(t, m, req) != want {
+						t.Errorf("%s, groups %v, %s: allow = %v with atom %d odd, want %v",
+							tc.name, groups, rail.alg, !want, odd, want)
+					}
+				}
+			}
+		}
+	}
+}
+
+// agentOptions returns the options the agent generates a tenant's module with
+// (snapshot.New in components/authz-agent).
+func agentOptions() Options {
+	opt := DefaultOptions()
+	opt.Groups, opt.Decision = true, true
+	return opt
+}
+
+// An AND of up to 16 atoms, which productAll multiplies in order, generates
+// the module text of a product taken wholly in order. Halving such a list
+// turns other partial products into helper rules, which decide the same and
+// change the text of modules generated from real policy sets.
+func TestANarrowConditionKeepsTheTextOfAnInOrderProduct(t *testing.T) {
+	limit := sequentialFactors
+	t.Cleanup(func() { sequentialFactors = limit })
+	for n := 2; n <= 16; n++ {
+		atoms := make([]string, n)
+		for i := range atoms {
+			atoms[i] = fmt.Sprintf("resource.a%d != 'x'", i)
+		}
+		ts := tenantWithSet(t, "DENY_UNLESS_PERMIT", "ALLOW", strings.Join(atoms, " AND "))
+		for _, opt := range []Options{DefaultOptions(), agentOptions()} {
+			generate := func(factors int) *Module {
+				sequentialFactors = factors
+				m, err := Generate(ts, table(t), opt)
+				if err != nil {
+					t.Fatalf("Generate: %v", err)
+				}
+				return m
+			}
+			got, want := generate(limit), generate(math.MaxInt)
+			gotLines := strings.Split(got.Text+got.DecisionText, "\n")
+			wantLines := strings.Split(want.Text+want.DecisionText, "\n")
+			for i := range max(len(gotLines), len(wantLines)) {
+				if g, w := line(gotLines, i), line(wantLines, i); g != w {
+					t.Errorf("an AND of %d atoms, groups %v: line %d of the module text is %q, while an in-order product has %q",
+						n, opt.Groups, i+1, g, w)
+					break
+				}
+			}
+		}
+	}
+}
+
+// line returns lines[i], or "" past the end.
+func line(lines []string, i int) string {
+	if i < len(lines) {
+		return lines[i]
+	}
+	return ""
 }

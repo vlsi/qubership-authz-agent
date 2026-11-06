@@ -35,7 +35,7 @@ type test struct {
 	ref2 string
 	// field and field2 name the list of the record of ref and of ref2 that
 	// has, nothas, none, overlap, and disjoint read: ks when empty, or ea or
-	// eb.
+	// eb; field2 is sb for the right of IS SUBSET.
 	field, field2 string
 	// num is the literal number rel compares with.
 	num *jsonvalue.Decimal
@@ -43,10 +43,10 @@ type test struct {
 	// SUBSET.
 	sets [][]string
 	// ri and ri2 number ref and ref2 among the references of the module's
-	// groups, -1 for none and for sroles, and slot numbers the list of ref
-	// that field names (listSlot). groupIndex sets them for the tests of the
-	// factors it holds.
-	ri, ri2, slot int
+	// groups, -1 for none and for sroles, and slot and slot2 number the
+	// lists of ref and ref2 that field and field2 name (listSlot).
+	// groupIndex sets them for the tests of the factors it holds.
+	ri, ri2, slot, slot2 int
 }
 
 // Group is a subject group: a conjunction of factors, each a disjunction of
@@ -85,6 +85,7 @@ func (g *gen) group(factors ...dnf) dnf {
 		d   dnf
 	}
 	var fs []f
+	seen := map[string]bool{}
 	for _, d := range factors {
 		if d.isFalse() {
 			return dnfFalse
@@ -93,7 +94,8 @@ func (g *gen) group(factors ...dnf) dnf {
 			continue
 		}
 		k := d.key()
-		if !slices.ContainsFunc(fs, func(x f) bool { return x.key == k }) {
+		if !seen[k] {
+			seen[k] = true
 			fs = append(fs, f{k, d})
 		}
 	}
@@ -149,8 +151,7 @@ func (l leafRails) grouped() bool {
 // groupedT is the true rail of one disjunct with its subject-only leaves, and
 // subj, in one group.
 func (g *gen) groupedT(grp []leafRails, subj dnf) dnf {
-	x := dnfTrue
-	factors := []dnf{}
+	factors, rest := []dnf{}, []dnf{}
 	if subj != nil {
 		factors = append(factors, subj)
 	}
@@ -158,28 +159,27 @@ func (g *gen) groupedT(grp []leafRails, subj dnf) dnf {
 		if l.grouped() {
 			factors = append(factors, l.t)
 		} else {
-			x = g.product(x, l.t)
+			rest = append(rest, l.t)
 		}
 	}
+	x := g.productAll(rest)
 	return g.product(g.group(factors...), x)
 }
 
 // groupedF is the union of the false rails of one disjunct's leaves, the
 // subject-only ones in one group.
 func (g *gen) groupedF(grp []leafRails) dnf {
-	subj := dnfFalse
-	out := dnfFalse
-	any := false
+	var subj, rest []dnf
 	for _, l := range grp {
 		if l.grouped() {
-			subj = union(subj, l.f)
-			any = true
+			subj = append(subj, l.f)
 		} else {
-			out = union(out, l.f)
+			rest = append(rest, l.f)
 		}
 	}
-	if any {
-		out = union(g.group(subj), out)
+	out := union(rest...)
+	if subj != nil {
+		out = union(g.group(union(subj...)), out)
 	}
 	return out
 }
@@ -193,11 +193,11 @@ func (c *cond) tWithSubject(subj dnf) dnf {
 		}
 		return dnfFalse
 	}
-	out := dnfFalse
-	for _, grp := range c.groups {
-		out = union(out, c.g.groupedT(grp, subj))
+	ts := make([]dnf, len(c.groups))
+	for i, grp := range c.groups {
+		ts[i] = c.g.groupedT(grp, subj)
 	}
-	return out
+	return union(ts...)
 }
 
 // EvalGroups returns the IDs of the module's groups the input satisfies.
@@ -326,7 +326,7 @@ func (m *Module) groupIndex() *groupIndex {
 					for _, c := range f {
 						for _, t := range c {
 							t.ri, t.ri2 = refID(t.ref), refID(t.ref2)
-							t.slot = listSlot(t.ri, t.field)
+							t.slot, t.slot2 = listSlot(t.ri, t.field), listSlot(t.ri2, t.field2)
 						}
 						for _, t := range c {
 							if k, ok := t.key(); ok {
@@ -387,7 +387,7 @@ func (m *Module) groupIndex() *groupIndex {
 		ix.pool.New = func() any {
 			return &groupEval{seen: make([]bool, len(ix.ids)), factors: make([]int8, len(ix.factors)),
 				recs: make([]Record, len(ix.refs)), loaded: make([]int8, len(ix.refs)),
-				sets: make([]map[string]struct{}, 3*len(ix.refs)+1), cands: make([][]int, len(ix.factors))}
+				sets: make([]map[string]struct{}, 4*len(ix.refs)+1), cands: make([][]int, len(ix.factors))}
 		}
 		m.ix = ix
 	})
@@ -499,11 +499,13 @@ func listSlot(ri int, field string) int {
 	case ri < 0:
 		return 0
 	case field == "ea":
-		return 3*ri + 2
+		return 4*ri + 2
 	case field == "eb":
-		return 3*ri + 3
+		return 4*ri + 3
+	case field == "sb":
+		return 4*ri + 4
 	}
-	return 3*ri + 1
+	return 4*ri + 1
 }
 
 func (e *groupEval) groupHolds(fs []int) bool {
@@ -610,16 +612,16 @@ func (t *test) holds(e *groupEval) bool {
 		case "neref":
 			return k != nil && k2 != nil && *k != *k2
 		case "inref":
-			return k != nil && ks2 != nil && slices.Contains(ks2, *k)
+			return k != nil && ks2 != nil && e.contains(t.slot2, ks2, *k)
 		default:
-			return k == nil || ks2 == nil || !slices.Contains(ks2, *k)
+			return k == nil || ks2 == nil || !e.contains(t.slot2, ks2, *k)
 		}
 	case "overlap":
 		ks2, _ := in2()
-		return ks != nil && ks2 != nil && slices.ContainsFunc(ks, func(x string) bool { return slices.Contains(ks2, x) })
+		return ks != nil && ks2 != nil && slices.ContainsFunc(ks, func(x string) bool { return e.contains(t.slot2, ks2, x) })
 	case "disjoint":
 		ks2, _ := in2()
-		return ks != nil && !(ks2 != nil && slices.ContainsFunc(ks, func(x string) bool { return slices.Contains(ks2, x) }))
+		return ks != nil && !(ks2 != nil && slices.ContainsFunc(ks, func(x string) bool { return e.contains(t.slot2, ks2, x) }))
 	}
 	panic("unknown test " + t.kind)
 }
