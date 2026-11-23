@@ -203,11 +203,11 @@ provider would trust a single realm (R3). A provider file written by hand outsid
 Deriving both addresses from `IDENTITY_PROVIDER_URL` means that a Keycloak moved to another host with the same paths
 needs one value (R3, R4). ADR-0104 R19 compares `iss` byte for byte, and a trailing `/` in `IDENTITY_PROVIDER_URL`
 would put `//` into `issuer.value` and give every token `TOKEN_ISSUER_UNKNOWN`, so the chart drops it (R4). An empty
-base address would give addresses that ADR-0104 R9 refuses, so the render fails first and names the value to set (R4).
+base address would give addresses that ADR-0104 R6 refuses, so the render fails first and names the value to set (R4).
 For a Keycloak whose addresses have no `/auth`, the values set `issuerPattern` and `jwksUri` instead (R3, R11). An empty
 `issuerPattern` means that the chart derives it (R3). An operator writes `issuerPattern` from the `iss` of the tokens,
 so the values schema checks its `{realm}`, and a value copied from one token with the realm name in place of `{realm}`
-fails at the install rather than stopping the start under ADR-0104 R9 (R8).
+fails at the install rather than stopping the start under ADR-0104 R6 (R8).
 
 `cloud-common` is the platform's realm for M2M clients, so a Pod does not become ready before that realm's keys are
 loaded. The agent holds no realm name of its own (ADR-0104 R13), so the values supply this one (R7).
@@ -246,7 +246,7 @@ chart writes from `trustedProviders`.
 - **A2. Keep a free list of providers in the values, as `AUTHZ_TRUSTED_PROVIDERS` is, that replaces the providers the
   chart writes.** Rejected by R7 and R10: the platform needs only the two providers that the block names, with the
   members that R3 and R5 fix, and a free list would carry the whole format of the provider files into the values, where
-  only the start of the agent checks it (ADR-0104 R6 to R18).
+  only the start of the agent checks it (ADR-0104 R3, R6, and R12 to R18).
 - **A3. Set `audience` in the values.** Rejected by R7: each provider has one `audience` that works in this stage. A
   later stage that checks the `aud` of Keycloak tokens adds the setting.
 - **A4. Write the provider `identity-provider` as an `exact` provider when `issuerPattern` holds no `{realm}`.**
@@ -288,7 +288,7 @@ Negative:
   Keycloak tokens. Each needs a change of the chart, or a provider file written by hand outside the chart (R3, R7).
 - No rule requires the values schema to check a value that the chart writes into a member of a provider, except the
   `{realm}` of `issuerPattern` (R8). A value that breaks another condition of ADR-0104 can therefore pass the values
-  schema and stop the start (ADR-0104 R9). Two such values are a `jwksUri` of the provider `identity-provider` without
+  schema and stop the start (ADR-0104 R6). Two such values are a `jwksUri` of the provider `identity-provider` without
   `{realm}`, and an `issuerPattern` whose `{realm}` fills only part of a path segment, such as `t-{realm}`.
 - On a cluster whose API server has an https issuer other than the default of R7, as a managed cluster often does,
   every token that the API server signs gets `TOKEN_ISSUER_UNKNOWN` in a ready Pod in `hybrid` or `k8s`, until
