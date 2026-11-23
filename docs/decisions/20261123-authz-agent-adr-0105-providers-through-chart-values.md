@@ -23,7 +23,8 @@ Where a statement of ADR-0091 or ADR-0094 disagrees with this record, this recor
 edits that bring those records in line with this one.
 
 - [authz-agent-ADR-0091: Verify tokens before policy evaluation against the keys of trusted issuers](20261029-authz-agent-adr-0091-verify-tokens-before-policy-evaluation.md):
-  the settings of the agent that the chart sets, and those that go away (ADR-0091 R64).
+  the settings of the agent that go away and that the values schema refuses (ADR-0091 R64, R65), and
+  `IDENTITY_PROVIDER_URL`, which the agent does not read (ADR-0091 R78).
 - [authz-agent-ADR-0092: Accept any verified token in Authorization and limit a caller that is not M2M to its tenant](20261029-authz-agent-adr-0092-tokens-in-authorization.md):
   the tokens that the agent accepts in every installation (ADR-0092 R11), and `M2M_AUTH_MODE`, which the agent does
   not read (ADR-0092 R15), as #345 rewrites them.
@@ -40,12 +41,14 @@ edits that bring those records in line with this one.
 ADR-0104 has the agent read two providers, `identity-provider` for the platform's Keycloak and `kubernetes` for the API
 server of the cluster, from the provider files in the directory `/etc/authz/providers`. The Helm chart in
 `helm-templates/authz-agent` deploys the agent on the platform, whose deployer passes nested values to a chart. The
-deployer also passes `M2M_AUTH_MODE` to every application it deploys, and the agent does not read it (ADR-0092 R15).
+values are what an operator of an installation sets, and the deployer passes them again at every upgrade, so a key
+that a later chart renames or removes changes the configuration of every installation that set it. The deployer also
+passes `M2M_AUTH_MODE` to every application it deploys, and the agent does not read it (ADR-0092 R15).
 
 The values of the chart carry `IDENTITY_PROVIDER_URL`, the address of the platform's Keycloak without a realm,
 `http://identity-provider:8080` by default. They also carry `DEPLOYMENT_SESSION_ID`, which the deployer sets for each
-install session, and which the chart puts into a label of its ConfigMap but not of the Pod template. The root of the
-values schema accepts every key that it does not name (`additionalProperties: true`).
+install session, and which the chart puts into a label of its ConfigMap but not of the Pod template. The values schema
+is JSON Schema draft-07, and its root accepts every key that it does not name (`additionalProperties: true`).
 
 kubeadm gives the API server the issuer `https://kubernetes.default.svc.cluster.local` in the static Pod manifest that
 it writes, unless the cluster configuration sets another one. The API server serves its keys only when its issuer is an
@@ -54,7 +57,7 @@ https URL (`pkg/serviceaccount/openidmetadata.go` and `pkg/controlplane` of Kube
 ## Decision
 
 We will have the chart write the provider files of ADR-0104, with both providers in every installation, from the
-values block `trustedProviders` and from `IDENTITY_PROVIDER_URL`.
+values block `trustedProviders` and from `IDENTITY_PROVIDER_URL`, and mount them whole at the provider directory.
 
 ### Terms
 
@@ -64,7 +67,6 @@ values block `trustedProviders` and from `IDENTITY_PROVIDER_URL`.
   over it.
 - **Values schema**: `helm-templates/authz-agent/values.schema.json`.
 - **Base address**: the address that R4 makes of `IDENTITY_PROVIDER_URL`.
-- **Stops the start**: as ADR-0091 defines it.
 
 ### Rules
 
@@ -72,6 +74,51 @@ values block `trustedProviders` and from `IDENTITY_PROVIDER_URL`.
 
 - **R1** (`chart`). The chart does not pass `M2M_AUTH_MODE` to the agent's container, and no value of `M2M_AUTH_MODE`
   in the values changes what the chart renders. The values schema accepts that key with any value.
+
+#### The values
+
+- **R7** (`chart`). The values schema validates `trustedProviders` with this JSON Schema, and `values.yaml` sets the
+  values that it names as `default`. Values that it does not accept fail the install.
+
+  ```json
+  {
+    "type": "object",
+    "properties": {
+      "identity-provider": {
+        "type": "object",
+        "properties": {
+          "issuerPattern": {
+            "description": "Empty: derived under R3. Otherwise {realm} once, in place of the realm name.",
+            "type": "string",
+            "pattern": "^([^{}]*\\{realm\\}[^{}]*)?$",
+            "default": ""
+          },
+          "jwksUri": {
+            "description": "Empty: derived under R3.",
+            "type": "string",
+            "default": ""
+          },
+          "readinessRealms": {
+            "type": "array",
+            "items": {"type": "string"},
+            "default": ["cloud-common"]
+          }
+        },
+        "additionalProperties": false
+      },
+      "kubernetes": {
+        "type": "object",
+        "properties": {
+          "issuer": {"type": "string", "default": "https://kubernetes.default.svc.cluster.local"},
+          "jwksUri": {"type": "string", "default": "https://kubernetes.default.svc/openid/v1/jwks"},
+          "jwksAuthentication": {"enum": ["service-account", "none"], "default": "service-account"}
+        },
+        "additionalProperties": false
+      }
+    },
+    "additionalProperties": false
+  }
+  ```
 
 #### The provider files
 
@@ -85,8 +132,7 @@ values block `trustedProviders` and from `IDENTITY_PROVIDER_URL`.
   - `readinessRealms`: `trustedProviders.identity-provider.readinessRealms`;
   - `audience`: `{"mode": "skipValidation"}`.
 - **R4** (`chart`). The base address is `IDENTITY_PROVIDER_URL` of the values, without its last character when that
-  character is `/`. When R3 derives a member from an empty base address, the render of the chart fails with an error
-  that names `IDENTITY_PROVIDER_URL`.
+  character is `/`.
 - **R5** (`chart`). The chart writes the provider `kubernetes` as an `exact` provider with these members:
   - `issuer.value`: `trustedProviders.kubernetes.issuer`;
   - `jwksUri`: `trustedProviders.kubernetes.jwksUri`;
@@ -97,31 +143,6 @@ values block `trustedProviders` and from `IDENTITY_PROVIDER_URL`.
   `jwksBearerTokenFile` of the provider `kubernetes`. In every other case the chart mounts no service account token for
   the audiences of the API server, and writes no `jwksBearerTokenFile`.
 
-#### The values
-
-- **R7** (`chart`). The values describe the providers in the block `trustedProviders`, whose keys are the `id` of each
-  provider. The block holds only the keys that this table lists, with the defaults that `values.yaml` sets, and the
-  values schema refuses any other key under `trustedProviders`:
-
-  | Key | Default |
-  | --- | --- |
-  | `trustedProviders.identity-provider.issuerPattern` | `""` |
-  | `trustedProviders.identity-provider.jwksUri` | `""` |
-  | `trustedProviders.identity-provider.readinessRealms` | `[cloud-common]` |
-  | `trustedProviders.kubernetes.issuer` | `https://kubernetes.default.svc.cluster.local` |
-  | `trustedProviders.kubernetes.jwksUri` | `https://kubernetes.default.svc/openid/v1/jwks` |
-  | `trustedProviders.kubernetes.jwksAuthentication` | `service-account` |
-
-- **R8** (`chart`). The values schema accepts an empty `trustedProviders.identity-provider.issuerPattern`, and refuses
-  a non-empty one that does not hold `{realm}` exactly once.
-- **R9** (`chart`). The values schema refuses a `trustedProviders.kubernetes.jwksAuthentication` other than
-  `service-account` and `none`.
-- **R10** (`chart`). The values schema names each key of the values that ADR-0091 R64 removes, and refuses values that
-  hold one of them, with an error that names the key.
-- **R11** (`chart`). Comments in `values.yaml` inside the block `trustedProviders` show the `issuer.value` and the
-  `jwksUri` that R3 derives from the default `IDENTITY_PROVIDER_URL`, and the values for a Keycloak whose addresses have
-  no `/auth`.
-
 #### The mount
 
 - **R12** (`chart`). The chart writes its provider files into one ConfigMap, and mounts that ConfigMap whole at the
@@ -130,59 +151,22 @@ values block `trustedProviders` and from `IDENTITY_PROVIDER_URL`.
   change of a provider file changes the Pod template, and a change of that ConfigMap that leaves every provider file
   as it was, such as a change of its labels, does not.
 
-#### The agent
-
-- **R14** (`keys`, `startup`). The agent does not read `IDENTITY_PROVIDER_URL`.
-
-### Implementation notes
-
-Adds no requirement. The values that R7 lists, as `values.yaml` sets them:
-
-```yaml
-IDENTITY_PROVIDER_URL: "http://identity-provider:8080"
-
-trustedProviders:
-  identity-provider:
-    # Empty: derived from IDENTITY_PROVIDER_URL as http://identity-provider:8080/auth/realms/{realm}
-    # For a Keycloak without /auth: http://keycloak:8080/realms/{realm}
-    issuerPattern: ""
-    # Empty: derived from IDENTITY_PROVIDER_URL as
-    # http://identity-provider:8080/auth/realms/{realm}/protocol/openid-connect/certs
-    # For a Keycloak without /auth: http://keycloak:8080/realms/{realm}/protocol/openid-connect/certs
-    jwksUri: ""
-    readinessRealms: [cloud-common]
-  kubernetes:
-    issuer: "https://kubernetes.default.svc.cluster.local"
-    jwksUri: "https://kubernetes.default.svc/openid/v1/jwks"
-    jwksAuthentication: service-account
-```
-
-The ConfigMap holds `identity-provider.json` and `kubernetes.json`, in the format of the examples of ADR-0104. One
-helper template renders the data of the ConfigMap, and the Pod template takes its checksum, as in
-`checksum/providers: {{ include "authz-agent.providerFiles" . | sha256sum }}`, rather than the checksum of the file
-`configmap.yaml`, which also renders the labels and the ServiceAccount.
-
-The token for the API server is a `serviceAccountToken` source without `audience`, which the kubelet requests for the
-audiences of the API server, at `kubernetes/token` of the projected volume that the chart mounts at
-`/var/run/secrets/tokens`. That volume holds the token for `netcracker` as well when ADR-0096 chooses it, so
-`jwksBearerTokenFile` is `/var/run/secrets/tokens/kubernetes/token`.
-
-In the values schema, a property whose schema is `false` refuses its key, and Helm names the path of the key in the
-error, such as `at '/AUTHZ_IDP_REALMS': false schema` in Helm 4.3. Helm validates with the regular expressions of Go,
-which have no lookahead and whose `.` does not match a line break. The schema of R8 therefore accepts an empty value,
-or a non-empty one that matches `\{realm\}` and does not match `\{realm\}[\s\S]*\{realm\}`.
-
 ### Justification
 
-The agent accepts Keycloak tokens and Kubernetes tokens in every installation (ADR-0092 R11), so the chart writes both
-providers, and a Kubernetes token is verified wherever the chart deploys the agent (R2). The agent does not read
+The values are the interface of an installation, and a key that a later chart renames or removes changes every
+installation that set it. So this record decides the names, the nesting, and the defaults of the keys, and the members
+of a provider that the chart derives from those keys (R2 to R7). The templates that write the provider files are the
+chart's. The block is keyed by the `id` of each provider, so
+the values, the provider files, and the errors of ADR-0104 R18 name a provider in the same way. It holds only the two
+providers, because ADR-0104 R6 accepts no other `id`. The template reads only the keys it knows, so the schema refuses
+every other key, such as an `audience`, that an operator would otherwise set with no effect (R7).
+
+`Authorization` accepts a verified token of either kind (ADR-0092 R11), and a token that the API server signs is a
+Kubernetes token only where the provider files hold the provider `kubernetes` (ADR-0104 R22). The architect and the
+owner of the policy decision code chose to accept Kubernetes tokens wherever the chart deploys the agent, so the chart
+writes both providers (R2). The agent does not read
 `M2M_AUTH_MODE` (ADR-0092 R15), so the chart passes nothing of it to the agent, and the values schema accepts the key,
 because the platform's deployer passes it to every application (R1).
-
-The block is keyed by the `id` of each provider, so the values, the provider files, and the errors of ADR-0104 R18
-name a provider in the same way (R7). It holds only the two providers, because ADR-0104 R6 accepts no other `id`. The
-template reads only the keys it knows, so the schema refuses every other key, such as an `audience`, that an operator
-would otherwise set with no effect (R7).
 
 Each provider has one `audience` that works in this stage. The platform's Keycloak has no audience mapper that names the
 services of an installation, and those services request their service account tokens with the audience `netcracker`
@@ -194,12 +178,11 @@ provider would trust a single realm (R3). A provider file written by hand outsid
 
 Deriving both addresses from `IDENTITY_PROVIDER_URL` means that a Keycloak moved to another host with the same paths
 needs one value (R3, R4). ADR-0104 R19 compares `iss` byte for byte, and a trailing `/` in `IDENTITY_PROVIDER_URL`
-would put `//` into `issuer.value` and give every token `TOKEN_ISSUER_UNKNOWN`, so the chart drops it (R4). An empty
-base address would give addresses that ADR-0104 R6 refuses, so the render fails first and names the value to set (R4).
-For a Keycloak whose addresses have no `/auth`, the values set `issuerPattern` and `jwksUri` instead (R3, R11). An empty
-`issuerPattern` means that the chart derives it (R3). An operator writes `issuerPattern` from the `iss` of the tokens,
-so the values schema checks its `{realm}`, and a value copied from one token with the realm name in place of `{realm}`
-fails at the install rather than stopping the start under ADR-0104 R6 (R8).
+would put `//` into `issuer.value` and give every token `TOKEN_ISSUER_UNKNOWN`, so the chart drops it (R4). For a
+Keycloak whose addresses have no `/auth`, the values set `issuerPattern` and `jwksUri` instead (R3). An operator writes
+`issuerPattern` from the `iss` of the tokens, so the values schema checks its `{realm}`, and a value copied from one
+token with the realm name in place of `{realm}` fails at the install rather than stopping the start under ADR-0104 R6
+(R7).
 
 `cloud-common` is the platform's realm for M2M clients, so a Pod does not become ready before that realm's keys are
 loaded. The agent holds no realm name of its own (ADR-0104 R13), so the values supply this one (R7).
@@ -210,25 +193,15 @@ them there with a token for the API server (Context; ADR-0094 Context). A cluste
 a managed cluster with another https issuer, the values set `trustedProviders.kubernetes.issuer` and keep the in-cluster
 `jwksUri` (R7). A standard cluster refuses an anonymous request for its keys (ADR-0094 Context), so the chart mounts a
 token for the API server by default. `none` is for a cluster that serves its keys to an anonymous request, where the Pod
-then holds no credential for the API server (R6, R9). The token is mounted only with `service-account`, where the
+then holds no credential for the API server (R6, R7). The token is mounted only with `service-account`, where the
 requests of the provider `kubernetes` for its keys carry it (R6).
 
 Mounting the ConfigMap whole gives the provider directory exactly the files that the chart writes, and a provider file
-that a later chart adds or drops needs no change of the mounts (R12). ADR-0104 R2 reads through the
-links that such a mount creates (ADR-0104 Context). The agent reads the provider files only at start (ADR-0104 R5), so
-a changed provider file takes effect in a container only when the container starts again, and the checksum makes
-`helm upgrade` roll out new Pods (R13). The checksum covers the provider files alone, because `DEPLOYMENT_SESSION_ID`
-changes the labels of the ConfigMap at every install session, and a checksum of the whole object would restart the Pods
-at each of them (R13).
-
-The agent holds nothing specific to Keycloak (ADR-0104), so turning the platform's address of Keycloak into provider
-files is the chart's work, and a deployment without the chart writes the full addresses into its provider files (R14).
-
-The root of the values schema accepts keys it does not name, so a key that the chart no longer reads would pass with no
-error. Naming each one makes the schema refuse it at the install (R10). An installation that still lists its trusted
-realms in `AUTHZ_IDP_REALMS` then stops at the install rather than trusting every realm of the Keycloak with no sign of
-the change, and one that still sets `AUTHZ_TRUSTED_PROVIDERS` stops rather than running with the providers that the
-chart writes from `trustedProviders`.
+that a later chart adds or drops needs no change of the mounts (R12). ADR-0104 R2 reads through the links that such a
+mount creates (ADR-0104 Context). The agent reads the provider files only at start (ADR-0104 R5), so a changed provider
+file takes effect in a container only when the container starts again, and the checksum makes `helm upgrade` roll out
+new Pods (R13). The checksum covers the provider files alone, because `DEPLOYMENT_SESSION_ID` changes the labels of the
+ConfigMap at every install session, and a checksum of the whole object would restart the Pods at each of them (R13).
 
 ### Alternatives considered
 
@@ -236,35 +209,37 @@ chart writes from `trustedProviders`.
   `TRUSTED_PROVIDERS_KUBERNETES_ISSUER`.** Rejected by R7: the platform's deployer passes nested values, and a block
   keyed by the `id` names a provider as the provider files do.
 - **A2. Keep a free list of providers in the values, as `AUTHZ_TRUSTED_PROVIDERS` is, that replaces the providers the
-  chart writes.** Rejected by R7 and R10: the platform needs only the two providers that the block names, with the
-  members that R3 and R5 fix, and a free list would carry the whole format of the provider files into the values, where
-  only the start of the agent checks it (ADR-0104 R3, R6, and R12 to R18).
+  chart writes.** Rejected by R7: the platform needs only the two providers that the block names, with the members that
+  R3 and R5 fix, and a free list would carry the whole format of the provider files into the values, where only the
+  start of the agent checks it (ADR-0104 R3, R6, and R12 to R18).
 - **A3. Set `audience` in the values.** Rejected by R7: each provider has one `audience` that works in this stage. A
   later stage that checks the `aud` of Keycloak tokens adds the setting.
 - **A4. Write the provider `identity-provider` as an `exact` provider when `issuerPattern` holds no `{realm}`.**
-  Rejected by R3 and R8: the platform's Keycloak holds one realm per tenant, and an `exact` provider would trust one of
+  Rejected by R3 and R7: the platform's Keycloak holds one realm per tenant, and an `exact` provider would trust one of
   them.
-- **A5. Write the provider `kubernetes` only in the M2M modes `hybrid` and `k8s` of `M2M_AUTH_MODE`.** Rejected by
-  R2: the agent accepts Kubernetes tokens in every installation (ADR-0092 R11), and without the provider it would
-  refuse each of them with `TOKEN_ISSUER_UNKNOWN`. An earlier version of this record did so.
-- **A6. Pass `M2M_AUTH_MODE` to the agent, or refuse values that set it.** Rejected by R1: the agent does not read it
-  (ADR-0092 R15), and the platform's deployer passes it to every application, so a refusal would stop every install of
-  the chart on the platform.
-- **A7. Let the agent build the addresses of the Keycloak from `IDENTITY_PROVIDER_URL`.** Rejected by R14: the agent
-  would hold the paths of Keycloak, and a Keycloak without `/auth` would need a change of the agent.
 - **A8. Mount each provider file with `subPath`.** Rejected by R12: each provider file would need a mount of its own,
   so a file that a later chart adds or drops would change the mounts as well as the ConfigMap.
 - **A9. Take the checksum of the template file of the ConfigMap.** Rejected by R13: that file also renders the labels,
   and `DEPLOYMENT_SESSION_ID` would restart the Pods at every install session.
-- **A10. Mount the token for the API server whatever the cluster allows.** Rejected by R6 and R9: on a cluster that
+- **A10. Mount the token for the API server whatever the cluster allows.** Rejected by R6 and R7: on a cluster that
   serves its keys to an anonymous request, the Pod would hold a credential for the API server that no request needs.
   This reverses ADR-0094 R2.
 - **A11. Default `readinessRealms` to the realms of `AUTHZ_IDP_REALMS`: `cloud-common`, `default`, `cpq`, and
   `external`.** Rejected by R7: `default` is the display name of a tenant, not the name of a realm, most installations
   hold neither `cpq` nor `external`, and a name that the Keycloak does not hold keeps the Pod not ready.
 - **A12. Let a value under `trustedProviders.kubernetes` leave the provider `kubernetes` out.** Rejected by R2 and R7:
-  it would be one more value that no installation on Kubernetes needs, and an installation that set it would refuse
-  every Kubernetes token with `TOKEN_ISSUER_UNKNOWN`.
+  an installation that set it would refuse every token that the API server signs (ADR-0104 R21, R27), where the
+  architect and the owner of the policy decision code chose to accept Kubernetes tokens wherever the chart deploys the
+  agent. A cluster whose issuer is not an https URL, where such a value would let a Pod become ready, is a cost this
+  record accepts (Negative).
+- **A13. Write the provider `kubernetes` only in the M2M modes `hybrid` and `k8s` of `M2M_AUTH_MODE`.** Rejected by
+  R2: the M2M modes are dropped (ADR-0092 R15), and without the provider the agent would refuse every token that the
+  API server signs (ADR-0104 R21, R27). An earlier version of R2 did so, and its A5 rejected the provider in every
+  mode.
+- **A14. Pass `M2M_AUTH_MODE` to the agent, or refuse values that set it.** Rejected by R1: the agent does not read it
+  (ADR-0092 R15), and the platform's deployer passes it to every application, so a refusal would stop every install of
+  the chart on the platform. This reverses an earlier version of R1, which passed the mode, and its A6, which rejected
+  a mode that only the chart reads.
 
 ## Consequences
 
@@ -282,21 +257,26 @@ Negative:
   `issuerPattern` (R3).
 - Through the chart an installation cannot describe an `exact` provider `identity-provider` or a check of the `aud` of
   Keycloak tokens. Each needs a change of the chart, or a provider file written by hand outside the chart (R3, R7).
-- No rule requires the values schema to check a value that the chart writes into a member of a provider, except the
-  `{realm}` of `issuerPattern` (R8). A value that breaks another condition of ADR-0104 can therefore pass the values
+- The values schema checks only the type of each value that the chart writes into a member of a provider, and the
+  `{realm}` of `issuerPattern` (R7). A value that breaks another condition of ADR-0104 can therefore pass the values
   schema and stop the start (ADR-0104 R6). Two such values are a `jwksUri` of the provider `identity-provider` without
   `{realm}`, and an `issuerPattern` whose `{realm}` fills only part of a path segment, such as `t-{realm}`.
-- On a cluster whose API server has an https issuer other than the default of R7, as a managed cluster often does,
-  every token that the API server signs gets `TOKEN_ISSUER_UNKNOWN` in a ready Pod, until
-  `trustedProviders.kubernetes.issuer` names that issuer (R7; ADR-0104 R19, R21).
-- Every Pod that the chart deploys waits for the keys of the API server before it becomes ready (R2; ADR-0104 R25). On
-  a cluster whose API server has an issuer that is not an https URL, the API server serves no keys, so with the
-  in-cluster `jwksUri` of R7 no Pod becomes ready, and the values cannot leave the provider `kubernetes` out (Context;
-  ADR-0091 R19).
+- On a cluster whose API server has an https issuer other than the default of R7, as a managed cluster often does, every
+  token that the API server signs gets `TOKEN_ISSUER_UNKNOWN` in a ready Pod, until `trustedProviders.kubernetes.issuer`
+  names that issuer (R7; ADR-0104 R19, R21).
+- Every Pod that the chart deploys waits for the keys of the provider `kubernetes` before it becomes ready (R2;
+  ADR-0104 R25). With the in-cluster `jwksUri` of R7, its readiness depends on the API server and on the agent's trust
+  in the cluster CA, which the Follow-ups leave to a record of a private CA. On a cluster whose API server has an issuer
+  that is not an https URL, the API server serves no keys, so with that `jwksUri` no Pod becomes ready, and the values
+  cannot leave the provider `kubernetes` out (Context; ADR-0091 R19).
+- With the default `jwksAuthentication`, every Pod that the chart deploys holds a token for the API server, with the
+  access of the agent's service account to the API server (R6, R7). ADR-0104 R24 and ADR-0094 R10 and R28 limit where
+  that token goes.
 - With `jwksAuthentication` `none`, a Pod stays not ready on a cluster that refuses an anonymous request for its keys,
   as a standard cluster does (R6; ADR-0091 R19).
 - A list in `readinessRealms` replaces the default whole, so values that add a realm list `cloud-common` again (R7).
-- Values that still set a key of ADR-0091 R64 fail the validation of the install until the key is removed (R10).
+- Once ADR-0091 R64 lists the keys that the Follow-ups add to it, values that still set one of them, such as
+  `AUTHZ_TRUSTED_PROVIDERS`, fail the install until the key is removed (ADR-0091 R65).
 - An edit of the ConfigMap outside Helm changes no checksum, so it takes effect in a Pod only when the agent's
   container starts again for another reason, and the Pods of one Deployment can then read different provider files
   (R13; ADR-0104 R5).
@@ -311,5 +291,8 @@ Follow-ups:
 - ADR-0091 R64 adds `AUTHZ_TRUSTED_PROVIDERS_FILE`, `AUTHZ_TRUSTED_PROVIDERS`, and `AUTHZ_JWKS_HTTP_TIMEOUT` to the
   settings that go away. ADR-0091 and ADR-0094 drop the statements that this record replaces, and ADR-0104 cites R13
   of this record in place of ADR-0091 R13.
-- ADR-0101, which #235 proposes, cites R14 of this record in place of ADR-0091 R78.
 - A record of a private CA decides how the cluster CA, which ADR-0094 R2 mounts, reaches the agent.
+- The documentation page of the chart values, which #232 owes, describes what this record leaves to the chart: the
+  comments in `values.yaml`, the values that R3 derives from the default `IDENTITY_PROVIDER_URL` and the values for a
+  Keycloak without `/auth`, the error of the render on an empty `IDENTITY_PROVIDER_URL`, and the template that writes
+  the provider files and their checksum.
