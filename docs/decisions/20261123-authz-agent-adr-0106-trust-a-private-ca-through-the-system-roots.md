@@ -18,9 +18,14 @@ kichasov
 #### Related ADRs
 
 - [authz-agent-ADR-0091: Verify tokens before policy evaluation against the keys of trusted issuers](20261029-authz-agent-adr-0091-verify-tokens-before-policy-evaluation.md):
-  the requests to Keycloak, whose CA this record moves to the system roots.
+  the requests to Keycloak, whose CA this record moves to the system roots: ADR-0091 R2 and R72, which A1 reverses;
+  ADR-0091 R19, a required source of keys that keeps the agent not ready.
 - [authz-agent-ADR-0094: Accept Kubernetes service account tokens from the namespaces of the installation](20261029-authz-agent-adr-0094-kubernetes-service-account-tokens.md):
-  the requests to the API server, whose cluster CA this record moves to the system roots; ADR-0094 R31 stays.
+  the requests to the API server, whose cluster CA this record moves to the system roots: ADR-0094 R27, which A1
+  reverses; ADR-0094 R31 stays.
+- [authz-agent-ADR-0101: Run the agent in Docker without Kubernetes](https://github.com/Netcracker/qubership-authz-agent/pull/235),
+  proposed in #235: the Docker target; ADR-0101 R4, the restrictions on the agent's container there, under which R6
+  holds.
 
 ## Context
 
@@ -37,8 +42,8 @@ store. A CA it cannot write is left out, and only an `ERROR` line of the entrypo
 
 ## Decision
 
-We will verify every HTTPS request of the agent against the system roots alone, and the chart will put the cluster CA
-and the internal CA into `/tmp/cert`, where the entrypoint of the base image adds them to those roots.
+We will verify every HTTPS request of the agent against the system roots alone. On every target the agent's image adds
+the CAs under `/tmp/cert` to those roots, and the chart puts the cluster CA and the internal CA there.
 
 ### Terms
 
@@ -68,6 +73,13 @@ and the internal CA into `/tmp/cert`, where the entrypoint of the base image add
   applies, a key named `internal-tls-ca.crt`. A value of `CA_CERTIFICATES_SECRET` that names no Secret in the agent's
   namespace keeps the Pod from starting.
 - **R5** (`chart`). The chart adds no certificate to the system roots other than those of R2, R3, and R4.
+
+#### The image
+
+- **R6** (`image`). When a container of the agent's image starts as any uid in group 0, the system roots gain the PEM
+  certificates in the `.crt`, `.cer`, and `.pem` files under `/tmp/cert`, also with a read-only root file system and all
+  Linux capabilities dropped. Of two such files with the same name, in any directories under `/tmp/cert`, the system
+  roots gain the certificates of one.
 
 ### Implementation notes
 
@@ -103,9 +115,9 @@ showed that a later source takes the path of an earlier one.
 ```
 
 The entrypoint has to be able to write `/usr/local/share/ca-certificates` and `/etc/ssl/certs`, since a CA it cannot
-write fails R2, R3, or R4. A service-account volume at `/var/run/secrets/kubernetes.io/serviceaccount` would fail R4,
-because the entrypoint also reads that directory, and its `ca.crt` takes the place of a key `ca.crt` of the Secret of
-`CA_CERTIFICATES_SECRET`. The values comment on `CA_CERTIFICATES_SECRET` is the place to name the two keys that R4
+write fails R2, R3, R4, or R6. A service-account volume at `/var/run/secrets/kubernetes.io/serviceaccount` would fail
+R4, because the entrypoint also reads that directory, and its `ca.crt` takes the place of a key `ca.crt` of the Secret
+of `CA_CERTIFICATES_SECRET`. The values comment on `CA_CERTIFICATES_SECRET` is the place to name the two keys that R4
 leaves out, and the comments on `CA_CERTIFICATES_SECRET` and `INTERNAL_TLS_ENABLED` the place to say that a changed CA
 is trusted after the Pod restarts.
 
@@ -122,12 +134,16 @@ The kind e2e installs with `--wait`, and the provider `kubernetes` keeps the
 agent not ready until its keys load, so the install fails when the cluster CA is missing from the system roots. One
 run with the `kube-root-ca.crt` source removed shows that failure.
 
+The image meets R6 by running the agent behind the entrypoint of the base image (#250). On Kubernetes the kind e2e shows
+it, and on the Docker target the CI case of #239 that calls a server whose certificate a CA under `/tmp/cert` signed.
+
 ### Justification
 
-One set of CAs serves every request and every target, so the code holds no CA setting per request, and a PIP, the
-policy source, and tenant-manager trust a private CA the same way as Keycloak and the API server (R1). The platform's
-images take a private CA through `/tmp/cert`, and the Docker target uses the same directory (ADR-0101 R19 in
-[#235](https://github.com/Netcracker/qubership-authz-agent/pull/235)).
+One set of CAs serves every request and every target, so the code holds no CA setting per request, and a PIP, the policy
+source, and tenant-manager trust a private CA the same way as Keycloak and the API server (R1). The platform's images
+take a private CA through `/tmp/cert`, so the agent's image does the same on every target (R6). R6 holds under the
+restrictions that the chart and ADR-0101 R4 ([#235](https://github.com/Netcracker/qubership-authz-agent/pull/235)) place
+on the agent's container.
 
 The agent accepts M2M tokens from Kubernetes in every installation on Kubernetes, as agreed in the review of this
 record
@@ -174,17 +190,16 @@ Negative:
   the trust store at the start of the container, and the Go standard library loads the system roots once per process
   ([`root.go`](https://github.com/golang/go/blob/go1.27.4/src/crypto/x509/root.go#L36-L37)).
 - Nothing reports a key of the Secret of `CA_CERTIFICATES_SECRET` that R4 leaves out.
-- A CA that the entrypoint cannot write breaks R2, R3, or R4, and at start only the entrypoint's `ERROR` line reports
-  it. Later, requests to servers whose certificates that CA signed fail verification, and a required source of keys
-  keeps the Pod not ready (ADR-0091 R19).
+- A CA that the entrypoint cannot write breaks R2, R3, R4, or R6, and at start only the entrypoint's `ERROR` line
+  reports it. Later, requests to servers whose certificates that CA signed fail verification, and a required source of
+  keys keeps the agent not ready (ADR-0091 R19).
 
 Follow-ups:
 
-- ADR-0101 R19 in #235 loses its last sentence, on `keycloak.caFile`, and its entry for ADR-0091 R2 under Related
-  ADRs. #235 also adds the layers `image` and `docker` to the reading guide. An `ENV` in the image or a setting of the
-  Compose example can change the CAs a request trusts, and an image that does not run the base image's entrypoint
-  breaks R2 to R4. So whichever of #235 and this change merges second adds both tags to R1 and the tag `image` to R2 to
-  R4.
+- #235 adds the layers `image` and `docker` to the reading guide, and R6 names `image` already. An `ENV` in the image or
+  a setting of the Compose example can change the CAs a request trusts, and an image that does not run the base image's
+  entrypoint breaks R2 to R4 and R6. So whichever of #235 and this change merges second adds both tags to R1, the tag
+  `docker` to R6, and the tag `image` to R2 to R4, and links the two records to each other's files under Related ADRs.
 - The section on trusting a private CA that #250 adds to `components/authz-agent/README.md` names the three sources of
   R2 to R4.
 
