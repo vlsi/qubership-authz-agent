@@ -34,10 +34,11 @@ presents a certificate that the cluster CA signs. Under `INTERNAL_TLS_ENABLED`, 
 certificates that the internal CA signs.
 
 At every start of a container that runs it, the entrypoint of the base image `qubership-core-base` adds the PEM
-certificates in the `.crt`, `.cer`, and `.pem` files under `/tmp/cert` to the trust store of the container. It names
-each file it adds after the base name of the file it read, so two files with the same name leave one CA in the trust
-store. In the base image, uid 10001 and group 0 own `/usr/local/share/ca-certificates` and `/etc/ssl/certs` and can
-write to them
+certificates in the `.crt`, `.cer`, and `.pem` files under `/tmp/cert` to the trust store of the container. It writes
+each certificate of a file to a copy named after the base name of that file and the certificate's position in it, such
+as `ca_000.crt` and `ca_001.crt`, so of two files with the same name, the file it reads last replaces the copies of the
+other, up to the number of certificates it holds. In the base image, uid 10001 and group 0 own
+`/usr/local/share/ca-certificates` and `/etc/ssl/certs` and can write to them
 ([`core-alpine/Dockerfile`](https://github.com/Netcracker/qubership-core-base-images/blob/v2.5.15/images/core-alpine/Dockerfile#L23-L24)),
 so the entrypoint can add the CAs for a container that runs as uid 10001 or as any uid in group 0. The chart sets a
 read-only root file system on Kubernetes, and ADR-0101 R4 requires the agent to start and become ready under one on the
@@ -115,12 +116,12 @@ showed that a later source takes the path of an earlier one.
 
 The image meets R2 to R4 only by running the agent behind the entrypoint of the base image (#250). The entrypoint has to
 be able to write `/usr/local/share/ca-certificates` and `/etc/ssl/certs`, since a CA it cannot write fails R2, R3, or
-R4, so under the chart's read-only root file system the Pod mounts a writable volume at each of the two paths. A
+R4, so under the chart's read-only root file system the Pod mounts an `emptyDir` volume at each of the two paths. A
 service-account volume at `/var/run/secrets/kubernetes.io/serviceaccount` would fail R4, because the entrypoint also
 reads that directory, and its `ca.crt` takes the place of a key `ca.crt` of the Secret of `CA_CERTIFICATES_SECRET`. The
 values comment on `CA_CERTIFICATES_SECRET` is the place to name the two keys that R4 leaves out, and the comments on
-`CA_CERTIFICATES_SECRET` and `INTERNAL_TLS_ENABLED` the place to say that a changed CA is trusted after the Pod
-restarts.
+`CA_CERTIFICATES_SECRET` and `INTERNAL_TLS_ENABLED` the place to say to recreate the Pod after a CA is added or removed,
+since a restart of the container can leave a removed CA trusted.
 
 In the agent, R1 removes the field `caFile` of a provider (`Provider.CAFile` in `internal/token/keys`) and the
 `tls.Config` that `fetch.go` builds from it, and, on the branches of the token packages, `keycloak.caFile`
@@ -151,8 +152,8 @@ needs no service-account volume, which ADR-0094 R31 turns off (R2).
 
 The Secret `<SERVICE_NAME>-tls` also holds `tls.crt`, a certificate of one service rather than a CA, and the entrypoint
 adds every `.crt` file it finds (R3, R5). The chart puts the cluster CA and the internal CA in `/tmp/cert` as
-`kubernetes-ca.crt` and `internal-tls-ca.crt`. Because the entrypoint names each file it adds after the base name of the
-file it read, a key of the Secret of `CA_CERTIFICATES_SECRET` with one of those names would take the place of that CA,
+`kubernetes-ca.crt` and `internal-tls-ca.crt`. Because the entrypoint names its copies after the base name of the file
+it read, a key of the Secret of `CA_CERTIFICATES_SECRET` with one of those names would take the place of that CA,
 and the agent could no longer verify the API server or the platform's servers. So the chart's CA wins, and only a key
 with one of those two names is left out (R4, R5).
 
@@ -182,9 +183,15 @@ Negative:
 - The requests that carry the token for the API server trust every CA of the system roots, not the cluster CA alone. A
   certificate for `kubernetes.default.svc` that the internal CA or a CA of `CA_CERTIFICATES_SECRET` issues passes
   verification, and its holder can receive that token.
-- A CA added or replaced in a mounted Secret or ConfigMap is trusted only after the Pod restarts. The entrypoint builds
+- A CA added to a mounted Secret or ConfigMap is trusted only after the container starts again. The entrypoint builds
   the trust store at the start of the container, and the Go standard library loads the system roots once per process
   ([`root.go`](https://github.com/golang/go/blob/go1.27.4/src/crypto/x509/root.go#L36-L37)).
+- A CA whose key is removed from a mounted Secret or ConfigMap stays trusted until the Pod is recreated, as by
+  `kubectl rollout restart`. When a bundle loses certificates, its copies past the new length stay trusted too,
+  whichever of its certificates was removed. The entrypoint never deletes a copy, so a restart of the container replaces
+  only the copies whose names the current files still produce, and the copies live in the `emptyDir` volume at
+  `/usr/local/share/ca-certificates`, which outlives that restart
+  ([Netcracker/qubership-core-base-images#388](https://github.com/Netcracker/qubership-core-base-images/issues/388)).
 - Nothing reports a key of the Secret of `CA_CERTIFICATES_SECRET` that R4 leaves out.
 - A CA that the entrypoint cannot write breaks R2, R3, or R4, and at start only the entrypoint's `ERROR` line reports
   it. Later, requests to servers whose certificates that CA signed fail verification, and a required source of keys
