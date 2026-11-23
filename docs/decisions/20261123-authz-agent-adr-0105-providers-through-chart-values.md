@@ -18,25 +18,16 @@ kichasov
 
 #### Related ADRs
 
+Where a statement of ADR-0091 or ADR-0094 disagrees with this record, this record replaces it. The Follow-ups name the
+edits that bring those records in line with this one.
+
 - [authz-agent-ADR-0091: Verify tokens before policy evaluation against the keys of trusted issuers](20261029-authz-agent-adr-0091-verify-tokens-before-policy-evaluation.md):
-  this record replaces these statements of ADR-0091: ADR-0091 R13, the checksum of the trusted providers file, with R13
-  of this record; the half of ADR-0091 R72 that sets `keycloak.url` from `IDENTITY_PROVIDER_URL`, with R3 and R4;
-  ADR-0091 R65, the refusal of the settings that go away, with R10; and ADR-0091 R78, with R14. The default
-  `cloud-common` of ADR-0091 R15, which ADR-0104 takes away from the agent, is a default of the values under R7. The
-  half of ADR-0091 R72 that sets `keycloak.caFile` stays until a record of a private CA replaces it. ADR-0091 R64 names
-  the settings that go away.
+  the settings of the agent that the chart sets, and those that go away (ADR-0091 R64).
 - [authz-agent-ADR-0092: Accept any verified token in Authorization and limit a caller that is not M2M to its tenant](20261029-authz-agent-adr-0092-tokens-in-authorization.md):
-  ADR-0092 R11 and R15, the M2M modes and how the agent reads `M2M_AUTH_MODE`, and ADR-0092 R14, the keys that the
-  agent loads in every mode. R2 of this record is the part of ADR-0092 R12 that the chart meets: in `legacy` the chart
-  writes no provider `kubernetes`.
+  the M2M modes, how the agent reads `M2M_AUTH_MODE`, and the keys it loads in every mode (ADR-0092 R11, R14, R15).
 - [authz-agent-ADR-0094: Accept Kubernetes service account tokens from the namespaces of the installation](20261029-authz-agent-adr-0094-kubernetes-service-account-tokens.md):
-  this record replaces these statements of ADR-0094: the token for the API server that ADR-0094 R2 mounts in `hybrid`
-  and `k8s`, with R6; the chart setting of ADR-0094 R9 that replaces the address of the keys, with R7; and ADR-0094
-  R30, the provider that the chart writes in `hybrid` and `k8s`, with R2 and R5. The audience `netcracker` that
-  ADR-0094 R14 fixed, which ADR-0104 replaces with the `audience` of a provider file, is the value that R5 of this
-  record writes. The cluster CA of ADR-0094 R2 and R9 stays until a record of a private CA replaces it. ADR-0094 R1
-  ties the provider `kubernetes` to the M2M modes, and ADR-0094 R31 keeps the default token of the service account out
-  of the Pod.
+  the M2M modes that require the provider `kubernetes` (ADR-0094 R1), the token for the API server (ADR-0094 R2), and
+  the Pod without the default token of its service account (ADR-0094 R31).
 - [authz-agent-ADR-0096: Choose the token the agent sends with a setting of its own](20261105-authz-agent-adr-0096-token-the-agent-sends.md):
   the token that the agent sends and the address at which the agent obtains it, which this record does not decide.
 - [authz-agent-ADR-0104: Describe the two trusted providers in a fixed directory of provider files](20261123-authz-agent-adr-0104-trusted-provider-files.md):
