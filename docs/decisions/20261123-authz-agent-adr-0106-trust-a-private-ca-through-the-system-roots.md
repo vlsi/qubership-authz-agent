@@ -21,15 +21,14 @@ kichasov
   ADR-0091 R19, a required source of keys that keeps the agent not ready.
 - [authz-agent-ADR-0094: Accept Kubernetes service account tokens from the namespaces of the installation](20261029-authz-agent-adr-0094-kubernetes-service-account-tokens.md):
   the term Token for the API server, and ADR-0094 R31, which turns off the service-account volume of the Pod and which
-  this record keeps.
-- [authz-agent-ADR-0104: Describe the two trusted providers in a fixed directory of provider files](https://github.com/Netcracker/qubership-authz-agent/pull/329),
-  proposed in #329: the requests for the keys of a provider (ADR-0104 R23), whose CA this record decides, and
-  ADR-0104 R6, under which a provider file with the member `caFile` stops the start. ADR-0104 deletes ADR-0091 R2, the
-  `caFile` half of ADR-0091 R72, ADR-0094 R27, and the CA halves of ADR-0094 R7 and R9, each of which named a CA per
-  request, and puts no rule of its own in their place.
-- [authz-agent-ADR-0105: Configure the two providers through the chart values](https://github.com/Netcracker/qubership-authz-agent/pull/332),
-  proposed in #332: ADR-0105 R2, the provider `kubernetes` in every installation, and ADR-0105 R5, which by default
-  loads the keys of that provider from the API server at an in-cluster address.
+  this record keeps. This request deletes ADR-0094 R2, which mounted the cluster CA and which R2 of this record
+  replaces, and points the ADR-0094 term Cluster CA at the term of this record.
+- [authz-agent-ADR-0104: Describe the two trusted providers in a fixed directory of provider files](20261123-authz-agent-adr-0104-trusted-provider-files.md):
+  the requests for the keys of a provider (ADR-0104 R23), whose CA this record decides, and ADR-0104 R6, under which
+  a provider file with the member `caFile` stops the start.
+- [authz-agent-ADR-0105: Configure the two providers through the chart values](20261123-authz-agent-adr-0105-providers-through-chart-values.md):
+  ADR-0105 R2, the provider `kubernetes` in every installation, and ADR-0105 R5, which by default loads the keys of
+  that provider from the API server at an in-cluster address.
 - [authz-agent-ADR-0101: Run the agent in Docker without Kubernetes](https://github.com/Netcracker/qubership-authz-agent/pull/235),
   proposed in #235: ADR-0101 R4, under which the agent starts and becomes ready on the Docker target as any uid in group
   0 and with a read-only root file system.
@@ -169,8 +168,7 @@ with one of those two names is left out (R4, R5).
 
 - **A1. Name a CA per request: `keycloak.caFile`, a `caFile` per provider, a file with the cluster CA, and the CA in
   `CERTIFICATE_FILE_PATH` read by the agent.** Rejected by R1: each kind of request would need a CA setting of its own,
-  and the PIPs have none. ADR-0104 deletes the rules and the halves of rules that named such CAs, ADR-0091 R2 and
-  ADR-0094 R27 among them, and leaves the CA of the requests for keys to this record.
+  and the PIPs have none.
 - **A2. Mount the cluster CA in a projected service-account volume at
   `/var/run/secrets/kubernetes.io/serviceaccount`, which the entrypoint also reads.** Rejected by R4: its `ca.crt`
   takes the place of a key `ca.crt` of the Secret of `CA_CERTIFICATES_SECRET` in the trust store (#319), and the volume

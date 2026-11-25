@@ -65,6 +65,8 @@ kichasov
   the provider files that the chart writes from its values (ADR-0105 R2, R3, R5, R16), the token for the API server that
   the chart gives the Pod (ADR-0105 R6), and the restart of the Pods when an upgrade changes a provider file (ADR-0105
   R13).
+- [authz-agent-ADR-0106: Trust a private CA only through the system roots of the base image](20261123-authz-agent-adr-0106-trust-a-private-ca-through-the-system-roots.md):
+  the CA that the requests of R23 trust (ADR-0106 R1).
 
 ## Context
 
@@ -462,7 +464,3 @@ Negative:
   can also use, and R29 has no token to compare the issuer with.
 - An `Incoming-Token` with an `aud` that its provider does not accept fails the check of R26. The request goes on, and
   policy evaluation gets the reason code of the failure rather than the claims of that token (ADR-0095 R3).
-
-Follow-ups:
-
-- A record of a private CA decides the CA that the requests of R23 trust, in place of the term Cluster CA of ADR-0094.

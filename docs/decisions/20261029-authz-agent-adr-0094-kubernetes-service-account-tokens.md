@@ -34,6 +34,8 @@ kichasov
   the provider `kubernetes` that the chart writes in every installation (ADR-0105 R2), the token for the API server
   that the chart mounts (ADR-0105 R6), and ADR-0105 R15, under which an operator cannot set the audience of the
   provider `kubernetes`.
+- [authz-agent-ADR-0106: Trust a private CA only through the system roots of the base image](20261123-authz-agent-adr-0106-trust-a-private-ca-through-the-system-roots.md):
+  the term Cluster CA, and the cluster CA in the system roots of the agent's container (ADR-0106 R2).
 
 ## Context
 
@@ -73,7 +75,7 @@ when it passes the checks of this record and its namespace belongs to the instal
   them.
 - **Token for the API server**: the token in the file that the `jwksBearerTokenFile` of the provider `kubernetes`
   names.
-- **Cluster CA**: the CA at `/var/run/secrets/tokens/kubernetes/ca.crt`.
+- **Cluster CA**: as ADR-0106 defines it.
 - **Token for `netcracker`**: the projected token at `/var/run/secrets/tokens/netcracker/token`, unless ADR-0096 R6
   names another file.
 - **In-cluster address**: an address whose host is `kubernetes.default.svc` or `kubernetes.default.svc.cluster.local`.
@@ -85,7 +87,6 @@ when it passes the checks of this record and its namespace belongs to the instal
 
 #### The provider
 
-- **R2** (`chart`). The chart mounts the cluster CA.
 - **R31** (`chart`). The agent's Pod sets `automountServiceAccountToken: false`.
 - **R3** (`chart`). The chart mounts the token for `netcracker` when ADR-0096 R2 chooses it.
 - **R32** (`keys`). The provider `kubernetes` reads its keys only over https. A provider `kubernetes` whose `jwksUri`
