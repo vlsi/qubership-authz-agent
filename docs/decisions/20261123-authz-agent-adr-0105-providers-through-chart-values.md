@@ -35,11 +35,11 @@ kichasov
   this record where it cited R2.
 - [authz-agent-ADR-0104: Describe the two trusted providers in a fixed directory of provider files](20261123-authz-agent-adr-0104-trusted-provider-files.md):
   the provider files that the chart writes and their format (ADR-0104 R6), the providers and the two kinds of token
-  (ADR-0104 R22), the source of a token, the tokens whose `iss` matches no provider, and the Kubernetes claim of a token
-  from another provider (ADR-0104 R19, R21, R27), the reading of the provider files only at start (ADR-0104 R5), the
-  agent without a realm of its own (ADR-0104 R13), the required sources (ADR-0104 R25), the check of `aud` (ADR-0104
-  R26), and the addresses that the token for the API server may go to (ADR-0104 R24, R28). This request makes ADR-0104
-  cite R13 of this record where it cited ADR-0091 R13.
+  (ADR-0104 R22), the source of a token and the tokens whose `iss` matches no provider (ADR-0104 R19, R21), the reading
+  of the provider files only at start (ADR-0104 R5), the agent without a realm of its own (ADR-0104 R13), the required
+  sources (ADR-0104 R25), the check of `aud` (ADR-0104 R26), the addresses that the token for the API server may go to
+  (ADR-0104 R24, R28), and the warning on the issuer of the provider `kubernetes` (ADR-0104 R29). This request makes
+  ADR-0104 cite R13 of this record where it cited ADR-0091 R13.
 
 ## Context
 
@@ -140,12 +140,12 @@ the tokens of those clients. The agent holds no realm name of its own (ADR-0104 
   `AUTHZ_IDP_REALMS`.** Rejected by R16: `default` is the display name of a tenant, not the name of a realm, most
   installations hold neither `cpq` nor `external`, and a name that the Keycloak does not hold keeps the Pod not ready.
 - **A12. Let a value leave the provider `kubernetes` out.** Rejected by R2: an installation that set it would refuse
-  every token that the API server signs (ADR-0104 R21, R27), where the architect and the owner of the policy decision
+  every token that the API server signs (ADR-0104 R21), where the architect and the owner of the policy decision
   code chose to accept Kubernetes tokens wherever the chart deploys the agent. A cluster whose issuer is not an https
   URL, where such a value would let a Pod become ready, is a cost this record accepts (Negative).
 - **A13. Write the provider `kubernetes` only in the M2M modes `hybrid` and `k8s`.** Rejected by R2: the M2M modes are
   dropped (ADR-0092 R15), and without the provider the agent would refuse every token that the API server signs
-  (ADR-0104 R21, R27). This reverses the earlier answer that tied the provider to those modes.
+  (ADR-0104 R21). This reverses the earlier answer that tied the provider to those modes.
 - **A16. Offer no value for the issuer of the API server, and always trust the issuer that kubeadm gives.** Rejected by
   R5: a managed cluster often has another issuer, and every token that its API server signs would get
   `TOKEN_ISSUER_UNKNOWN` (ADR-0104 R19, R21).
@@ -171,7 +171,7 @@ Negative:
   (R3, R15).
 - On a cluster whose API server has an https issuer other than the default of R5, as a managed cluster often has, every
   token that the API server signs gets `TOKEN_ISSUER_UNKNOWN` in a ready Pod, until the values override the issuer (R5;
-  ADR-0104 R19, R21).
+  ADR-0104 R19, R21). With the token for the API server, ADR-0104 R29 logs a warning at the start.
 - Every Pod that the chart deploys waits for the keys of the provider `kubernetes` before it becomes ready (R2; ADR-0104
   R25). With the default address of R5, its readiness depends on the API server and on the agent's trust in the CA that
   signs the certificate of the API server (ADR-0094 Context). On a cluster whose API server has an issuer that is not an
