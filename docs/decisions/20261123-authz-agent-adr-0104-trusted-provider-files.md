@@ -443,8 +443,8 @@ Negative:
   being M2M tokens (A13).
 - No rule of this record names the CA that the requests of R23 trust, and the rules of ADR-0091 and ADR-0094 that
   named one went with the requests that this record replaces. A `caFile` now stops the start under R6. An https
-  `jwksUri` whose certificate a private CA or the cluster CA signs therefore works only once the agent trusts that CA in
-  another way.
+  `jwksUri` whose certificate a private CA or the cluster CA signs therefore works only once the agent trusts that CA
+  under ADR-0106 R1.
 - A provider `identity-provider` whose issuer is an API server makes every token of that API server an identity-provider
   token (R22). Where the provider `kubernetes` names the same issuer, R17 stops the start. Otherwise, where the keys
   load without a token, as the public keys of a managed cluster do, the token of a Pod of that cluster passes with no
