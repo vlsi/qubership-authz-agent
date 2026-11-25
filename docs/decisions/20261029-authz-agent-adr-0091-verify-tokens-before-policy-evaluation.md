@@ -29,7 +29,7 @@ kichasov
 - [authz-agent-ADR-0093: Take the tenant of a decision from the verified user token, then from the request](20261029-authz-agent-adr-0093-tenant-of-a-decision.md):
   ADR-0093 R10 to R14, the default tenant, and ADR-0093 R17, the policy snapshots that readiness waits for.
 - [authz-agent-ADR-0094: Accept Kubernetes service account tokens from the namespaces of the installation](20261029-authz-agent-adr-0094-kubernetes-service-account-tokens.md):
-  ADR-0094 R2, R3, R26, R28, and R30 to R32, the provider `kubernetes` and the tokens that the chart mounts, and
+  ADR-0094 R3, R26, R28, R31, and R32, the provider `kubernetes` and the tokens that the chart mounts, and
   ADR-0094 R16 to R25, the extra checks of a Kubernetes token.
 - [authz-agent-ADR-0095: Refuse a check request before policy evaluation](20261029-authz-agent-adr-0095-refuse-before-policy-evaluation.md):
     ADR-0095 R16, the index of the reason codes.
@@ -39,6 +39,11 @@ kichasov
   the provider files and the words for providers, realms, sources, issuers, and the two kinds of token (ADR-0104 R22);
   the source of a token (ADR-0104 R19 to R21), the address of its keys (ADR-0104 R23), the required sources (ADR-0104
   R25), and the check of `aud` (ADR-0104 R26).
+- [authz-agent-ADR-0105: Configure the two providers through the chart values](20261123-authz-agent-adr-0105-providers-through-chart-values.md):
+  the provider files that the chart writes, with both providers in every installation (ADR-0105 R2) and the provider
+  `identity-provider` derived from `IDENTITY_PROVIDER_URL` (ADR-0105 R3); the token that the chart mounts for the
+  `jwksBearerTokenFile` of the provider `kubernetes` (ADR-0105 R6); and the restart of the Pods when an upgrade changes
+  a provider file (ADR-0105 R13).
 
 ## Context
 
@@ -84,10 +89,7 @@ The word Keycloak names the server.
 
 #### Trusted issuers
 
-- **R72** (`chart`). The chart derives the provider `identity-provider` from `IDENTITY_PROVIDER_URL`.
 - **R78** (`keys`). The agent does not read `IDENTITY_PROVIDER_URL`.
-- **R13** (`chart`). The chart adds a checksum of the provider files to the Pod template, so a change of a provider file
-  restarts the Pods.
 
 #### Readiness
 
@@ -233,8 +235,8 @@ The word Keycloak names the server.
 #### Settings that go away
 
 - **R64** (`chart`). The settings of the current key loading go away: `AUTHZ_IDP_REALMS`,
-  `AUTHZ_JWKS_BOOTSTRAP_REQUIRED`, `AUTHZ_JWKS_HTTP_RETRIES`, `AUTHZ_TRUSTED_PROVIDERS_FILE`, and
-  `AUTHZ_TRUSTED_PROVIDERS_RELOAD_INTERVAL`.
+  `AUTHZ_JWKS_BOOTSTRAP_REQUIRED`, `AUTHZ_JWKS_HTTP_RETRIES`, `AUTHZ_JWKS_HTTP_TIMEOUT`, `AUTHZ_TRUSTED_PROVIDERS`,
+  `AUTHZ_TRUSTED_PROVIDERS_FILE`, and `AUTHZ_TRUSTED_PROVIDERS_RELOAD_INTERVAL`.
 - **R65** (`chart`). The values schema refuses those settings, so an installation that still sets `AUTHZ_IDP_REALMS`
   learns that its trust widens.
 
@@ -397,7 +399,7 @@ Negative:
   `TOKEN_ALG_NOT_ALLOWED` when no held key under its `kid` fits its `alg`, and `TOKEN_SIGNATURE_INVALID` when one fits
   and none verifies it (R32, R43, R79). A source that has no keys loaded yet stays without keys, and a required source
   then keeps the agent not ready (R14, R19).
-- An edit of a provider file outside Helm takes effect only at the next restart of the Pods (R13; ADR-0104 R5).
+- An edit of a provider file outside Helm takes effect only at the next restart of the Pods (ADR-0104 R5; ADR-0105 R13).
 - A provider that signs tokens without `kid` cannot be used, because all its tokens are refused.
 - A token without `iat` passes the current policies, and an `iat` up to 300 seconds in the future passes for every
   token. This record refuses a token without `iat`, so a provider that does not set it cannot be used, and it checks a

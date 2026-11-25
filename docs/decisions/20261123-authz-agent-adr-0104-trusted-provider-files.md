@@ -24,17 +24,16 @@ kichasov
 #### Related ADRs
 
 - [authz-agent-ADR-0091: Verify tokens before policy evaluation against the keys of trusted issuers](20261029-authz-agent-adr-0091-verify-tokens-before-policy-evaluation.md):
-  the term Stops the start, the checksum that restarts the Pods when a provider file changes (ADR-0091 R13), the
-  readiness that waits for a usable key of every required source (ADR-0091 R14, R19), the loads and the codes of a token
-  whose key is not found (ADR-0091 R23, R38, R39, R81), and the checks of a token (ADR-0091 R40 to R48). This request
-  deletes from ADR-0091 the rules whose place this record takes: R73, R6, and R66 (now R6 of this record), R1 and R3
-  (now R19 of this record), R4 and R9 (now R23 of this record), R5 (now R20 and R21 of this record), R7 (now R17 and R19
-  of this record), R8 (now R6 of this record), R10 (now R24 and R28 of this record), R11 (now R21 of this record), R12
-  (now R5 of this record), R15 (now R13 of this record), and R49 and R50 (now R26 of this record). It also deletes
-  ADR-0091 R2 and the `caFile` half of ADR-0091 R72 with the member `caFile`, and ADR-0091 A15, which rejected a reading
-  of a discovery document. It deletes the terms Trusted providers file, Marked provider, File token, and Realm token,
-  points the other terms for providers and tokens at this record, and restates ADR-0091 R13, R14, R16, R17, R19, R21,
-  R29, R34, R35, R37, R48, R52, R54, R60, R64, and R72 in the terms of this record.
+  the term Stops the start, the readiness that waits for a usable key of every required source (ADR-0091 R14, R19), the
+  loads and the codes of a token whose key is not found (ADR-0091 R23, R38, R39, R81), and the checks of a token
+  (ADR-0091 R40 to R48). This request deletes from ADR-0091 the rules whose place this record takes: R73, R6, and R66
+  (now R6 of this record), R1 and R3 (now R19 of this record), R4 and R9 (now R23 of this record), R5 (now R20 and R21
+  of this record), R7 (now R17 and R19 of this record), R8 (now R6 of this record), R10 (now R24 and R28 of this
+  record), R11 (now R21 of this record), R12 (now R5 of this record), R15 (now R13 of this record), and R49 and R50 (now
+  R26 of this record). It also deletes ADR-0091 R2 and the `caFile` half of ADR-0091 R72 with the member `caFile`, and
+  ADR-0091 A15, which rejected a reading of a discovery document. It deletes the terms Trusted providers file, Marked
+  provider, File token, and Realm token, points the other terms for providers and tokens at this record, and restates
+  ADR-0091 R14, R16, R17, R19, R21, R29, R34, R35, R37, R48, R52, R54, R60, and R64 in the terms of this record.
 - [authz-agent-ADR-0092: Accept any verified token in Authorization and limit a caller that is not M2M to its tenant](20261029-authz-agent-adr-0092-tokens-in-authorization.md):
   the M2M test of an identity-provider token (ADR-0092 R6, R21) and of a Kubernetes token (ADR-0092 R7), the kinds of
   token that `Authorization` accepts (ADR-0092 R11), and ADR-0092 R15, under which `M2M_AUTH_MODE` changes no token
@@ -52,7 +51,7 @@ kichasov
   replaces, with no successor here. It also deletes ADR-0094 A4 to A6, which rejected a fixed address of the keys, an
   issuer set in the configuration, and discovery without a token: this record configures the address and the issuer and
   drops discovery (R6, R23). It makes the token for the API server the token in the `jwksBearerTokenFile` of the
-  provider `kubernetes`, and restates ADR-0094 R2, R16 to R25, R28, R30, and R32 in the terms of this record.
+  provider `kubernetes`, and restates ADR-0094 R16 to R25, R28, and R32 in the terms of this record.
 - [authz-agent-ADR-0095: Refuse a check request before policy evaluation](20261029-authz-agent-adr-0095-refuse-before-policy-evaluation.md):
   the steps of a check request (ADR-0095 R1), the answer to a request whose `Incoming-Token` fails a check (ADR-0095
   R3), and the index of reason codes (ADR-0095 R16). This request makes steps 1 and 2 of ADR-0095 R1 name the checks of
@@ -62,6 +61,10 @@ kichasov
   the token that the agent obtains from the realm `cloud-common`, which is an identity-provider token under R22. This
   request makes ADR-0096 call that token an identity-provider token, and cite R14 of this record where it cited
   ADR-0094 R5.
+- [authz-agent-ADR-0105: Configure the two providers through the chart values](20261123-authz-agent-adr-0105-providers-through-chart-values.md):
+  the provider files that the chart writes from its values (ADR-0105 R2, R3, R5, R16), the token for the API server that
+  the chart gives the Pod (ADR-0105 R6), and the restart of the Pods when an upgrade changes a provider file (ADR-0105
+  R13).
 
 ## Context
 
@@ -241,12 +244,11 @@ dialect that draft 2020-12 names for `pattern`.
 
 ### Justification
 
-A fixed directory gives the agent one place to look and a deployment one place to mount, with no setting that the
-chart and the agent have to agree on (R1). Several files let each provider stand in a file of its own (R2, R4). The
-agent skips names that start with `.` and reads through symbolic links, because a ConfigMap mounted as a directory
-keeps its data in hidden directories and links each key into them (R2). Reading the files only at start fixes the
-providers of a process for its lifetime, and a change of the files restarts the Pods through the checksum of ADR-0091
-R13 (R5).
+A fixed directory gives the agent one place to look and a deployment one place to mount, with no setting that the chart
+and the agent have to agree on (R1). Several files let each provider stand in a file of its own (R2, R4). The agent
+skips names that start with `.` and reads through symbolic links, because a ConfigMap mounted as a directory keeps its
+data in hidden directories and links each key into them (R2). Reading the files only at start fixes the providers of a
+process for its lifetime, and an upgrade that changes a provider file restarts the Pods (R5; ADR-0105 R13).
 
 A JSON Schema states the format of a provider file in one place, in a notation that validators and editors read, and
 the other rules state what the agent does with each member (R6). The schema is a file of its own with an `$id`, so a
@@ -463,6 +465,4 @@ Negative:
 
 Follow-ups:
 
-- A record of the chart takes the place of ADR-0091 R13 and R72 and ADR-0094 R2 and R30, which this request restates in
-  the terms of this record, and a record of a private CA decides the CA that the requests of R23 trust, in place of the
-  term Cluster CA of ADR-0094.
+- A record of a private CA decides the CA that the requests of R23 trust, in place of the term Cluster CA of ADR-0094.

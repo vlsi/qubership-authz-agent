@@ -13,7 +13,7 @@ kichasov
 
 - The project architect (`mr-joom`) approves this record, and with it the answers it takes from the owner of the policy
   decision code on the checks. On 2026-11-23 the architect and the owner of the policy decision code agreed to drop the
-  M2M modes, so every installation that the chart deploys accepts Kubernetes tokens (R30).
+  M2M modes, so every installation that the chart deploys accepts Kubernetes tokens (ADR-0105 R2).
 - The owner of the policy decision code (`vlsi`) returned the questionnaire of 2026-11-03.
 - The Netcracker/qubership-authz-agent maintainers (kichasov).
 
@@ -30,6 +30,10 @@ kichasov
 - [authz-agent-ADR-0104: Describe the two trusted providers in a fixed directory of provider files](20261123-authz-agent-adr-0104-trusted-provider-files.md):
   the provider `kubernetes` and the Kubernetes token (ADR-0104 R22), the address of the keys of that provider (ADR-0104
   R23, R28), and the requests that carry the token for the API server (ADR-0104 R24).
+- [authz-agent-ADR-0105: Configure the two providers through the chart values](20261123-authz-agent-adr-0105-providers-through-chart-values.md):
+  the provider `kubernetes` that the chart writes in every installation (ADR-0105 R2), the token for the API server
+  that the chart mounts (ADR-0105 R6), and ADR-0105 R15, under which an operator cannot set the audience of the
+  provider `kubernetes`.
 
 ## Context
 
@@ -81,8 +85,7 @@ when it passes the checks of this record and its namespace belongs to the instal
 
 #### The provider
 
-- **R2** (`chart`). The chart mounts the token for the API server and the cluster CA.
-- **R30** (`chart`). The chart writes the provider `kubernetes`.
+- **R2** (`chart`). The chart mounts the cluster CA.
 - **R31** (`chart`). The agent's Pod sets `automountServiceAccountToken: false`.
 - **R3** (`chart`). The chart mounts the token for `netcracker` when ADR-0096 R2 chooses it.
 - **R32** (`keys`). The provider `kubernetes` reads its keys only over https. A provider `kubernetes` whose `jwksUri`
@@ -167,7 +170,7 @@ Negative:
   token that an API server signed is refused under ADR-0104 R21, unless a provider `identity-provider` names its issuer,
   which makes it an identity-provider token (ADR-0104 R22).
 - The chart writes the provider `kubernetes` in every installation, so every Pod that the chart deploys waits for the
-  keys of the API server before it becomes ready (R30; ADR-0104 R25; ADR-0091 R14), and a token for the API server that
-  the agent cannot read stops it at the start (R2; ADR-0104 R14).
-- On a cluster whose issuer is not an https URL the API server serves no keys (Context), so every Pod that the chart
-  deploys stays not ready (R30; ADR-0091 R19).
+  keys of the API server before it becomes ready (ADR-0105 R2; ADR-0104 R25; ADR-0091 R14), and a token for the API
+  server that the agent cannot read stops it at the start (ADR-0105 R6; ADR-0104 R14).
+- On a cluster whose issuer is not an https URL the API server serves no keys (Context), so with the default address of
+  the keys of ADR-0105 R5 every Pod that the chart deploys stays not ready (ADR-0105 R2, R5; ADR-0091 R19).

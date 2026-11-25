@@ -32,6 +32,8 @@ kichasov
   ADR-0095 R2, the 503 for keys that cannot be loaded.
 - [authz-agent-ADR-0104: Describe the two trusted providers in a fixed directory of provider files](20261123-authz-agent-adr-0104-trusted-provider-files.md):
   ADR-0104 R22, which defines the identity-provider token and the Kubernetes token that R6, R7, R11, and R21 name.
+- [authz-agent-ADR-0105: Configure the two providers through the chart values](20261123-authz-agent-adr-0105-providers-through-chart-values.md):
+  ADR-0105 R2, under which the chart writes the provider `kubernetes` in every installation.
 
 ## Context
 
@@ -139,7 +141,7 @@ Negative:
 - No setting refuses identity-provider tokens in `Authorization`, so the refusals of the agent no longer show which
   services still call with one, as `k8s` did (R11).
 - Every installation that the chart deploys accepts Kubernetes tokens from the namespaces of the installation in
-  `Authorization`, where `legacy`, the default mode, refused them (R11; ADR-0094 R17, R30).
+  `Authorization`, where `legacy`, the default mode, refused them (R11; ADR-0094 R17; ADR-0105 R2).
 - Outside Kubernetes no API server serves the keys of a provider `kubernetes`, so a provider `kubernetes` there would
   keep the agent not ready (ADR-0104 R25; ADR-0091 R14), and the provider files hold none. No token is then a Kubernetes
   token, and a token that an API server signed is refused under ADR-0104 R21, unless a provider `identity-provider`
