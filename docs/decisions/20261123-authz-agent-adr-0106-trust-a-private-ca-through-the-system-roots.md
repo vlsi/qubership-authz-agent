@@ -18,11 +18,18 @@ kichasov
 #### Related ADRs
 
 - [authz-agent-ADR-0091: Verify tokens before policy evaluation against the keys of trusted issuers](20261029-authz-agent-adr-0091-verify-tokens-before-policy-evaluation.md):
-  the requests to Keycloak, whose CA this record moves to the system roots: ADR-0091 R2 and R72, which A1 reverses;
   ADR-0091 R19, a required source of keys that keeps the agent not ready.
 - [authz-agent-ADR-0094: Accept Kubernetes service account tokens from the namespaces of the installation](20261029-authz-agent-adr-0094-kubernetes-service-account-tokens.md):
-  the requests to the API server, whose cluster CA this record moves to the system roots: ADR-0094 R27, which A1
-  reverses; ADR-0094 R30, the marked provider in every installation; ADR-0094 R31 stays.
+  the term Token for the API server, and ADR-0094 R31, which turns off the service-account volume of the Pod and which
+  this record keeps.
+- [authz-agent-ADR-0104: Describe the two trusted providers in a fixed directory of provider files](https://github.com/Netcracker/qubership-authz-agent/pull/329),
+  proposed in #329: the requests for the keys of a provider (ADR-0104 R23), whose CA this record decides, and
+  ADR-0104 R6, under which a provider file with the member `caFile` stops the start. ADR-0104 deletes ADR-0091 R2, the
+  `caFile` half of ADR-0091 R72, ADR-0094 R27, and the CA halves of ADR-0094 R7 and R9, each of which named a CA per
+  request, and puts no rule of its own in their place.
+- [authz-agent-ADR-0105: Configure the two providers through the chart values](https://github.com/Netcracker/qubership-authz-agent/pull/332),
+  proposed in #332: ADR-0105 R2, the provider `kubernetes` in every installation, and ADR-0105 R5, which by default
+  loads the keys of that provider from the API server at an in-cluster address.
 - [authz-agent-ADR-0101: Run the agent in Docker without Kubernetes](https://github.com/Netcracker/qubership-authz-agent/pull/235),
   proposed in #235: ADR-0101 R4, under which the agent starts and becomes ready on the Docker target as any uid in group
   0 and with a read-only root file system.
@@ -62,6 +69,8 @@ and the internal CA into `/tmp/cert`, where the entrypoint of the base image add
 - **Internal CA**: the CA that signs the certificates of the platform's servers under `INTERNAL_TLS_ENABLED`. The key
   `ca.crt` of the Secret `<SERVICE_NAME>-tls` in the agent's namespace holds it; `<SERVICE_NAME>` is the chart value
   `SERVICE_NAME`.
+- **Provider file**, **provider `kubernetes`**, **Kubernetes token**, **required source**: as ADR-0104 defines them.
+- **Token for the API server**, **in-cluster address**: as ADR-0094 defines them.
 
 ### Rules
 
@@ -123,18 +132,17 @@ values comment on `CA_CERTIFICATES_SECRET` is the place to name the two keys tha
 `CA_CERTIFICATES_SECRET` and `INTERNAL_TLS_ENABLED` the place to say to recreate the Pod after a CA is added or removed,
 since a restart of the container can leave a removed CA trusted.
 
-In the agent, R1 removes the field `caFile` of a provider (`Provider.CAFile` in `internal/token/keys`) and the
-`tls.Config` that `fetch.go` builds from it, and, on the branches of the token packages, `keycloak.caFile`
-(`Keycloak.CAFile`, #201), `clusterCAFile`, and `Options.InternalCAFile` (#159). A request keeps the `tls.Config` of
-the default transport.
+In the agent, R1 removes the field `caFile` of a provider (`Provider.CAFile` in `internal/token/keys` on main) and the
+`tls.Config` that `fetch.go` builds from it, unless #201, whose provider files have no such member, removes them first.
+A request keeps the `tls.Config` of the default transport.
 
 Checks to add with the chart change: `test/scripts/test-chart-render.sh` renders the chart with and without
 `INTERNAL_TLS_ENABLED` and `CA_CERTIFICATES_SECRET`. It asserts the sources of the volume with the Secret of
 `CA_CERTIFICATES_SECRET` first among them, and that the agent's Pod sets `automountServiceAccountToken: false` and
 mounts no volume under `/var/run/secrets/kubernetes.io/serviceaccount`, the check for the service-account case of R4.
-The kind e2e installs with `--wait`, and the provider `kubernetes` keeps the
-agent not ready until its keys load, so the install fails when the cluster CA is missing from the system roots. One
-run with the `kube-root-ca.crt` source removed shows that failure.
+The kind e2e installs with `--wait`, and the provider `kubernetes` keeps the agent not ready until its keys load, so the
+install fails when the cluster CA is missing from the system roots. One run with the `kube-root-ca.crt` source removed
+shows that failure.
 
 ### Justification
 
@@ -142,12 +150,13 @@ One set of CAs serves every request and every target, so the code holds no CA se
 source, and tenant-manager trust a private CA the same way as Keycloak and the API server (R1). The platform's images
 take a private CA through `/tmp/cert`, so the chart puts the CAs of R2, R3, and R4 there.
 
-The chart writes the marked provider in every installation (ADR-0094 R30), so the agent accepts M2M tokens from
-Kubernetes in every installation on Kubernetes.
-Whether their keys come from the API server of the cluster depends on the cluster's issuer, and the chart cannot read
-the issuer when it renders. So every installation on Kubernetes gets the cluster CA (R2). The ConfigMap
-`kube-root-ca.crt` is in every namespace and holds the CA that the service-account volume of a Pod gets, so the agent
-needs no service-account volume, which ADR-0094 R31 turns off (R2).
+The chart writes the provider `kubernetes` in every installation (ADR-0105 R2), so the agent accepts Kubernetes tokens
+in every installation on Kubernetes. That provider loads its keys from the API server at an in-cluster address by
+default (ADR-0105 R5), and always while the Pod holds the token for the API server (ADR-0104 R28). The cluster CA signs
+the certificate of the API server, so every installation on Kubernetes gets the cluster CA (R2). An installation whose
+values move the keys away from the API server gets it too, and every HTTPS request there trusts the cluster CA, a cost
+the Negative consequences accept. The ConfigMap `kube-root-ca.crt` is in every namespace and holds the CA that the
+service-account volume of a Pod gets, so the agent needs no service-account volume, which ADR-0094 R31 turns off (R2).
 
 The Secret `<SERVICE_NAME>-tls` also holds `tls.crt`, a certificate of one service rather than a CA, and the entrypoint
 adds every `.crt` file it finds (R3, R5). The chart puts the cluster CA and the internal CA in `/tmp/cert` as
@@ -159,8 +168,9 @@ with one of those two names is left out (R4, R5).
 ### Alternatives considered
 
 - **A1. Name a CA per request: `keycloak.caFile`, a `caFile` per provider, a file with the cluster CA, and the CA in
-  `CERTIFICATE_FILE_PATH` read by the agent.** Rejected by R1. This reverses ADR-0091 R2 and R72 and ADR-0094 R27:
-  each kind of request needed a CA setting of its own, and the PIPs had none.
+  `CERTIFICATE_FILE_PATH` read by the agent.** Rejected by R1: each kind of request would need a CA setting of its own,
+  and the PIPs have none. ADR-0104 deletes the rules and the halves of rules that named such CAs, ADR-0091 R2 and
+  ADR-0094 R27 among them, and leaves the CA of the requests for keys to this record.
 - **A2. Mount the cluster CA in a projected service-account volume at
   `/var/run/secrets/kubernetes.io/serviceaccount`, which the entrypoint also reads.** Rejected by R4: its `ca.crt`
   takes the place of a key `ca.crt` of the Secret of `CA_CERTIFICATES_SECRET` in the trust store (#319), and the volume
