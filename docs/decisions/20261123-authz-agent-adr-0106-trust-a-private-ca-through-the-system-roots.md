@@ -22,7 +22,7 @@ kichasov
   ADR-0091 R19, a required source of keys that keeps the agent not ready.
 - [authz-agent-ADR-0094: Accept Kubernetes service account tokens from the namespaces of the installation](20261029-authz-agent-adr-0094-kubernetes-service-account-tokens.md):
   the requests to the API server, whose cluster CA this record moves to the system roots: ADR-0094 R27, which A1
-  reverses; ADR-0094 R31 stays.
+  reverses; ADR-0094 R30, the marked provider in every installation; ADR-0094 R31 stays.
 - [authz-agent-ADR-0101: Run the agent in Docker without Kubernetes](https://github.com/Netcracker/qubership-authz-agent/pull/235),
   proposed in #235: ADR-0101 R4, under which the agent starts and becomes ready on the Docker target as any uid in group
   0 and with a read-only root file system.
@@ -142,9 +142,8 @@ One set of CAs serves every request and every target, so the code holds no CA se
 source, and tenant-manager trust a private CA the same way as Keycloak and the API server (R1). The platform's images
 take a private CA through `/tmp/cert`, so the chart puts the CAs of R2, R3, and R4 there.
 
-The agent accepts M2M tokens from Kubernetes in every installation on Kubernetes, as agreed in the review of this
-record
-([#330](https://github.com/Netcracker/qubership-authz-agent/pull/330#discussion_r4667182029)).
+The chart writes the marked provider in every installation (ADR-0094 R30), so the agent accepts M2M tokens from
+Kubernetes in every installation on Kubernetes.
 Whether their keys come from the API server of the cluster depends on the cluster's issuer, and the chart cannot read
 the issuer when it renders. So every installation on Kubernetes gets the cluster CA (R2). The ConfigMap
 `kube-root-ca.crt` is in every namespace and holds the CA that the service-account volume of a Pod gets, so the agent
