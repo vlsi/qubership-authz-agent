@@ -15,7 +15,7 @@ a person or an agent can check a change against each rule. Earlier records are p
 - **O1, O2** are open points: questions a record does not settle yet. A record with an open point cannot be accepted.
 - **Negative** consequences are costs the decision accepts, so they are not defects.
 
-A rule names the layer where its check runs, or two layers, in parentheses:
+A rule names the layer where its check runs, or several layers, in parentheses:
 
 | Layer | Holds | Code |
 | --- | --- | --- |
