@@ -143,9 +143,10 @@ the tokens of those clients. The agent holds no realm name of its own (ADR-0104 
   every token that the API server signs (ADR-0104 R21), where the architect and the owner of the policy decision
   code chose to accept Kubernetes tokens wherever the chart deploys the agent. A cluster whose issuer is not an https
   URL, where such a value would let a Pod become ready, is a cost this record accepts (Negative).
-- **A13. Write the provider `kubernetes` only in the M2M modes `hybrid` and `k8s`.** Rejected by R2: the M2M modes are
-  dropped (ADR-0092 R15), and without the provider the agent would refuse every token that the API server signs
-  (ADR-0104 R21). This reverses the earlier answer that tied the provider to those modes.
+- **A13. Write the provider `kubernetes` only in the M2M modes `hybrid` and `k8s`.** Rejected by R2: `M2M_AUTH_MODE`
+  changes none of the tokens that the agent accepts (ADR-0092 R15), and without the provider the agent would refuse
+  every token that the API server signs (ADR-0104 R21). This reverses the earlier answer that tied the provider to
+  those modes.
 - **A16. Offer no value for the issuer of the API server, and always trust the issuer that kubeadm gives.** Rejected by
   R5: a managed cluster often has another issuer, and every token that its API server signs would get
   `TOKEN_ISSUER_UNKNOWN` (ADR-0104 R19, R21).
